@@ -38,25 +38,20 @@ def create_ids(fasta_file:Path, contig_dict):
         old_to_new_id_map = dict()
         for feature in contig.features:
             id_tag = 'error'
-            feature.qualifiers['inference'] = feature.qualifiers['inference'].lower()
+            utils.set_feature_qualifier(feature, "inference", utils.get_feature_qualifier(feature, "inference").lower())
+
             for i in range(len(FEATURE_INFERENCES)):
-                if FEATURE_INFERENCES[i] in feature.qualifiers['inference']:
+                if FEATURE_INFERENCES[i] in utils.get_feature_qualifier(feature, 'inference'):
                     id_tag = FEATURE_ID_TAGS[i]
                     break
             new_id = f'{contig.id}_{new_id_number:05d}_{id_tag}'
             new_id_number += 1
-            try:
-                old_to_new_id_map[feature.qualifiers['id']] = new_id
-            except KeyError:
-                pass
-            feature.qualifiers['id'] = new_id
-            feature.qualifiers['protein_id'] = new_id
-            feature.qualifiers['locus_tag'] = new_id
+            old_to_new_id_map[utils.get_feature_qualifier(feature, "id")] = new_id
+            utils.set_feature_qualifier(feature, "id", new_id)
+            utils.set_feature_qualifier(feature, "protein_id", new_id)
+            utils.set_feature_qualifier(feature, "locus_tag", new_id)
         for feature in contig.features:
-            try:
-                feature.qualifiers['parent'] = old_to_new_id_map[feature.qualifiers['parent']]
-            except KeyError:
-                pass
+            utils.set_feature_qualifier(feature, 'parent', old_to_new_id_map[utils.get_feature_qualifier(feature, "parent")])
 
 
 def decipher_metaerg_id(id):
@@ -68,10 +63,10 @@ def decipher_metaerg_id(id):
 
 def gff_words_to_seqfeature(words: list, inference):
     seq_feature = utils.gff_words_to_seqfeature(words)
-    seq_feature.qualifiers['inference'] = inference
+    utils.set_feature_qualifier(seq_feature, "inference", inference)
 
     if not words[2] in VALID_GBK_FEATURE_KEYS:
-        seq_feature.qualifiers['note'] = words[2]
+        utils.set_feature_qualifier(seq_feature, "note", words[2])
         seq_feature.type = 'misc_feature'
 
     for unwanted in 'gc_cont conf score cscore sscore rscore uscore tscore rpt_type rpt_family ltr_similarity ' \
@@ -145,8 +140,8 @@ def predict_trnas_with_aragorn(fasta_file:Path, contig_dict):
             start = max(0, int(pos_str[0]) - 1)
             end = min(len(current_contig.seq), int(pos_str[1]))
             f = SeqFeature(location=FeatureLocation(start, end, strand=strand), type='tRNA',
-                           qualifiers={'name': f'{words[1]}-{words[4]}',
-                                       'inference': 'aragorn'})
+                           qualifiers={'name': [f'{words[1]}-{words[4]}'],
+                                       'inference': ['aragorn']})
             current_contig.features.append(f)
     utils.log(f'tRNA prediction complete. Found {trna_count} tRNAs.')
 
@@ -161,9 +156,9 @@ def non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict):
             type = 'crispr'
 
     f = SeqFeature(location=FeatureLocation(hit['query_start'] - 1, hit['query_end'], strand=hit['query_strand']),
-                   type=type, qualifiers={'name': hit["hit_id"],
-                                          'inference': 'cmscan',
-                                          'profile': hit["descr"]})
+                   type=type, qualifiers={'name': [hit["hit_id"]],
+                                          'inference': ['cmscan'],
+                                          'profile': [hit["descr"]]})
     contig.features.append(f)
 
 
@@ -251,8 +246,8 @@ def predict_tandem_repeats_with_trf(fasta_file, contig_dict):
                 continue
             words = line.split()
             loc = FeatureLocation(int(words[0]) - 1, int(words[1]))
-            qal = {'inference': 'tandem-repeat-finder',
-                   'note': f'period size {words[2]}; copies {words[3]}'}
+            qal = {'inference': ['tandem-repeat-finder'],
+                   'note': [f'period size {words[2]}; copies {words[3]}']}
             contig.features.append(SeqFeature(location=loc, type='repeat_region', qualifiers=qal))
             tdr_count += 1
     utils.log(f'Tandem repeat prediction complete. Found {tdr_count} repeat regions.')
@@ -286,8 +281,8 @@ def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
             if 'C' == words[8]:
                 strand = -1
             loc = FeatureLocation(int(words[5]) - 1, int(words[6]), strand=strand)
-            qal = {'note': f'repeat {words[9]}',
-                   'inference': 'repeatscout, repeatmasker'}
+            qal = {'note': [f'repeat {words[9]}'],
+                   'inference': ['repeatscout, repeatmasker']}
             if 'Simple_repeat' == words[10]:
                 contig.features.append(SeqFeature(location=loc, type='repeat_region', qualifiers=qal))
                 repeat_count += 1
@@ -297,13 +292,13 @@ def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
                 except KeyError:
                     repeat_list = []
                     repeat_hash[words[9]] = repeat_list
-                qal['contig'] = contig
+                qal['contig'] = [contig]
                 repeat_list.append(SeqFeature(location=loc, type='repeat_region', qualifiers=qal))
     for repeat_list in repeat_hash.values():
         if len(repeat_list) >= 10:
             for f in repeat_list:
-                f.qualifiers['contig'].features.append(f)
-                f.qualifiers['note'] += f' (occurs {len(repeat_list)}x)'
+                utils.get_feature_qualifier(f, "contig").features.append(f)
+                utils.set_feature_qualifier(f, "note", utils.get_feature_qualifier(f, "note") + f' (occurs {len(repeat_list)}x)')
                 del f.qualifiers['contig']
                 repeat_count += 1
     utils.log(f'Remaining repeat prediction complete. Found {repeat_count} repeat regions.')
@@ -335,15 +330,15 @@ def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
             words[8] = cds_id_re.sub('', words[8], 1)
             feature = gff_words_to_seqfeature(words, words[1].lower())
             partial = ''
-            if int(feature.qualifiers['partial']) > 0:
+            if int(utils.get_feature_qualifier(feature, 'partial')) > 0:
                 partial = ' partial'
             rbsmotif = ''
-            if feature.qualifiers["rbs_motif"] != 'None':
-                rbsmotif = f' rbs motif {feature.qualifiers["rbs_motif"]}'
+            if utils.get_feature_qualifier(feature, "rbs_motif") != 'None':
+                rbsmotif = f' rbs motif {utils.get_feature_qualifier(feature, "rbs_motif")}'
             rbsspacer = ''
-            if feature.qualifiers["rbs_spacer"] != 'None':
-                rbsspacer = f' rbs spacer {feature.qualifiers["rbs_spacer"]}'
-            note = f'start codon {feature.qualifiers["start_type"]}{partial}{rbsmotif}{rbsspacer}'
+            if utils.get_feature_qualifier(feature, "rbs_spacer") != 'None':
+                rbsspacer = f' rbs spacer {utils.get_feature_qualifier(feature, "rbs_spacer")}'
+            note = f'start codon {utils.get_feature_qualifier(feature, "start_type")}{partial}{rbsmotif}{rbsspacer}'
             del feature.qualifiers['partial'], feature.qualifiers["rbs_motif"] , feature.qualifiers["rbs_spacer"], \
                 feature.qualifiers['start_type']
             contig.features.append(feature)
@@ -366,12 +361,10 @@ def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet)
             identical_function_count += 1
     top_hit = blast_result[1][0]
     deciph_db_id = databases.decipher_database_id(top_hit['hit_id'])
-    target_feature.qualifiers['taxonomy'] = deciph_db_id["taxon"]
-    target_feature.qualifiers['product'] = f'[{top_hit["aligned_length"]}/{deciph_db_id["length"]}'\
+    utils.set_feature_qualifier(target_feature, "taxonomy", deciph_db_id["taxon"])
+    utils.set_feature_qualifier(target_feature, "product", f'[{top_hit["aligned_length"]}/{deciph_db_id["length"]}'\
                                            f'{alphabet}@{top_hit["percent_id"]}%] [{identical_function_count}/{hit_count}]'\
-                                           f' {deciph_db_id["descr"]}'
-    #if 'aa' == alphabet:
-     #  print(blast_result[0], target_feature.qualifiers['product'], target_feature.qualifiers['taxonomy'])
+                                           f' {deciph_db_id["descr"]}')
 
 
 def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
@@ -382,11 +375,11 @@ def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
             for f in contig.features:
                 if f.type == 'CDS':
                     feature_seq = utils.pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
-                    f.qualifiers['translation'] = feature_seq.seq
-                    feature_seq.id = f.qualifiers['id']
+                    utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
+                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
                     feature_seq.description = ''
                     if '*' in feature_seq:
-                        utils.log(f'Warning, internal stop codon(s) in CDS {f.qualifiers["id"]} {feature_seq.seq}')
+                        utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
                     SeqIO.write(feature_seq, faa_handle, "fasta")
     diamond_file = Path(fasta_file.stem + '.diamond.tab.txt')
     utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
@@ -405,7 +398,7 @@ def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
             for f in contig.features:
                 if f.type in ['tRNA', 'rRNA', 'ncRNA']:
                     feature_seq = f.extract(contig)
-                    feature_seq.id = f.qualifiers['id']
+                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
                     feature_seq.description = ''
                     SeqIO.write(feature_seq, fna_handle, "fasta")
     blastn_file = Path(fasta_file.stem + '.blastn.tab.txt')
@@ -429,7 +422,7 @@ def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
             cdd_hit_str = ""
             for h in blast_result[1]:
                 cdd_hit_str += f'{h["hit_id"]}:{h["percent_id"]:.1f}%@{h["query_start"]}-{h["query_end"]};'
-            target_feature.qualifiers['cdd_hits'] = cdd_hit_str[:-1]
+            utils.set_feature_qualifier(target_feature, 'cdd_hits', cdd_hit_str[:-1])
             count += 1
     utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins (CDS).')
 
@@ -450,14 +443,14 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
             for gb_record in SeqIO.parse(handle, "genbank"):
                 for feature in gb_record.features:
                     try:
-                        category = "[" + feature.qualifiers["category"][0] +"] "
+                        category = "[" + utils.get_feature_qualifier(feature, "category") +"] "
                     except:
                         pass
                     try:
-                        d_id = decipher_metaerg_id(feature.qualifiers["locus_tag"][0])
+                        d_id = decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"[0]))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
-                        antismash_txt = category + "; ".join(t for t in feature.qualifiers["gene_functions"])
-                        metaerg_feature.qualifiers['antismash_hits'] = antismash_txt
+                        antismash_txt = category + "; ".join(t for t in utils.get_feature_qualifier(feature, "gene_functions"))
+                        utils.set_feature_qualifier(metaerg_feature, 'antismash_hits', antismash_txt)
                         antismash_hit_count += 1
                     except:
                         pass
@@ -489,8 +482,8 @@ def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
                     current_txt = "o,"
             elif current_feature != new_feature:
                 if feature_tmh_count:
-                    current_feature.qualifiers['tmh'] = feature_tmh_count
-                    current_feature.qualifiers['tmh_topology'] = current_txt[:-1]
+                    utils.set_feature_qualifier(current_feature, 'transmembrane_helixes', feature_tmh_count)
+                    utils.set_feature_qualifier(current_feature, 'tmh_topology', current_txt[:-1])
                     count += 1
                 current_feature = new_feature
                 feature_tmh_count = 0
@@ -502,8 +495,8 @@ def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
                 feature_tmh_count += 1
                 current_txt += f'{words[3]}-{words[4],}'
         if feature_tmh_count:
-            current_feature.qualifiers['transmembrane_helixes'] = feature_tmh_count
-            current_feature.qualifiers['tmh_topology'] = current_txt[:-1]
+            utils.set_feature_qualifier(current_feature, 'transmembrane_helixes', feature_tmh_count)
+            utils.set_feature_qualifier(current_feature, 'tmh_topology', current_txt[:-1])
             count += 1
     utils.log(f'Transmembrane helix discovery complete. Found {count} membrane proteins.')
 
@@ -525,6 +518,6 @@ def discover_signal_peptides(fasta_file: Path, contig_dict):
                 continue
             d_id = decipher_metaerg_id(words[0])
             feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
-            feature.qualifiers["signal_peptide"] = words[1]
+            utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1
             utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')

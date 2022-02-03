@@ -30,6 +30,20 @@ def log(log_message, topic=''):
         print(f'{format_runtime()} {log_message}')
 
 
+def get_feature_qualifier(feature: SeqFeature, key):
+    if key in feature.qualifiers:
+        if isinstance(feature.qualifiers[key], list):
+            if len(feature.qualifiers[key]) > 0:
+                return feature.qualifiers[key][0]
+        else:
+            return feature.qualifiers[key]
+    return ""
+
+
+def set_feature_qualifier(feature: SeqFeature, key, value):
+    feature.qualifiers[key] = [value]
+
+
 def filter_seq(record):
     global FILTERED_CONTIGS
     FILTERED_CONTIGS += 1
@@ -54,7 +68,8 @@ def mask_seq(record:SeqRecord, exceptions=None, min_mask_length=50):
     seq = str(record.seq)
     TOTAL_SEQ += len(seq)
     for f in record.features:
-        if f.qualifiers['inference'].lower() in exceptions:
+        inference = get_feature_qualifier(f, 'inference').lower()
+        if inference in exceptions:
             continue
         if len(f.location) < min_mask_length:
             continue

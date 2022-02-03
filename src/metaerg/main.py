@@ -52,31 +52,35 @@ def main():
     contig_dict = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
     for contig in contig_dict.values():
         contig.annotations['molecule_type'] = 'DNA'
-    contig_dict = {}
-    with open(gbk_file) as handle:
-        for gb_record in SeqIO.parse(handle, "genbank"):
-            contig_dict[gb_record.id] = gb_record
-            print(gb_record.id, len(gb_record.features))
-    features.discover_transmembrane_helixes(fasta_file, contig_dict)
-    # for prediction in (features.predict_crisprs_with_minced,
-    #                    features.predict_trnas_with_aragorn,
-    #                    features.predict_non_coding_rna_features_with_infernal,
-    #                    features.predict_retrotransposons_with_ltrharvest,
-    #                    features.predict_tandem_repeats_with_trf,
-    #                    features.predict_remaining_repeats_with_repeatmasker,
-    #                    features.predict_coding_sequences_with_prodigal,
-    #                    features.create_ids,
-    #                    databases.load_descriptions_and_taxonomy,
-    #                    features.annotate_features_by_homology_diamond,
-    #                    features.annotate_features_by_homology_blastn,
-    #                    features.annotate_features_by_homology_cdd,
-    #                    features.annotate_features_by_homology_antismash
-    #                    features.discover_transmembrane_helixes
-    #                    ):
-    #     prediction(fasta_file, contig_dict)
-    #     SeqIO.write(contig_dict.values(), gbk_file, "genbank")
+    # contig_dict = {}
+    # with open(gbk_file) as handle:
+    #     for gb_record in SeqIO.parse(handle, "genbank"):
+    #         contig_dict[gb_record.id] = gb_record
+    #         print(gb_record.id, len(gb_record.features))
+    # features.discover_transmembrane_helixes(fasta_file, contig_dict)
+    for prediction in (features.predict_crisprs_with_minced,
+                       features.predict_trnas_with_aragorn,
+                       features.predict_non_coding_rna_features_with_infernal,
+                       features.predict_retrotransposons_with_ltrharvest,
+                       features.predict_tandem_repeats_with_trf,
+                       features.predict_remaining_repeats_with_repeatmasker,
+                       features.predict_coding_sequences_with_prodigal,
+                       features.create_ids,
+                       databases.load_descriptions_and_taxonomy,
+                       features.annotate_features_by_homology_diamond,
+                       features.annotate_features_by_homology_blastn,
+                       features.annotate_features_by_homology_cdd,
+                       features.annotate_features_by_homology_antismash,
+                       features.discover_transmembrane_helixes,
+                       features.discover_signal_peptides
+                       ):
+        # try:
+            prediction(fasta_file, contig_dict)
+            SeqIO.write(contig_dict.values(), gbk_file, "genbank")
+            with open(gff_file, "w") as gff_handle:
+                 GFF.write(contig_dict.values(), gff_handle)
         #except:
-         #  utils.log(f'Error running {prediction}; moving to next step.')
+        #  utils.log(f'Error running {prediction}; moving to next step.')
     # contig_dict = {}
     # with open(gbk_file) as handle:
     #     for gb_record in SeqIO.parse(handle, "genbank"):
