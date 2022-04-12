@@ -9,12 +9,12 @@ dependencies. This python version overcomes some of those issues. Also, the anno
 
 By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
 realized a controlled vocabulary for both taxonomy and functions. This makes annotations much more straightforward to
-interpret than the original version of metaerg and many other annotation tools. 
+interpret than the original version of metaerg and many other annotation tools.
 
 Metaerg.py consists of 4 modules:
 
 ## Module 1. Automated annotation of (meta)genomes
-(Development of this module is complete - however, implementation of multitreading could be improved) 
+(Development of this module is complete) 
 The script performs the following:
 * CRISPR regions using Minced.
 * tRNAs using Aragorn.
@@ -28,12 +28,29 @@ The script performs the following:
 * annotates genes involved in production of secondary metabolites using Antismash.
 * annotates membrane amd translocated proteins using TMHMM and Signalp6.
 
+Usage is straightforward:
+
+>metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
+
 ## Module 2. Automated creation of the search databases
 (Development of this module is complete)
 * Creation of the diamond and blastn databases for bacterial and archaeal RNA and protein genes using ncbi datasets and gtdbtk.
 * Creation of the diamond database for viruses from viral refseq.
 * Creation of the diamond and blastn databases for eukaryotic RNA and protein genes using ncbi datasets.
 * Installation of RFAM and CDD.
+
+Usage is straightforward:
+
+>metaerg-build-databases --target_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [FPVEBRC]]
+
+tasks:
+* F - create database folders
+* P - build prokaryotes
+* V - build viruses
+* E - build eukaryotes
+* B - build PVE blast databases
+* R - build RFAM
+* C - build CDD
 
 ## Module 3. Visualization
 (Development of this module has started)
