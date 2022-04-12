@@ -32,6 +32,8 @@ Usage is straightforward:
 
 >metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
 
+Metaerg needs 40-45 min for annotation of a 4 Mb genome on a desktop computer.
+
 ## Module 2. Automated creation of the search databases
 (Development of this module is complete)
 * Creation of the diamond and blastn databases for bacterial and archaeal RNA and protein genes using ncbi datasets and gtdbtk.

@@ -434,24 +434,19 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
     antismash_dir = Path('antismash')
     if antismash_dir.exists():
        shutil.rmtree(antismash_dir)
-    #with open("antismash_output", 'w') as output:
-    #    utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {fasta_file.stem + ".gbk"}', stdout=output, stderr=output)
     utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {fasta_file.stem + ".gbk"}')
     antismash_hit_count = 0
     for f in sorted(antismash_dir.glob("*region*.gbk")):
         with open(f) as handle:
-            utils.log(f.name)
             antismash_region_name = '[antismash]'
             for gb_record in SeqIO.parse(handle, "genbank"):
                 for feature in gb_record.features:
-                    print(feature)
                     if 'region' == feature.type:
                         antismash_region_name = utils.get_feature_qualifier(feature, "rules")
                         utils.log(f'antismash_region_name "{antismash_region_name}"')
                     elif 'CDS' in feature.type:
                         d_id = decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
-                        utils.log('metaerg feature:')
                         utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
@@ -459,7 +454,6 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
                         antismash_gene_category =  utils.get_feature_qualifier(feature, "gene_kind")
                         if antismash_gene_category:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_category', antismash_gene_category)
-                        print(metaerg_feature)
                         antismash_hit_count += 1
     utils.log(f'Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
