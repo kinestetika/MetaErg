@@ -23,7 +23,7 @@ The script performs the following:
 * tandem repeats with trf (tandem repeat finder).
 * repeat regions with Repeatscout and Repeatmasker.
 * coding genes with Prodigal.
-* annotates taxonomy and functions of RNA and protein genes using diamond and blastn and a database of 47,894 bacterial, 11,508 viral and 161 eukaryotic genomes.
+* annotates taxonomy and functions of RNA and protein genes using diamond and blastn and a database of 23,145 bacterial, 11,508 viral and 150 eukaryotic genomes.
 * annotates gene functions using RPSBlast and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary metabolites using Antismash.
 * annotates membrane amd translocated proteins using TMHMM and Signalp6.
