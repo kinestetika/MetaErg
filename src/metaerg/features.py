@@ -50,9 +50,9 @@ def create_ids(fasta_file:Path, contig_dict):
             utils.set_feature_qualifier(feature, "id", new_id)
             utils.set_feature_qualifier(feature, "protein_id", new_id)
             utils.set_feature_qualifier(feature, "locus_tag", new_id)
-        for feature in contig.features:
-            utils.set_feature_qualifier(feature, 'parent', old_to_new_id_map[
-                utils.get_feature_qualifier(feature, "parent")])
+        #for feature in contig.features:
+        #    utils.set_feature_qualifier(feature, 'parent', old_to_new_id_map[
+        #        utils.get_feature_qualifier(feature, "parent")])
 
 
 def decipher_metaerg_id(id):
@@ -438,7 +438,7 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
     antismash_hit_count = 0
     for f in sorted(antismash_dir.glob("*region*.gbk")):
         with open(f) as handle:
-            antismash_region_name = '[antismash]'
+            antismash_region_name = ''
             for gb_record in SeqIO.parse(handle, "genbank"):
                 for feature in gb_record.features:
                     if 'region' == feature.type:
@@ -447,7 +447,8 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
                     elif 'CDS' in feature.type:
                         d_id = decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
-                        utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
+                        if antismash_region_name:
+                            utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_function', antismash_gene_function)

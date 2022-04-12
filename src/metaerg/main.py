@@ -53,6 +53,7 @@ def main():
     contig_dict = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
     for contig in contig_dict.values():
         contig.annotations['molecule_type'] = 'DNA'
+
     ################
     # for debugging individual predicton tools, first run the pipeline,
     # then, uncomment the following lines:
@@ -84,22 +85,10 @@ def main():
                        features.discover_signal_peptides,
                        features.annotate_features_by_homology_antismash
                        ):
-        # try:
-            prediction(fasta_file, contig_dict)
-            SeqIO.write(contig_dict.values(), gbk_file, "genbank")
-            with open(gff_file, "w") as gff_handle:
-                 GFF.write(contig_dict.values(), gff_handle)
-        #except:
-        #  utils.log(f'Error running {prediction}; moving to next step.')
-    # contig_dict = {}
-    # with open(gbk_file) as handle:
-    #     for gb_record in SeqIO.parse(handle, "genbank"):
-    #         contig_dict[gb_record.id] = gb_record
-    #         print(gb_record.id, len(gb_record.features))
-    #
-    # #SeqIO.write(contig_dict.values(), gbk_file, "genbank")
-    # with open(gff_file, "w") as gff_handle:
-    #     GFF.write(contig_dict.values(), gff_handle)
+        prediction(fasta_file, contig_dict)
+        SeqIO.write(contig_dict.values(), gbk_file, "genbank")
+        with open(gff_file, "w") as gff_handle:
+             GFF.write(contig_dict.values(), gff_handle)
 
     utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
 

@@ -188,8 +188,9 @@ class TabularBlastParser:
             all_hits.append(self.next_hit)
         while self.load_next_hit_from_file():
             if self.current_query_id != self.next_hit['query_id']:
+                prev_query_id = self.current_query_id
                 self.current_query_id = self.next_hit['query_id']
-                return self.current_query_id, all_hits
+                return prev_query_id, all_hits
             all_hits.append(self.next_hit)
         if len(all_hits):
             return self.current_query_id, all_hits
