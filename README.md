@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0
+## metaerg.py, version 2.0.11
 
 Metaerg.py is a program that annotates (meta)genomes of microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. The two main output files in .gbk and gff format contain
@@ -6,6 +6,10 @@ predicted genes, their functions and taxonomic classifications.
 
 Metaerg was originally developed in perl. It is relatively challenging to install and comes with complex database 
 dependencies. This python version overcomes some of those issues. Also, the annotation pipeline has further evolved.
+
+By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
+realized a controlled vocabulary for both taxonomy and functions. This makes annotations much more straightforward to
+interpret than the original version of metaerg and many other annotation tools. 
 
 Metaerg.py consists of 4 modules:
 
@@ -33,7 +37,7 @@ The script performs the following:
 
 ## Module 3. Visualization
 (Development of this module has started)
-* Creation of a template for interactive vizualisation of annotations in a Jupyter notebook using a custom ipy widget, pandas and mathplotlib.
+* Creation of a template for interactive visualisation of annotations in a Jupyter notebook using pandas and mathplotlib.
 
 ## Module 4. Assignment of genes to biochemical pathways
 (Development of this module is planned)

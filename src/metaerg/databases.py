@@ -3,11 +3,10 @@ import os
 import gzip
 import re
 import warnings
+import time
 from pathlib import Path
-from collections import deque, Counter
 
-import utils
-import subprocess
+from metaerg import utils
 import shutil
 from tqdm import tqdm
 
@@ -18,7 +17,7 @@ from Bio import BiopythonParserWarning
 
 import ncbi.datasets
 
-VERSION = 0.0
+VERSION = "2.0.10"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
                      'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
@@ -28,7 +27,7 @@ IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature p
 EUK_ROOT_TAXA = 'Amoebozoa Ancyromonadida Apusozoa Breviatea CRuMs Cryptophyceae Discoba Glaucocystophyceae ' \
                 'Haptista Hemimastigophora Malawimonadida Metamonada Rhodelphea Rhodophyta Sar Aphelida ' \
                 'Choanoflagellata Filasterea Fungi Ichthyosporea Rotosphaerida'.split()
-DBDIR = Path('.')
+DBDIR = Path('metaerg')
 DESCRIPTIONS = {'p': [], 'e': [], 'v': []}
 TAXONOMY  = {'p': [], 'e': [], 'v': []}
 
@@ -56,7 +55,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--target_dir', required=True,  help='where to create the database')
     parser.add_argument('--gtdbtk_dir', required=True,  help='where to create the database')
-    parser.add_argument('--tasks', required=False,  default='FPVERB', help='F = folders, P = prokaryotes, V = viruses, '
+    parser.add_argument('--tasks', required=False,  default='FPVERBC', help='F = folders, P = prokaryotes, V = viruses, '
                                                                            'E = eukaryotes, R = rfam, B = build_db')
 
     args = parser.parse_args()
@@ -71,10 +70,10 @@ def prep_database_folder(settings):
             exit(1)
     else:
         os.mkdir(settings["db_dir"])
-        os.mkdir(settings["ncbi_cache"])
-        os.mkdir(settings["ncbi_cache_pro"])
-        os.mkdir(settings["ncbi_cache_euk"])
-        os.mkdir(settings["ncbi_cache_vir"])
+    for dir in (settings["ncbi_cache"], settings["ncbi_cache_pro"], settings["ncbi_cache_euk"],
+                settings["ncbi_cache_vir"]):
+        P = Path(dir)
+        P.mkdir(exist_ok=True)
 
 
 def unlink_files(files):
@@ -180,13 +179,14 @@ def download_genomes_with_datasets(settings, taxon_list):
     if not len(accessions):
         return
     for attempt in range(3):
+        time.sleep(10)
         try:
             genome_api = ncbi.datasets.GenomeApi(ncbi.datasets.ApiClient())
             api_response = genome_api.download_assembly_package(
                 accessions=accessions,
                 exclude_sequence=True,
                 include_annotation_type=['GENOME_GFF'],
-                _preload_content=False
+                _preload_content=False,
             )
             zipfilename = os.path.join(settings["db_dir"], 'ncbi_genomes.zip')
             with open(zipfilename, 'wb') as f:
@@ -211,6 +211,11 @@ def download_genomes_with_datasets(settings, taxon_list):
             return
         except ncbi.datasets.openapi.exceptions.ServiceException:
             utils.log(f'NCBI error for accessions {accessions}, aborting.')
+            break
+        except ncbi.datasets.openapi.exceptions.ApiException:
+            utils.log(f'NCBI has flagged us for too many requests, taking a 20 s breath.')
+            time.sleep(10)
+
         #except:
         #    utils.log("Error, perhaps while decompressing zipfile, retrying...")
     utils.log("Three failed retrieval attempts - giving up for this batch.")
@@ -308,7 +313,7 @@ def prep_viral_database(settings):
                         taxon_dict[taxon_str] = taxon_id
                         taxon_handle.write(f'v\t{taxon_id}\t{taxon_str}\n')
                     descr_id = update_descriptions_and_get_id(gb_record.description, descr_dict, desrc_handle, 'v')
-                    seq_record = SeqRecord(Seq(gb_record.seq))
+                    seq_record = SeqRecord(gb_record.seq)
                     seq_record.id = f'{taxon_id}~{gb_record.id}~v~{gene_count}~{descr_id}~{taxon_id}~{len(seq_record.seq)}'
                     seq_record.description = gb_record.description
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")

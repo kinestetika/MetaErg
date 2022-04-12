@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='metaerg',
-    version='2.0',
+    version='2.0.11',
     packages=setuptools.find_packages(where='src'),
     url='https://github.com/kinestetika/MetaErg',
     license='MIT',
@@ -25,14 +25,15 @@ setuptools.setup(
     project_urls={'Source': 'https://github.com/kinestetika/MetaErg'},
     package_dir={'': 'src'},
     python_requires='>=3.10',
-    install_requires=['tqdm', 'biopython'],
+    install_requires=['tqdm', 'biopython', 'bcbio-gff', 'ncbi-datasets-pylib'],
     extras_require={  # Optional
         'dev': ['setuptools', 'build', 'twine'],
-        'test': [],
+        'test': []
     },
     entry_points={  # Optional
         'console_scripts': [
-            'calisp=calisp.main:main',
+            'metaerg=metaerg.main:main',
+            'metaerg-build-databases=metaerg.databases:main'
         ],
     }
 )

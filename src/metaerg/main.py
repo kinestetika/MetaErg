@@ -1,14 +1,15 @@
 import argparse
 import os
-import utils
-import features
 from pathlib import Path
+
 from Bio import SeqIO
 from BCBio import GFF
 
-from src.metaerg import databases
+from metaerg import databases
+from metaerg import features
+from metaerg import utils
 
-VERSION = 0.0
+VERSION = "2.0.11"
 
 
 def parse_arguments():
@@ -39,10 +40,10 @@ def get_tmp_file(tmp_dir):
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    prep_output_dir(args)
-    # Filter and load contigs
     input_fasta_file = Path(args.contig_file)
     fasta_file = Path(input_fasta_file.name)
+    prep_output_dir(args)
+    # Filter and load contigs
     gbk_file = Path(input_fasta_file.stem + ".gbk")
     gff_file = Path(input_fasta_file.stem + ".gff")
 
@@ -52,12 +53,21 @@ def main():
     contig_dict = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
     for contig in contig_dict.values():
         contig.annotations['molecule_type'] = 'DNA'
+    ################
+    # for debugging individual predicton tools, first run the pipeline,
+    # then, uncomment the following lines:
+    ################
     # contig_dict = {}
     # with open(gbk_file) as handle:
     #     for gb_record in SeqIO.parse(handle, "genbank"):
     #         contig_dict[gb_record.id] = gb_record
     #         print(gb_record.id, len(gb_record.features))
-    # features.discover_transmembrane_helixes(fasta_file, contig_dict)
+    # features.annotate_features_by_homology_antismash(fasta_file, contig_dict)
+    # SeqIO.write(contig_dict.values(), gbk_file, "genbank")
+    # with open(gff_file, "w") as gff_handle:
+    #     GFF.write(contig_dict.values(), gff_handle)
+    # exit(0)
+
     for prediction in (features.predict_crisprs_with_minced,
                        features.predict_trnas_with_aragorn,
                        features.predict_non_coding_rna_features_with_infernal,
@@ -70,9 +80,9 @@ def main():
                        features.annotate_features_by_homology_diamond,
                        features.annotate_features_by_homology_blastn,
                        features.annotate_features_by_homology_cdd,
-                       features.annotate_features_by_homology_antismash,
                        features.discover_transmembrane_helixes,
-                       features.discover_signal_peptides
+                       features.discover_signal_peptides,
+                       features.annotate_features_by_homology_antismash
                        ):
         # try:
             prediction(fasta_file, contig_dict)

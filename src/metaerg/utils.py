@@ -19,7 +19,6 @@ ESCAPE_CHARS = {'%2C': ',',
                 '%25': '%',
                 '%26': '&'}
 
-
 def format_runtime():
     runtime = time.monotonic() - START_TIME
     return f'[{int(runtime / 3600):02d}h:{int((runtime % 3600) / 60):02d}m:{int(runtime % 60):02d}s]'
