@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0.11
+## metaerg.py, version 2.0.12
 
 Metaerg.py is a program that annotates (meta)genomes of microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. The two main output files in .gbk and gff format contain
@@ -32,7 +32,7 @@ Usage is straightforward:
 
 >metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
 
-Metaerg needs 40-45 min for annotation of a 4 Mb genome on a desktop computer.
+Metaerg needs 40 min for annotation of a 4 Mb genome on a desktop computer.
 
 ## Module 2. Automated creation of the search databases
 (Development of this module is complete)
@@ -45,7 +45,7 @@ Usage is straightforward:
 
 >metaerg-build-databases --target_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [FPVEBRC]]
 
-tasks:
+tasks (default = build all):
 * F - create database folders
 * P - build prokaryotes
 * V - build viruses

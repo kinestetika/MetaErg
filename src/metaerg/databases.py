@@ -17,7 +17,7 @@ from Bio import BiopythonParserWarning
 
 import ncbi.datasets
 
-VERSION = "2.0.10"
+VERSION = "2.0.12"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
                      'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
