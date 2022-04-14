@@ -12,7 +12,7 @@ from metaerg import databases
 FILTERED_CONTIGS = 0
 MASKED_SEQ = 0
 TOTAL_SEQ = 0
-VALID_GBK_FEATURE_KEYS = set('CDS tRNA rRNA ncRNA repeat_region misc_feature'.split())
+VALID_GBK_FEATURE_KEYS = set('CDS tRNA rRNA ncRNA repeat_region retrotransposon crispr_repeat'.split())
 FEATURE_INFERENCES = ['minced', 'aragorn', 'cmscan', 'ltrharvest', 'tandem-repeat-finder', 'repeatscout', 'prodigal']
 FEATURE_ID_TAGS = ['crispr', 'trna', 'rna', 'ltr', 'tr', 'repeat', 'cds']
 FEATURE_ID_PATTERN = re.compile("(.+)_(\d{5})_(crispr|trna|rna|ltr|tr|repeat|cds)$")
@@ -100,6 +100,7 @@ def predict_crisprs_with_minced(fasta_file:Path, contig_dict):
             if 'repeat_region' == words[2]:
                 crispr_region_count += 1
             feature = gff_words_to_seqfeature(words, words[1])
+            feature.type = 'crispr_repeat'
             contig.features.append(feature)
     utils.log(f'CRISPR prediction complete. Found {crispr_region_count} repeat regions.')
 
@@ -223,10 +224,13 @@ def predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict):
             words = line.split('\t')
             if len(words) < 9:
                 continue
-            contig: SeqRecord = contig_dict[words[0]]
+            #print(words[2])
             if 'repeat_region' == words[2]:
                 retrotransposon_count += 1
-            contig.features.append(gff_words_to_seqfeature(words, words[1]))
+                contig: SeqRecord = contig_dict[words[0]]
+                gbk_feature = gff_words_to_seqfeature(words, 'LTRharvest')
+                gbk_feature.type = 'retrotransposon'
+                contig.features.append(gbk_feature)
     utils.log(f'Retrotransposon prediction complete. Found {retrotransposon_count} repeat regions.')
 
 
@@ -414,18 +418,33 @@ def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
     utils.log(f'Performing homology searches with rbsblast/cdd ...')
     cds_aa_file = Path(fasta_file.stem + '.cds.aa')
     cdd_file = Path(fasta_file.stem + '.cdd.tab.txt')
+
+    utils.log('parsing cdd info from database...')
+    cdd_descriptions_file = Path(databases.DBDIR, "cdd", "cddid.tbl")
+    cdd_descriptions = {}
+    with open(cdd_descriptions_file) as cdd_descr_handle:
+        for line in cdd_descr_handle:
+            words = line.split("\t")
+            cdd_descriptions[int(words[0])] = (f'{words[2]} - {words[3]}', int(words[4]))
+
     utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} -outfmt 6 -evalue 1e-7')
+
+    utils.log('parsing search results...')
     count = 0
     with utils.TabularBlastParser(cdd_file) as handle:
         for blast_result in handle:
             deciph_feat_id = decipher_metaerg_id(blast_result[0])
             target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
-            cdd_hit_str = ""
             for h in blast_result[1]:
-                cdd_hit_str += f'{h["hit_id"]}:{h["percent_id"]:.1f}%@{h["query_start"]}-{h["query_end"]};'
-            utils.set_feature_qualifier(target_feature, 'cdd_hits', cdd_hit_str[:-1])
+                cdd_id = int(h["hit_id"][4:])
+                hit_length = abs(h["hit_end"] - h["hit_start"])
+                cdd_descr = cdd_descriptions[cdd_id]
+                #cdd_hit_str += f'{h["hit_id"]}:{h["percent_id"]:.1f}%@{h["query_start"]}-{h["query_end"]};'
+                utils.set_feature_qualifier(target_feature, 'cdd',
+                    f'[{hit_length}/{cdd_descr[1]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr[0]}')
+                break
             count += 1
-    utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins (CDS).')
+    utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins.')
 
 
 
@@ -443,7 +462,6 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
                 for feature in gb_record.features:
                     if 'region' == feature.type:
                         antismash_region_name = utils.get_feature_qualifier(feature, "rules")
-                        utils.log(f'antismash_region_name "{antismash_region_name}"')
                     elif 'CDS' in feature.type:
                         d_id = decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]

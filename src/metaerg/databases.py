@@ -480,7 +480,7 @@ def decipher_database_id(id):
     descr = DESCRIPTIONS[words[2]][int(words[4])]
     length = int(words[6])
     pos = int(words[3])
-    return {'taxon': taxon,
+    return {'taxon': taxon.replace('~', '~ '),
             'descr': descr,
             'length': length,
             'gene_number': pos,

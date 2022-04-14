@@ -40,7 +40,7 @@ def get_tmp_file(tmp_dir):
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    input_fasta_file = Path(args.contig_file)
+    input_fasta_file = Path(args.contig_file).absolute()
     fasta_file = Path(input_fasta_file.name)
     prep_output_dir(args)
     # Filter and load contigs
@@ -62,8 +62,8 @@ def main():
     # with open(gbk_file) as handle:
     #     for gb_record in SeqIO.parse(handle, "genbank"):
     #         contig_dict[gb_record.id] = gb_record
-    #         print(gb_record.id, len(gb_record.features))
-    # features.annotate_features_by_homology_antismash(fasta_file, contig_dict)
+    #         #print(gb_record.id, len(gb_record.features))
+    # features.predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict)
     # SeqIO.write(contig_dict.values(), gbk_file, "genbank")
     # with open(gff_file, "w") as gff_handle:
     #     GFF.write(contig_dict.values(), gff_handle)
