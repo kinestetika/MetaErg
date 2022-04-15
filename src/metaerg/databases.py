@@ -17,7 +17,7 @@ from Bio import BiopythonParserWarning
 
 import ncbi.datasets
 
-VERSION = "2.0.12"
+VERSION = "2.0.13"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
                      'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
@@ -27,28 +27,75 @@ IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature p
 EUK_ROOT_TAXA = 'Amoebozoa Ancyromonadida Apusozoa Breviatea CRuMs Cryptophyceae Discoba Glaucocystophyceae ' \
                 'Haptista Hemimastigophora Malawimonadida Metamonada Rhodelphea Rhodophyta Sar Aphelida ' \
                 'Choanoflagellata Filasterea Fungi Ichthyosporea Rotosphaerida'.split()
+DB_DESCR_FILENAME = 'db_descriptions.txt'
+DB_TAXON_FILENAME = 'db_taxonomy.txt'
+CDD_INDEX_FILENAME = "cddid.tbl"
 DBDIR = Path('metaerg')
 DESCRIPTIONS = {'p': [], 'e': [], 'v': []}
 TAXONOMY  = {'p': [], 'e': [], 'v': []}
+CDD = {}
+DESCRIPTIONS_CACHE = {'p': set(), 'e': set(), 'v': set()}
+TAXONOMY_CACHE = {'p': set(), 'e': set(), 'v': set()}
+CDD_CACHE = set()
+
+warnings.simplefilter('ignore', BiopythonParserWarning)
 
 
-def load_descriptions_and_taxonomy(x=0, y=0):
-    with open(Path(DBDIR, 'db_descriptions.txt')) as descr_handle:
+def load_descriptions_taxonomy_cdd(x=0, y=0):
+    # load descriptions
+    with open(Path(DBDIR, DB_DESCR_FILENAME)) as descr_handle:
         for line in descr_handle:
             words = line.split('\t')
             DESCRIPTIONS[words[0]].append(words[2].strip())
     utils.log(f'Parsed ({len(DESCRIPTIONS["p"])}, {len(DESCRIPTIONS["e"])}, {len(DESCRIPTIONS["v"])}) gene descriptions '
               f'from db for (prokaryotes, eukaryotes and viruses) respectively. ')
     # load taxonomy
-    with open(Path(DBDIR, 'db_taxonomy.txt')) as taxon_handle:
+    with open(Path(DBDIR, DB_TAXON_FILENAME)) as taxon_handle:
         for line in taxon_handle:
             words = line.split('\t')
             TAXONOMY[words[0]].append(words[2].strip())
     utils.log(f'Parsed ({len(TAXONOMY["p"])}, {len(TAXONOMY["e"])}, {len(TAXONOMY["v"])}) taxa from db for (prokaryotes,'
           f'eukaryotes and viruses) respectively.')
+    # load cdd
+    cdd_descriptions_file = Path(DBDIR, CDD_INDEX_FILENAME)
+    with open(cdd_descriptions_file) as cdd_descr_handle:
+        for line in cdd_descr_handle:
+            words = line.split("\t")
+            # id, id_name, gene_name, descr, length
+            CDD[int(words[0])] = (words[1], words[2], words[3], int(words[4]))
 
 
-warnings.simplefilter('ignore', BiopythonParserWarning)
+def decipher_database_id(id, add_to_cache=False):
+    words = id.split('~') # org_acc gene_acc [pev] gene# decr# taxon#
+    taxon = TAXONOMY[words[2]][int(words[5])]
+    descr = DESCRIPTIONS[words[2]][int(words[4])]
+    length = int(words[6])
+    pos = int(words[3])
+
+    if add_to_cache:
+        DESCRIPTIONS_CACHE[words[2]].add(int(words[4]))
+        TAXONOMY_CACHE[words[2]].add(int(words[5]))
+
+    return {'taxon': taxon.replace('~', '~ '),
+            'descr': descr,
+            'length': length,
+            'gene_number': pos,
+            'descr_id': (words[2], int(words[4]))}
+
+
+def save_cache(dir):
+    with open(Path(dir, DB_DESCR_FILENAME), 'w') as file_handle:
+        for kingdom in DESCRIPTIONS_CACHE:
+            for db_id in DESCRIPTIONS_CACHE[kingdom]:
+                file_handle.write(f'{kingdom}\t{db_id}\t{DESCRIPTIONS[kingdom][db_id]}\n')
+    with open(Path(dir, DB_TAXON_FILENAME), 'w') as file_handle:
+        for kingdom in TAXONOMY_CACHE:
+            for db_id in TAXONOMY_CACHE[kingdom]:
+                file_handle.write(f'{kingdom}\t{db_id}\t{TAXONOMY[kingdom][db_id]}\n')
+    with open(Path(dir, CDD_INDEX_FILENAME), 'w') as file_handle:
+        for cdd_id in CDD_CACHE:
+            cdd_item = CDD[cdd_id]
+            file_handle.write(f'{cdd_id}\t{cdd_item[0]}\t{cdd_item[1]}\t{cdd_item[2]}\t{cdd_item[3]}\n')
 
 
 def parse_arguments():
@@ -474,19 +521,6 @@ def build_blast_db(settings):
     utils.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
 
 
-def decipher_database_id(id):
-    words = id.split('~') # org_acc gene_acc [pev] gene# decr# taxon#
-    taxon = TAXONOMY[words[2]][int(words[5])]
-    descr = DESCRIPTIONS[words[2]][int(words[4])]
-    length = int(words[6])
-    pos = int(words[3])
-    return {'taxon': taxon.replace('~', '~ '),
-            'descr': descr,
-            'length': length,
-            'gene_number': pos,
-            'descr_id': (words[2], int(words[4]))}
-
-
 def prep_rfam(settings):
     rfam_file = settings["rfam"]
     if not os.path.exists(rfam_file):
@@ -509,8 +543,9 @@ def prep_cdd(settings):
         os.mkdir(cdd_dir)
         os.chdir(cdd_dir)
         utils.run_external(f'wget https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
-        cdd_index = os.path.join(cdd_dir, 'cddid.tbl')
+        cdd_index = Path(cdd_dir, CDD_INDEX_FILENAME)
         utils.run_external(f'gunzip {cdd_index}.gz')
+        utils.run_external(f'cp {cdd_index} {cdd_index.parent}')
         utils.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
         utils.run_external(f'tar -xf cdd.tar.gz')
         utils.run_external(f'makeprofiledb -title CDD.v.3.12 -in Cdd.pn -out Cdd'

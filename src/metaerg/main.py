@@ -9,7 +9,7 @@ from metaerg import databases
 from metaerg import features
 from metaerg import utils
 
-VERSION = "2.0.12"
+VERSION = "2.0.13"
 
 
 def parse_arguments():
@@ -77,13 +77,14 @@ def main():
                        features.predict_remaining_repeats_with_repeatmasker,
                        features.predict_coding_sequences_with_prodigal,
                        features.create_ids,
-                       databases.load_descriptions_and_taxonomy,
+                       databases.load_descriptions_taxonomy_cdd,
                        features.annotate_features_by_homology_diamond,
                        features.annotate_features_by_homology_blastn,
                        features.annotate_features_by_homology_cdd,
                        features.discover_transmembrane_helixes,
                        features.discover_signal_peptides,
-                       features.annotate_features_by_homology_antismash
+                       features.annotate_features_by_homology_antismash,
+                       features.create_files
                        ):
         prediction(fasta_file, contig_dict)
         SeqIO.write(contig_dict.values(), gbk_file, "genbank")

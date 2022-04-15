@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0.12
+## metaerg.py, version 2.0.13
 
 Metaerg.py is a program that annotates (meta)genomes of microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. The two main output files in .gbk and gff format contain

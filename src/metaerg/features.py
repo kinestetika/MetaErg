@@ -9,6 +9,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 from metaerg import utils
 from metaerg import databases
 
+FORCE = False
 FILTERED_CONTIGS = 0
 MASKED_SEQ = 0
 TOTAL_SEQ = 0
@@ -86,8 +87,13 @@ def predict_crisprs_with_minced(fasta_file:Path, contig_dict):
     # NODE_883_length_34292_cov_11.1505	minced:0.3.2	repeat_unit	33687	33723	1	.	.	ID=DR.CRISPR3.1;Parent=CRISPR3;bin=91
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
     minced_file = Path(fasta_file.stem + '.minced')
+
     utils.log('Predicting CRISPR arrays with minced...')
-    utils.run_external(f'minced -gffFull {fasta_file} {minced_file}')
+    if not minced_file.exists() or FORCE:
+        utils.run_external(f'minced -gffFull {fasta_file} {minced_file}')
+    else:
+        utils.log("Reusing existing result file.")
+
     crispr_region_count = 0
     with open(minced_file) as crispr_handle:
         for line in crispr_handle:
@@ -118,8 +124,13 @@ def predict_trnas_with_aragorn(fasta_file:Path, contig_dict):
     # >end    957850 sequences 11875 tRNA genes
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
     aragorn_file = Path(fasta_file.stem + '.aragorn')
+
     utils.log('Predicting tRNAs with aragorn...')
-    utils.run_external(f'aragorn -l -t -gc{TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
+    if not aragorn_file.exists() or FORCE:
+        utils.run_external(f'aragorn -l -t -gc{TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
+    else:
+        utils.log("Reusing existing result file.")
+
     trna_count = 0
     current_contig = None
     with open(aragorn_file) as aragorn_handle:
@@ -167,8 +178,13 @@ def non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict):
 def predict_non_coding_rna_features_with_infernal(fasta_file:Path, contig_dict):
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
     cmscan_file = Path(fasta_file.stem + '.cmscan')
+
     utils.log('Predicting non-coding RNAs (rRNA, tRNA, CRISPRs, etc.) with infernal (cmscan)...')
-    utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
+    if not cmscan_file.exists() or FORCE:
+        utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
+    else:
+        utils.log("Reusing existing result file.")
+
     hits = []
     with open(cmscan_file) as hmm_handle:
         for line in hmm_handle:
@@ -213,9 +229,14 @@ def predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict):
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
     ltr_index = Path(fasta_file.stem + '.ltr_index')
     ltr_harvest_file = Path(fasta_file.stem + '.ltr_harvest.gff')
+
     utils.log('Predicting retrotransposons with genometools/ltrharvest...')
-    utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index} -tis -suf -lcp -des -ssp -sds -dna')
-    utils.run_external(f'gt ltrharvest -index {ltr_index} -gff3 {ltr_harvest_file} -seqids')
+    if not ltr_harvest_file.exists() or FORCE:
+        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index} -tis -suf -lcp -des -ssp -sds -dna')
+        utils.run_external(f'gt ltrharvest -index {ltr_index} -gff3 {ltr_harvest_file} -seqids')
+    else:
+        utils.log("Reusing existing result file.")
+
     retrotransposon_count = 0
     with open(ltr_harvest_file) as ltr_handle:
         for line in ltr_handle:
@@ -237,10 +258,14 @@ def predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict):
 def predict_tandem_repeats_with_trf(fasta_file, contig_dict):
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
     trf_file = Path(fasta_file.stem + '.trf')
+
     utils.log('Predicting tandem repeats with trf...')
-    if not utils.SILENT:
+    if not trf_file.exists() or FORCE:
         with open(trf_file, 'w') as output:
             utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
+    else:
+        utils.log("Reusing existing result file.")
+
     tdr_count = 0
     with open(trf_file) as trf_handle:
         for line in trf_handle:
@@ -260,17 +285,21 @@ def predict_tandem_repeats_with_trf(fasta_file, contig_dict):
 
 def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    utils.log('Predicting remaining repeats with repeatmasker...')
     lmer_table = Path(fasta_file.stem + '.lmers')
     repeat_scout_raw = Path(fasta_file.stem + '.repeatscout')
     repeat_scout_filtered = Path(fasta_file.stem + '.repeatscout.filtered')
     repeat_masker_file = Path(fasta_file.stem + '.fna.out')
 
-    utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table}')
-    utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeat_scout_raw} -freq {lmer_table}')
-    with open(repeat_scout_filtered, 'w') as output, open(repeat_scout_raw) as input:
-        utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-    utils.run_external(f'RepeatMasker -lib {repeat_scout_filtered} -dir . {fasta_file}')
+    utils.log('Predicting remaining repeats with repeatmasker...')
+    if not repeat_scout_filtered.exists() or FORCE:
+        utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table}')
+        utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeat_scout_raw} -freq {lmer_table}')
+        with open(repeat_scout_filtered, 'w') as output, open(repeat_scout_raw) as input:
+            utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
+        utils.run_external(f'RepeatMasker -lib {repeat_scout_filtered} -dir . {fasta_file}')
+    else:
+        utils.log("Reusing existing result file.")
+
     repeat_count = 0
     repeat_hash = dict()
     with open(repeat_masker_file) as repeatmasker_handle:
@@ -311,7 +340,6 @@ def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
 
 def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
     utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    utils.log(f'Predicting coding sequences with prodigal (using -p {SOURCE}) ...')
     faa_file = Path(fasta_file.stem + '.cds.faa')
     fna_file = Path(fasta_file.stem + '.cds.fna')
     gff_file = Path(fasta_file.stem + '.cds.gff')
@@ -320,7 +348,12 @@ def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
         c = f'-g {TRANSLATION_TABLE} '
         utils.log(f'... (and using -g {TRANSLATION_TABLE}) ...')
 
-    utils.run_external(f'prodigal -p {SOURCE} {c}-m -f gff -q -i {fasta_file} -a {faa_file} -d {fna_file} -o {gff_file}')
+    utils.log(f'Predicting coding sequences with prodigal (using -p {SOURCE}) ...')
+    if not faa_file.exists() or FORCE:
+        utils.run_external(f'prodigal -p {SOURCE} {c}-m -f gff -q -i {fasta_file} -a {faa_file} -d {fna_file} -o {gff_file}')
+    else:
+        utils.log("Reusing existing result file.")
+
     cds_found = 0
     cds_id_re = re.compile(r'^ID=[0-9]+_[0-9]+;')
 
@@ -359,13 +392,13 @@ def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet)
     hit_count = 0
     for hit in blast_result[1]:
         hit_count += 1
-        deciph_db_id = databases.decipher_database_id(hit['hit_id'])
+        deciph_db_id = databases.decipher_database_id(hit['hit_id'], add_to_cache=True)
         if not gene_function:
             gene_function = deciph_db_id["descr_id"]
         elif gene_function == deciph_db_id["descr_id"]:
             identical_function_count += 1
     top_hit = blast_result[1][0]
-    deciph_db_id = databases.decipher_database_id(top_hit['hit_id'])
+    deciph_db_id = databases.decipher_database_id(top_hit['hit_id'], add_to_cache=True)
     utils.set_feature_qualifier(target_feature, "taxonomy", deciph_db_id["taxon"])
     utils.set_feature_qualifier(target_feature, "product", f'[{top_hit["aligned_length"]}/{deciph_db_id["length"]}'\
                                            f'{alphabet}@{top_hit["percent_id"]}%] [{identical_function_count}/{hit_count}]'\
@@ -373,8 +406,9 @@ def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet)
 
 
 def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
-    utils.log(f'Performing homology searches with diamond...')
+    diamond_file = Path(fasta_file.stem + '.diamond.tab.txt')
     cds_aa_file = Path(fasta_file.stem + '.cds.aa')
+    utils.log(f'Translating CDS and writing to file...')
     with open(cds_aa_file, 'w') as faa_handle:
         for contig in contig_dict.values():
             for f in contig.features:
@@ -382,13 +416,17 @@ def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
                     feature_seq = utils.pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
                     utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
                     feature_seq.id = utils.get_feature_qualifier(f, 'id')
-                    feature_seq.description = ''
+                    feature_seq.description = utils.get_feature_qualifier(f, 'product')
                     if '*' in feature_seq:
                         utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
                     SeqIO.write(feature_seq, faa_handle, "fasta")
-    diamond_file = Path(fasta_file.stem + '.diamond.tab.txt')
-    utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
-    # load descriptions
+
+    utils.log(f'Performing homology searches with diamond...')
+    if not diamond_file.exists() or FORCE:
+        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
+    else:
+        utils.log("Reusing existing result file.")
+
     with utils.TabularBlastParser(diamond_file) as handle:
         for blast_result in handle:
             add_homology_search_results_to_feature(blast_result, contig_dict, 'aa')
@@ -396,8 +434,9 @@ def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
 
 
 def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
-    utils.log(f'Performing homology searches with blastn ...')
+    utils.log(f'Writing RNA to file...')
     rna_nt_file = Path(fasta_file.stem + '.rna.nt')
+    blastn_file = Path(fasta_file.stem + '.blastn.tab.txt')
     with open(rna_nt_file, 'w') as fna_handle:
         for contig in contig_dict.values():
             for f in contig.features:
@@ -406,8 +445,13 @@ def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
                     feature_seq.id = utils.get_feature_qualifier(f, 'id')
                     feature_seq.description = ''
                     SeqIO.write(feature_seq, fna_handle, "fasta")
-    blastn_file = Path(fasta_file.stem + '.blastn.tab.txt')
-    utils.run_external(f'blastn -db {Path(databases.DBDIR, "db_rna.fna")} -query {rna_nt_file} -out {blastn_file} -max_target_seqs 25 -outfmt 6')
+
+    utils.log(f'Performing homology searches with blastn ...')
+    if not blastn_file.exists() or FORCE:
+        utils.run_external(f'blastn -db {Path(databases.DBDIR, "db_rna.fna")} -query {rna_nt_file} -out {blastn_file} -max_target_seqs 25 -outfmt 6')
+    else:
+        utils.log("Reusing existing result file.")
+
     with utils.TabularBlastParser(blastn_file) as handle:
         for blast_result in handle:
             add_homology_search_results_to_feature(blast_result, contig_dict, 'nt')
@@ -415,45 +459,46 @@ def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
 
 
 def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
-    utils.log(f'Performing homology searches with rbsblast/cdd ...')
     cds_aa_file = Path(fasta_file.stem + '.cds.aa')
     cdd_file = Path(fasta_file.stem + '.cdd.tab.txt')
 
-    utils.log('parsing cdd info from database...')
-    cdd_descriptions_file = Path(databases.DBDIR, "cdd", "cddid.tbl")
-    cdd_descriptions = {}
-    with open(cdd_descriptions_file) as cdd_descr_handle:
-        for line in cdd_descr_handle:
-            words = line.split("\t")
-            cdd_descriptions[int(words[0])] = (f'{words[2]} - {words[3]}', int(words[4]))
+    utils.log(f'Performing homology searches with rpsblast/cdd ...')
+    if not cdd_file.exists() or FORCE:
+        utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} -outfmt 6 -evalue 1e-7')
+    else:
+        utils.log("Reusing existing result file.")
 
-    utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} -outfmt 6 -evalue 1e-7')
-
-    utils.log('parsing search results...')
     count = 0
     with utils.TabularBlastParser(cdd_file) as handle:
+        top_hit = True
         for blast_result in handle:
             deciph_feat_id = decipher_metaerg_id(blast_result[0])
             target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
             for h in blast_result[1]:
                 cdd_id = int(h["hit_id"][4:])
-                hit_length = abs(h["hit_end"] - h["hit_start"])
-                cdd_descr = cdd_descriptions[cdd_id]
-                #cdd_hit_str += f'{h["hit_id"]}:{h["percent_id"]:.1f}%@{h["query_start"]}-{h["query_end"]};'
-                utils.set_feature_qualifier(target_feature, 'cdd',
-                    f'[{hit_length}/{cdd_descr[1]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr[0]}')
-                break
+                databases.CDD_CACHE.add(cdd_id)
+                if top_hit:
+                    hit_length = abs(h["hit_end"] - h["hit_start"])
+                    cdd_item = databases.CDD[cdd_id]
+                    cdd_descr = f'{cdd_item[0]}|{cdd_item[1]} {cdd_item[2]}'
+                    utils.set_feature_qualifier(target_feature, 'cdd',
+                        f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
+                    top_hit = False
             count += 1
     utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins.')
 
 
-
 def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
-    utils.log(f'Performing homology searches with antismash ...')
     antismash_dir = Path('antismash')
-    if antismash_dir.exists():
-       shutil.rmtree(antismash_dir)
-    utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {fasta_file.stem + ".gbk"}')
+
+    utils.log(f'Performing homology searches with antismash ...')
+    if not antismash_dir.exists() or FORCE:
+        if antismash_dir.exists():
+            shutil.rmtree(antismash_dir)
+        utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {fasta_file.stem + ".gbk"}')
+    else:
+        utils.log("Reusing existing results.")
+
     antismash_hit_count = 0
     for f in sorted(antismash_dir.glob("*region*.gbk")):
         with open(f) as handle:
@@ -478,11 +523,16 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
 
 
 def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
-    utils.log(f'Discovering transmembrane helixes with tmhmm...')
     cds_aa_file = Path(fasta_file.stem + '.cds.aa')
     tmhmm_file =  Path(fasta_file.stem + '.tmhmm.txt')
-    with open(tmhmm_file, 'w') as output, open(cds_aa_file) as input:
-        utils.run_external('tmhmm', stdin=input, stdout=output)
+
+    utils.log(f'Discovering transmembrane helixes with tmhmm...')
+    if not tmhmm_file.exists() or FORCE:
+        with open(tmhmm_file, 'w') as output, open(cds_aa_file) as input:
+            utils.run_external('tmhmm', stdin=input, stdout=output)
+    else:
+        utils.log("Reusing existing results.")
+
     count = 0
     current_feature = None
     current_txt = ""
@@ -522,12 +572,17 @@ def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
 
 
 def discover_signal_peptides(fasta_file: Path, contig_dict):
-    utils.log(f'Discovering signal peptides with signalp...')
     cds_aa_file = Path(fasta_file.stem + '.cds.aa')
     signalp_dir = Path('signalp')
-    if signalp_dir.exists():
-        shutil.rmtree(signalp_dir)
-    utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other')
+
+    utils.log(f'Discovering signal peptides with signalp...')
+    if not signalp_dir.exists() or FORCE:
+        if signalp_dir.exists():
+            shutil.rmtree(signalp_dir)
+        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other')
+    else:
+        utils.log("Reusing existing results.")
+
     count = 0
     with open(Path('signalp', 'prediction_results.txt')) as signalp_handle:
         for line in signalp_handle:
@@ -541,3 +596,7 @@ def discover_signal_peptides(fasta_file: Path, contig_dict):
             utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1
         utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')
+
+
+def create_files(fasta_file: Path, contig_dict):
+    databases.save_cache(fasta_file.parent)
