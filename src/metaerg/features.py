@@ -470,10 +470,10 @@ def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
 
     count = 0
     with utils.TabularBlastParser(cdd_file) as handle:
-        top_hit = True
         for blast_result in handle:
             deciph_feat_id = decipher_metaerg_id(blast_result[0])
             target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
+            top_hit = True
             for h in blast_result[1]:
                 cdd_id = int(h["hit_id"][4:])
                 databases.CDD_CACHE.add(cdd_id)

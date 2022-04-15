@@ -31,8 +31,8 @@ DB_DESCR_FILENAME = 'db_descriptions.txt'
 DB_TAXON_FILENAME = 'db_taxonomy.txt'
 CDD_INDEX_FILENAME = "cddid.tbl"
 DBDIR = Path('metaerg')
-DESCRIPTIONS = {'p': [], 'e': [], 'v': []}
-TAXONOMY  = {'p': [], 'e': [], 'v': []}
+DESCRIPTIONS = {'p': {}, 'e': {}, 'v': {}}
+TAXONOMY  = {'p': {}, 'e': {}, 'v': {}}
 CDD = {}
 DESCRIPTIONS_CACHE = {'p': set(), 'e': set(), 'v': set()}
 TAXONOMY_CACHE = {'p': set(), 'e': set(), 'v': set()}
@@ -46,14 +46,14 @@ def load_descriptions_taxonomy_cdd(x=0, y=0):
     with open(Path(DBDIR, DB_DESCR_FILENAME)) as descr_handle:
         for line in descr_handle:
             words = line.split('\t')
-            DESCRIPTIONS[words[0]].append(words[2].strip())
+            DESCRIPTIONS[words[0]][int(words[1])] = words[2].strip()
     utils.log(f'Parsed ({len(DESCRIPTIONS["p"])}, {len(DESCRIPTIONS["e"])}, {len(DESCRIPTIONS["v"])}) gene descriptions '
               f'from db for (prokaryotes, eukaryotes and viruses) respectively. ')
     # load taxonomy
     with open(Path(DBDIR, DB_TAXON_FILENAME)) as taxon_handle:
         for line in taxon_handle:
             words = line.split('\t')
-            TAXONOMY[words[0]].append(words[2].strip())
+            TAXONOMY[words[0]][int(words[1])] = words[2].strip()
     utils.log(f'Parsed ({len(TAXONOMY["p"])}, {len(TAXONOMY["e"])}, {len(TAXONOMY["v"])}) taxa from db for (prokaryotes,'
           f'eukaryotes and viruses) respectively.')
     # load cdd
