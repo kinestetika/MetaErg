@@ -6,10 +6,10 @@ from Bio import SeqIO
 from BCBio import GFF
 
 from metaerg import databases
-from metaerg import features
+from metaerg import predict
 from metaerg import utils
 
-VERSION = "2.0.13"
+VERSION = "2.0.15"
 
 
 def parse_arguments():
@@ -20,16 +20,15 @@ def parse_arguments():
     return args
 
 
-def prep_output_dir(args):
-    output_dir = Path(Path(args.contig_file).parent, "metaerg")
-    if os.path.exists(output_dir):
+def create_output_dir(parent_dir:Path):
+    output_dir = Path(parent_dir, "metaerg")
+    if output_dir.exists():
         utils.log('Warning: may overwrite existing output files...')
-        if os.path.isfile(output_dir):
+        if output_dir.is_file():
             utils.log(f'Expected folder at {output_dir}, found regular file, crash! Delete this fiel first')
             exit(1)
     else:
         os.mkdir(output_dir)
-    os.chdir(output_dir)
     return output_dir
 
 
@@ -40,19 +39,36 @@ def get_tmp_file(tmp_dir):
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    input_fasta_file = Path(args.contig_file).absolute()
-    fasta_file = Path(input_fasta_file.name)
-    prep_output_dir(args)
-    # Filter and load contigs
-    gbk_file = Path(input_fasta_file.stem + ".gbk")
-    gff_file = Path(input_fasta_file.stem + ".gff")
 
-    databases.DBDIR = Path(args.database_dir)
-    # Feature prediction
-    utils.create_filtered_contig_fasta_file(fasta_file_in=input_fasta_file, fasta_file_out=fasta_file)
-    contig_dict = SeqIO.to_dict(SeqIO.parse(fasta_file, "fasta"))
+    # (1) set and validate database dir
+    dbdir = Path(args.database_dir)
+    databases.DBDIR = dbdir
+    if not databases.does_db_appear_valid():
+        utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
+        exit(1)
+
+    # (2) set and validate fasta .fna file, mag (genome) name,
+    input_fasta_file = Path(args.contig_file).absolute()
+    if not input_fasta_file.exists() or input_fasta_file.is_dir():
+        utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
+        exit(1)
+    mag_name = input_fasta_file.stem
+
+    # (3) set output files
+    output_dir = create_output_dir(input_fasta_file.parent)
+    os.chdir(output_dir)
+    gbk_file = predict.spawn_file("gbk", mag_name)
+    gff_file = predict.spawn_file("gff", mag_name)
+
+    # (4) Filter and load contigs
+    filtered_fasta_file = predict.spawn_file('filtered.fna', mag_name)
+    utils.create_filtered_contig_fasta_file(fasta_file_in=input_fasta_file, fasta_file_out=filtered_fasta_file)
+    contig_dict = SeqIO.to_dict(SeqIO.parse(filtered_fasta_file, "fasta"))
     for contig in contig_dict.values():
         contig.annotations['molecule_type'] = 'DNA'
+
+
+    # Feature prediction
 
     ################
     # for debugging individual predicton tools, first run the pipeline,
@@ -69,24 +85,25 @@ def main():
     #     GFF.write(contig_dict.values(), gff_handle)
     # exit(0)
 
-    for prediction in (features.predict_crisprs_with_minced,
-                       features.predict_trnas_with_aragorn,
-                       features.predict_non_coding_rna_features_with_infernal,
-                       features.predict_retrotransposons_with_ltrharvest,
-                       features.predict_tandem_repeats_with_trf,
-                       features.predict_remaining_repeats_with_repeatmasker,
-                       features.predict_coding_sequences_with_prodigal,
-                       features.create_ids,
+    for prediction in (predict.predict_crisprs_with_minced,
+                       predict.predict_trnas_with_aragorn,
+                       predict.predict_non_coding_rna_features_with_infernal,
+                       predict.predict_retrotransposons_with_ltrharvest,
+                       predict.predict_tandem_repeats_with_trf,
+                       predict.predict_remaining_repeats_with_repeatmasker,
+                       predict.predict_coding_sequences_with_prodigal,
+                       predict.create_ids,
                        databases.load_descriptions_taxonomy_cdd,
-                       features.annotate_features_by_homology_diamond,
-                       features.annotate_features_by_homology_blastn,
-                       features.annotate_features_by_homology_cdd,
-                       features.discover_transmembrane_helixes,
-                       features.discover_signal_peptides,
-                       features.annotate_features_by_homology_antismash,
-                       features.create_files
+                       predict.write_gene_files,
+                       predict.predict_functions_and_taxa_with_diamond,
+                       predict.predict_functions_and_taxa_with_blastn,
+                       predict.predict_functions_with_cdd,
+                       predict.predict_transmembrane_helixes,
+                       predict.predict_signal_peptides,
+                       predict.predict_functions_with_antismash,
+                       predict.create_files
                        ):
-        prediction(fasta_file, contig_dict)
+        prediction(mag_name, contig_dict)
         SeqIO.write(contig_dict.values(), gbk_file, "genbank")
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)

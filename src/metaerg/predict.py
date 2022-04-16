@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 
 from Bio import SeqIO
+from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
@@ -10,26 +11,64 @@ from metaerg import utils
 from metaerg import databases
 
 FORCE = False
+MULTI_MODE = False
+FILENAME_BASE = "pha"
 FILTERED_CONTIGS = 0
 MASKED_SEQ = 0
 TOTAL_SEQ = 0
-VALID_GBK_FEATURE_KEYS = set('CDS tRNA rRNA ncRNA repeat_region retrotransposon crispr_repeat'.split())
 FEATURE_INFERENCES = ['minced', 'aragorn', 'cmscan', 'ltrharvest', 'tandem-repeat-finder', 'repeatscout', 'prodigal']
 FEATURE_ID_TAGS = ['crispr', 'trna', 'rna', 'ltr', 'tr', 'repeat', 'cds']
-FEATURE_ID_PATTERN = re.compile("(.+)_(\d{5})_(crispr|trna|rna|ltr|tr|repeat|cds)$")
-NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria':'rRNA',
-                        'LSU_rRNA_archaea': 'rRNA',
-                        'LSU_rRNA_eukarya': 'rRNA',
-                        'SSU_rRNA_bacteria': 'rRNA',
-                        'SSU_rRNA_archaea': 'rRNA',
-                        'SSU_rRNA_eukarya': 'rRNA',
-                        'SSU_rRNA_microsporidia': 'rRNA',
-                        '5S_rRNA': 'rRNA',
-                        '5_8S_rRNA': 'rRNA',
-                        'tmRNA': 'tmRNA',
-                        'tRNA': 'tRNA'}
 TRANSLATION_TABLE = 11
 SOURCE = 'meta'
+
+
+def spawn_file(program_name, mag_name):
+    if MULTI_MODE:
+        dir =  Path(program_name)
+        if not dir.exists():
+            dir.mkdir()
+        elif dir.is_file():
+            if FORCE:
+                dir.unlink()
+                dir.mkdir()
+            else:
+                raise Exception("Use force to overwrite existing results")
+        return Path(dir, mag_name)
+    else:
+        file = Path(f'{mag_name}.{program_name}')
+        if file.exists() and file.is_dir():
+            if FORCE:
+                shutil.rmtree(file)
+        return file
+
+
+def create_masked_contig_fasta_file(mag_name, contig_dict:dict, exceptions=None, min_mask_length=50):
+    if exceptions is None:
+        exceptions = set()
+    global MASKED_SEQ, TOTAL_SEQ
+    (MASKED_SEQ, TOTAL_SEQ) = (0,0)
+    masked_fasta_file = spawn_file('masked', mag_name)
+    seq_iterator = (mask_seq(record, exceptions=exceptions, min_mask_length=min_mask_length)
+                    for record in contig_dict.values())
+    SeqIO.write(seq_iterator, masked_fasta_file, "fasta")
+    utils.log(f'Masked {MASKED_SEQ/TOTAL_SEQ*100:.1f}% of sequence data.')
+    return masked_fasta_file
+
+
+def mask_seq(record:SeqRecord, exceptions=None, min_mask_length=50):
+    global MASKED_SEQ, TOTAL_SEQ
+    seq = str(record.seq)
+    TOTAL_SEQ += len(seq)
+    for f in record.features:
+        inference = utils.get_feature_qualifier(f, 'inference').lower()
+        if inference in exceptions:
+            continue
+        if len(f.location) < min_mask_length:
+            continue
+        fl:FeatureLocation = f.location
+        MASKED_SEQ += fl.end - fl.start
+        seq = seq[:fl.start] + 'N' * (fl.end - fl.start) + seq[fl.end:]
+    return SeqRecord(Seq(seq), id=record.id, description=record.description)
 
 
 def create_ids(fasta_file:Path, contig_dict):
@@ -56,37 +95,34 @@ def create_ids(fasta_file:Path, contig_dict):
         #        utils.get_feature_qualifier(feature, "parent")])
 
 
-def decipher_metaerg_id(id):
-    m = FEATURE_ID_PATTERN.match(id)
-    return {'contig_id': m.group(1),
-            'gene_number': int(m.group(2)),
-            'gene_type': m.group(3)}
+def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet):
+    deciph_feat_id = utils.decipher_metaerg_id(blast_result[0])
+    target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
+    gene_function = None
+    identical_function_count = 1
+    hit_count = 0
+    for hit in blast_result[1]:
+        hit_count += 1
+        deciph_db_id = databases.decipher_database_id(hit['hit_id'], add_to_cache=True)
+        if not gene_function:
+            gene_function = deciph_db_id["descr_id"]
+        elif gene_function == deciph_db_id["descr_id"]:
+            identical_function_count += 1
+    top_hit = blast_result[1][0]
+    deciph_db_id = databases.decipher_database_id(top_hit['hit_id'], add_to_cache=True)
+    utils.set_feature_qualifier(target_feature, "taxonomy", deciph_db_id["taxon"])
+    utils.set_feature_qualifier(target_feature, "product", f'[{top_hit["aligned_length"]}/{deciph_db_id["length"]}'
+                                           f'{alphabet}@{top_hit["percent_id"]}%] [{identical_function_count}/{hit_count}]'
+                                           f' {deciph_db_id["descr"]}')
 
 
-def gff_words_to_seqfeature(words: list, inference):
-    seq_feature = utils.gff_words_to_seqfeature(words)
-    utils.set_feature_qualifier(seq_feature, "inference", inference)
 
-    if not words[2] in VALID_GBK_FEATURE_KEYS:
-        utils.set_feature_qualifier(seq_feature, "note", words[2])
-        seq_feature.type = 'misc_feature'
-
-    for unwanted in 'gc_cont conf score cscore sscore rscore uscore tscore rpt_type rpt_family ltr_similarity ' \
-                    'seq_number'.split():
-        try:
-            del seq_feature.qualifiers[unwanted]
-        except KeyError:
-            pass
-
-    return seq_feature
-
-
-def predict_crisprs_with_minced(fasta_file:Path, contig_dict):
+def predict_crisprs_with_minced(mag_name, contig_dict):
     # Sequence tool CRISPR crispr.start crispr.end numRepeat_CRISPR
     # NODE_883_length_34292_cov_11.1505	minced:0.3.2	repeat_region	33687	33944	4	.	.	ID=CRISPR3;bin=91;rpt_family=CRISPR;rpt_type=direct;rpt_unit_seq=GTCGCACTGGGCTTCTAAAGCCCATGAGGATTGAAAC
     # NODE_883_length_34292_cov_11.1505	minced:0.3.2	repeat_unit	33687	33723	1	.	.	ID=DR.CRISPR3.1;Parent=CRISPR3;bin=91
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    minced_file = Path(fasta_file.stem + '.minced')
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    minced_file = spawn_file('minced', mag_name)
 
     utils.log('Predicting CRISPR arrays with minced...')
     if not minced_file.exists() or FORCE:
@@ -105,13 +141,13 @@ def predict_crisprs_with_minced(fasta_file:Path, contig_dict):
             contig: SeqRecord = contig_dict[words[0]]
             if 'repeat_region' == words[2]:
                 crispr_region_count += 1
-            feature = gff_words_to_seqfeature(words, words[1])
+            feature = utils.gff_words_to_seqfeature(words, words[1])
             feature.type = 'crispr_repeat'
             contig.features.append(feature)
     utils.log(f'CRISPR prediction complete. Found {crispr_region_count} repeat regions.')
 
 
-def predict_trnas_with_aragorn(fasta_file:Path, contig_dict):
+def predict_trnas_with_aragorn(mag_name, contig_dict):
     # >C1997739
     # 0 genes found
     # >C1997905
@@ -122,8 +158,8 @@ def predict_trnas_with_aragorn(fasta_file:Path, contig_dict):
     # 1   tmRNA*                       c[-31,312]      208,252 ANDNAQTGAVALAA*
     # ...
     # >end    957850 sequences 11875 tRNA genes
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    aragorn_file = Path(fasta_file.stem + '.aragorn')
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    aragorn_file = spawn_file('aragorn', mag_name)
 
     utils.log('Predicting tRNAs with aragorn...')
     if not aragorn_file.exists() or FORCE:
@@ -159,25 +195,9 @@ def predict_trnas_with_aragorn(fasta_file:Path, contig_dict):
     utils.log(f'tRNA prediction complete. Found {trna_count} tRNAs.')
 
 
-def non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict):
-    contig = contig_dict[hit['query_id']]
-    type = 'ncRNA'
-    try:
-        type = NON_CODING_RNA_TYPES[hit['hit_id']]
-    except KeyError:
-        if hit['hit_id'].startswith('CRISPR'):
-            type = 'crispr'
-
-    f = SeqFeature(location=FeatureLocation(hit['query_start'] - 1, hit['query_end'], strand=hit['query_strand']),
-                   type=type, qualifiers={'name': [hit["hit_id"]],
-                                          'inference': ['cmscan'],
-                                          'profile': [hit["descr"]]})
-    contig.features.append(f)
-
-
-def predict_non_coding_rna_features_with_infernal(fasta_file:Path, contig_dict):
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    cmscan_file = Path(fasta_file.stem + '.cmscan')
+def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict):
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    cmscan_file = spawn_file('cmscan', mag_name)
 
     utils.log('Predicting non-coding RNAs (rRNA, tRNA, CRISPRs, etc.) with infernal (cmscan)...')
     if not cmscan_file.exists() or FORCE:
@@ -221,19 +241,19 @@ def predict_non_coding_rna_features_with_infernal(fasta_file:Path, contig_dict):
             else:
                 hits.append(hit)
     for hit in hits:
-        non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict)
+        utils.non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict)
     utils.log(f'Non-coding RNA prediction complete. Found {len(hits)} ncRNAs.')
 
 
-def predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict):
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    ltr_index = Path(fasta_file.stem + '.ltr_index')
-    ltr_harvest_file = Path(fasta_file.stem + '.ltr_harvest.gff')
+def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict):
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    ltr_index_file = spawn_file('ltr_index', mag_name)
+    ltr_harvest_file = spawn_file('ltr_harvest', mag_name)
 
     utils.log('Predicting retrotransposons with genometools/ltrharvest...')
     if not ltr_harvest_file.exists() or FORCE:
-        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index} -tis -suf -lcp -des -ssp -sds -dna')
-        utils.run_external(f'gt ltrharvest -index {ltr_index} -gff3 {ltr_harvest_file} -seqids')
+        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
+        utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
     else:
         utils.log("Reusing existing result file.")
 
@@ -249,15 +269,15 @@ def predict_retrotransposons_with_ltrharvest(fasta_file, contig_dict):
             if 'repeat_region' == words[2]:
                 retrotransposon_count += 1
                 contig: SeqRecord = contig_dict[words[0]]
-                gbk_feature = gff_words_to_seqfeature(words, 'LTRharvest')
+                gbk_feature = utils.gff_words_to_seqfeature(words, 'LTRharvest')
                 gbk_feature.type = 'retrotransposon'
                 contig.features.append(gbk_feature)
     utils.log(f'Retrotransposon prediction complete. Found {retrotransposon_count} repeat regions.')
 
 
-def predict_tandem_repeats_with_trf(fasta_file, contig_dict):
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    trf_file = Path(fasta_file.stem + '.trf')
+def predict_tandem_repeats_with_trf(mag_name, contig_dict):
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    trf_file = spawn_file('tandem-repeat-finder', mag_name)
 
     utils.log('Predicting tandem repeats with trf...')
     if not trf_file.exists() or FORCE:
@@ -283,26 +303,28 @@ def predict_tandem_repeats_with_trf(fasta_file, contig_dict):
     utils.log(f'Tandem repeat prediction complete. Found {tdr_count} repeat regions.')
 
 
-def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    lmer_table = Path(fasta_file.stem + '.lmers')
-    repeat_scout_raw = Path(fasta_file.stem + '.repeatscout')
-    repeat_scout_filtered = Path(fasta_file.stem + '.repeatscout.filtered')
-    repeat_masker_file = Path(fasta_file.stem + '.fna.out')
+def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict):
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    lmer_table_file = spawn_file('lmer-table', mag_name)
+    repeatscout_file_raw = spawn_file('repeatscout-raw', mag_name)
+    repeatscout_file_filtered = spawn_file('repeatscout-filtered', mag_name)
+    repeatmasker_file = spawn_file('repeatmasker', mag_name)
 
     utils.log('Predicting remaining repeats with repeatmasker...')
-    if not repeat_scout_filtered.exists() or FORCE:
-        utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table}')
-        utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeat_scout_raw} -freq {lmer_table}')
-        with open(repeat_scout_filtered, 'w') as output, open(repeat_scout_raw) as input:
+    if not repeatmasker_file.exists() or FORCE:
+        utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
+        utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
+        with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
             utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-        utils.run_external(f'RepeatMasker -lib {repeat_scout_filtered} -dir . {fasta_file}')
+        utils.run_external(f'RepeatMasker -lib {repeatscout_file_filtered} -dir . {fasta_file}')
+        # repeatmasker result file will be called 'masked.out', nothing we can do about that
+        utils.run_external(f'mv masked.out {repeatmasker_file}')
     else:
         utils.log("Reusing existing result file.")
 
     repeat_count = 0
     repeat_hash = dict()
-    with open(repeat_masker_file) as repeatmasker_handle:
+    with open(repeatmasker_file) as repeatmasker_handle:
         for line in repeatmasker_handle:
             words = line.split()
             if len(words) < 11:
@@ -338,26 +360,26 @@ def predict_remaining_repeats_with_repeatmasker(fasta_file: Path, contig_dict):
     utils.log(f'Remaining repeat prediction complete. Found {repeat_count} repeat regions.')
 
 
-def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
-    utils.create_masked_contig_fasta_file(fasta_file, contig_dict)
-    faa_file = Path(fasta_file.stem + '.cds.faa')
-    fna_file = Path(fasta_file.stem + '.cds.fna')
-    gff_file = Path(fasta_file.stem + '.cds.gff')
+def predict_coding_sequences_with_prodigal(mag_name, contig_dict):
+    fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
+    #faa_file = Path(fasta_file.stem + '.cds.faa')
+    #fna_file = Path(fasta_file.stem + '.cds.fna')
+    prodigal_file = spawn_file('prodigal', mag_name)
     c = ''
     if 'meta' != SOURCE:
         c = f'-g {TRANSLATION_TABLE} '
         utils.log(f'... (and using -g {TRANSLATION_TABLE}) ...')
 
     utils.log(f'Predicting coding sequences with prodigal (using -p {SOURCE}) ...')
-    if not faa_file.exists() or FORCE:
-        utils.run_external(f'prodigal -p {SOURCE} {c}-m -f gff -q -i {fasta_file} -a {faa_file} -d {fna_file} -o {gff_file}')
+    if not prodigal_file.exists() or FORCE:
+        utils.run_external(f'prodigal -p {SOURCE} {c}-m -f gff -q -i {fasta_file} -o {prodigal_file}')
     else:
         utils.log("Reusing existing result file.")
 
     cds_found = 0
     cds_id_re = re.compile(r'^ID=[0-9]+_[0-9]+;')
 
-    with open(gff_file) as prodigal_handle:
+    with open(prodigal_file) as prodigal_handle:
         for line in prodigal_handle:
             if line.startswith("#"):
                 continue
@@ -366,7 +388,7 @@ def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
                 continue
             contig: SeqRecord = contig_dict[words[0]]
             words[8] = cds_id_re.sub('', words[8], 1)
-            feature = gff_words_to_seqfeature(words, words[1].lower())
+            feature = utils.gff_words_to_seqfeature(words, words[1].lower())
             partial = ''
             if int(utils.get_feature_qualifier(feature, 'partial')) > 0:
                 partial = ' partial'
@@ -384,32 +406,12 @@ def predict_coding_sequences_with_prodigal(fasta_file:Path, contig_dict):
     utils.log(f'Prediction of coding sequences complete, found {cds_found} CDS.')
 
 
-def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet):
-    deciph_feat_id = decipher_metaerg_id(blast_result[0])
-    target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
-    gene_function = None
-    identical_function_count = 1
-    hit_count = 0
-    for hit in blast_result[1]:
-        hit_count += 1
-        deciph_db_id = databases.decipher_database_id(hit['hit_id'], add_to_cache=True)
-        if not gene_function:
-            gene_function = deciph_db_id["descr_id"]
-        elif gene_function == deciph_db_id["descr_id"]:
-            identical_function_count += 1
-    top_hit = blast_result[1][0]
-    deciph_db_id = databases.decipher_database_id(top_hit['hit_id'], add_to_cache=True)
-    utils.set_feature_qualifier(target_feature, "taxonomy", deciph_db_id["taxon"])
-    utils.set_feature_qualifier(target_feature, "product", f'[{top_hit["aligned_length"]}/{deciph_db_id["length"]}'\
-                                           f'{alphabet}@{top_hit["percent_id"]}%] [{identical_function_count}/{hit_count}]'\
-                                           f' {deciph_db_id["descr"]}')
+def write_gene_files(mag_name, contig_dict):
+    cds_aa_file = spawn_file('cds.faa', mag_name)
+    rna_nt_file = spawn_file('rna.nt', mag_name)
 
-
-def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
-    diamond_file = Path(fasta_file.stem + '.diamond.tab.txt')
-    cds_aa_file = Path(fasta_file.stem + '.cds.aa')
-    utils.log(f'Translating CDS and writing to file...')
-    with open(cds_aa_file, 'w') as faa_handle:
+    utils.log(f'Translating CDS and writing CDS and RNA genes to file...')
+    with open(cds_aa_file, 'w') as faa_handle, open(rna_nt_file, 'w') as fna_handle:
         for contig in contig_dict.values():
             for f in contig.features:
                 if f.type == 'CDS':
@@ -420,7 +422,16 @@ def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
                     if '*' in feature_seq:
                         utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
                     SeqIO.write(feature_seq, faa_handle, "fasta")
+                elif f.type in ['tRNA', 'rRNA', 'ncRNA']:
+                    feature_seq = f.extract(contig)
+                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
+                    feature_seq.description = ''
+                    SeqIO.write(feature_seq, fna_handle, "fasta")
 
+
+def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
+    diamond_file = spawn_file('diamond', mag_name)
+    cds_aa_file = spawn_file('cds.faa', mag_name)
     utils.log(f'Performing homology searches with diamond...')
     if not diamond_file.exists() or FORCE:
         utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
@@ -433,18 +444,9 @@ def annotate_features_by_homology_diamond(fasta_file:Path, contig_dict):
     utils.log('Diamond search complete.')
 
 
-def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
-    utils.log(f'Writing RNA to file...')
-    rna_nt_file = Path(fasta_file.stem + '.rna.nt')
-    blastn_file = Path(fasta_file.stem + '.blastn.tab.txt')
-    with open(rna_nt_file, 'w') as fna_handle:
-        for contig in contig_dict.values():
-            for f in contig.features:
-                if f.type in ['tRNA', 'rRNA', 'ncRNA']:
-                    feature_seq = f.extract(contig)
-                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
-                    feature_seq.description = ''
-                    SeqIO.write(feature_seq, fna_handle, "fasta")
+def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
+    blastn_file = spawn_file('blastn', mag_name)
+    rna_nt_file = spawn_file('rna.nt', mag_name)
 
     utils.log(f'Performing homology searches with blastn ...')
     if not blastn_file.exists() or FORCE:
@@ -458,9 +460,9 @@ def annotate_features_by_homology_blastn(fasta_file:Path, contig_dict):
     utils.log('Blastn search complete.')
 
 
-def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
-    cds_aa_file = Path(fasta_file.stem + '.cds.aa')
-    cdd_file = Path(fasta_file.stem + '.cdd.tab.txt')
+def predict_functions_with_cdd(mag_name, contig_dict):
+    cds_aa_file = spawn_file('cds.faa', mag_name)
+    cdd_file = spawn_file('cdd', mag_name)
 
     utils.log(f'Performing homology searches with rpsblast/cdd ...')
     if not cdd_file.exists() or FORCE:
@@ -471,7 +473,7 @@ def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
     count = 0
     with utils.TabularBlastParser(cdd_file) as handle:
         for blast_result in handle:
-            deciph_feat_id = decipher_metaerg_id(blast_result[0])
+            deciph_feat_id = utils.decipher_metaerg_id(blast_result[0])
             target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
             top_hit = True
             for h in blast_result[1]:
@@ -488,14 +490,15 @@ def annotate_features_by_homology_cdd(fasta_file: Path, contig_dict):
     utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins.')
 
 
-def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
-    antismash_dir = Path('antismash')
+def predict_functions_with_antismash(mag_name, contig_dict):
+    antismash_dir = spawn_file('antismash', mag_name)
+    gbk_file = spawn_file('gbk', mag_name)
 
     utils.log(f'Performing homology searches with antismash ...')
     if not antismash_dir.exists() or FORCE:
         if antismash_dir.exists():
             shutil.rmtree(antismash_dir)
-        utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {fasta_file.stem + ".gbk"}')
+        utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {gbk_file}')
     else:
         utils.log("Reusing existing results.")
 
@@ -508,7 +511,7 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
                     if 'region' == feature.type:
                         antismash_region_name = utils.get_feature_qualifier(feature, "rules")
                     elif 'CDS' in feature.type:
-                        d_id = decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
+                        d_id = utils.decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
                         if antismash_region_name:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
@@ -522,9 +525,9 @@ def annotate_features_by_homology_antismash(fasta_file: Path, contig_dict):
     utils.log(f'Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
 
-def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
-    cds_aa_file = Path(fasta_file.stem + '.cds.aa')
-    tmhmm_file =  Path(fasta_file.stem + '.tmhmm.txt')
+def predict_transmembrane_helixes(mag_name, contig_dict):
+    tmhmm_file =  spawn_file('tmhmm', mag_name)
+    cds_aa_file = spawn_file('cds.faa', mag_name)
 
     utils.log(f'Discovering transmembrane helixes with tmhmm...')
     if not tmhmm_file.exists() or FORCE:
@@ -542,7 +545,7 @@ def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
             if line.startswith("#"):
                 continue
             words = line.split()
-            d_id = decipher_metaerg_id(words[0])
+            d_id = utils.decipher_metaerg_id(words[0])
             new_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
             if not current_feature:
                 current_feature = new_feature
@@ -571,9 +574,9 @@ def discover_transmembrane_helixes(fasta_file: Path, contig_dict):
     utils.log(f'Transmembrane helix discovery complete. Found {count} membrane proteins.')
 
 
-def discover_signal_peptides(fasta_file: Path, contig_dict):
-    cds_aa_file = Path(fasta_file.stem + '.cds.aa')
-    signalp_dir = Path('signalp')
+def predict_signal_peptides(mag_name, contig_dict):
+    signalp_dir = spawn_file('signalp', mag_name)
+    cds_aa_file = spawn_file('cds.faa', mag_name)
 
     utils.log(f'Discovering signal peptides with signalp...')
     if not signalp_dir.exists() or FORCE:
@@ -591,12 +594,12 @@ def discover_signal_peptides(fasta_file: Path, contig_dict):
             words = line.split()
             if "OTHER" == words[1]:
                 continue
-            d_id = decipher_metaerg_id(words[0])
+            d_id = utils.decipher_metaerg_id(words[0])
             feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
             utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1
         utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')
 
 
-def create_files(fasta_file: Path, contig_dict):
-    databases.save_cache(fasta_file.parent)
+def create_files(mag_name, contig_dict):
+    databases.save_cache(Path("."))

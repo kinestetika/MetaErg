@@ -17,7 +17,7 @@ from Bio import BiopythonParserWarning
 
 import ncbi.datasets
 
-VERSION = "2.0.13"
+VERSION = "2.0.15"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
                      'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
@@ -40,6 +40,10 @@ CDD_CACHE = set()
 
 warnings.simplefilter('ignore', BiopythonParserWarning)
 
+
+def does_db_appear_valid():
+    return Path(DBDIR, DB_DESCR_FILENAME).exists() and Path(DBDIR, DB_TAXON_FILENAME).exists() \
+        and Path(DBDIR, CDD_INDEX_FILENAME).exists()
 
 def load_descriptions_taxonomy_cdd(x=0, y=0):
     # load descriptions
@@ -430,7 +434,7 @@ def prep_eukaryote_database(settings):
         utils.log(f'({count}/{len(targets)}) Now extracting {accession} into ncbi-cache as {dest_file}...')
         gbff_count = 0
         for file in os.listdir(src_dir):
-            if file.endswith('.gbff'):
+            if file.endswith(".gbff"):
                 with open(os.path.join(src_dir, file), 'rb') as f_in, gzip.open(dest_file, 'wb') as f_out:
                     f_out.writelines(f_in)
                 gbff_count += 1

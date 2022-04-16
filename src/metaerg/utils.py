@@ -5,13 +5,28 @@ import subprocess
 from pathlib import Path
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 SILENT = False
 START_TIME = time.monotonic()
 LOG_TOPICS = set()
 NON_IUPAC_RE = re.compile(r'[^ACTGN]')
+UNWANTED_FEATURE_QUALIFIERS = 'gc_cont conf score cscore sscore rscore uscore tscore rpt_type rpt_family ' \
+                              'ltr_similarity seq_number'.split()
+VALID_GBK_FEATURE_KEYS = set('CDS tRNA rRNA ncRNA repeat_region retrotransposon crispr_repeat'.split())
+NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria':'rRNA',
+                        'LSU_rRNA_archaea': 'rRNA',
+                        'LSU_rRNA_eukarya': 'rRNA',
+                        'SSU_rRNA_bacteria': 'rRNA',
+                        'SSU_rRNA_archaea': 'rRNA',
+                        'SSU_rRNA_eukarya': 'rRNA',
+                        'SSU_rRNA_microsporidia': 'rRNA',
+                        '5S_rRNA': 'rRNA',
+                        '5_8S_rRNA': 'rRNA',
+                        'tmRNA': 'tmRNA',
+                        'tRNA': 'tRNA'}
+FEATURE_ID_PATTERN = re.compile("(.+)_(\d{5})_(crispr|trna|rna|ltr|tr|repeat|cds)$")
+
 
 ESCAPE_CHARS = {'%2C': ',',
                 '%3B': ';',
@@ -62,34 +77,6 @@ def create_filtered_contig_fasta_file(fasta_file_in:Path, fasta_file_out:Path, m
         f'nt to {fasta_file_out}')
 
 
-def mask_seq(record:SeqRecord, exceptions=None, min_mask_length=50):
-    global MASKED_SEQ, TOTAL_SEQ
-    seq = str(record.seq)
-    TOTAL_SEQ += len(seq)
-    for f in record.features:
-        inference = get_feature_qualifier(f, 'inference').lower()
-        if inference in exceptions:
-            continue
-        if len(f.location) < min_mask_length:
-            continue
-        fl:FeatureLocation = f.location
-        MASKED_SEQ += fl.end - fl.start
-        seq = seq[:fl.start] + 'N' * (fl.end - fl.start) + seq[fl.end:]
-    return SeqRecord(Seq(seq), id=record.id, description=record.description)
-
-
-def create_masked_contig_fasta_file(fasta_file:Path, contig_dict:dict, exceptions=None, min_mask_length=50):
-    if exceptions is None:
-        exceptions = set()
-    global MASKED_SEQ, TOTAL_SEQ
-    (MASKED_SEQ, TOTAL_SEQ) = (0,0)
-    log(f'Masking contig features with Ns in file {fasta_file}...')
-    seq_iterator = (mask_seq(record, exceptions=exceptions, min_mask_length=min_mask_length)
-                    for record in contig_dict.values())
-    SeqIO.write(seq_iterator, fasta_file, "fasta")
-    log(f'Masked {MASKED_SEQ/TOTAL_SEQ*100:.1f}% of sequence data.')
-
-
 def unescape_str(str):
     for t in ESCAPE_CHARS.items():
         str = str.replace(t[0], t[1])
@@ -98,7 +85,7 @@ def unescape_str(str):
     return str.strip()
 
 
-def gff_words_to_seqfeature(words: list):
+def gff_words_to_seqfeature(words: list, inference=''):
     strand = None
     if '+' == words[6]:
         strand = +1
@@ -112,7 +99,22 @@ def gff_words_to_seqfeature(words: list):
     if len(qal) % 2 != 0:
         qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
     qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
-    return SeqFeature(location=loc, type=words[2], qualifiers=qal)
+    seq_feature = SeqFeature(location=loc, type=words[2], qualifiers=qal)
+
+    if (inference): # inference is only passed by predict functions, not during database constuction
+        set_feature_qualifier(seq_feature, "inference", inference)
+
+        if not words[2] in VALID_GBK_FEATURE_KEYS:
+            set_feature_qualifier(seq_feature, "note", words[2])
+            seq_feature.type = 'misc_feature'
+
+        for unwanted in UNWANTED_FEATURE_QUALIFIERS:
+            try:
+                del seq_feature.qualifiers[unwanted]
+            except KeyError:
+                pass
+
+    return seq_feature
 
 
 def pad_seq(sequence):
@@ -130,6 +132,29 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
     if result.returncode != 0:
         print(result.stderr)
         raise Exception(f'Error while trying to run "{exec}"')
+
+
+def non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict):
+    contig = contig_dict[hit['query_id']]
+    type = 'ncRNA'
+    try:
+        type = NON_CODING_RNA_TYPES[hit['hit_id']]
+    except KeyError:
+        if hit['hit_id'].startswith('CRISPR'):
+            type = 'crispr'
+
+    f = SeqFeature(location=FeatureLocation(hit['query_start'] - 1, hit['query_end'], strand=hit['query_strand']),
+                   type=type, qualifiers={'name': [hit["hit_id"]],
+                                          'inference': ['cmscan'],
+                                          'profile': [hit["descr"]]})
+    contig.features.append(f)
+
+
+def decipher_metaerg_id(id):
+    m = FEATURE_ID_PATTERN.match(id)
+    return {'contig_id': m.group(1),
+            'gene_number': int(m.group(2)),
+            'gene_type': m.group(3)}
 
 
 def words_to_hit(words):

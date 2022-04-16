@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0.13
+## metaerg.py, version 2.0.15
 
 Metaerg.py is a program that annotates (meta)genomes of microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. The two main output files in .gbk and gff format contain
@@ -18,7 +18,7 @@ Metaerg.py consists of 4 modules:
 The script performs the following:
 * CRISPR regions using Minced.
 * tRNAs using Aragorn.
-* RNA genes and other non-coding features using Infernal and RFAM.
+* RNA genes and other non-coding features using Infernal (cmscan) and RFAM.
 * retrotransposons with LTRHarvest.
 * tandem repeats with trf (tandem repeat finder).
 * repeat regions with Repeatscout and Repeatmasker.
