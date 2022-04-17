@@ -11,11 +11,11 @@ from metaerg import utils
 PRODUCT_RE = re.compile('\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
 
 
-def html_make_link(val):
-    return '<a target="_blank" href="{}">{}</a>'.format(val, val)
+def html_make_link(feature_id, description):
+    return '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, description)
 
 
-def html_save_genome_stats(mag_name, contig_dict):
+def html_write_genome_stats(mag_name, contig_dict):
     genome_stats = {}
     genome_stats["#contigs"] = len(contig_dict)
     total_size = 0
@@ -37,6 +37,7 @@ def html_save_genome_stats(mag_name, contig_dict):
     genome_stats['#retrotransposons'] = 0
     genome_stats['#CRISPR repeats'] = 0
     genome_stats['% repeats'] = 0
+    genome_stats['total # features'] = 0
     taxon_dict = {}
     for contig in contig_dict.values():
         for feature in contig.features:
@@ -64,12 +65,27 @@ def html_save_genome_stats(mag_name, contig_dict):
                     taxon_dict[t] += 1
                 else:
                     taxon_dict[t] = 1
+            genome_stats['total # features'] += 1
+
     genome_stats['% coding'] = f'{genome_stats["% coding"]/total_size*100:.2f}%'
     genome_stats['% repeats'] = f'{genome_stats["% repeats"]/total_size*100:.2f}%'
     genome_stats['dominant taxon'] = max(taxon_dict, key=taxon_dict.get)
+    genome_stats['total # features'] = '<a target="_blank" href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
+
+    # create html
+    genome_stats_for_viz = []
     for (key, value) in genome_stats.items():
+        genome_stats_for_viz.append({'property': key, 'value': value})
         print(f'{key:20}: {value}')
-    styled_table.to_html(f'index.html', doctype_html=True)
+    df = pd.DataFrame(genome_stats_for_viz, columns=['property', 'value'])
+    s = df.style.format(precision=1)
+    s.set_table_styles([{'selector': 'td', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
+    s.set_table_styles([{'selector': 'th.col_heading', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
+    s.set_table_styles([{'selector': 'td', 'props': 'padding-left: 10px;'}], overwrite=False)
+    s.set_sticky(axis=1)
+    s.hide(axis="index")
+    s.hide(axis="columns")
+    s.to_html(f'index.html', doctype_html=True)
     return genome_stats
 
 
@@ -171,7 +187,7 @@ def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom
     return s
 
 
-def html_save_page_for_feature(feature, contig, blast_results, genome_stats):
+def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
     taxon = utils.get_feature_qualifier(feature, 'taxonomy')
     feature_id = utils.get_feature_qualifier(feature, 'id')
     if "~" in taxon:
@@ -209,7 +225,7 @@ def html_save_page_for_feature(feature, contig, blast_results, genome_stats):
         writer.write('</body>\n</html>\n')
 
 
-def html_save_feature_overview(mag_name, contig_dict, genome_stats):
+def html_write_feature_overview(mag_name, contig_dict, genome_stats):
     columns='id strand length type location D % A R description taxon'.split()
     dominant_taxon = genome_stats['dominant taxon'].split("~ ")
     feature_list = []
@@ -306,7 +322,7 @@ def html_save_feature_overview(mag_name, contig_dict, genome_stats):
                 f['D'] = u'\u25CF'
                 style['D'] = 'text-align: center;'
             if f['description']:
-                f['description'] = html_make_link(f['description'])
+                f['description'] = html_make_link(f['id'], f['description'])
             #location
             try:
                 number_of_tmh = int(utils.get_feature_qualifier(feature, 'transmembrane_helixes'))
@@ -356,9 +372,9 @@ def html_save_all(mag_name, contig_dict):
     mag_dir = Path(mag_name)
     os.chdir(mag_dir)
     # write html
-    genome_stats = html_save_genome_stats(mag_name, contig_dict)
-    html_save_feature_overview(mag_name, contig_dict, genome_stats)
+    genome_stats = html_write_genome_stats(mag_name, contig_dict)
+    html_write_feature_overview(mag_name, contig_dict, genome_stats)
     for contig in contig_dict.values():
         for feature in contig.features:
-            html_save_page_for_feature(feature, contig, blast_results, genome_stats)
+            html_write_page_for_feature(feature, contig, blast_results, genome_stats)
     os.chdir(metaerg_dir)
