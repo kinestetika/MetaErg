@@ -9,13 +9,34 @@ from metaerg import predict
 from metaerg import utils
 
 PRODUCT_RE = re.compile('\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
+CENTER_DOT = u'\u25CF'
+
+def make_feature_product(feature):
+    product = utils.get_feature_qualifier(feature, "product")
+    if not product:
+        product = utils.get_feature_qualifier(feature, "profile")
+    return product
+
+
+def make_feature_taxon(feature):
+    taxon = utils.get_feature_qualifier(feature, 'taxonomy')
+    if "~" in taxon:
+        for t in reversed(taxon.split("~ ")):
+            if not " " in t:
+                taxon = f'[{t}]'
+                break
+    return taxon
+
+
+def make_feature_short_description(feature):
+    return (f'{make_feature_product(feature)} {make_feature_taxon(feature)}')
 
 
 def html_make_link(feature_id, description):
     return '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, description)
 
 
-def html_write_genome_stats(mag_name, contig_dict):
+def html_write_genome_stats(contig_dict):
     genome_stats = {}
     genome_stats["#contigs"] = len(contig_dict)
     total_size = 0
@@ -188,17 +209,11 @@ def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom
 
 
 def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
-    taxon = utils.get_feature_qualifier(feature, 'taxonomy')
     feature_id = utils.get_feature_qualifier(feature, 'id')
-    if "~" in taxon:
-        for t in reversed(taxon.split("~ ")):
-            if not " " in t:
-                taxon = f'[{t}]'
-                break
-    header = (f'>{feature_id} {utils.get_feature_qualifier(feature, "product")} {taxon}')
+    header = f'>{feature_id} {make_feature_short_description(feature)}'
     seq = ''
     if 'CDS' == feature.type:
-        seq = utils.get_feature_qualifier(feature, 'translation')
+        seq = utils.pad_seq(feature.extract(contig)).translate(table=predict.TRANSLATION_TABLE)[:-1].seq
     else:
         seq = feature.extract(contig).seq
 
@@ -225,156 +240,185 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
         writer.write('</body>\n</html>\n')
 
 
-def html_write_feature_overview(mag_name, contig_dict, genome_stats):
-    columns='id strand length type location D % A R description taxon'.split()
-    dominant_taxon = genome_stats['dominant taxon'].split("~ ")
-    feature_list = []
-    style_list = []
+def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats):
+    writer.write('''<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">''')
+    writer.write(f'<title>{mag_name} - all features</title>\n')
+    writer.write('''</head>
+<body>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+  
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+
+<script type="text/javascript" charset="utf8">
+$(document).ready( function () {
+    $('#table_id').DataTable({
+        "paging": false,
+        "bSort" : false
+        });
+} );
+</script>
+
+<style>
+  th {
+	position: sticky;
+	position: -webkit-sticky;
+	top: 0px;
+	z-index: 2;
+	background-color: white;
+     }
+  #f {
+    font-family: Calibri, sans-serif;
+    text-align: center;
+    padding: 0px;
+    margin: 0px;
+     }
+  #cg {
+    color: green;
+     }
+  #cr {
+    color: red;
+     }
+  #cb {
+    color: blue;
+     }
+  #co {
+    color: orange;
+     }
+  #al {
+    text-align: left;
+      }
+
+</style>
+
+<div id=f>
+<table id="table_id" class="display">
+    <thead>
+        <tr>
+''')
+    left_aligned = 'id description'
+    for column in 'id strand length type location CDD ident align recall description taxon'.split():
+        if column in left_aligned:
+            writer.write(f'          <th id=al>{column}</th>\n')
+        else:
+            writer.write(f'          <th>{column}</th>\n')
+    writer.write('''        </tr>
+    </thead>
+    <tbody>''')
     for contig in contig_dict.values():
         for feature in contig.features:
-            f = {'id': utils.get_feature_qualifier(feature, 'id'),
-                 'strand': '',
-                 'type': feature.type,
-                 'location': '',
-                 'D': '',
-                 '%': '',
-                 'A': '',
-                 'R': '',
-                 'description': '',
-                 'taxon': ''}
-            style = {'id': 'text-align: left;',
-                     'strand': 'text-align: center;',
-                     'length': 'text-align: center;',
-                     'type': '' 'text-align: center;',
-                     'location': 'text-align: center;',
-                     'D':'',
-                     '%': '',
-                     'A': '',
-                     'R': '',
-                     'description': 'text-align: left;',
-                     'taxon': 'text-align: left;'}
-
+            product = make_feature_product(feature)
+            feature_id = utils.get_feature_qualifier(feature, "id")
+            writer.write('      <tr>\n')
+            # id
+            writer.write(f'          <td id=al>{feature_id}</td>\n')
             # strand
             if feature.type in ['CDS', 'tRNA', 'rRNA', 'ncRNA']:
                 if feature.location.strand > 0:
-                    f['strand'] = '+'
+                    writer.write('          <td>+</td>\n')
                 else:
-                    f['strand'] = '-'
-
+                    writer.write('          <td>-</td>\n')
+            else:
+                writer.write('          <td></td>\n')
             # length
             if feature.type == 'CDS':
-                f['length'] = len(utils.get_feature_qualifier(feature, 'translation'))
+                writer.write(f'          <td>{int(len(feature.location)/3-1)}</td>\n')
             else:
-                f['length'] = len(feature.location)
-
-            # taxonomy
-            taxonomy = utils.get_feature_qualifier(feature, 'taxonomy')
-            if taxonomy:
-                taxon_list = taxonomy.split("~ ")
-                for t in reversed(taxon_list):
-                    if not " " in t:
-                        f['taxon'] = f'[{t}]'
-                        break
-                score = 0
-                for j in range(min(len(taxon_list), len(dominant_taxon))):
-                    if taxon_list[j] == dominant_taxon[j]:
-                        score += 1
-                if score < 2:
-                    style['taxon'] = 'color: red;'
-                elif score < 4:
-                    style['taxon'] = 'color: orange;'
-                elif score < 5:
-                    style['taxon'] = 'color: blue;'
-                else:
-                    style['taxon'] = 'color: green;'
-
-            # blast hit, product
-            f['description'] = utils.get_feature_qualifier(feature, 'product')
-            match = re.match(PRODUCT_RE, utils.get_feature_qualifier(feature, 'product'))
-            if (match):
-                blast_aligned = int(match.group(1)) / int(match.group(2))
-                blast_percent_id = float(match.group(3))
-                blast_hit_count = int(match.group(4)) / int(match.group(5))
-                f['description'] = match.group(6)
-                f['%'] = u'\u25CF'
-                f['A'] = u'\u25CF'
-                f['R'] = u'\u25CF'
-
-                if blast_percent_id < 30:
-                    style['%'] = 'color: red; text-align: center;'
-                elif blast_percent_id < 50:
-                    style['%'] = 'color: orange; text-align: center;'
-                else:
-                    style['%'] = 'color: green; text-align: center;'
-                if blast_aligned < 0.5:
-                    style['A'] = 'color: red; text-align: center;'
-                elif blast_aligned < 0.8:
-                    style['A'] = 'color: orange; text-align: center;'
-                else:
-                    style['A'] = 'color: green; text-align: center;'
-                if blast_hit_count < 0.5:
-                    style['R'] = 'color: red; text-align: center;'
-                elif blast_hit_count < 0.8:
-                    style['R'] = 'color: orange; text-align: center;'
-                else:
-                    style['R'] = 'color: green; text-align: center;'
-            if utils.get_feature_qualifier(feature, 'cdd'):
-                f['D'] = u'\u25CF'
-                style['D'] = 'text-align: center;'
-            if f['description']:
-                f['description'] = html_make_link(f['id'], f['description'])
-            #location
+                writer.write(f'          <td>{len(feature.location)}</td>\n')
+            # type:
+            writer.write(f'          <td>{feature.type}</td>\n')
+            # location
             try:
                 number_of_tmh = int(utils.get_feature_qualifier(feature, 'transmembrane_helixes'))
             except ValueError:
                 number_of_tmh = 0
             if number_of_tmh > 1:
-                f['location'] = 'membrane'
+                writer.write('          <td>membrane</td>\n')
             elif number_of_tmh == 1:
-                f['location'] = 'membrane anchor'
+                writer.write('          <td>membrane anchor</td>\n')
             elif utils.get_feature_qualifier(feature, 'signal_peptide'):
-                f['location'] = 'envelope'
-            elif 'CDS' == feature.type and f['description']:
-                f['location'] = 'cytoplasm'
-            feature_list.append(f)
-            style_list.append(style)
-    dataframe_with_data = pd.DataFrame(feature_list, columns=columns)
-    dataframe_with_styles = pd.DataFrame(style_list, columns=columns)
-    styled_table = dataframe_with_data.style
-    styled_table.set_table_styles([{'selector': 'th.col_heading', 'props': 'text-align: center; border-left: 1px solid black;'}])
-    styled_table.set_table_styles({'description': [{'selector': 'th.col_heading', 'props': 'text-align: left;'}],
-                        'taxon': [{'selector': 'th.col_heading', 'props': 'text-align: left;'}],
-                        'id': [{'selector': 'th.col_heading', 'props': 'text-align: left;'}]})
-    styled_table.set_table_styles([{'selector': 'td', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
-    styled_table.set_table_styles([{'selector': 'th.col_heading', 'props': 'border-bottom: 1px solid black;'}], overwrite=False)
-    styled_table.set_sticky(axis=1)
-    styled_table.hide(axis="index")
-    styled_table.apply(lambda table: dataframe_with_styles, axis=None)
-    styled_table.to_html('index_of_features.html', doctype_html=True)
+                writer.write('          <td>envelope</td>\n')
+            elif 'CDS' == feature.type and product:
+                writer.write('          <td>cytoplasm</td>\n')
+            else:
+                writer.write('          <td></td>\n')
+            # homology blast hits (cdd)
+            if utils.get_feature_qualifier(feature, 'cdd'):
+                writer.write(f'          <td>{CENTER_DOT}</td>\n')
+            else:
+                writer.write('          <td></td>\n')
+            # homology blast hits (metaerg database)
+            match = re.match(PRODUCT_RE, product)
+            if (match):
+                blast_percent_id = float(match.group(3))
+                percent_id_color = 'cg'
+                if blast_percent_id < 30:
+                    percent_id_color = 'cr'
+                elif blast_percent_id < 50:
+                    percent_id_color = 'co'
+                writer.write(f'          <td id={percent_id_color}>{CENTER_DOT}</td>\n')
+                blast_aligned = int(match.group(1)) / int(match.group(2))
+                alignment_color = 'cg'
+                if blast_aligned < 0.6:
+                    alignment_color = 'cr'
+                elif blast_aligned < 0.8:
+                    alignment_color = 'co'
+                writer.write(f'          <td id={alignment_color}>{CENTER_DOT}</td>\n')
+                blast_hit_count = int(match.group(4)) / int(match.group(5))
+                hit_count_color = 'cg'
+                if blast_hit_count < 0.5:
+                    hit_count_color = 'cr'
+                elif blast_hit_count < 0.8:
+                    hit_count_color = 'co'
+                writer.write(f'          <td id={hit_count_color}>{CENTER_DOT}</td>\n')
+                description = '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, match.group(6))
+                writer.write(f'          <td id=al>{description}</td>\n')
+            else:
+                writer.write(f'          <td></td><td></td><td></td><td id=al>{product}</td>\n')
+            # taxon
+            taxonomy = utils.get_feature_qualifier(feature, 'taxonomy')
+            if taxonomy:
+                taxon = make_feature_taxon(feature)
+                score = 0
+                taxon_list = taxonomy.split("~ ")
+                dominant_taxon = genome_stats['dominant taxon'].split("~ ")
+                for j in range(min(len(taxon_list), len(dominant_taxon))):
+                    if taxon_list[j] == dominant_taxon[j]:
+                        score += 1
+                taxon_color = 'cg'
+                if score < 2:
+                    taxon_color = 'cr'
+                elif score < 4:
+                    taxon_color = 'co'
+                elif score < 5:
+                    taxon_color = 'cb'
+                writer.write(f'          <td id={taxon_color}>{taxon}</td>\n')
+            else:
+                writer.write('          <td></td>\n')
+            writer.write('      </tr>\n')
+
+    writer.write('''    </tbody>
+</table> 
+</div>
+</body>
+
+</html>''')
 
 
-def html_save_all(mag_name, contig_dict):
-    metaerg_dir = os.getcwd()
-    # load blast results for visualization
-    blast_results = {'diamond': predict.spawn_file('diamond', mag_name),
-                     'blastn': predict.spawn_file('blastn', mag_name),
-                     'cdd': predict.spawn_file('cdd', mag_name)}
-    for key in blast_results.keys():
-        with utils.TabularBlastParser(blast_results[key]) as handle:
-            blast_result_hash = {}
-            for br in handle:
-                blast_result_hash[br[0]] = br[1]
-        blast_results[key] = blast_result_hash
-    # make dirs
-    html_dir = Path('html')
-    html_dir.mkdir(exist_ok=True)
-    os.chdir(html_dir)
-    mag_dir = Path(mag_name)
-    os.chdir(mag_dir)
+def html_save_all(mag_name, contig_dict, blast_results):
+    genome_stats = html_write_genome_stats(contig_dict)
+    with open('index_of_features.html', 'w') as html_writer:
+        html_write_feature_overview(html_writer, mag_name, contig_dict, genome_stats)
+
+    #mag_dir = Path(mag_name)
+    #os.chdir(mag_dir)
     # write html
-    genome_stats = html_write_genome_stats(mag_name, contig_dict)
-    html_write_feature_overview(mag_name, contig_dict, genome_stats)
     for contig in contig_dict.values():
         for feature in contig.features:
             html_write_page_for_feature(feature, contig, blast_results, genome_stats)
-    os.chdir(metaerg_dir)

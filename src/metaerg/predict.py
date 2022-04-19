@@ -254,6 +254,9 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict):
     if not ltr_harvest_file.exists() or FORCE:
         utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
         utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
+        # remove index files
+        for file in ltr_harvest_file.parent.glob(f'{mag_name}.ltr_index*'):
+            file.unlink()
     else:
         utils.log("Reusing existing result file.")
 
@@ -317,8 +320,13 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict):
         with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
             utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
         utils.run_external(f'RepeatMasker -lib {repeatscout_file_filtered} -dir . {fasta_file}')
-        # repeatmasker result file will be called 'masked.out', nothing we can do about that
-        utils.run_external(f'mv masked.out {repeatmasker_file}')
+        # repeatmasker result file will be called '{mag_name}.masked.out', nothing we can do about that
+        utils.run_external(f'mv {mag_name}.masked.out {repeatmasker_file}')
+        for file in repeatmasker_file.parent.glob(f'{mag_name}.masked*'):
+            if file.is_dir():
+                shutil.rmtree(file)
+            else:
+                file.unlink()
     else:
         utils.log("Reusing existing result file.")
 
@@ -411,22 +419,25 @@ def write_gene_files(mag_name, contig_dict):
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
     utils.log(f'Translating CDS and writing CDS and RNA genes to file...')
-    with open(cds_aa_file, 'w') as faa_handle, open(rna_nt_file, 'w') as fna_handle:
-        for contig in contig_dict.values():
-            for f in contig.features:
-                if f.type == 'CDS':
-                    feature_seq = utils.pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
-                    utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
-                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
-                    feature_seq.description = utils.get_feature_qualifier(f, 'product')
-                    if '*' in feature_seq:
-                        utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
-                    SeqIO.write(feature_seq, faa_handle, "fasta")
-                elif f.type in ['tRNA', 'rRNA', 'ncRNA']:
-                    feature_seq = f.extract(contig)
-                    feature_seq.id = utils.get_feature_qualifier(f, 'id')
-                    feature_seq.description = ''
-                    SeqIO.write(feature_seq, fna_handle, "fasta")
+    if not cds_aa_file.exists() or not rna_nt_file.exists() or FORCE:
+        with open(cds_aa_file, 'w') as faa_handle, open(rna_nt_file, 'w') as fna_handle:
+            for contig in contig_dict.values():
+                for f in contig.features:
+                    if f.type == 'CDS':
+                        feature_seq = utils.pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
+                        utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
+                        feature_seq.id = utils.get_feature_qualifier(f, 'id')
+                        feature_seq.description = utils.get_feature_qualifier(f, 'product')
+                        if '*' in feature_seq:
+                            utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
+                        SeqIO.write(feature_seq, faa_handle, "fasta")
+                    elif f.type in ['tRNA', 'rRNA', 'ncRNA']:
+                        feature_seq = f.extract(contig)
+                        feature_seq.id = utils.get_feature_qualifier(f, 'id')
+                        feature_seq.description = ''
+                        SeqIO.write(feature_seq, fna_handle, "fasta")
+    else:
+        utils.log("Reusing existing gene files.")
 
 
 def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
@@ -533,6 +544,9 @@ def predict_transmembrane_helixes(mag_name, contig_dict):
     if not tmhmm_file.exists() or FORCE:
         with open(tmhmm_file, 'w') as output, open(cds_aa_file) as input:
             utils.run_external('tmhmm', stdin=input, stdout=output)
+        for file in tmhmm_file.parent.glob(f'TMHMM_*'):
+            if file.is_dir():
+                shutil.rmtree(file)
     else:
         utils.log("Reusing existing results.")
 
@@ -587,7 +601,7 @@ def predict_signal_peptides(mag_name, contig_dict):
         utils.log("Reusing existing results.")
 
     count = 0
-    with open(Path('signalp', 'prediction_results.txt')) as signalp_handle:
+    with open(Path(signalp_dir, 'prediction_results.txt')) as signalp_handle:
         for line in signalp_handle:
             if line.startswith("#"):
                 continue
@@ -601,5 +615,6 @@ def predict_signal_peptides(mag_name, contig_dict):
         utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')
 
 
-def create_files(mag_name, contig_dict):
+def write_databases(mag_name, contig_dict):
     databases.save_cache(Path("."))
+
