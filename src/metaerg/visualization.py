@@ -291,6 +291,9 @@ $(document).ready( function () {
   #co {
     color: orange;
      }
+  #cw {
+    color: white;
+     }
   #al {
     text-align: left;
       }
@@ -303,7 +306,7 @@ $(document).ready( function () {
         <tr>
 ''')
     left_aligned = 'id description'
-    for column in 'id strand length type location CDD ident align recall description taxon'.split():
+    for column in 'id strand length type location CDD|ident|align|recall description taxon'.split():
         if column in left_aligned:
             writer.write(f'          <th id=al>{column}</th>\n')
         else:
@@ -315,6 +318,8 @@ $(document).ready( function () {
         for feature in contig.features:
             product = make_feature_product(feature)
             feature_id = utils.get_feature_qualifier(feature, "id")
+            description = ''
+            signal_peptide = utils.get_feature_qualifier(feature, 'signal_peptide')
             writer.write('      <tr>\n')
             # id
             writer.write(f'          <td id=al>{feature_id}</td>\n')
@@ -342,17 +347,20 @@ $(document).ready( function () {
                 writer.write('          <td>membrane</td>\n')
             elif number_of_tmh == 1:
                 writer.write('          <td>membrane anchor</td>\n')
-            elif utils.get_feature_qualifier(feature, 'signal_peptide'):
+            elif 'LIPO' in signal_peptide:
+                writer.write('          <td>(lipoprotein)</td>\n')
+            elif signal_peptide:
                 writer.write('          <td>envelope</td>\n')
             elif 'CDS' == feature.type and product:
                 writer.write('          <td>cytoplasm</td>\n')
             else:
                 writer.write('          <td></td>\n')
             # homology blast hits (cdd)
+            writer.write('          <td>')
             if utils.get_feature_qualifier(feature, 'cdd'):
-                writer.write(f'          <td>{CENTER_DOT}</td>\n')
+                writer.write(f'          <b>{CENTER_DOT} </b>')
             else:
-                writer.write('          <td></td>\n')
+                writer.write(f'          <b id=cw>{CENTER_DOT} </b>')
             # homology blast hits (metaerg database)
             match = re.match(PRODUCT_RE, product)
             if (match):
@@ -362,25 +370,27 @@ $(document).ready( function () {
                     percent_id_color = 'cr'
                 elif blast_percent_id < 50:
                     percent_id_color = 'co'
-                writer.write(f'          <td id={percent_id_color}>{CENTER_DOT}</td>\n')
+                writer.write(f'<b id={percent_id_color}>{CENTER_DOT} </b>')
                 blast_aligned = int(match.group(1)) / int(match.group(2))
                 alignment_color = 'cg'
                 if blast_aligned < 0.6:
                     alignment_color = 'cr'
                 elif blast_aligned < 0.8:
                     alignment_color = 'co'
-                writer.write(f'          <td id={alignment_color}>{CENTER_DOT}</td>\n')
+                writer.write(f'<b id={alignment_color}>{CENTER_DOT} </b>')
                 blast_hit_count = int(match.group(4)) / int(match.group(5))
                 hit_count_color = 'cg'
                 if blast_hit_count < 0.5:
                     hit_count_color = 'cr'
                 elif blast_hit_count < 0.8:
                     hit_count_color = 'co'
-                writer.write(f'          <td id={hit_count_color}>{CENTER_DOT}</td>\n')
+                writer.write(f'<b id={hit_count_color}>{CENTER_DOT} </b>')
                 description = '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, match.group(6))
+            writer.write('</td>\n')
+            if description:
                 writer.write(f'          <td id=al>{description}</td>\n')
             else:
-                writer.write(f'          <td></td><td></td><td></td><td id=al>{product}</td>\n')
+                writer.write(f'          <td id=al>{product}</td>\n')
             # taxon
             taxonomy = utils.get_feature_qualifier(feature, 'taxonomy')
             if taxonomy:
