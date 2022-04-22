@@ -240,7 +240,7 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
         writer.write('</body>\n</html>\n')
 
 
-def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats):
+def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats, blast_results):
     writer.write('''<!doctype html>
 <html>
 <head>
@@ -306,7 +306,7 @@ $(document).ready( function () {
         <tr>
 ''')
     left_aligned = 'id description'
-    for column in 'id strand length type location CDD|ident|align|recall description taxon'.split():
+    for column in 'id strand length type location subsystem CDD ident align recall description taxon'.split():
         if column in left_aligned:
             writer.write(f'          <th id=al>{column}</th>\n')
         else:
@@ -355,40 +355,52 @@ $(document).ready( function () {
                 writer.write('          <td>cytoplasm</td>\n')
             else:
                 writer.write('          <td></td>\n')
+            # subsystem
+            writer.write('          <td></td>\n')
             # homology blast hits (cdd)
-            writer.write('          <td>')
             if utils.get_feature_qualifier(feature, 'cdd'):
-                writer.write(f'          <b>{CENTER_DOT} </b>')
+                writer.write(f'          <td>Y</td>\n')
+                # construct a description in case of no blast hit below
+                cdd_result = blast_results['cdd'][feature_id]
+                if len(cdd_result):
+                    cdd_id = int(cdd_result[0]["hit_id"][4:])
+                    cdd_item = databases.CDD[cdd_id]
+                    txt = cdd_item[2]
+                    if len(txt) > 30:
+                        txt = txt[:30] + '...'
+                    description = f'{cdd_item[0]}|{cdd_item[1]} {txt}'
             else:
-                writer.write(f'          <b id=cw>{CENTER_DOT} </b>')
+                writer.write(f'          <td></td>\n')
             # homology blast hits (metaerg database)
             match = re.match(PRODUCT_RE, product)
             if (match):
                 blast_percent_id = float(match.group(3))
-                percent_id_color = 'cg'
+                color = 'cg'
                 if blast_percent_id < 30:
-                    percent_id_color = 'cr'
+                    color = 'cr'
                 elif blast_percent_id < 50:
-                    percent_id_color = 'co'
-                writer.write(f'<b id={percent_id_color}>{CENTER_DOT} </b>')
-                blast_aligned = int(match.group(1)) / int(match.group(2))
-                alignment_color = 'cg'
-                if blast_aligned < 0.6:
-                    alignment_color = 'cr'
-                elif blast_aligned < 0.8:
-                    alignment_color = 'co'
-                writer.write(f'<b id={alignment_color}>{CENTER_DOT} </b>')
-                blast_hit_count = int(match.group(4)) / int(match.group(5))
-                hit_count_color = 'cg'
-                if blast_hit_count < 0.5:
-                    hit_count_color = 'cr'
-                elif blast_hit_count < 0.8:
-                    hit_count_color = 'co'
-                writer.write(f'<b id={hit_count_color}>{CENTER_DOT} </b>')
-                description = '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, match.group(6))
-            writer.write('</td>\n')
+                    color = 'co'
+                writer.write(f'<td id={color}>{blast_percent_id:.0f}</td>\n')
+                blast_aligned = (int(match.group(1)) / int(match.group(2))) * 100
+                color = 'cg'
+                if blast_aligned < 60:
+                    color = 'cr'
+                elif blast_aligned < 80:
+                    color = 'co'
+                writer.write(f'<td id={color}>{blast_aligned:.0f} </td>\n')
+                blast_hit_count = (int(match.group(4)) / int(match.group(5))) * 100
+                color = 'cg'
+                if blast_hit_count < 50:
+                    color = 'cr'
+                elif blast_hit_count < 80:
+                    color = 'co'
+                writer.write(f'<td id={color}>{blast_hit_count:.0f} </td>\n')
+                description = match.group(6)
+            else:
+                writer.write('          <td></td><td></td><td></td>\n')
+
             if description:
-                writer.write(f'          <td id=al>{description}</td>\n')
+                writer.write('<td id=al><a target="_blank" href="{}.html">{}</a></td>\n'.format(feature_id, description))
             else:
                 writer.write(f'          <td id=al>{product}</td>\n')
             # taxon
@@ -424,7 +436,7 @@ $(document).ready( function () {
 def html_save_all(mag_name, contig_dict, blast_results):
     genome_stats = html_write_genome_stats(contig_dict)
     with open('index_of_features.html', 'w') as html_writer:
-        html_write_feature_overview(html_writer, mag_name, contig_dict, genome_stats)
+        html_write_feature_overview(html_writer, mag_name, contig_dict, genome_stats, blast_results)
 
     #mag_dir = Path(mag_name)
     #os.chdir(mag_dir)

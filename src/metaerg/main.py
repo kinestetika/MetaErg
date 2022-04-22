@@ -17,6 +17,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--contig_file', required=True,  help='fasta nucleotide file of the contigs')
     parser.add_argument('--database_dir', required=True,  help='dir that contains the annotation databases')
+    parser.add_argument('--rename_contigs', default=True,  help='renaming contigs improves visualization. It is '
+                                                                'required when original contig names are long')
+    parser.add_argument('--rename_mags', default=True,  help='renaming mags improves visualization. It is '
+                                                             'required when original file names are long (>7 chars)')
+    parser.add_argument('--min_contig_length', default=0,  help='shorter contigs will be filtered before annotaton.')
+
     args = parser.parse_args()
     return args
 
@@ -46,24 +52,21 @@ def get_tmp_file(tmp_dir):
     return os.path.join()
 
 
-def main():
-    utils.log(f'This is metaerg.py {VERSION}')
-    args = parse_arguments()
-
-    # (1) set and validate database dir
-    dbdir = Path(args.database_dir)
-    databases.DBDIR = dbdir
-    if not databases.does_db_appear_valid():
-        utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
-        exit(1)
-
+def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
     # (2) set and validate fasta .fna file, mag (genome) name,
-    input_fasta_file = Path(args.contig_file).absolute()
+    input_fasta_file = Path(contig_file).absolute()
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
         exit(1)
-    mag_name = input_fasta_file.stem
+    if rename_mags:
+        mag_name = f'g{genome_id:4}'
+    else:
+        mag_name = input_fasta_file.stem
+        if len(mag_name) > 5:
+            new_mag_name = f'g{genome_id:4}'
+            utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
+            mag_name = new_mag_name
 
     # (3) set output files, note that these file paths are relative to the current working dir
     output_dir, html_dir = create_output_dir(working_directory)
@@ -73,9 +76,43 @@ def main():
     faa_file = predict.spawn_file("faa", mag_name)
     fna_file = predict.spawn_file("rna.fna", mag_name)
 
-    # (4) Filter and load contigs
+    # (4) Filter, rename and load contigs
     filtered_fasta_file = predict.spawn_file('filtered.fna', mag_name)
-    utils.create_filtered_contig_fasta_file(fasta_file_in=input_fasta_file, fasta_file_out=filtered_fasta_file)
+    contig_dict = SeqIO.to_dict(SeqIO.parse(input_fasta_file, "fasta"))
+    if not rename_contigs: # check if contig names are short enough
+        for contig_name in contig_dict.keys():
+            if len(contig_name) > 5:
+                utils.log(f'Contig name "{contig_name}" is too long for visualization, will rename contigs...')
+                rename_contigs = True
+                break
+    if rename_contigs:
+        rename_txt = ' renaming contigs,'
+    else:
+        rename_txt = ''
+    contig_name_mappings = {}
+    utils.log(f'Filtering contigs for length, removing gaps,{rename_txt} replacing non-IUPAC bases with N, '
+              'capitalizing...')
+    i = 0
+    with open(filtered_fasta_file, 'w') as fasta_writer:
+        for contig in contig_dict.values():
+            if len(contig) < min_length:
+                continue
+            filtered_contig = utils.filter_seq(contig)
+            if rename_contigs:
+                new_id = f'{mag_name}|c{i:4}'
+                contig_name_mappings[new_id] = contig.id
+                filtered_contig.id = new_id
+                filtered_contig.description = filtered_contig.id
+            i += 1
+            SeqIO.write(filtered_contig, fasta_writer, "fasta")
+    utils.log(f'Wrote {i} contigs of length >{min_length} nt to {filtered_fasta_file}')
+
+    if rename_contigs:
+        contig_name_mappings_file = predict.spawn_file('contig.name.mappings', mag_name)
+        with open(contig_name_mappings_file, 'w') as mapping_writer:
+            for key, value in contig_name_mappings.items():
+                mapping_writer.write(f'{key}\t{value}\n')
+
     contig_dict = SeqIO.to_dict(SeqIO.parse(filtered_fasta_file, "fasta"))
     for contig in contig_dict.values():
         contig.annotations['molecule_type'] = 'DNA'
@@ -102,7 +139,7 @@ def main():
                        predict.predict_non_coding_rna_features_with_infernal,
                        predict.predict_retrotransposons_with_ltrharvest,
                        predict.predict_tandem_repeats_with_trf,
-                       #predict.predict_remaining_repeats_with_repeatmasker,
+                       predict.predict_remaining_repeats_with_repeatmasker,
                        predict.predict_coding_sequences_with_prodigal,
                        predict.create_ids,
                        databases.load_descriptions_taxonomy_cdd,
@@ -155,6 +192,19 @@ def main():
     visualization.html_save_all(mag_name, contig_dict, blast_results)
     utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
+
+def main():
+    utils.log(f'This is metaerg.py {VERSION}')
+    args = parse_arguments()
+
+    # (1) set and validate database dir
+    dbdir = Path(args.database_dir)
+    databases.DBDIR = dbdir
+    if not databases.does_db_appear_valid():
+        utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
+        exit(1)
+
+    annotate_genome(args.contig_file)
 
 if __name__ == "__main__":
     main()
