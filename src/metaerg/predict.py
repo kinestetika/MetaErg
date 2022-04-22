@@ -9,6 +9,7 @@ from Bio.SeqFeature import SeqFeature, FeatureLocation
 
 from metaerg import utils
 from metaerg import databases
+from metaerg import subsystems
 
 FORCE = False
 MULTI_MODE = False
@@ -20,6 +21,7 @@ FEATURE_INFERENCES = ['minced', 'aragorn', 'cmscan', 'ltrharvest', 'tandem-repea
 FEATURE_ID_TAGS = ['crispr', 'trna', 'rna', 'ltr', 'tr', 'repeat', 'cds']
 TRANSLATION_TABLE = 11
 SOURCE = 'meta'
+BLAST_RESULTS = {}
 
 
 def spawn_file(program_name, mag_name):
@@ -449,8 +451,10 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
     else:
         utils.log("Reusing existing result file.")
 
+    BLAST_RESULTS['diamond'] = {}
     with utils.TabularBlastParser(diamond_file) as handle:
         for blast_result in handle:
+            BLAST_RESULTS['diamond'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'aa')
     utils.log('Diamond search complete.')
 
@@ -465,8 +469,10 @@ def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
     else:
         utils.log("Reusing existing result file.")
 
+    BLAST_RESULTS['blastn'] = {}
     with utils.TabularBlastParser(blastn_file) as handle:
         for blast_result in handle:
+            BLAST_RESULTS['blastn'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'nt')
     utils.log('Blastn search complete.')
 
@@ -482,21 +488,21 @@ def predict_functions_with_cdd(mag_name, contig_dict):
         utils.log("Reusing existing result file.")
 
     count = 0
+    BLAST_RESULTS['cdd'] = {}
     with utils.TabularBlastParser(cdd_file) as handle:
         for blast_result in handle:
+            BLAST_RESULTS['cdd'][blast_result[0]] = blast_result[1]
             deciph_feat_id = utils.decipher_metaerg_id(blast_result[0])
             target_feature = contig_dict[deciph_feat_id['contig_id']].features[deciph_feat_id['gene_number']]
-            top_hit = True
             for h in blast_result[1]:
                 cdd_id = int(h["hit_id"][4:])
                 databases.CDD_CACHE.add(cdd_id)
-                if top_hit:
-                    hit_length = abs(h["hit_end"] - h["hit_start"])
-                    cdd_item = databases.CDD[cdd_id]
-                    cdd_descr = f'{cdd_item[0]}|{cdd_item[1]} {cdd_item[2]}'
-                    utils.set_feature_qualifier(target_feature, 'cdd',
-                        f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
-                    top_hit = False
+                hit_length = abs(h["hit_end"] - h["hit_start"])
+                cdd_item = databases.CDD[cdd_id]
+                cdd_descr = f'{cdd_item[0]}|{cdd_item[1]} {cdd_item[2]}'
+                utils.set_feature_qualifier(target_feature, 'cdd',
+                    f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
+                break
             count += 1
     utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins.')
 
@@ -613,6 +619,40 @@ def predict_signal_peptides(mag_name, contig_dict):
             utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1
         utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')
+
+
+def predict_subsystems(mag_name, contig_dict):
+    subsystems_file = spawn_file('subsystems', mag_name)
+    subsystems.prep_subsystems()
+    for contig in contig_dict.values():
+        for f in contig.features:
+            f_id = utils.get_feature_qualifier(f, 'id')
+            for topic in ['cdd', 'diamond', 'blastn']:
+                try:
+                    blast_result = BLAST_RESULTS[topic][f_id]
+                    for hit in blast_result:
+                        # determine if blast alignment is good
+                        if topic == 'cdd':
+                            cdd_id = int(hit["hit_id"][4:])
+                            cdd_item = databases.CDD[cdd_id]
+                            aligned = abs(hit["hit_start"] - hit["hit_end"]) / cdd_item[3]
+                            hit_descr = cdd_item[2]
+                        else:
+                            db_entry = databases.decipher_database_id(hit['hit_id'])
+                            aligned = abs(hit["hit_start"] - hit["hit_end"]) / db_entry["length"]
+                            hit_descr = db_entry["descr"]
+                        if aligned < 0.8:
+                            break
+                        subsystem_matched = subsystems.match_subsystem(hit_descr)
+                        if subsystem_matched:
+                            prev = utils.get_feature_qualifier(f, 'subsystem')
+                            if prev:
+                                utils.set_feature_qualifier(f, 'subsystem', f'{prev}, {subsystem_matched}')
+                            else:
+                                utils.set_feature_qualifier(f, 'subsystem', subsystem_matched)
+                            break
+                except KeyError:
+                    continue
 
 
 def write_databases(mag_name, contig_dict):

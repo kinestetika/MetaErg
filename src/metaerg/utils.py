@@ -221,17 +221,3 @@ class TabularBlastParser:
         if len(all_hits):
             return self.current_query_id, all_hits
         raise StopIteration
-
-
-def make_short_contig_names(infile, outfile, mapfile):
-    contig_dict = SeqIO.to_dict(SeqIO.parse(infile, "fasta"))
-    contig_list = list(contig_dict.values())
-    with open(outfile, 'w') as out:
-        for i in range(len(contig_dict)):
-            name = f'c{i}'
-            contig = contig_list[i]
-            new_seq = SeqRecord(contig.seq)
-            new_seq.id = name
-            new_seq.description = name # f'{name} {contig.id}'
-            SeqIO.write(new_seq, out, "fasta")
-            print(new_seq.description)

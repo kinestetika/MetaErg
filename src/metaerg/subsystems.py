@@ -1,3 +1,10 @@
+import re
+
+from metaerg import utils
+
+SUBSYSTEM_LIST = []
+SUBSYSTEM_HASH = {}
+
 SUBSYSTEMS = '''>ribosome
 ribosomal protein L1
 ribosomal protein L2
@@ -54,3 +61,25 @@ ribosomal protein S12 methylthiotransferase RimO
 ribosomal protein S6--L-glutamate ligase
 ribosome-binding factor RbfA
 '''
+
+def prep_subsystems():
+    current_subsystem = None
+    for line in SUBSYSTEMS.split('\n'):
+        line = line.strip()
+        if line.startswith("#") or not len(line):
+            continue
+        if line.startswith(">"):
+            current_subsystem = line[1:]
+            SUBSYSTEM_HASH[current_subsystem] = []
+            continue
+        SUBSYSTEM_HASH[current_subsystem].append(line)
+        SUBSYSTEM_LIST.append((line, current_subsystem))
+    SUBSYSTEM_LIST.sort(key=lambda x: -len(x[0]))
+
+
+def match_subsystem(descr):
+    for subsystem_entry in SUBSYSTEM_LIST:
+        gene_phrase = subsystem_entry[0]
+        match = re.search(f'\b{gene_phrase}\b', descr)
+        if match:
+            return subsystem_entry[1]

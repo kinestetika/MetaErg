@@ -9,6 +9,7 @@ from metaerg import databases
 from metaerg import predict
 from metaerg import utils
 from metaerg import visualization
+from metaerg import subsystems
 
 VERSION = "2.0.15"
 
@@ -90,6 +91,7 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
 
     return filtered_contig_dict
 
+
 def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
     # (2) set and validate fasta .fna file, mag (genome) name,
     input_fasta_file = Path(contig_file).absolute()
@@ -150,6 +152,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
                        predict.predict_functions_with_antismash,
                        predict.predict_transmembrane_helixes,
                        predict.predict_signal_peptides,
+                       predict.predict_subsystems,
                        predict.write_databases
                        ):
         prediction(mag_name, contig_dict)
@@ -157,17 +160,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)
 
-    # (6) load blast results
-    blast_results = {'diamond': predict.spawn_file('diamond', mag_name),
-                     'blastn': predict.spawn_file('blastn', mag_name),
-                     'cdd': predict.spawn_file('cdd', mag_name)}
-    for key in blast_results.keys():
-        with utils.TabularBlastParser(blast_results[key]) as handle:
-            blast_result_hash = {}
-            for br in handle:
-                blast_result_hash[br[0]] = br[1]
-        blast_results[key] = blast_result_hash
-    # (7) write main result files
+    # (6) write main result files
     utils.log("Now writing final result files...")
     os.chdir(working_directory)
     with open(faa_file, 'w') as faa_handle, open(fna_file, 'w') as fna_handle:
@@ -189,14 +182,15 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
     with open(gff_file, "w") as gff_handle:
         GFF.write(contig_dict.values(), gff_handle)
     os.chdir(html_dir)
-    visualization.html_save_all(mag_name, contig_dict, blast_results)
+    visualization.html_save_all(mag_name, contig_dict, predict.BLAST_RESULTS)
     utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-
+    subsystems.prep_subsystems()
+    exit(0)
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)
     databases.DBDIR = dbdir
