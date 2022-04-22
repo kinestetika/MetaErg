@@ -48,9 +48,47 @@ def create_output_dir(parent_dir:Path):
     return output_dir, html_dir
 
 
-def get_tmp_file(tmp_dir):
-    return os.path.join()
+def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length):
+    filtered_fasta_file = predict.spawn_file('filtered.fna', mag_name)
+    contig_dict = SeqIO.to_dict(SeqIO.parse(input_fasta_file, "fasta"))
+    if not rename_contigs: # check if contig names are short enough
+        for contig_name in contig_dict.keys():
+            if len(contig_name) > 5:
+                utils.log(f'Contig name "{contig_name}" is too long for visualization, will rename contigs...')
+                rename_contigs = True
+                break
+    if rename_contigs:
+        rename_txt = ' renaming contigs,'
+    else:
+        rename_txt = ''
+    contig_name_mappings = {}
+    utils.log(f'Filtering contigs for length, removing gaps,{rename_txt} replacing non-IUPAC bases with N, '
+              'capitalizing...')
+    i = 0
+    filtered_contig_dict = {}
+    with open(filtered_fasta_file, 'w') as fasta_writer:
+        for contig in contig_dict.values():
+            if len(contig) < min_length:
+                continue
+            filtered_contig = utils.filter_seq(contig)
+            if rename_contigs:
+                new_id = f'{mag_name}|c{i:4}'
+                contig_name_mappings[new_id] = contig.id
+                filtered_contig.id = new_id
+                filtered_contig.description = filtered_contig.id
+            i += 1
+            filtered_contig.annotations['molecule_type'] = 'DNA'
+            SeqIO.write(filtered_contig, fasta_writer, "fasta")
+            filtered_contig_dict[filtered_contig.id] = filtered_contig
+    utils.log(f'Wrote {i} contigs of length >{min_length} nt to {filtered_fasta_file}')
 
+    if rename_contigs:
+        contig_name_mappings_file = predict.spawn_file('contig.name.mappings', mag_name)
+        with open(contig_name_mappings_file, 'w') as mapping_writer:
+            for key, value in contig_name_mappings.items():
+                mapping_writer.write(f'{key}\t{value}\n')
+
+    return filtered_contig_dict
 
 def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
     # (2) set and validate fasta .fna file, mag (genome) name,
@@ -77,47 +115,9 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
     fna_file = predict.spawn_file("rna.fna", mag_name)
 
     # (4) Filter, rename and load contigs
-    filtered_fasta_file = predict.spawn_file('filtered.fna', mag_name)
-    contig_dict = SeqIO.to_dict(SeqIO.parse(input_fasta_file, "fasta"))
-    if not rename_contigs: # check if contig names are short enough
-        for contig_name in contig_dict.keys():
-            if len(contig_name) > 5:
-                utils.log(f'Contig name "{contig_name}" is too long for visualization, will rename contigs...')
-                rename_contigs = True
-                break
-    if rename_contigs:
-        rename_txt = ' renaming contigs,'
-    else:
-        rename_txt = ''
-    contig_name_mappings = {}
-    utils.log(f'Filtering contigs for length, removing gaps,{rename_txt} replacing non-IUPAC bases with N, '
-              'capitalizing...')
-    i = 0
-    with open(filtered_fasta_file, 'w') as fasta_writer:
-        for contig in contig_dict.values():
-            if len(contig) < min_length:
-                continue
-            filtered_contig = utils.filter_seq(contig)
-            if rename_contigs:
-                new_id = f'{mag_name}|c{i:4}'
-                contig_name_mappings[new_id] = contig.id
-                filtered_contig.id = new_id
-                filtered_contig.description = filtered_contig.id
-            i += 1
-            SeqIO.write(filtered_contig, fasta_writer, "fasta")
-    utils.log(f'Wrote {i} contigs of length >{min_length} nt to {filtered_fasta_file}')
+    contig_dict = filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length)
 
-    if rename_contigs:
-        contig_name_mappings_file = predict.spawn_file('contig.name.mappings', mag_name)
-        with open(contig_name_mappings_file, 'w') as mapping_writer:
-            for key, value in contig_name_mappings.items():
-                mapping_writer.write(f'{key}\t{value}\n')
-
-    contig_dict = SeqIO.to_dict(SeqIO.parse(filtered_fasta_file, "fasta"))
-    for contig in contig_dict.values():
-        contig.annotations['molecule_type'] = 'DNA'
-
-    # Feature prediction
+    # (5) Feature prediction
 
     ################
     # for debugging individual predicton tools, first run the pipeline,
@@ -157,7 +157,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)
 
-    #load blast results
+    # (6) load blast results
     blast_results = {'diamond': predict.spawn_file('diamond', mag_name),
                      'blastn': predict.spawn_file('blastn', mag_name),
                      'cdd': predict.spawn_file('cdd', mag_name)}
@@ -167,7 +167,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
             for br in handle:
                 blast_result_hash[br[0]] = br[1]
         blast_results[key] = blast_result_hash
-    # write main result files
+    # (7) write main result files
     utils.log("Now writing final result files...")
     os.chdir(working_directory)
     with open(faa_file, 'w') as faa_handle, open(fna_file, 'w') as fna_handle:
@@ -203,7 +203,6 @@ def main():
     if not databases.does_db_appear_valid():
         utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
         exit(1)
-
     annotate_genome(args.contig_file)
 
 if __name__ == "__main__":
