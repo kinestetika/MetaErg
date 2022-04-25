@@ -73,7 +73,7 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
                 continue
             filtered_contig = utils.filter_seq(contig)
             if rename_contigs:
-                new_id = f'{mag_name}|c{i:4}'
+                new_id = f'{mag_name}.c{i:0>4}'
                 contig_name_mappings[new_id] = contig.id
                 filtered_contig.id = new_id
                 filtered_contig.description = filtered_contig.id
@@ -100,11 +100,11 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
         exit(1)
     if rename_mags:
-        mag_name = f'g{genome_id:4}'
+        mag_name = f'g{genome_id:0>4}'
     else:
         mag_name = input_fasta_file.stem
         if len(mag_name) > 5:
-            new_mag_name = f'g{genome_id:4}'
+            new_mag_name = f'g{genome_id:0>4}'
             utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
             mag_name = new_mag_name
 
@@ -189,14 +189,14 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    subsystems.prep_subsystems()
-    exit(0)
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)
     databases.DBDIR = dbdir
     if not databases.does_db_appear_valid():
         utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
         exit(1)
+    # (2) prep subsystems
+    # (3) annotate..
     annotate_genome(args.contig_file)
 
 if __name__ == "__main__":

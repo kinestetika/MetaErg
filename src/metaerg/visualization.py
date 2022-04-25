@@ -1,8 +1,5 @@
-import os
 import re
 import pandas as pd
-from pathlib import Path
-from Bio import SeqIO
 
 from metaerg import databases
 from metaerg import predict
@@ -237,7 +234,20 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
             writer.write(f'<hr><h3>conserved domain database hits</h3>')
             writer.write(cdd_blast_table.to_html(None))
 
-        writer.write('</body>\n</html>\n')
+        writer.write('<table>\n')
+        for key in feature.qualifiers:
+            writer.write('  <tr>\n')
+            writer.write(f'    <td>{key}</td><td>{utils.get_feature_qualifier(feature, key)}</td>\n')
+            writer.write('  </tr>\n')
+        writer.write('</table></body>\n</html>\n')
+
+
+# To make the header sticky, add the following lines to th style:
+# position: sticky;
+# position: -webkit - sticky;
+# top: 0
+# px;
+# z - index: 2;
 
 
 def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats, blast_results):
@@ -259,7 +269,7 @@ def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats, bla
 <script type="text/javascript" charset="utf8">
 $(document).ready( function () {
     $('#table_id').DataTable({
-        "paging": false,
+        "lengthMenu": [[20, 100, -1], [20, 100, "All"] ],
         "bSort" : false
         });
 } );
@@ -267,10 +277,6 @@ $(document).ready( function () {
 
 <style>
   th {
-	position: sticky;
-	position: -webkit-sticky;
-	top: 0px;
-	z-index: 2;
 	background-color: white;
      }
   #f {

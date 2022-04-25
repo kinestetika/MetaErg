@@ -26,7 +26,7 @@ NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria':'rRNA',
                         '5_8S_rRNA': 'rRNA',
                         'tmRNA': 'tmRNA',
                         'tRNA': 'tRNA'}
-FEATURE_ID_PATTERN = re.compile("(.+)_(\d{5})_(crispr|trna|rna|ltr|tr|repeat|cds)$")
+FEATURE_ID_PATTERN = re.compile("(.+)\.(\d{5})\.(crispr|trna|rna|ltr|tr|repeat|cds)$")
 
 
 ESCAPE_CHARS = {'%2C': ',',
@@ -60,8 +60,6 @@ def set_feature_qualifier(feature: SeqFeature, key, value):
 
 
 def filter_seq(record):
-    global FILTERED_CONTIGS
-    FILTERED_CONTIGS += 1
     record.seq = Seq(NON_IUPAC_RE.sub('N', str(record.seq)))
     record.seq = Seq(''.join(str(record.seq).split()).upper())
     return record
@@ -69,13 +67,9 @@ def filter_seq(record):
 
 def create_filtered_contig_fasta_file(fasta_file_in:Path, fasta_file_out:Path, min_length=0):
     log('Filtering contigs for length, removing gaps, replacing non-IUPAC bases with N, capitalizing...')
-    global FILTERED_CONTIGS
-    FILTERED_CONTIGS = 0
     input_seq_iterator = SeqIO.parse(fasta_file_in, "fasta")
     short_seq_iterator = (filter_seq(record) for record in input_seq_iterator if len(record.seq) >= min_length)
     SeqIO.write(short_seq_iterator, fasta_file_out, "fasta")
-    log(f'Wrote {FILTERED_CONTIGS} contigs of length >{min_length} '
-        f'nt to {fasta_file_out}')
 
 
 def unescape_str(str):

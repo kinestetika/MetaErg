@@ -86,7 +86,7 @@ def create_ids(fasta_file:Path, contig_dict):
                 if FEATURE_INFERENCES[i] in utils.get_feature_qualifier(feature, 'inference'):
                     id_tag = FEATURE_ID_TAGS[i]
                     break
-            new_id = f'{contig.id}_{new_id_number:05d}_{id_tag}'
+            new_id = f'{contig.id}.{new_id_number:05d}.{id_tag}'
             new_id_number += 1
             old_to_new_id_map[utils.get_feature_qualifier(feature, "id")] = new_id
             utils.set_feature_qualifier(feature, "id", new_id)
@@ -456,7 +456,7 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
         for blast_result in handle:
             BLAST_RESULTS['diamond'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'aa')
-    utils.log('Diamond search complete.')
+    utils.log(f'Diamond search complete - found {len(BLAST_RESULTS["diamond"])} hits to proteins.')
 
 
 def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
@@ -474,7 +474,7 @@ def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
         for blast_result in handle:
             BLAST_RESULTS['blastn'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'nt')
-    utils.log('Blastn search complete.')
+    utils.log(f'Blastn search complete - found {len(BLAST_RESULTS["blastn"])} hits to RNA genes.')
 
 
 def predict_functions_with_cdd(mag_name, contig_dict):
@@ -487,7 +487,6 @@ def predict_functions_with_cdd(mag_name, contig_dict):
     else:
         utils.log("Reusing existing result file.")
 
-    count = 0
     BLAST_RESULTS['cdd'] = {}
     with utils.TabularBlastParser(cdd_file) as handle:
         for blast_result in handle:
@@ -503,8 +502,7 @@ def predict_functions_with_cdd(mag_name, contig_dict):
                 utils.set_feature_qualifier(target_feature, 'cdd',
                     f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
                 break
-            count += 1
-    utils.log(f'RPSBlast CDD search complete. Found hits for {count} proteins.')
+    utils.log(f'RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} hits to proteins.')
 
 
 def predict_functions_with_antismash(mag_name, contig_dict):
@@ -532,11 +530,14 @@ def predict_functions_with_antismash(mag_name, contig_dict):
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
                         if antismash_region_name:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
+                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_function', antismash_gene_function)
+                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
                         antismash_gene_category =  utils.get_feature_qualifier(feature, "gene_kind")
                         if antismash_gene_category:
+                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_category', antismash_gene_category)
                         antismash_hit_count += 1
     utils.log(f'Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')

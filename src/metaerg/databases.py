@@ -106,8 +106,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--target_dir', required=True,  help='where to create the database')
     parser.add_argument('--gtdbtk_dir', required=True,  help='where to create the database')
-    parser.add_argument('--tasks', required=False,  default='FPVERBC', help='F = folders, P = prokaryotes, V = viruses, '
-                                                                           'E = eukaryotes, R = rfam, B = build_db')
+    parser.add_argument('--tasks', required=False,  default='FPVERBC', help='F = create folders, '
+                        'P = download prokaryotes, V = download viruses, E = download eukaryotes, '
+                        'B = build P,V,E blast databases, R = install rfam, C = install cdd')
 
     args = parser.parse_args()
     return args
@@ -549,7 +550,7 @@ def prep_cdd(settings):
         utils.run_external(f'wget https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
         cdd_index = Path(cdd_dir, CDD_INDEX_FILENAME)
         utils.run_external(f'gunzip {cdd_index}.gz')
-        utils.run_external(f'cp {cdd_index} {cdd_index.parent}')
+        utils.run_external(f'cp {cdd_index} {settings["db_dir"]}')
         utils.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
         utils.run_external(f'tar -xf cdd.tar.gz')
         utils.run_external(f'makeprofiledb -title CDD.v.3.12 -in Cdd.pn -out Cdd'
