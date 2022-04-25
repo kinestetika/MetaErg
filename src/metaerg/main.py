@@ -1,5 +1,6 @@
 import argparse
 import os
+import shutil
 from pathlib import Path
 
 from Bio import SeqIO
@@ -13,6 +14,40 @@ from metaerg import subsystems
 
 VERSION = "2.0.15"
 
+
+def get_available_prereqs():
+    utils.log("Checking available dependencies (helper programs)...")
+    prereqs = [('minced', False),
+               ('aragorn', False),
+               ('cmscan', True),
+               ('gt', False), # LTR Harvest
+               ('trf', False), # Tandem Repeat Finder
+               ('build_lmer_table', False),
+               ('RepeatScout', False),
+               ('filter-stage-1.prl', False),
+               ('RepeatMasker', False),
+               ('prodigal', True),
+               ('diamond', True),
+               ('blastn', True),
+               ('rpsblast', True),
+               ('antismash', False),
+               ('tmhmm', False),
+               ('signalp6', False)
+               ]
+    prereqs_failed = False
+    for (program, required) in prereqs:
+        program_path = shutil.which(program, mode=os.X_OK)
+        if program_path:
+            utils.log(f'{program} => {program_path}')
+            predict.AVAILABLE_PREREQS.add(program)
+        elif required:
+            prereqs_failed = True
+            utils.log(f'{program} => (FATAL ERROR)')
+        else:
+            utils.log(f'{program} => (not found))')
+    if prereqs_failed:
+        utils.log('Aborting... missing required dependency.')
+        exit(1)
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
@@ -194,6 +229,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
 
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
+    get_available_prereqs()
     args = parse_arguments()
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)

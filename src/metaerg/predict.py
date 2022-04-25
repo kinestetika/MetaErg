@@ -22,6 +22,7 @@ FEATURE_ID_TAGS = ['crispr', 'trna', 'rna', 'ltr', 'tr', 'repeat', 'cds']
 TRANSLATION_TABLE = 11
 SOURCE = 'meta'
 BLAST_RESULTS = {}
+AVAILABLE_PREREQS = set()
 
 
 def spawn_file(program_name, mag_name):
@@ -127,6 +128,9 @@ def predict_crisprs_with_minced(mag_name, contig_dict, subsystem_hash):
     minced_file = spawn_file('minced', mag_name)
 
     utils.log('Predicting CRISPR arrays with minced...')
+    if not 'minced' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not minced_file.exists() or FORCE:
         utils.run_external(f'minced -gffFull {fasta_file} {minced_file}')
     else:
@@ -164,6 +168,9 @@ def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
     aragorn_file = spawn_file('aragorn', mag_name)
 
     utils.log('Predicting tRNAs with aragorn...')
+    if not 'aragorn' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not aragorn_file.exists() or FORCE:
         utils.run_external(f'aragorn -l -t -gc{TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
     else:
@@ -202,6 +209,9 @@ def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict, subsyst
     cmscan_file = spawn_file('cmscan', mag_name)
 
     utils.log('Predicting non-coding RNAs (rRNA, tRNA, CRISPRs, etc.) with infernal (cmscan)...')
+    if not 'cmscan' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not cmscan_file.exists() or FORCE:
         utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
     else:
@@ -253,6 +263,9 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_ha
     ltr_harvest_file = spawn_file('ltr_harvest', mag_name)
 
     utils.log('Predicting retrotransposons with genometools/ltrharvest...')
+    if not 'gt' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not ltr_harvest_file.exists() or FORCE:
         utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
         utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
@@ -285,6 +298,9 @@ def predict_tandem_repeats_with_trf(mag_name, contig_dict, subsystem_hash):
     trf_file = spawn_file('tandem-repeat-finder', mag_name)
 
     utils.log('Predicting tandem repeats with trf...')
+    if not 'trf' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not trf_file.exists() or FORCE:
         with open(trf_file, 'w') as output:
             utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
@@ -316,6 +332,10 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
     repeatmasker_file = spawn_file('repeatmasker', mag_name)
 
     utils.log('Predicting remaining repeats with repeatmasker...')
+    for program in 'build_lmer_table RepeatScout filter-stage-1.prl RepeatMasker'.split():
+        if not program in AVAILABLE_PREREQS:
+            utils.log("Skipping analysis - helper program missing.")
+            return
     if not repeatmasker_file.exists() or FORCE:
         utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
         utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
@@ -381,6 +401,9 @@ def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash
         utils.log(f'... (and using -g {TRANSLATION_TABLE}) ...')
 
     utils.log(f'Predicting coding sequences with prodigal (using -p {SOURCE}) ...')
+    if not 'prodigal' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not prodigal_file.exists() or FORCE:
         utils.run_external(f'prodigal -p {SOURCE} {c}-m -f gff -q -i {fasta_file} -o {prodigal_file}')
     else:
@@ -446,6 +469,9 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
     diamond_file = spawn_file('diamond', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
     utils.log(f'Performing homology searches with diamond...')
+    if not 'diamond' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not diamond_file.exists() or FORCE:
         utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
     else:
@@ -456,7 +482,7 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         for blast_result in handle:
             BLAST_RESULTS['diamond'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'aa')
-    utils.log(f'Diamond search complete - found {len(BLAST_RESULTS["diamond"])} hits to proteins.')
+    utils.log(f'Diamond search complete - found {len(BLAST_RESULTS["diamond"])} proteins with hits.')
 
 
 def predict_functions_and_taxa_with_blastn(mag_name, contig_dict, subsystem_hash):
@@ -464,6 +490,9 @@ def predict_functions_and_taxa_with_blastn(mag_name, contig_dict, subsystem_hash
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
     utils.log(f'Performing homology searches with blastn ...')
+    if not 'blastn' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not blastn_file.exists() or FORCE:
         utils.run_external(f'blastn -db {Path(databases.DBDIR, "db_rna.fna")} -query {rna_nt_file} -out {blastn_file} -max_target_seqs 25 -outfmt 6')
     else:
@@ -474,7 +503,7 @@ def predict_functions_and_taxa_with_blastn(mag_name, contig_dict, subsystem_hash
         for blast_result in handle:
             BLAST_RESULTS['blastn'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'nt')
-    utils.log(f'Blastn search complete - found {len(BLAST_RESULTS["blastn"])} hits to RNA genes.')
+    utils.log(f'Blastn search complete - found {len(BLAST_RESULTS["blastn"])} RNA genes with hits.')
 
 
 def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
@@ -482,6 +511,9 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
     cdd_file = spawn_file('cdd', mag_name)
 
     utils.log(f'Performing homology searches with rpsblast/cdd ...')
+    if not 'rpsblast' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not cdd_file.exists() or FORCE:
         utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} -outfmt 6 -evalue 1e-7')
     else:
@@ -502,7 +534,7 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
                 utils.set_feature_qualifier(target_feature, 'cdd',
                     f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
                 break
-    utils.log(f'RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} hits to proteins.')
+    utils.log(f'RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} functions for proteins.')
 
 
 def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
@@ -510,6 +542,9 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
     gbk_file = spawn_file('gbk', mag_name)
 
     utils.log(f'Performing homology searches with antismash ...')
+    if not 'antismash' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not antismash_dir.exists() or FORCE:
         if antismash_dir.exists():
             shutil.rmtree(antismash_dir)
@@ -551,6 +586,9 @@ def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
     utils.log(f'Discovering transmembrane helixes with tmhmm...')
+    if not 'tmhmm' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not tmhmm_file.exists() or FORCE:
         with open(tmhmm_file, 'w') as output, open(cds_aa_file) as input:
             utils.run_external('tmhmm', stdin=input, stdout=output)
@@ -603,6 +641,9 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
     utils.log(f'Discovering signal peptides with signalp...')
+    if not 'signalp6' in AVAILABLE_PREREQS:
+        utils.log("Skipping analysis - helper program missing.")
+        return
     if not signalp_dir.exists() or FORCE:
         if signalp_dir.exists():
             shutil.rmtree(signalp_dir)
