@@ -15,7 +15,7 @@ Metaerg.py consists of 4 modules:
 
 ## Module 1. Automated annotation of (meta)genomes
 (Development of this module is complete) 
-The script performs the following:
+Metaerg 2.0 predicts the following:
 * CRISPR regions using Minced.
 * tRNAs using Aragorn.
 * RNA genes and other non-coding features using Infernal (cmscan) and RFAM.
@@ -55,8 +55,11 @@ tasks (default = build all):
 * C - build CDD
 
 ## Module 3. Visualization
-(Development of this module has started)
-* Creation of a template for interactive visualisation of annotations in a Jupyter notebook using pandas and mathplotlib.
+(Development of this module is nearly complete)
+* Annotations are visualized as nice html tables for viewing and searching in a web browser.
+* These tables can also be visualized in a Jupyter notebook
 
 ## Module 4. Assignment of genes to biochemical pathways
-(Development of this module is planned)
+(Development of this module is in progress)
+* Assignment of genes to pathways has been implemented.
+* Pathway database still needs expansion

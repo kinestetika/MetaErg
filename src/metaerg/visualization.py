@@ -94,7 +94,7 @@ def html_write_genome_stats(contig_dict):
     genome_stats_for_viz = []
     for (key, value) in genome_stats.items():
         genome_stats_for_viz.append({'property': key, 'value': value})
-        print(f'{key:20}: {value}')
+        # print(f'{key:20}: {value}')
     df = pd.DataFrame(genome_stats_for_viz, columns=['property', 'value'])
     s = df.style.format(precision=1)
     s.set_table_styles([{'selector': 'td', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
@@ -362,7 +362,8 @@ $(document).ready( function () {
             else:
                 writer.write('          <td></td>\n')
             # subsystem
-            writer.write('          <td></td>\n')
+            subsystem = utils.get_feature_qualifier(feature, 'subsystem')
+            writer.write(f'          <td>{subsystem}</td>\n')
             # homology blast hits (cdd)
             if utils.get_feature_qualifier(feature, 'cdd'):
                 writer.write(f'          <td>Y</td>\n')

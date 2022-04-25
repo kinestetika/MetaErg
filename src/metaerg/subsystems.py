@@ -1,11 +1,14 @@
 import re
 
 from metaerg import utils
+from metaerg import databases
 
 SUBSYSTEM_LIST = []
 SUBSYSTEM_HASH = {}
 
-SUBSYSTEMS = '''>ribosome
+SUBSYSTEMS = '''>[secondary-metabolites]
+# (populated by antismash)
+>[ribosome]
 ribosomal protein L1
 ribosomal protein L2
 ribosomal protein L3
@@ -75,11 +78,68 @@ def prep_subsystems():
         SUBSYSTEM_HASH[current_subsystem].append(line)
         SUBSYSTEM_LIST.append((line, current_subsystem))
     SUBSYSTEM_LIST.sort(key=lambda x: -len(x[0]))
+    utils.log(f'Prepared subsystem database with {len(SUBSYSTEM_HASH)} subsystems.')
+
+
+def get_empty_subsystem_hash():
+    h = {}
+    for key in SUBSYSTEM_HASH:
+        if len(SUBSYSTEM_HASH[key]):
+            h[key] = dict()
+            for phrase in SUBSYSTEM_HASH[key]:
+                h[key][phrase] = list()
+        else:
+            h[key] = list()
+    return h
+
+
+def add_subsystem_to_feature(feature, subsystem, phrase, assignments):
+    feature_id = utils.get_feature_qualifier(feature, 'id')
+    prev = utils.get_feature_qualifier(feature, 'subsystem')
+    if prev:
+        utils.set_feature_qualifier(feature, 'subsystem', f'{prev}, {subsystem}')
+    else:
+        utils.set_feature_qualifier(feature, 'subsystem', subsystem)
+    if phrase:
+        assignments[subsystem][phrase].append(feature_id)
+    else:
+        assignments[subsystem].append(feature_id)
 
 
 def match_subsystem(descr):
     for subsystem_entry in SUBSYSTEM_LIST:
         gene_phrase = subsystem_entry[0]
-        match = re.search(f'\b{gene_phrase}\b', descr)
-        if match:
-            return subsystem_entry[1]
+        if len(descr) > len(gene_phrase) + 20:
+            return None, None
+        match = re.search(r'\b' + gene_phrase + r'\b', descr)
+        # match = re.search(gene_phrase, descr)
+        if match and match.start() < 10:
+            return subsystem_entry[1], gene_phrase
+    return None, None
+
+
+def match_feature_to_subsystems(feature, blast_results, subsystem_assignments):
+    feature_id = utils.get_feature_qualifier(feature, 'id')
+    for topic in ['cdd', 'diamond', 'blastn']:
+        try:
+            blast_result = blast_results[topic][feature_id]
+            for hit in blast_result:
+                # determine if blast alignment is good
+                if topic == 'cdd':
+                    cdd_id = int(hit["hit_id"][4:])
+                    cdd_item = databases.CDD[cdd_id]
+                    aligned = abs(hit["hit_start"] - hit["hit_end"]) / cdd_item[3]
+                    hit_descr = cdd_item[2]
+                else:
+                    db_entry = databases.decipher_database_id(hit['hit_id'])
+                    aligned = abs(hit["hit_start"] - hit["hit_end"]) / db_entry["length"]
+                    hit_descr = db_entry["descr"]
+                if aligned < 0.8:
+                    continue
+                subsystem_matched, phrase = match_subsystem(hit_descr)
+                if subsystem_matched:
+                    add_subsystem_to_feature(feature, subsystem_matched, phrase, subsystem_assignments)
+                    return
+
+        except KeyError:
+            continue

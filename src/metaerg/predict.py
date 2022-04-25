@@ -73,7 +73,7 @@ def mask_seq(record:SeqRecord, exceptions=None, min_mask_length=50):
     return SeqRecord(Seq(seq), id=record.id, description=record.description)
 
 
-def create_ids(fasta_file:Path, contig_dict):
+def create_ids(fasta_file:Path, contig_dict, subsystem_hash):
     for contig in contig_dict.values():
         contig.features = sorted(contig.features, key=lambda f: f.location.start)
         new_id_number = 0
@@ -119,7 +119,7 @@ def add_homology_search_results_to_feature(blast_result,  contig_dict, alphabet)
 
 
 
-def predict_crisprs_with_minced(mag_name, contig_dict):
+def predict_crisprs_with_minced(mag_name, contig_dict, subsystem_hash):
     # Sequence tool CRISPR crispr.start crispr.end numRepeat_CRISPR
     # NODE_883_length_34292_cov_11.1505	minced:0.3.2	repeat_region	33687	33944	4	.	.	ID=CRISPR3;bin=91;rpt_family=CRISPR;rpt_type=direct;rpt_unit_seq=GTCGCACTGGGCTTCTAAAGCCCATGAGGATTGAAAC
     # NODE_883_length_34292_cov_11.1505	minced:0.3.2	repeat_unit	33687	33723	1	.	.	ID=DR.CRISPR3.1;Parent=CRISPR3;bin=91
@@ -149,7 +149,7 @@ def predict_crisprs_with_minced(mag_name, contig_dict):
     utils.log(f'CRISPR prediction complete. Found {crispr_region_count} repeat regions.')
 
 
-def predict_trnas_with_aragorn(mag_name, contig_dict):
+def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
     # >C1997739
     # 0 genes found
     # >C1997905
@@ -197,7 +197,7 @@ def predict_trnas_with_aragorn(mag_name, contig_dict):
     utils.log(f'tRNA prediction complete. Found {trna_count} tRNAs.')
 
 
-def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict):
+def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     cmscan_file = spawn_file('cmscan', mag_name)
 
@@ -247,7 +247,7 @@ def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict):
     utils.log(f'Non-coding RNA prediction complete. Found {len(hits)} ncRNAs.')
 
 
-def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict):
+def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     ltr_index_file = spawn_file('ltr_index', mag_name)
     ltr_harvest_file = spawn_file('ltr_harvest', mag_name)
@@ -280,7 +280,7 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict):
     utils.log(f'Retrotransposon prediction complete. Found {retrotransposon_count} repeat regions.')
 
 
-def predict_tandem_repeats_with_trf(mag_name, contig_dict):
+def predict_tandem_repeats_with_trf(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     trf_file = spawn_file('tandem-repeat-finder', mag_name)
 
@@ -308,7 +308,7 @@ def predict_tandem_repeats_with_trf(mag_name, contig_dict):
     utils.log(f'Tandem repeat prediction complete. Found {tdr_count} repeat regions.')
 
 
-def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict):
+def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     lmer_table_file = spawn_file('lmer-table', mag_name)
     repeatscout_file_raw = spawn_file('repeatscout-raw', mag_name)
@@ -370,7 +370,7 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict):
     utils.log(f'Remaining repeat prediction complete. Found {repeat_count} repeat regions.')
 
 
-def predict_coding_sequences_with_prodigal(mag_name, contig_dict):
+def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     #faa_file = Path(fasta_file.stem + '.cds.faa')
     #fna_file = Path(fasta_file.stem + '.cds.fna')
@@ -416,7 +416,7 @@ def predict_coding_sequences_with_prodigal(mag_name, contig_dict):
     utils.log(f'Prediction of coding sequences complete, found {cds_found} CDS.')
 
 
-def write_gene_files(mag_name, contig_dict):
+def write_gene_files(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
@@ -442,7 +442,7 @@ def write_gene_files(mag_name, contig_dict):
         utils.log("Reusing existing gene files.")
 
 
-def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
+def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_hash):
     diamond_file = spawn_file('diamond', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
     utils.log(f'Performing homology searches with diamond...')
@@ -459,7 +459,7 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict):
     utils.log(f'Diamond search complete - found {len(BLAST_RESULTS["diamond"])} hits to proteins.')
 
 
-def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
+def predict_functions_and_taxa_with_blastn(mag_name, contig_dict, subsystem_hash):
     blastn_file = spawn_file('blastn', mag_name)
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
@@ -477,7 +477,7 @@ def predict_functions_and_taxa_with_blastn(mag_name, contig_dict):
     utils.log(f'Blastn search complete - found {len(BLAST_RESULTS["blastn"])} hits to RNA genes.')
 
 
-def predict_functions_with_cdd(mag_name, contig_dict):
+def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
     cdd_file = spawn_file('cdd', mag_name)
 
@@ -505,7 +505,7 @@ def predict_functions_with_cdd(mag_name, contig_dict):
     utils.log(f'RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} hits to proteins.')
 
 
-def predict_functions_with_antismash(mag_name, contig_dict):
+def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
     antismash_dir = spawn_file('antismash', mag_name)
     gbk_file = spawn_file('gbk', mag_name)
 
@@ -530,20 +530,23 @@ def predict_functions_with_antismash(mag_name, contig_dict):
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
                         if antismash_region_name:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
-                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
+                            subsystems.add_subsystem_to_feature(metaerg_feature, '[secondary-metabolites]',
+                                                                phrase=None, assignments=subsystem_hash)
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_function', antismash_gene_function)
-                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
+                            subsystems.add_subsystem_to_feature(metaerg_feature, '[secondary-metabolites]',
+                                                                phrase=None, assignments=subsystem_hash)
                         antismash_gene_category =  utils.get_feature_qualifier(feature, "gene_kind")
                         if antismash_gene_category:
-                            utils.set_feature_qualifier(metaerg_feature, 'subsystem', 'secondary-metabolites')
+                            subsystems.add_subsystem_to_feature(metaerg_feature, '[secondary-metabolites]',
+                                                                phrase=None, assignments=subsystem_hash)
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_category', antismash_gene_category)
                         antismash_hit_count += 1
     utils.log(f'Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
 
-def predict_transmembrane_helixes(mag_name, contig_dict):
+def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
     tmhmm_file =  spawn_file('tmhmm', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
@@ -595,7 +598,7 @@ def predict_transmembrane_helixes(mag_name, contig_dict):
     utils.log(f'Transmembrane helix discovery complete. Found {count} membrane proteins.')
 
 
-def predict_signal_peptides(mag_name, contig_dict):
+def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     signalp_dir = spawn_file('signalp', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
@@ -622,40 +625,35 @@ def predict_signal_peptides(mag_name, contig_dict):
         utils.log(f'Signal peptide discovery complete. Found {count} proteins with signal peptide.')
 
 
-def predict_subsystems(mag_name, contig_dict):
+def predict_subsystems(mag_name, contig_dict, subsystem_hash):
     subsystems_file = spawn_file('subsystems', mag_name)
-    subsystems.prep_subsystems()
+    utils.log(f'Assigning genes to subsystems...')
     for contig in contig_dict.values():
         for f in contig.features:
             f_id = utils.get_feature_qualifier(f, 'id')
-            for topic in ['cdd', 'diamond', 'blastn']:
-                try:
-                    blast_result = BLAST_RESULTS[topic][f_id]
-                    for hit in blast_result:
-                        # determine if blast alignment is good
-                        if topic == 'cdd':
-                            cdd_id = int(hit["hit_id"][4:])
-                            cdd_item = databases.CDD[cdd_id]
-                            aligned = abs(hit["hit_start"] - hit["hit_end"]) / cdd_item[3]
-                            hit_descr = cdd_item[2]
-                        else:
-                            db_entry = databases.decipher_database_id(hit['hit_id'])
-                            aligned = abs(hit["hit_start"] - hit["hit_end"]) / db_entry["length"]
-                            hit_descr = db_entry["descr"]
-                        if aligned < 0.8:
-                            break
-                        subsystem_matched = subsystems.match_subsystem(hit_descr)
-                        if subsystem_matched:
-                            prev = utils.get_feature_qualifier(f, 'subsystem')
-                            if prev:
-                                utils.set_feature_qualifier(f, 'subsystem', f'{prev}, {subsystem_matched}')
-                            else:
-                                utils.set_feature_qualifier(f, 'subsystem', subsystem_matched)
-                            break
-                except KeyError:
-                    continue
+            subsystems.match_feature_to_subsystems(f, BLAST_RESULTS, subsystem_hash)
+
+    gene_count = 0
+    with open(subsystems_file, 'w') as writer:
+        writer.write('#subsystem\tgenes_expected\tgenes_found\tfraction\n')
+        for subsystem in subsystem_hash.keys():
+            subsystem_gene_count = 0
+            if isinstance(subsystem_hash[subsystem], list):
+                writer.write(f'>{subsystem}\t???\t{len(subsystem_hash[subsystem])}\n')
+                for gene in subsystem_hash[subsystem]:
+                    writer.write(f'\t{gene}\n')
+            else:
+                for phrase in subsystem_hash[subsystem].keys():
+                    if len(subsystem_hash[subsystem][phrase]):
+                        subsystem_gene_count += 1
+                    gene_count += len(subsystem_hash[subsystem][phrase])
+                writer.write(f'>{subsystem}\t{len(subsystem_hash[subsystem])}\t{subsystem_gene_count}\t'
+                             f'{subsystem_gene_count/len(subsystem_hash[subsystem]):.2f}\n')
+                for phrase in subsystem_hash[subsystem].keys():
+                    writer.write(f'\t{phrase}\t{"; ".join(subsystem_hash[subsystem][phrase])}\n')
+    utils.log(f'Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
 
 
-def write_databases(mag_name, contig_dict):
+def write_databases(mag_name, contig_dict, subsystem_hash):
     databases.save_cache(Path("."))
 

@@ -18,9 +18,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--contig_file', required=True,  help='fasta nucleotide file of the contigs')
     parser.add_argument('--database_dir', required=True,  help='dir that contains the annotation databases')
-    parser.add_argument('--rename_contigs', default=True,  help='renaming contigs improves visualization. It is '
+    parser.add_argument('--rename_contigs', default=False,  help='renaming contigs improves visualization. It is '
                                                                 'required when original contig names are long')
-    parser.add_argument('--rename_mags', default=True,  help='renaming mags improves visualization. It is '
+    parser.add_argument('--rename_mags', default=False,  help='renaming mags improves visualization. It is '
                                                              'required when original file names are long (>7 chars)')
     parser.add_argument('--min_contig_length', default=0,  help='shorter contigs will be filtered before annotaton.')
 
@@ -119,7 +119,10 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
     # (4) Filter, rename and load contigs
     contig_dict = filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length)
 
-    # (5) Feature prediction
+    # (5) Create empty subsystems hash
+    subsystem_hash = subsystems.get_empty_subsystem_hash()
+
+    # (6) Feature prediction
 
     ################
     # for debugging individual predicton tools, first run the pipeline,
@@ -155,12 +158,12 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
                        predict.predict_subsystems,
                        predict.write_databases
                        ):
-        prediction(mag_name, contig_dict)
+        prediction(mag_name, contig_dict, subsystem_hash)
         SeqIO.write(contig_dict.values(), gbk_file, "genbank")
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)
 
-    # (6) write main result files
+    # (7) write main result files
     utils.log("Now writing final result files...")
     os.chdir(working_directory)
     with open(faa_file, 'w') as faa_handle, open(fna_file, 'w') as fna_handle:
@@ -196,8 +199,10 @@ def main():
         utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
         exit(1)
     # (2) prep subsystems
+    subsystems.prep_subsystems()
     # (3) annotate..
-    annotate_genome(args.contig_file)
+    annotate_genome(args.contig_file, rename_contigs=args.rename_contigs, rename_mags=args.rename_mags,
+                    min_length=args.min_contig_length)
 
 if __name__ == "__main__":
     main()

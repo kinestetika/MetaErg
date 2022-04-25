@@ -45,7 +45,7 @@ def does_db_appear_valid():
     return Path(DBDIR, DB_DESCR_FILENAME).exists() and Path(DBDIR, DB_TAXON_FILENAME).exists() \
         and Path(DBDIR, CDD_INDEX_FILENAME).exists()
 
-def load_descriptions_taxonomy_cdd(x=0, y=0):
+def load_descriptions_taxonomy_cdd(x=0, y=0, z=0):
     # load descriptions
     with open(Path(DBDIR, DB_DESCR_FILENAME)) as descr_handle:
         for line in descr_handle:
