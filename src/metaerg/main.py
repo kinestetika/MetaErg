@@ -18,10 +18,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--contig_file', required=True,  help='fasta nucleotide file of the contigs')
     parser.add_argument('--database_dir', required=True,  help='dir that contains the annotation databases')
-    parser.add_argument('--rename_contigs', default=False,  help='renaming contigs improves visualization. It is '
-                                                                'required when original contig names are long')
-    parser.add_argument('--rename_mags', default=False,  help='renaming mags improves visualization. It is '
-                                                             'required when original file names are long (>7 chars)')
+    parser.add_argument('--rename_contigs', default=False,  action=argparse.BooleanOptionalAction,
+                        help='renaming contigs improves visualization. It will be enforced when original '
+                             'contig names are long')
+    parser.add_argument('--rename_mags', default=False,  action=argparse.BooleanOptionalAction,
+                        help='renaming mags improves visualization. It will be enforced when original '
+                             'file names are long (>7 chars)')
     parser.add_argument('--min_contig_length', default=0,  help='shorter contigs will be filtered before annotaton.')
 
     args = parser.parse_args()

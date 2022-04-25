@@ -96,7 +96,7 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
 
     for subsystem in subsystems_hash.keys():
         s = subsystems.get_subsystem_stats(subsystems_hash[subsystem])
-        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}/{s[0]}) {s[2]:0f}%</button>\n')
+        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}/{s[0]}) {s[2]*100:.0f}%</button>\n')
         if isinstance(subsystems_hash[subsystem], list):
             writer.write('          <div class="panel"><p>\n')
             for feature_id in subsystems_hash[subsystem]:
@@ -105,9 +105,25 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
         else:
             writer.write('          <div class="panel"><table>\n')
             for phrase in subsystems_hash[subsystem].keys():
-                writer.write(f'<tr><td>{phrase}</td><td>{subsystems_hash[subsystem][phrase]}</td></tr>\n')
+                writer.write(f'<tr><td>{phrase}</td><td>{" ".join(html_make_link(g, g) for g in subsystems_hash[subsystem][phrase])}</td></tr>\n')
             writer.write('          </table></div>\n')
-    writer.write("</div></body></html>\n")
+    writer.write('''<script>
+    var acc = document.getElementsByClassName("accordion");
+    var i;
+    
+    for (i = 0; i < acc.length; i++) {
+      acc[i].addEventListener("click", function() {
+        this.classList.toggle("active");
+        var panel = this.nextElementSibling;
+        if (panel.style.display === "block") {
+          panel.style.display = "none";
+        } else {
+          panel.style.display = "block";
+        }
+      });
+    }
+    </script>
+    </div></body></html>''')
 
 
 def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom_taxon=None, max_hits=0):

@@ -637,15 +637,16 @@ def predict_subsystems(mag_name, contig_dict, subsystem_hash):
     with open(subsystems_file, 'w') as writer:
         writer.write('#subsystem\tgenes_expected\tgenes_found\tfraction\n')
         for subsystem in subsystem_hash.keys():
-            subsystem_gene_count = 0
             s = subsystems.get_subsystem_stats(subsystem_hash[subsystem])
             writer.write(f'>{subsystem}\t{s[0]}\t{s[1]}\t{s[1]:0.2f}\n')
             if isinstance(subsystem_hash[subsystem], list):
                 for gene in subsystem_hash[subsystem]:
                     writer.write(f'\t{gene}\n')
+                    gene_count += 1
             else:
                 for phrase in subsystem_hash[subsystem].keys():
                     writer.write(f'\t{phrase}\t{"; ".join(subsystem_hash[subsystem][phrase])}\n')
+                    gene_count += len(subsystem_hash[subsystem][phrase])
     utils.log(f'Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
 
 
