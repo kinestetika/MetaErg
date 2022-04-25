@@ -4,6 +4,8 @@ import pandas as pd
 from metaerg import databases
 from metaerg import predict
 from metaerg import utils
+from metaerg import subsystems
+
 
 PRODUCT_RE = re.compile('\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
 CENTER_DOT = u'\u25CF'
@@ -33,78 +35,79 @@ def html_make_link(feature_id, description):
     return '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, description)
 
 
-def html_write_genome_stats(contig_dict):
-    genome_stats = {}
-    genome_stats["#contigs"] = len(contig_dict)
-    total_size = 0
-    for contig in contig_dict.values():
-        total_size += len(contig)
-    genome_stats["size"] = total_size
-    cum_size = 0
-    for contig in contig_dict.values():
-        cum_size += len(contig)
-        if cum_size > total_size/2:
-            genome_stats["N50"] = len(contig)
-            break
-    genome_stats['#CDS'] = 0
-    genome_stats['% coding'] = 0
-    genome_stats['#rRNA'] = 0
-    genome_stats['#tRNA'] = 0
-    genome_stats['#ncRNA'] = 0
-    genome_stats['#repeats'] = 0
-    genome_stats['#retrotransposons'] = 0
-    genome_stats['#CRISPR repeats'] = 0
-    genome_stats['% repeats'] = 0
-    genome_stats['total # features'] = 0
-    taxon_dict = {}
-    for contig in contig_dict.values():
-        for feature in contig.features:
-            if 'CDS' == feature.type:
-                genome_stats['#CDS'] += 1
-                genome_stats['% coding'] += feature.location.end - feature.location.start
-            elif 'rRNA' == feature.type:
-                genome_stats['#rRNA'] += 1
-            elif 'tRNA' == feature.type:
-                genome_stats['#tRNA'] += 1
-            elif 'ncRNA' == feature.type:
-                genome_stats['#ncRNA'] += 1
-            elif 'repeat_region' == feature.type:
-                genome_stats['#repeats'] += 1
-                genome_stats['% repeats'] += feature.location.end - feature.location.start
-            elif 'retrotransposon' == feature.type:
-                genome_stats['#retrotransposons'] += 1
-                genome_stats['% repeats'] += feature.location.end - feature.location.start
-            elif 'crispr_repeat' == feature.type:
-                genome_stats['#CRISPR repeats'] += 1
-                genome_stats['% repeats'] += feature.location.end - feature.location.start
-            t = utils.get_feature_qualifier(feature, 'taxonomy')
-            if len(t):
-                if t in taxon_dict.keys():
-                    taxon_dict[t] += 1
-                else:
-                    taxon_dict[t] = 1
-            genome_stats['total # features'] += 1
+def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsystems_hash):
+    writer.write('''<!doctype html>
+    <html>
+    <head>
+        <meta charset="utf-8">''')
+    writer.write(f'<title>{mag_name} - properties and subsystems</title>\n')
+    writer.write('''</head>
+    <body>
 
-    genome_stats['% coding'] = f'{genome_stats["% coding"]/total_size*100:.2f}%'
-    genome_stats['% repeats'] = f'{genome_stats["% repeats"]/total_size*100:.2f}%'
-    genome_stats['dominant taxon'] = max(taxon_dict, key=taxon_dict.get)
-    genome_stats['total # features'] = '<a target="_blank" href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
+    <style>
+      th {
+    	background-color: white;
+         }
+      #f {
+        font-family: Calibri, sans-serif;
+        text-align: left;
+        padding: 0px;
+        margin: 0px;
+         }
+      .accordion {
+        background-color: #eee;
+        color: #444;
+        cursor: pointer;
+        padding: 10px;
+        width: 100%;
+        border: none;
+        text-align: left;
+        outline: none;
+        font-size: 15px;
+        transition: 0.4s;
+      }
+      .active, .accordion:hover {
+        background-color: #ccc; 
+      }
+      .panel {
+        font-family: Calibri, sans-serif;
+        padding: 0 18px;
+        display: none;
+        background-color: white;
+        overflow: hidden;
+      }
+    </style>
 
-    # create html
-    genome_stats_for_viz = []
+    <h4 id=f>Genome properties</h4>
+    <table id=f>
+        <thead>
+            <tr>
+              <th>key</th>
+              <th>value</th>
+            </tr>
+        </thead>
+        <tbody>''')
     for (key, value) in genome_stats.items():
-        genome_stats_for_viz.append({'property': key, 'value': value})
-        # print(f'{key:20}: {value}')
-    df = pd.DataFrame(genome_stats_for_viz, columns=['property', 'value'])
-    s = df.style.format(precision=1)
-    s.set_table_styles([{'selector': 'td', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
-    s.set_table_styles([{'selector': 'th.col_heading', 'props': 'font-family: Calibri, sans-serif;'}], overwrite=False)
-    s.set_table_styles([{'selector': 'td', 'props': 'padding-left: 10px;'}], overwrite=False)
-    s.set_sticky(axis=1)
-    s.hide(axis="index")
-    s.hide(axis="columns")
-    s.to_html(f'index.html', doctype_html=True)
-    return genome_stats
+        if key == 'total # features':
+            value = '<a target="_blank" href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
+        writer.write(f'          <tr><td>{key}</td><td>{value}</td></tr>\n')
+    writer.write('        </tbody></table>\n')
+    writer.write('        <h4 id=f>Subsystems overview</h4>\n')
+
+    for subsystem in subsystems_hash.keys():
+        s = subsystems.get_subsystem_stats(subsystems_hash[subsystem])
+        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}/{s[0]}) {s[2]:0f}%</button>\n')
+        if isinstance(subsystems_hash[subsystem], list):
+            writer.write('          <div class="panel"><p>\n')
+            for feature_id in subsystems_hash[subsystem]:
+                writer.write(f'{html_make_link(feature_id, feature_id)} ')
+            writer.write('\n          </p></div>\n')
+        else:
+            writer.write('          <div class="panel"><table>\n')
+            for phrase in subsystems_hash[subsystem].keys():
+                writer.write(f'<tr><td>{phrase}</td><td>{subsystems_hash[subsystem][phrase]}</td></tr>\n')
+            writer.write('          </table></div>\n')
+    writer.write("</div></body></html>\n")
 
 
 def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom_taxon=None, max_hits=0):
@@ -440,8 +443,9 @@ $(document).ready( function () {
 </html>''')
 
 
-def html_save_all(mag_name, contig_dict, blast_results):
-    genome_stats = html_write_genome_stats(contig_dict)
+def html_save_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_hash):
+    with open('index.html', 'w') as html_writer:
+        html_write_genome_stats_and_subsystems(html_writer, mag_name, genome_stats, subsystem_hash)
     with open('index_of_features.html', 'w') as html_writer:
         html_write_feature_overview(html_writer, mag_name, contig_dict, genome_stats, blast_results)
 

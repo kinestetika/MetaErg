@@ -143,3 +143,15 @@ def match_feature_to_subsystems(feature, blast_results, subsystem_assignments):
 
         except KeyError:
             continue
+
+
+def get_subsystem_stats(subsystem_hash):
+    if isinstance(subsystem_hash, list):
+        return 0, len(subsystem_hash), 1
+    else:
+        subsystem_gene_count = 0
+        for phrase in subsystem_hash.keys():
+            if len(subsystem_hash[phrase]):
+                subsystem_gene_count += 1
+        return len(subsystem_hash), subsystem_gene_count, subsystem_gene_count / len(subsystem_hash)
+

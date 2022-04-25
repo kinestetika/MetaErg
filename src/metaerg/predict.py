@@ -638,20 +638,74 @@ def predict_subsystems(mag_name, contig_dict, subsystem_hash):
         writer.write('#subsystem\tgenes_expected\tgenes_found\tfraction\n')
         for subsystem in subsystem_hash.keys():
             subsystem_gene_count = 0
+            s = subsystems.get_subsystem_stats(subsystem_hash[subsystem])
+            writer.write(f'>{subsystem}\t{s[0]}\t{s[1]}\t{s[1]:0.2f}\n')
             if isinstance(subsystem_hash[subsystem], list):
-                writer.write(f'>{subsystem}\t???\t{len(subsystem_hash[subsystem])}\n')
                 for gene in subsystem_hash[subsystem]:
                     writer.write(f'\t{gene}\n')
             else:
                 for phrase in subsystem_hash[subsystem].keys():
-                    if len(subsystem_hash[subsystem][phrase]):
-                        subsystem_gene_count += 1
-                    gene_count += len(subsystem_hash[subsystem][phrase])
-                writer.write(f'>{subsystem}\t{len(subsystem_hash[subsystem])}\t{subsystem_gene_count}\t'
-                             f'{subsystem_gene_count/len(subsystem_hash[subsystem]):.2f}\n')
-                for phrase in subsystem_hash[subsystem].keys():
                     writer.write(f'\t{phrase}\t{"; ".join(subsystem_hash[subsystem][phrase])}\n')
     utils.log(f'Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
+
+
+def compile_genome_stats(mag_name, contig_dict, subsystem_hash):
+    genome_stats = {}
+    genome_stats['genome name'] = mag_name
+    genome_stats["#contigs"] = len(contig_dict)
+    total_size = 0
+    for contig in contig_dict.values():
+        total_size += len(contig)
+    genome_stats["size"] = total_size
+    cum_size = 0
+    for contig in contig_dict.values():
+        cum_size += len(contig)
+        if cum_size > total_size/2:
+            genome_stats["N50"] = len(contig)
+            break
+    genome_stats['#CDS'] = 0
+    genome_stats['% coding'] = 0
+    genome_stats['#rRNA'] = 0
+    genome_stats['#tRNA'] = 0
+    genome_stats['#ncRNA'] = 0
+    genome_stats['#repeats'] = 0
+    genome_stats['#retrotransposons'] = 0
+    genome_stats['#CRISPR repeats'] = 0
+    genome_stats['% repeats'] = 0
+    genome_stats['total # features'] = 0
+    taxon_dict = {}
+    for contig in contig_dict.values():
+        for feature in contig.features:
+            if 'CDS' == feature.type:
+                genome_stats['#CDS'] += 1
+                genome_stats['% coding'] += feature.location.end - feature.location.start
+            elif 'rRNA' == feature.type:
+                genome_stats['#rRNA'] += 1
+            elif 'tRNA' == feature.type:
+                genome_stats['#tRNA'] += 1
+            elif 'ncRNA' == feature.type:
+                genome_stats['#ncRNA'] += 1
+            elif 'repeat_region' == feature.type:
+                genome_stats['#repeats'] += 1
+                genome_stats['% repeats'] += feature.location.end - feature.location.start
+            elif 'retrotransposon' == feature.type:
+                genome_stats['#retrotransposons'] += 1
+                genome_stats['% repeats'] += feature.location.end - feature.location.start
+            elif 'crispr_repeat' == feature.type:
+                genome_stats['#CRISPR repeats'] += 1
+                genome_stats['% repeats'] += feature.location.end - feature.location.start
+            t = utils.get_feature_qualifier(feature, 'taxonomy')
+            if len(t):
+                if t in taxon_dict.keys():
+                    taxon_dict[t] += 1
+                else:
+                    taxon_dict[t] = 1
+            genome_stats['total # features'] += 1
+
+    genome_stats['% coding'] = f'{genome_stats["% coding"]/total_size*100:.2f}%'
+    genome_stats['% repeats'] = f'{genome_stats["% repeats"]/total_size*100:.2f}%'
+    genome_stats['dominant taxon'] = max(taxon_dict, key=taxon_dict.get)
+    return genome_stats
 
 
 def write_databases(mag_name, contig_dict, subsystem_hash):

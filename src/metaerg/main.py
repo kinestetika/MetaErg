@@ -185,7 +185,8 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
     with open(gff_file, "w") as gff_handle:
         GFF.write(contig_dict.values(), gff_handle)
     os.chdir(html_dir)
-    visualization.html_save_all(mag_name, contig_dict, predict.BLAST_RESULTS)
+    genome_stats = predict.compile_genome_stats(mag_name, contig_dict, subsystem_hash)
+    visualization.html_save_all(mag_name, genome_stats, contig_dict, predict.BLAST_RESULTS, subsystem_hash)
     utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 
