@@ -178,15 +178,15 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
 
     for prediction in (predict.predict_crisprs_with_minced,
                        predict.predict_trnas_with_aragorn,
-                       predict.predict_non_coding_rna_features_with_infernal,
+                       predict.predict_non_coding_rna_features_with_infernal,  # may use >1 threads
                        predict.predict_retrotransposons_with_ltrharvest,
                        predict.predict_tandem_repeats_with_trf,
-                       predict.predict_remaining_repeats_with_repeatmasker,
+                       predict.predict_remaining_repeats_with_repeatmasker, # may use >1 threads
                        predict.predict_coding_sequences_with_prodigal,
                        predict.create_ids,
                        databases.load_descriptions_taxonomy_cdd,
                        predict.write_gene_files,
-                       predict.predict_functions_and_taxa_with_diamond,
+                       predict.predict_functions_and_taxa_with_diamond, # may use >1 threads
                        predict.predict_functions_and_taxa_with_blastn,
                        predict.predict_functions_with_cdd,
                        predict.predict_functions_with_antismash,

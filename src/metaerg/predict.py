@@ -212,7 +212,7 @@ def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict, subsyst
     if not 'cmscan' in AVAILABLE_PREREQS:
         utils.log("Skipping analysis - helper program missing.")
         return
-    if not cmscan_file.exists() or FORCE:
+    if not cmscan_file.exists() or FORCE: ## --cpu <n>
         utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
     else:
         utils.log("Reusing existing result file.")
@@ -341,7 +341,7 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
         utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
         with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
             utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-        utils.run_external(f'RepeatMasker -lib {repeatscout_file_filtered} -dir . {fasta_file}')
+        utils.run_external(f'RepeatMasker -lib {repeatscout_file_filtered} -dir . {fasta_file}') # -pa(rallel) [number]
         # repeatmasker result file will be called '{mag_name}.masked.out', nothing we can do about that
         utils.run_external(f'mv {mag_name}.masked.out {repeatmasker_file}')
         for file in repeatmasker_file.parent.glob(f'{mag_name}.masked*'):
@@ -473,7 +473,14 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         utils.log("Skipping analysis - helper program missing.")
         return
     if not diamond_file.exists() or FORCE:
-        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6')
+        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6') # --threads n
+        # --fast                   enable fast mode
+        # --mid-sensitive          enable mid-sensitive mode
+        # --sensitive              enable sensitive mode)
+        # --more-sensitive         enable more sensitive mode
+        # --very-sensitive         enable very sensitive mode
+        # --ultra-sensitive        enable ultra sensitive mode
+
     else:
         utils.log("Reusing existing result file.")
 
@@ -647,7 +654,7 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     if not signalp_dir.exists() or FORCE:
         if signalp_dir.exists():
             shutil.rmtree(signalp_dir)
-        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other')
+        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other') # --bsize BSIZE
     else:
         utils.log("Reusing existing results.")
 
