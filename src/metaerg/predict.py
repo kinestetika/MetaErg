@@ -23,7 +23,7 @@ TRANSLATION_TABLE = 11
 SOURCE = 'meta'
 BLAST_RESULTS = {}
 AVAILABLE_PREREQS = set()
-
+THREADS_PER_GENOME = 1
 
 def spawn_file(program_name, mag_name):
     if MULTI_MODE:
@@ -212,8 +212,8 @@ def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict, subsyst
     if not 'cmscan' in AVAILABLE_PREREQS:
         utils.log("Skipping analysis - helper program missing.")
         return
-    if not cmscan_file.exists() or FORCE: ## --cpu <n>
-        utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
+    if not cmscan_file.exists() or FORCE:
+        utils.run_external(f'cmscan --cpu {THREADS_PER_GENOME} --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
     else:
         utils.log("Reusing existing result file.")
 
@@ -341,7 +341,7 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
         utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
         with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
             utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-        utils.run_external(f'RepeatMasker -lib {repeatscout_file_filtered} -dir . {fasta_file}') # -pa(rallel) [number]
+        utils.run_external(f'RepeatMasker -pa {THREADS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
         # repeatmasker result file will be called '{mag_name}.masked.out', nothing we can do about that
         utils.run_external(f'mv {mag_name}.masked.out {repeatmasker_file}')
         for file in repeatmasker_file.parent.glob(f'{mag_name}.masked*'):
@@ -473,10 +473,11 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         utils.log("Skipping analysis - helper program missing.")
         return
     if not diamond_file.exists() or FORCE:
-        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} -f 6') # --threads n
+        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} '
+                           f'-f 6  --threads {THREADS_PER_GENOME} --ultra-sensitive')
         # --fast                   enable fast mode
         # --mid-sensitive          enable mid-sensitive mode
-        # --sensitive              enable sensitive mode)
+        # --sensitive              enable sensitive mode
         # --more-sensitive         enable more sensitive mode
         # --very-sensitive         enable very sensitive mode
         # --ultra-sensitive        enable ultra sensitive mode
@@ -522,7 +523,8 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
         utils.log("Skipping analysis - helper program missing.")
         return
     if not cdd_file.exists() or FORCE:
-        utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} -outfmt 6 -evalue 1e-7')
+        utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} '
+                           f'-outfmt 6 -evalue 1e-7 -mt_mode 1 -num_threads {THREADS_PER_GENOME}')
     else:
         utils.log("Reusing existing result file.")
 
@@ -572,8 +574,6 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
                         if antismash_region_name:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
-                            subsystems.add_subsystem_to_feature(metaerg_feature, '[secondary-metabolites]',
-                                                                phrase=None, assignments=subsystem_hash)
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_function', antismash_gene_function)
@@ -581,8 +581,6 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
                                                                 phrase=None, assignments=subsystem_hash)
                         antismash_gene_category =  utils.get_feature_qualifier(feature, "gene_kind")
                         if antismash_gene_category:
-                            subsystems.add_subsystem_to_feature(metaerg_feature, '[secondary-metabolites]',
-                                                                phrase=None, assignments=subsystem_hash)
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_category', antismash_gene_category)
                         antismash_hit_count += 1
     utils.log(f'Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
@@ -654,7 +652,7 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     if not signalp_dir.exists() or FORCE:
         if signalp_dir.exists():
             shutil.rmtree(signalp_dir)
-        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other') # --bsize BSIZE
+        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other')
     else:
         utils.log("Reusing existing results.")
 
@@ -678,7 +676,6 @@ def predict_subsystems(mag_name, contig_dict, subsystem_hash):
     utils.log(f'Assigning genes to subsystems...')
     for contig in contig_dict.values():
         for f in contig.features:
-            f_id = utils.get_feature_qualifier(f, 'id')
             subsystems.match_feature_to_subsystems(f, BLAST_RESULTS, subsystem_hash)
 
     gene_count = 0
@@ -723,6 +720,7 @@ def compile_genome_stats(mag_name, contig_dict, subsystem_hash):
     genome_stats['% repeats'] = 0
     genome_stats['total # features'] = 0
     taxon_dict = {}
+    total_taxon_hits = 0
     for contig in contig_dict.values():
         for feature in contig.features:
             if 'CDS' == feature.type:
@@ -749,11 +747,12 @@ def compile_genome_stats(mag_name, contig_dict, subsystem_hash):
                     taxon_dict[t] += 1
                 else:
                     taxon_dict[t] = 1
+                total_taxon_hits += 1
             genome_stats['total # features'] += 1
 
     genome_stats['% coding'] = f'{genome_stats["% coding"]/total_size*100:.2f}%'
     genome_stats['% repeats'] = f'{genome_stats["% repeats"]/total_size*100:.2f}%'
-    genome_stats['dominant taxon'] = max(taxon_dict, key=taxon_dict.get)
+    genome_stats['dominant taxon'] = f'{max(taxon_dict, key=taxon_dict.get)} ({max(taxon_dict.values())/total_taxon_hits*100:.1f}%)'
     return genome_stats
 
 

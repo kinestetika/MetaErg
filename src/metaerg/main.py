@@ -2,6 +2,7 @@ import argparse
 import os
 import shutil
 from pathlib import Path
+from multiprocessing import cpu_count
 
 from Bio import SeqIO
 from BCBio import GFF
@@ -51,15 +52,19 @@ def get_available_prereqs():
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
-    parser.add_argument('--contig_file', required=True,  help='fasta nucleotide file of the contigs')
-    parser.add_argument('--database_dir', required=True,  help='dir that contains the annotation databases')
+    parser.add_argument('--contig_file', required=True,  help='Fasta nucleotide file of the contigs, or dir that '
+                                                              'contains multiple fasta nucleotide files.')
+    parser.add_argument('--database_dir', required=True,  help='Dir that contains the annotation databases.')
     parser.add_argument('--rename_contigs', default=False,  action=argparse.BooleanOptionalAction,
-                        help='renaming contigs improves visualization. It will be enforced when original '
+                        help='Renaming contigs can improve visualization. It will be enforced when original '
                              'contig names are long')
     parser.add_argument('--rename_mags', default=False,  action=argparse.BooleanOptionalAction,
-                        help='renaming mags improves visualization. It will be enforced when original '
+                        help='Renaming mags can improve visualization. It will be enforced when original '
                              'file names are long (>7 chars)')
-    parser.add_argument('--min_contig_length', default=0,  help='shorter contigs will be filtered before annotaton.')
+    parser.add_argument('--min_contig_length', default=0,  help='Shorter contigs will be filtered before annotaton.')
+    parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
+    parser.add_argument('--extension', default='.fna', help='When annotating multiple files in a folder, the extension'
+                                                            'of the fasta nucleotide files (default: .fna).')
 
     args = parser.parse_args()
     return args
@@ -129,9 +134,8 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
     return filtered_contig_dict
 
 
-def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
-    # (2) set and validate fasta .fna file, mag (genome) name,
-    input_fasta_file = Path(contig_file).absolute()
+def annotate_genome(input_fasta_file: Path, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
+    # (1) set and validate fasta .fna file, mag (genome) name,
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
@@ -145,7 +149,7 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
             utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
             mag_name = new_mag_name
 
-    # (3) set output files, note that these file paths are relative to the current working dir
+    # (2) set output files, note that these file paths are relative to the current working dir
     output_dir, html_dir = create_output_dir(working_directory)
     os.chdir(output_dir)
     gbk_file = predict.spawn_file("gbk", mag_name)
@@ -153,13 +157,13 @@ def annotate_genome(contig_file, genome_id=0, rename_contigs=True, rename_mags=T
     faa_file = predict.spawn_file("faa", mag_name)
     fna_file = predict.spawn_file("rna.fna", mag_name)
 
-    # (4) Filter, rename and load contigs
+    # (3) Filter, rename and load contigs
     contig_dict = filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length)
 
-    # (5) Create empty subsystems hash
+    # (4) Create empty subsystems hash
     subsystem_hash = subsystems.get_empty_subsystem_hash()
 
-    # (6) Feature prediction
+    # (5) Feature prediction
 
     ################
     # for debugging individual predicton tools, first run the pipeline,
@@ -234,14 +238,34 @@ def main():
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)
     databases.DBDIR = dbdir
-    if not databases.does_db_appear_valid():
+    if databases.does_db_appear_valid():
+        utils.log(f'Metaerg database at "{dbdir}" appears valid.')
+    else:
         utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
         exit(1)
     # (2) prep subsystems
     subsystems.prep_subsystems()
-    # (3) annotate..
-    annotate_genome(args.contig_file, rename_contigs=args.rename_contigs, rename_mags=args.rename_mags,
-                    min_length=args.min_contig_length)
+    # (3) determine # of threads available and how many we're using
+    cpus_available = cpu_count()
+    cpus_used = args.cpus
+    if cpus_used > 0:
+        cpus_used = min(cpus_used, cpus_available)
+    else:
+        cpus_used = cpus_available
+    utils.log(f'Detected {cpus_available} available threads/cpus, will use {cpus_used}.')
+    # (4) determine how many genomes we're annotating...
+    contig_file = Path(args.contig_file).absolute()
+    if contig_file.is_dir():
+        file_extension = args.extension
+        for f in sorted(contig_file.glob(f'.{file_extension}')):
+            print(f)
+    else:
+        # annotate a single genome
+        utils.log(f'Ready to annotate genome in nucleotide fasta file "{contig_file}".')
+        predict.THREADS_PER_GENOME = cpus_used
+        annotate_genome(contig_file, rename_contigs=args.rename_contigs, rename_mags=args.rename_mags,
+                        min_length=args.min_contig_length)
+
 
 if __name__ == "__main__":
     main()

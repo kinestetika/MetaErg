@@ -59,6 +59,24 @@ def set_feature_qualifier(feature: SeqFeature, key, value):
     feature.qualifiers[key] = [value]
 
 
+def write_cds_to_multiple_fasta_files(contig_dict, target_dir, number_of_files):
+    count = 0
+    for contig in contig_dict.values():
+        for f in contig.features:
+            if f.type == 'CDS':
+                count += 1
+    seqs_per_file = count / number_of_files
+    filehandles = [open(Path(target_dir, f'split.{i}.faa'), 'w') for i in range(number_of_files)]
+    count = 0
+    for contig in contig_dict.values():
+        for f in contig.features:
+            feature_seq = get_feature_qualifier(f, 'translation')
+            feature_seq.id = get_feature_qualifier(f, 'id')
+            SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
+    for f in filehandles:
+        f.close()
+
+
 def filter_seq(record):
     record.seq = Seq(NON_IUPAC_RE.sub('N', str(record.seq)))
     record.seq = Seq(''.join(str(record.seq).split()).upper())
