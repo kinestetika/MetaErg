@@ -42,14 +42,14 @@ Metaerg needs 40 min for annotation of a 4 Mb genome on a desktop computer.
 
 ## Databases
 
-The metaerg annotation databases can be downleaded [here]()) and are created from the following sources:
+The metaerg annotation databases can be downloaded [here](https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg-databases-07.tar.gz)) and are created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
 * NCBI (refseq) annotations of genes of gtdbtk baterial and archaeal genomes are obtained using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/)
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
 * For Eukaryotes, for each taxon within Amoebozoa, Ancyromonadida, Apusozoa, Breviatea, CRuMs, Cryptophyceae, Discoba, Glaucocystophyceae, Haptista, Hemimastigophora, Malawimonadida, Metamonada, Rhodelphea, Rhodophyta, Sar, Aphelida, Choanoflagellata, Filasterea, Fungi, Ichthyosporea, Rotosphaeridagenomes, one genome is added to the database using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/). 
 * [RFAM](https://rfam.xfam.org/) and [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml) databases are also used.
 
-If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be downloaded from [here]():
+If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be downloaded from the link just provided):
 
 >metaerg-build-databases --target_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [FPVEBRC]]
 

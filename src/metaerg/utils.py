@@ -27,8 +27,7 @@ NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria':'rRNA',
                         'tmRNA': 'tmRNA',
                         'tRNA': 'tRNA'}
 FEATURE_ID_PATTERN = re.compile("(.+)\.(\d{5})\.(crispr|trna|rna|ltr|tr|repeat|cds)$")
-
-
+TRANSLATION_TABLE = 11
 ESCAPE_CHARS = {'%2C': ',',
                 '%3B': ';',
                 '%3D': '=',
@@ -59,22 +58,28 @@ def set_feature_qualifier(feature: SeqFeature, key, value):
     feature.qualifiers[key] = [value]
 
 
-def write_cds_to_multiple_fasta_files(contig_dict, target_dir, number_of_files):
+def write_cds_to_multiple_fasta_files(contig_dict, base_file:Path, number_of_files):
+    number_of_files = int(number_of_files+0.5)
     count = 0
     for contig in contig_dict.values():
         for f in contig.features:
             if f.type == 'CDS':
                 count += 1
     seqs_per_file = count / number_of_files
-    filehandles = [open(Path(target_dir, f'split.{i}.faa'), 'w') for i in range(number_of_files)]
+    paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(number_of_files)]
+    filehandles = [open(paths[i], 'w') for i in range(number_of_files)]
     count = 0
     for contig in contig_dict.values():
         for f in contig.features:
-            feature_seq = get_feature_qualifier(f, 'translation')
-            feature_seq.id = get_feature_qualifier(f, 'id')
-            SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
+            if f.type == 'CDS':
+                feature_seq = pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
+                feature_seq.id = get_feature_qualifier(f, 'id')
+                feature_seq.description = feature_seq.id
+                SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
+                count += 1
     for f in filehandles:
         f.close()
+    return paths
 
 
 def filter_seq(record):

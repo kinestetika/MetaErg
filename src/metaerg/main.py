@@ -3,6 +3,7 @@ import os
 import shutil
 from pathlib import Path
 from multiprocessing import cpu_count
+from concurrent.futures import ProcessPoolExecutor
 
 from Bio import SeqIO
 from BCBio import GFF
@@ -63,8 +64,10 @@ def parse_arguments():
                              'file names are long (>7 chars)')
     parser.add_argument('--min_contig_length', default=0,  help='Shorter contigs will be filtered before annotaton.')
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
-    parser.add_argument('--extension', default='.fna', help='When annotating multiple files in a folder, the extension'
-                                                            'of the fasta nucleotide files (default: .fna).')
+    parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, the extension'
+                                                                 'of the fasta nucleotide files (default: .fna).')
+    parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
+
 
     args = parser.parse_args()
     return args
@@ -134,7 +137,7 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
     return filtered_contig_dict
 
 
-def annotate_genome(input_fasta_file: Path, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
+def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
     # (1) set and validate fasta .fna file, mag (genome) name,
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
@@ -203,6 +206,7 @@ def annotate_genome(input_fasta_file: Path, genome_id=0, rename_contigs=True, re
         SeqIO.write(contig_dict.values(), gbk_file, "genbank")
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)
+        antismash_results_dir = predict.spawn_file('antismash', mag_name)
 
     # (7) write main result files
     utils.log("Now writing final result files...")
@@ -211,7 +215,7 @@ def annotate_genome(input_fasta_file: Path, genome_id=0, rename_contigs=True, re
         for contig in contig_dict.values():
             for f in contig.features:
                 if f.type == 'CDS':
-                    feature_seq = utils.pad_seq(f.extract(contig)).translate(table=predict.TRANSLATION_TABLE)[:-1]
+                    feature_seq = utils.pad_seq(f.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1]
                     feature_seq.id = utils.get_feature_qualifier(f, 'id')
                     feature_seq.description = f'{feature_seq.id} {visualization.make_feature_short_description(f)}'
                     if '*' in feature_seq:
@@ -226,6 +230,11 @@ def annotate_genome(input_fasta_file: Path, genome_id=0, rename_contigs=True, re
     with open(gff_file, "w") as gff_handle:
         GFF.write(contig_dict.values(), gff_handle)
     os.chdir(html_dir)
+    if antismash_results_dir.exists():
+        shutil.rmtree(antismash_results_dir.name, ignore_errors=True)
+        shutil.copytree(antismash_results_dir, html_dir)
+        shutil.rmtree('antismash', ignore_errors=True)
+        shutil.move(Path(antismash_results_dir.name, 'antismash'))
     genome_stats = predict.compile_genome_stats(mag_name, contig_dict, subsystem_hash)
     visualization.html_save_all(mag_name, genome_stats, contig_dict, predict.BLAST_RESULTS, subsystem_hash)
     utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
@@ -235,6 +244,7 @@ def main():
     utils.log(f'This is metaerg.py {VERSION}')
     get_available_prereqs()
     args = parse_arguments()
+    utils.TRANSLATION_TABLE = args.translation_table
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)
     databases.DBDIR = dbdir
@@ -253,12 +263,23 @@ def main():
     else:
         cpus_used = cpus_available
     utils.log(f'Detected {cpus_available} available threads/cpus, will use {cpus_used}.')
-    # (4) determine how many genomes we're annotating...
+    # (4) determine how many genomes we're annotating and annotate...
     contig_file = Path(args.contig_file).absolute()
     if contig_file.is_dir():
-        file_extension = args.extension
-        for f in sorted(contig_file.glob(f'.{file_extension}')):
-            print(f)
+        contig_files = [x.absolute() for x in sorted(contig_file.glob(f'*{args.file_extension}'))]
+        if not len(contig_files):
+            utils.log(f'Did not find any contig files with extension "{args.file_extension}" in dir "{contig_file}"')
+            exit(1)
+        predict.MULTI_MODE = True
+        predict.THREADS_PER_GENOME = max(1, int(cpus_used / len(contig_files)))
+        utils.log(f'Ready to annotate {len(contig_files)} genomes in dir "{contig_file}" with '
+                  f'{predict.THREADS_PER_GENOME} threads per genome.')
+        with ProcessPoolExecutor(max_workers=cpus_used) as executor:
+            count = 0
+            for f in contig_files:
+                utils.log(f'Now submitting {f} for annotation...')
+                executor.submit(annotate_genome, f, count, True, True, args.min_contig_length)
+                count += 1
     else:
         # annotate a single genome
         utils.log(f'Ready to annotate genome in nucleotide fasta file "{contig_file}".')

@@ -1,6 +1,7 @@
 import re
 import shutil
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -19,7 +20,6 @@ MASKED_SEQ = 0
 TOTAL_SEQ = 0
 FEATURE_INFERENCES = ['minced', 'aragorn', 'cmscan', 'ltrharvest', 'tandem-repeat-finder', 'repeatscout', 'prodigal']
 FEATURE_ID_TAGS = ['crispr', 'trna', 'rna', 'ltr', 'tr', 'repeat', 'cds']
-TRANSLATION_TABLE = 11
 SOURCE = 'meta'
 BLAST_RESULTS = {}
 AVAILABLE_PREREQS = set()
@@ -172,7 +172,7 @@ def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
         utils.log("Skipping analysis - helper program missing.")
         return
     if not aragorn_file.exists() or FORCE:
-        utils.run_external(f'aragorn -l -t -gc{TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
+        utils.run_external(f'aragorn -l -t -gc{utils.TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
     else:
         utils.log("Reusing existing result file.")
 
@@ -213,7 +213,9 @@ def predict_non_coding_rna_features_with_infernal(mag_name, contig_dict, subsyst
         utils.log("Skipping analysis - helper program missing.")
         return
     if not cmscan_file.exists() or FORCE:
-        utils.run_external(f'cmscan --cpu {THREADS_PER_GENOME} --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
+        # Although cmscan has a --cpu option, it does not actually work. Compute time seems to scale up with the #
+        # of contigs. Worthwhile to split execution over multiple files
+        utils.run_external(f'cmscan --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
     else:
         utils.log("Reusing existing result file.")
 
@@ -397,8 +399,8 @@ def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash
     prodigal_file = spawn_file('prodigal', mag_name)
     c = ''
     if 'meta' != SOURCE:
-        c = f'-g {TRANSLATION_TABLE} '
-        utils.log(f'... (and using -g {TRANSLATION_TABLE}) ...')
+        c = f'-g {utils.TRANSLATION_TABLE} '
+        utils.log(f'... (and using -g {utils.TRANSLATION_TABLE}) ...')
 
     utils.log(f'Predicting coding sequences with prodigal (using -p {SOURCE}) ...')
     if not 'prodigal' in AVAILABLE_PREREQS:
@@ -449,7 +451,7 @@ def write_gene_files(mag_name, contig_dict, subsystem_hash):
             for contig in contig_dict.values():
                 for f in contig.features:
                     if f.type == 'CDS':
-                        feature_seq = utils.pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
+                        feature_seq = utils.pad_seq(f.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1]
                         utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
                         feature_seq.id = utils.get_feature_qualifier(f, 'id')
                         feature_seq.description = utils.get_feature_qualifier(f, 'product')
@@ -474,7 +476,7 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         return
     if not diamond_file.exists() or FORCE:
         utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} '
-                           f'-f 6  --threads {THREADS_PER_GENOME} --ultra-sensitive')
+                           f'-f 6  --threads {THREADS_PER_GENOME}')
         # --fast                   enable fast mode
         # --mid-sensitive          enable mid-sensitive mode
         # --sensitive              enable sensitive mode
@@ -565,15 +567,18 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
     for f in sorted(antismash_dir.glob("*region*.gbk")):
         with open(f) as handle:
             antismash_region_name = ''
+            antismash_region_number = 0
             for gb_record in SeqIO.parse(handle, "genbank"):
                 for feature in gb_record.features:
                     if 'region' == feature.type:
                         antismash_region_name = utils.get_feature_qualifier(feature, "rules")
+                        antismash_region_number = int(utils.get_feature_qualifier(feature, "region_number"))
                     elif 'CDS' in feature.type:
                         d_id = utils.decipher_metaerg_id(utils.get_feature_qualifier(feature, "locus_tag"))
                         metaerg_feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
                         if antismash_region_name:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_region', antismash_region_name)
+                            utils.set_feature_qualifier(metaerg_feature, 'antismash_region_number', antismash_region_number)
                         antismash_gene_function = utils.get_feature_qualifier(feature, "gene_functions")
                         if antismash_gene_function:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_function', antismash_gene_function)
@@ -652,7 +657,26 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     if not signalp_dir.exists() or FORCE:
         if signalp_dir.exists():
             shutil.rmtree(signalp_dir)
-        utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none --organism other')
+        # signalp is very slow and has no multithreading. For efficiency, it is worthwhile to multithread it
+        # but as it also uses much memory per thread, a compromise might be best
+        if THREADS_PER_GENOME > 2:
+            signalp_threads = int(THREADS_PER_GENOME/2 + 0.5)
+            split_fasta_files = utils.write_cds_to_multiple_fasta_files(contig_dict, cds_aa_file, signalp_threads)
+            signalp_dirs = [Path(f.parent, f'{f.name}.signalp') for f in split_fasta_files]
+            with ProcessPoolExecutor(max_workers=signalp_threads) as executor:
+                for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
+                    executor.submit(utils.run_external, f'signalp6 --fastafile {split_cds_aa_file} --output_dir '
+                                                        f'{split_signalp_dir} --format none --organism other')
+            signalp_dir.mkdir()
+            with open(Path(signalp_dir, 'prediction_results.txt'), 'wb') as output:
+                for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
+                    with open(Path(split_signalp_dir, 'prediction_results.txt'), 'rb') as input:
+                        shutil.copyfileobj(input, output)
+                    shutil.rmtree(split_signalp_dir)
+                    split_cds_aa_file.unlink()
+        else:
+            utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none '
+                               f'--organism other')
     else:
         utils.log("Reusing existing results.")
 
@@ -661,10 +685,10 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
         for line in signalp_handle:
             if line.startswith("#"):
                 continue
-            words = line.split()
+            words = line.split("\t")
             if "OTHER" == words[1]:
                 continue
-            d_id = utils.decipher_metaerg_id(words[0])
+            d_id = utils.decipher_metaerg_id(words[0].split()[0])
             feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
             utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1

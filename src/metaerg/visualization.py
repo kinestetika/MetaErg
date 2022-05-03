@@ -229,7 +229,7 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
     header = f'>{feature_id} {make_feature_short_description(feature)}'
     seq = ''
     if 'CDS' == feature.type:
-        seq = utils.pad_seq(feature.extract(contig)).translate(table=predict.TRANSLATION_TABLE)[:-1].seq
+        seq = utils.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
     else:
         seq = feature.extract(contig).seq
 
