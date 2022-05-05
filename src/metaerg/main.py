@@ -73,25 +73,17 @@ def parse_arguments():
     return args
 
 
-def create_output_dir(parent_dir:Path):
-    output_dir = Path(parent_dir, "temp")
-    if output_dir.exists():
+def create_temp_dir(parent_dir:Path):
+    temp_dir = Path(parent_dir, "temp")
+    if temp_dir.exists():
         utils.log('Warning: may overwrite existing temp files...')
-        if output_dir.is_file():
-            utils.log(f'Expected folder at {output_dir}, found regular file, crash! Delete this file first')
+        if temp_dir.is_file():
+            utils.log(f'Expected folder at {temp_dir}, found regular file, crash! Delete this file first')
             exit(1)
     else:
-        os.mkdir(output_dir)
+        os.mkdir(temp_dir)
 
-    html_dir = Path(parent_dir, "html")
-    if html_dir.exists():
-        utils.log('Warning: may overwrite existing html files...')
-        if html_dir.is_file():
-            utils.log(f'Expected folder at {html_dir}, found regular file, crash! Delete this file first')
-            exit(1)
-    else:
-        os.mkdir(html_dir)
-    return output_dir, html_dir
+    return temp_dir
 
 
 def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length):
@@ -152,13 +144,11 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
             utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
             mag_name = new_mag_name
 
-    # (2) set output files, note that these file paths are relative to the current working dir
-    output_dir, html_dir = create_output_dir(working_directory)
-    os.chdir(output_dir)
+    # (2) prep temp output files, note that these file paths are relative to the current working dir
+    temp_dir = create_temp_dir(working_directory)  # (doesn't overwrite)
+    os.chdir(temp_dir)
     gbk_file = predict.spawn_file("gbk", mag_name)
     gff_file = predict.spawn_file("gff", mag_name)
-    faa_file = predict.spawn_file("faa", mag_name)
-    fna_file = predict.spawn_file("rna.fna", mag_name)
 
     # (3) Filter, rename and load contigs
     contig_dict = filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length)
@@ -185,20 +175,19 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
 
     for prediction in (predict.predict_crisprs_with_minced,
                        predict.predict_trnas_with_aragorn,
-                       predict.predict_non_coding_rna_features_with_infernal,  # may use >1 threads
+                       predict.predict_non_coding_rna_features_with_infernal_cmscan,  # multithreaded by splitting input
                        predict.predict_retrotransposons_with_ltrharvest,
                        predict.predict_tandem_repeats_with_trf,
-                       predict.predict_remaining_repeats_with_repeatmasker, # may use >1 threads
+                       predict.predict_remaining_repeats_with_repeatmasker,  # may use >1 threads
                        predict.predict_coding_sequences_with_prodigal,
                        predict.create_ids,
-                       databases.load_descriptions_taxonomy_cdd,
                        predict.write_gene_files,
                        predict.predict_functions_and_taxa_with_diamond, # may use >1 threads
                        predict.predict_functions_and_taxa_with_blastn,
-                       predict.predict_functions_with_cdd,
+                       predict.predict_functions_with_cdd,  # ??? multithreaded by splitting input
                        predict.predict_functions_with_antismash,
                        predict.predict_transmembrane_helixes,
-                       predict.predict_signal_peptides,
+                       predict.predict_signal_peptides,  # multithreaded by splitting input
                        predict.predict_subsystems,
                        predict.write_databases
                        ):
@@ -206,11 +195,15 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
         SeqIO.write(contig_dict.values(), gbk_file, "genbank")
         with open(gff_file, "w") as gff_handle:
              GFF.write(contig_dict.values(), gff_handle)
-        antismash_results_dir = predict.spawn_file('antismash', mag_name)
+    mag_antismash_result_dir = predict.spawn_file('antismash', mag_name).absolute()
 
-    # (7) write main result files
-    utils.log("Now writing final result files...")
+    # (7) write flat text result files
+    utils.log(f'({mag_name}) Now writing to .gbk, .gff, and fasta...')
     os.chdir(working_directory)
+    faa_file = predict.spawn_file("faa", mag_name)
+    fna_file = predict.spawn_file("rna.fna", mag_name)
+    gbk_file = predict.spawn_file("gbk", mag_name)
+    gff_file = predict.spawn_file("gff", mag_name)
     with open(faa_file, 'w') as faa_handle, open(fna_file, 'w') as fna_handle:
         for contig in contig_dict.values():
             for f in contig.features:
@@ -218,8 +211,6 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
                     feature_seq = utils.pad_seq(f.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1]
                     feature_seq.id = utils.get_feature_qualifier(f, 'id')
                     feature_seq.description = f'{feature_seq.id} {visualization.make_feature_short_description(f)}'
-                    if '*' in feature_seq:
-                        utils.log(f'Warning, internal stop codon(s) in CDS {utils.get_feature_qualifier(f, "id")} {feature_seq.seq}')
                     SeqIO.write(feature_seq, faa_handle, "fasta")
                 elif f.type in ['tRNA', 'rRNA', 'ncRNA']:
                     feature_seq = f.extract(contig)
@@ -229,15 +220,19 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
     SeqIO.write(contig_dict.values(), gbk_file, "genbank")
     with open(gff_file, "w") as gff_handle:
         GFF.write(contig_dict.values(), gff_handle)
-    os.chdir(html_dir)
-    if antismash_results_dir.exists():
-        shutil.rmtree(antismash_results_dir.name, ignore_errors=True)
-        shutil.copytree(antismash_results_dir, html_dir)
-        shutil.rmtree('antismash', ignore_errors=True)
-        shutil.move(Path(antismash_results_dir.name, 'antismash'))
+    # (8) write html result files
+    utils.log(f'({mag_name}) Now writing final result as .html for visualization...')
+    mag_html_dir = predict.spawn_file("html", mag_name)
+    shutil.rmtree(mag_html_dir, ignore_errors=True)
+    mag_html_dir.mkdir()
+    os.chdir(mag_html_dir)
+    if mag_antismash_result_dir.exists():
+        shutil.copytree(mag_antismash_result_dir, 'antismash')
+        #shutil.rmtree('antismash', ignore_errors=True)
+        #shutil.move(mag_antismash_result_dir.name, 'antismash')
     genome_stats = predict.compile_genome_stats(mag_name, contig_dict, subsystem_hash)
     visualization.html_save_all(mag_name, genome_stats, contig_dict, predict.BLAST_RESULTS, subsystem_hash)
-    utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
+    utils.log(f'({mag_name}) Done. Thank you for using metaerg.py {VERSION}')
 
 
 def main():
@@ -253,6 +248,7 @@ def main():
     else:
         utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
         exit(1)
+    databases.load_descriptions_taxonomy_cdd()
     # (2) prep subsystems
     subsystems.prep_subsystems()
     # (3) determine # of threads available and how many we're using

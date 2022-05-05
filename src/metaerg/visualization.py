@@ -1,8 +1,9 @@
+import os
 import re
 import pandas as pd
 
+from pathlib import Path
 from metaerg import databases
-from metaerg import predict
 from metaerg import utils
 from metaerg import subsystems
 
@@ -32,7 +33,7 @@ def make_feature_short_description(feature):
 
 
 def html_make_link(feature_id, description):
-    return '<a target="_blank" href="{}.html">{}</a>'.format(feature_id, description)
+    return '<a target="_blank" href="features/{}.html">{}</a>'.format(feature_id, description)
 
 
 def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsystems_hash):
@@ -89,24 +90,32 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
         <tbody>''')
     for (key, value) in genome_stats.items():
         if key == 'total # features':
-            value = '<a target="_blank" href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
+            value = '<a href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
         writer.write(f'          <tr><td>{key}</td><td>{value}</td></tr>\n')
     writer.write('        </tbody></table>\n')
     writer.write('        <h4 id=f>Subsystems overview</h4>\n')
 
     for subsystem in subsystems_hash.keys():
         s = subsystems.get_subsystem_stats(subsystems_hash[subsystem])
-        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}/{s[0]}) {s[2]*100:.0f}%</button>\n')
-        if isinstance(subsystems_hash[subsystem], list):
-            writer.write('          <div class="panel"><p>\n')
+        subsystem_txt = ')'
+        if s[0]:
+            subsystem_txt = f'/{s[0]}): {s[2]*100:.0f}%'
+        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}{subsystem_txt}</button>\n')
+        writer.write('          <div class="panel">\n')
+        if '[secondary-metabolites]' == subsystem:
+            if len(subsystems_hash[subsystem]):
+                writer.write('          <p><a href="antismash/index.html" target="">View antismash results.</a></p>\n')
+        elif isinstance(subsystems_hash[subsystem], list):
+            writer.write('          <p>\n')
             for feature_id in subsystems_hash[subsystem]:
                 writer.write(f'{html_make_link(feature_id, feature_id)} ')
-            writer.write('\n          </p></div>\n')
+            writer.write('\n          </p>\n')
         else:
-            writer.write('          <div class="panel"><table>\n')
+            writer.write('          <table>\n')
             for phrase in subsystems_hash[subsystem].keys():
                 writer.write(f'<tr><td>{phrase}</td><td>{" ".join(html_make_link(g, g) for g in subsystems_hash[subsystem][phrase])}</td></tr>\n')
-            writer.write('          </table></div>\n')
+            writer.write('          </table>\n')
+        writer.write('          </div>\n')
     writer.write('''<script>
     var acc = document.getElementsByClassName("accordion");
     var i;
@@ -426,7 +435,7 @@ $(document).ready( function () {
                 writer.write('          <td></td><td></td><td></td>\n')
 
             if description:
-                writer.write('<td id=al><a target="_blank" href="{}.html">{}</a></td>\n'.format(feature_id, description))
+                writer.write('<td id=al><a target="_blank" href="features/{}.html">{}</a></td>\n'.format(feature_id, description))
             else:
                 writer.write(f'          <td id=al>{product}</td>\n')
             # taxon
@@ -460,14 +469,17 @@ $(document).ready( function () {
 
 
 def html_save_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_hash):
+    utils.log(f'({mag_name}) Writing html index and overview...')
     with open('index.html', 'w') as html_writer:
         html_write_genome_stats_and_subsystems(html_writer, mag_name, genome_stats, subsystem_hash)
     with open('index_of_features.html', 'w') as html_writer:
         html_write_feature_overview(html_writer, mag_name, contig_dict, genome_stats, blast_results)
 
-    #mag_dir = Path(mag_name)
-    #os.chdir(mag_dir)
-    # write html
+    feature_dir = Path('features')
+    feature_dir.mkdir()
+    os.chdir(feature_dir)
+    utils.log(f'({mag_name}) Writing html page for each gene...')
     for contig in contig_dict.values():
         for feature in contig.features:
             html_write_page_for_feature(feature, contig, blast_results, genome_stats)
+    os.chdir('..')

@@ -34,7 +34,7 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 
 >metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/
 
-Metaerg needs 40 min for annotation of a 4 Mb genome on a desktop computer.
+Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
 
 ## Installation
 

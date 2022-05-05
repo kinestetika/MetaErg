@@ -58,25 +58,30 @@ def set_feature_qualifier(feature: SeqFeature, key, value):
     feature.qualifiers[key] = [value]
 
 
-def write_cds_to_multiple_fasta_files(contig_dict, base_file:Path, number_of_files):
-    number_of_files = int(number_of_files+0.5)
-    count = 0
-    for contig in contig_dict.values():
-        for f in contig.features:
-            if f.type == 'CDS':
-                count += 1
+def split_fasta_file(contig_dict, base_file:Path, number_of_files:int, target):
+    count = len(contig_dict)
+    if 'CDS' == target:
+        for contig in contig_dict.values():
+            for f in contig.features:
+                if f.type == 'CDS':
+                    count += 1
+    number_of_files = min(number_of_files, count)
     seqs_per_file = count / number_of_files
     paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(number_of_files)]
     filehandles = [open(paths[i], 'w') for i in range(number_of_files)]
     count = 0
     for contig in contig_dict.values():
-        for f in contig.features:
-            if f.type == 'CDS':
-                feature_seq = pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
-                feature_seq.id = get_feature_qualifier(f, 'id')
-                feature_seq.description = feature_seq.id
-                SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
-                count += 1
+        if 'CDS' == target:
+            for f in contig.features:
+                if f.type == 'CDS':
+                    feature_seq = pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
+                    feature_seq.id = get_feature_qualifier(f, 'id')
+                    feature_seq.description = feature_seq.id
+                    SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
+                    count += 1
+        else:
+            SeqIO.write(contig, filehandles[int(count / seqs_per_file)], "fasta")
+            count += 1
     for f in filehandles:
         f.close()
     return paths
@@ -148,7 +153,7 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         return
     result = subprocess.run(exec.split(), stdout=stdout, stdin=stdin, stderr=stderr)
     if result.returncode != 0:
-        print(result.stderr)
+        # print(result.stderr)
         raise Exception(f'Error while trying to run "{exec}"')
 
 
