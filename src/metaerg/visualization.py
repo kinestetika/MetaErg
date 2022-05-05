@@ -435,7 +435,7 @@ $(document).ready( function () {
                 writer.write('          <td></td><td></td><td></td>\n')
 
             if description:
-                writer.write('<td id=al><a target="_blank" href="features/{}.html">{}</a></td>\n'.format(feature_id, description))
+                writer.write('<td id=al><a target="gene_details" href="features/{}.html">{}</a></td>\n'.format(feature_id, description))
             else:
                 writer.write(f'          <td id=al>{product}</td>\n')
             # taxon
@@ -462,6 +462,9 @@ $(document).ready( function () {
 
     writer.write('''    </tbody>
 </table> 
+</div>
+<div id=f>
+<iframe src="" title="gene details" name="gene_details" style="border:none;width:100%;height:1000px;"></iframe>
 </div>
 </body>
 
