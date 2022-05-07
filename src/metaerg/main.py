@@ -253,7 +253,7 @@ def main():
     subsystems.prep_subsystems()
     # (3) determine # of threads available and how many we're using
     cpus_available = cpu_count()
-    cpus_used = args.cpus
+    cpus_used = int(args.cpus)
     if cpus_used > 0:
         cpus_used = min(cpus_used, cpus_available)
     else:
