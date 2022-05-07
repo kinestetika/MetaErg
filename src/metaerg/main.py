@@ -14,7 +14,7 @@ from metaerg import utils
 from metaerg import visualization
 from metaerg import subsystems
 
-VERSION = "2.0.15"
+VERSION = "2.0.16"
 
 
 def get_available_prereqs():
