@@ -52,7 +52,7 @@ def get_available_prereqs():
         exit(1)
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
+    parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
     parser.add_argument('--contig_file', required=True,  help='Fasta nucleotide file of the contigs, or dir that '
                                                               'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', required=True,  help='Dir that contains the annotation databases.')
@@ -67,6 +67,8 @@ def parse_arguments():
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, the extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
     parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
+    parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
+    parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
 
 
     args = parser.parse_args()
@@ -132,6 +134,7 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
 def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_length=0):
     # (1) set and validate fasta .fna file, mag (genome) name,
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
+    utils.log(f'Now starting to annotate {mag_name}...')
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
         return
@@ -228,8 +231,8 @@ def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_le
 
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
-    get_available_prereqs()
     args = parse_arguments()
+    get_available_prereqs()
     utils.TRANSLATION_TABLE = args.translation_table
     # (1) set and validate database dir
     dbdir = Path(args.database_dir)
@@ -270,7 +273,9 @@ def main():
                     executor.submit(annotate_genome, f, new_mag_name, True, args.min_contig_length)
                     mapping_file.write(f'{new_mag_name}\t{f.name}\n')
                     count += 1
-        visualization.html_write_mag_table(contig_file)
+        os.chdir(contig_file)
+        visualization.html_write_mag_table(open(Path(contig_file, 'html', 'index.html'), 'w'),
+                                           contig_file, gtdbtk_dir=args.gtdbtk_dir, checkm_dir=args.checkm_dir)
     else:
         # annotate a single genome
         utils.log(f'Ready to annotate genome in nucleotide fasta file "{contig_file}".')
@@ -281,7 +286,7 @@ def main():
             utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
             mag_name = new_mag_name
         annotate_genome(contig_file, mag_name, rename_contigs=args.rename_contigs, min_length=args.min_contig_length)
-    utils.log(f'({mag_name}) Done. Thank you for using metaerg.py {VERSION}')
+    utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 
 if __name__ == "__main__":

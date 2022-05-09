@@ -1,8 +1,7 @@
-import json
 import os
 import re
 import pandas as pd
-import json
+import ast
 
 from pathlib import Path
 
@@ -14,8 +13,9 @@ from metaerg import subsystems
 from Bio import SeqIO
 
 
-PRODUCT_RE = re.compile('\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
+PRODUCT_RE = re.compile(r'\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
 CENTER_DOT = u'\u25CF'
+
 
 def make_feature_product(feature):
     product = utils.get_feature_qualifier(feature, "product")
@@ -28,14 +28,14 @@ def make_feature_taxon(feature):
     taxon = utils.get_feature_qualifier(feature, 'taxonomy')
     if "~" in taxon:
         for t in reversed(taxon.split("~ ")):
-            if not " " in t:
+            if " " not in t:
                 taxon = f'[{t}]'
                 break
     return taxon
 
 
 def make_feature_short_description(feature):
-    return (f'{make_feature_product(feature)} {make_feature_taxon(feature)}')
+    return f'{make_feature_product(feature)} {make_feature_taxon(feature)}'
 
 
 def html_make_link(feature_id, description):
@@ -53,7 +53,7 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
 
     <style>
       th {
-    	background-color: white;
+        background-color: white;
          }
       #f {
         font-family: Calibri, sans-serif;
@@ -142,7 +142,6 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
 
 
 def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom_taxon=None, max_hits=0):
-    blast_result = None
     query_length = int(len(feature.location) / 3)
     feature_id = utils.get_feature_qualifier(feature, 'id')
     if is_cdd:
@@ -242,7 +241,6 @@ def html_create_blast_table_for_feature_page(feature, blast_results, is_cdd, dom
 def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
     feature_id = utils.get_feature_qualifier(feature, 'id')
     header = f'>{feature_id} {make_feature_short_description(feature)}'
-    seq = ''
     if 'CDS' == feature.type:
         seq = utils.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
     else:
@@ -311,8 +309,8 @@ $(document).ready( function () {
 
 <style>
   th {
-	background-color: white;
-     }
+    background-color: white;
+      }
   #f {
     font-family: Calibri, sans-serif;
     text-align: center;
@@ -414,7 +412,7 @@ $(document).ready( function () {
                 writer.write(f'          <td></td>\n')
             # homology blast hits (metaerg database)
             match = re.match(PRODUCT_RE, product)
-            if (match):
+            if match:
                 blast_percent_id = float(match.group(3))
                 color = 'cg'
                 if blast_percent_id < 30:
@@ -493,27 +491,30 @@ def html_write_all(mag_name, genome_stats, contig_dict, blast_results, subsystem
     os.chdir('..')
 
 
-def html_write_mag_table(writer, dir):
+def html_write_mag_table(writer, target_dir, checkm_dir='checkm', gtdbtk_dir='gtdbtk'):
     mag_list = []
-    with open(Path(dir, 'mag.name.mapping.txt')) as handle:
+    with open(Path(target_dir, 'mag.name.mapping.txt')) as handle:
         for line in handle:
             mag_list.append(line.split())
 
     checkm_results = {}
-    checkm_result_file = Path(dir, 'checkm', 'storage', 'bin_stats_ext.tsv')
+    checkm_result_file = Path(checkm_dir, 'storage', 'bin_stats_ext.tsv')
+    #print(checkm_result_file.absolute())
     if checkm_result_file.exists():
         with open(checkm_result_file) as handle:
             for line in handle:
                 words = line.split('\t')
-                checkm_results[words[0]] = json.loads(words[1])
+                checkm_results[words[0]] = ast.literal_eval(words[1])
+    #print(checkm_results)
     gtdbtk_results = {}
-    for file in  (Path(dir, 'gtdbtk', 'gtdbtk.ar53.summary.tsv'), Path(dir, 'gtdbtk', 'gtdbtk.bac120.summary.tsv')):
+    for file in (Path(gtdbtk_dir, 'gtdbtk.ar53.summary.tsv'), Path(gtdbtk_dir, 'gtdbtk.bac120.summary.tsv')):
         if file.exists():
             with open(file) as handle:
                 for line in handle:
                     if line.startswith("user_genome\t"):
                         continue
                     words = line.split("\t")
+                    words[1] = re.sub('[a-z]__', ' ', words[1])
                     gtdbtk_results[words[0]] = words[1]
 
     writer.write('''<!doctype html>
@@ -541,7 +542,7 @@ def html_write_mag_table(writer, dir):
 
     <style>
       th {
-    	background-color: white;
+        background-color: white;
          }
       #f {
         font-family: Calibri, sans-serif;
@@ -584,16 +585,16 @@ def html_write_mag_table(writer, dir):
     </thead>
     <tbody>''')
 
-    for old_name, new_name in mag_list:
+    for new_name, old_name in mag_list:
         contig_dict = {}
-        gbk_file = Path(dir, 'gbk', new_name)
+        gbk_file = Path(target_dir, 'gbk', new_name)
         with open(gbk_file) as handle:
             for gb_record in SeqIO.parse(handle, "genbank"):
                 contig_dict[gb_record.id] = gb_record
         genome_stats = predict.compile_genome_stats(new_name, contig_dict)
         writer.write('        <tr>')
         writer.write(f'            <td id=al>{old_name}</td>')
-        writer.write(f'            <td id=al>{new_name}</td>')
+        writer.write(f'            <td id=al><a href="{new_name}/index.html">{new_name}</a></td>')
         writer.write(f'            <td>{genome_stats["size"]/1e6:.2f}</td>')
         writer.write(f'            <td>{genome_stats["N50"]}</td>')
         completeness = ''
@@ -601,26 +602,25 @@ def html_write_mag_table(writer, dir):
         code = ''
         gtdbtk_classification = ''
         try:
-            checkm_result = checkm_results[old_name]
+            checkm_result = checkm_results[Path(old_name).stem]
             if not checkm_result:
                 checkm_result = checkm_results[new_name]
             if checkm_result:
-                completeness = float(checkm_result["Completeness"])
-                contamination = float(checkm_result["Contamination"])
+                completeness = f'{float(checkm_result["Completeness"]):.1f}'
+                contamination = f'{float(checkm_result["Contamination"]):.1f}'
                 code = int(checkm_result["Translation table"])
         except KeyError:
             pass
         try:
-            gtdbtk_classification = gtdbtk_results[old_name]
+            gtdbtk_classification = gtdbtk_results[Path(old_name).stem]
             if not gtdbtk_classification:
                 gtdbtk_classification = gtdbtk_results[new_name]
         except KeyError:
             pass
-        writer.write(f'            <td>{genome_stats["N50"]}</td>')
         writer.write(f'            <td>{code}</td>')
-        writer.write(f'            <td>{completeness:.1f}</td>')
-        writer.write(f'            <td>{contamination:.1f}</td>')
-        writer.write(f'            <td>{gtdbtk_classification}</td>')
+        writer.write(f'            <td>{completeness}</td>')
+        writer.write(f'            <td>{contamination}</td>')
+        writer.write(f'            <td id=al>{gtdbtk_classification}</td>')
         writer.write('        </tr>')
 
     writer.write('''    </tbody>

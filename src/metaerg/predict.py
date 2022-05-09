@@ -276,7 +276,7 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_ha
     ltr_index_file = spawn_file('ltr_index', mag_name)
     ltr_harvest_file = spawn_file('ltr_harvest', mag_name)
 
-    utils.log('({mag_name}) Predicting retrotransposons with genometools/ltrharvest...')
+    utils.log(f'({mag_name}) Predicting retrotransposons with genometools/ltrharvest...')
     if not 'gt' in AVAILABLE_PREREQS:
         utils.log(f'({mag_name}) Skipping analysis - could not find gt in $PATH.')
         return
@@ -494,7 +494,7 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         # --ultra-sensitive        enable ultra sensitive mode
 
     else:
-        utils.log(f'({mag_name}) Reusing existing results in{diamond_file}.')
+        utils.log(f'({mag_name}) Reusing existing results in {diamond_file}.')
 
     BLAST_RESULTS['diamond'] = {}
     with utils.TabularBlastParser(diamond_file) as handle:
@@ -611,6 +611,8 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
                         if antismash_gene_category:
                             utils.set_feature_qualifier(metaerg_feature, 'antismash_category', antismash_gene_category)
                         antismash_hit_count += 1
+    if not antismash_hit_count:
+        antismash_dir.mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
     utils.log(f'({mag_name}) Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
 
