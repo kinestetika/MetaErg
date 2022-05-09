@@ -14,7 +14,7 @@ from metaerg import utils
 from metaerg import visualization
 from metaerg import subsystems
 
-VERSION = "2.0.16"
+VERSION = "2.0.17"
 
 
 def get_available_prereqs():
@@ -33,6 +33,7 @@ def get_available_prereqs():
                ('blastn', True),
                ('rpsblast', True),
                ('antismash', False),
+               ('hmmsearch', False)
                ('tmhmm', False),
                ('signalp6', False)
                ]
@@ -181,6 +182,7 @@ def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_le
                        predict.predict_functions_and_taxa_with_blastn,
                        predict.predict_functions_with_cdd,  # ??? multithreaded by splitting input
                        predict.predict_functions_with_antismash,
+                       predict.predict_hydrocarbon_genes_with_canthyd,
                        predict.predict_transmembrane_helixes,
                        predict.predict_signal_peptides,  # multithreaded by splitting input
                        predict.predict_subsystems,

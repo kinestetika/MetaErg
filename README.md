@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0.16
+## metaerg.py, version 2.0.17
 
 Metaerg.py is a program that annotates genomes or sets of mags from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. Output files of annotated contigs are created in common formats
@@ -48,6 +48,7 @@ The metaerg annotation databases can be downloaded [here](https://object-arbutus
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
 * For Eukaryotes, for each taxon within Amoebozoa, Ancyromonadida, Apusozoa, Breviatea, CRuMs, Cryptophyceae, Discoba, Glaucocystophyceae, Haptista, Hemimastigophora, Malawimonadida, Metamonada, Rhodelphea, Rhodophyta, Sar, Aphelida, Choanoflagellata, Filasterea, Fungi, Ichthyosporea, Rotosphaeridagenomes, one genome is added to the database using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/). 
 * [RFAM](https://rfam.xfam.org/) and [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml) databases are also used.
+* Specialized function databases - [Cant-Hyd](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/blob/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm).
 
 If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be downloaded from the link just provided):
 
@@ -61,4 +62,5 @@ tasks (default = build all):
 * B - build PVE blast databases
 * R - build RFAM
 * C - build CDD
+* S - build specialized functional databases
 

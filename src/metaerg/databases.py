@@ -17,7 +17,7 @@ from Bio import BiopythonParserWarning
 
 import ncbi.datasets
 
-VERSION = "2.0.16"
+VERSION = "2.0.17"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
                      'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
@@ -106,9 +106,9 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2021')
     parser.add_argument('--target_dir', required=True,  help='where to create the database')
     parser.add_argument('--gtdbtk_dir', required=True,  help='where to create the database')
-    parser.add_argument('--tasks', required=False,  default='FPVERBC', help='F = create folders, '
+    parser.add_argument('--tasks', required=False,  default='FPVERBCS', help='F = create folders, '
                         'P = download prokaryotes, V = download viruses, E = download eukaryotes, '
-                        'B = build P,V,E blast databases, R = install rfam, C = install cdd')
+                        'B = build P,V,E blast databases, R = install rfam, C = install cdd, S = install specialized')
 
     args = parser.parse_args()
     return args
@@ -559,6 +559,16 @@ def prep_cdd(settings):
         utils.log('Keeping previously installed conserved domain database...')
 
 
+def prep_other(settings):
+    canthyd_dir = settings["canthyd"]
+    if not os.path.exists(canthyd_dir):
+        utils.log(f'Installing the conserved domain database to {canthyd_dir}...')
+        os.mkdir(canthyd_dir)
+        os.chdir(canthyd_dir)
+        utils.run_external(f'wget https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/blob/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
+        utils.run_external(f'hmmpress CANT-HYD.hmm')
+
+
 def main():
     utils.log(f'This is metaerg.py\'s make database script {VERSION}')
     args = parse_arguments()
@@ -575,6 +585,7 @@ def main():
                 'ncbi_cache_pro': os.path.join(args.target_dir, "ncbi-cache", "pro"),
                 'ncbi_cache_euk': os.path.join(args.target_dir, "ncbi-cache", "euk"),
                 'ncbi_cache_vir': os.path.join(args.target_dir, "ncbi-cache", "vir"),
+                'canthyd': os.path.join(args.target_dir, "canthyd"),
                 'gtdbtk_taxonomy_file' : os.path.join(gtdbtk_root, "taxonomy", "gtdb_taxonomy.tsv"),
                 'gtdbtk_genome_sequences_root': os.path.join(gtdbtk_root, "fastani", "database"),
                 'faa_db_name': "db_protein.faa",
@@ -604,6 +615,9 @@ def main():
     if 'C' in args.tasks:
         utils.log('Now downloading and installing cdd...')
         prep_cdd(settings)
+    if 'S' in args.tasks:
+        utils.log('Now downloading and installing specialized databases...')
+        prep_other(settings)
     utils.log("Done.")
 
 if __name__ == '__main__':

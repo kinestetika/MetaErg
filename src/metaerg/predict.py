@@ -617,6 +617,24 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
     utils.log(f'({mag_name}) Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
 
+def predict_hydrocarbon_genes_with_canthyd(mag_name, contig_dict, subsystem_hash):
+    canthyd_file = spawn_file('canthyd', mag_name)
+    cds_aa_file = spawn_file('cds.faa', mag_name)
+    utils.log(f'({mag_name}) Searching genes involved in hydrocarbon metabolism with canthyd...')
+    if not 'hmmsearch' in AVAILABLE_PREREQS:
+        utils.log(f'({mag_name}) Skipping analysis - could not find hmmsearch in $PATH.')
+        return
+    if not (canthyd_file.exists() and canthyd_file.stat().st_size) or FORCE:
+        utils.run_external(f'hmmsearch --cut_nc --tblout '
+                           f'{canthyd_file} {Path(databases.DBDIR, "canthyd", "CANT-HYD.hmm")} {cds_aa_file}')
+    else:
+        utils.log(f'({mag_name}) Reusing existing results in {canthyd_file}.')
+
+    with utils.TabularBlastParser(canthyd_file) as handle:
+        for blast_result in handle:
+            pass
+
+
 def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
     tmhmm_file =  spawn_file('tmhmm', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
