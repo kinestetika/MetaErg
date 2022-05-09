@@ -4,6 +4,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from Bio import SeqIO
+from Bio import SeqUtils
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -750,9 +751,12 @@ def compile_genome_stats(mag_name, contig_dict):
     genome_stats['genome name'] = mag_name
     genome_stats["#contigs"] = len(contig_dict)
     total_size = 0
+    percent_gc = 0
     for contig in contig_dict.values():
         total_size += len(contig)
+        percent_gc += SeqUtils.GC(contig.seq) * len(contig)
     genome_stats["size"] = total_size
+    genome_stats["GC content"] = f'{percent_gc/total_size:.1f}%'
     cum_size = 0
     for contig in contig_dict.values():
         cum_size += len(contig)
