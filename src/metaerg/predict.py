@@ -742,7 +742,7 @@ def predict_subsystems(mag_name, contig_dict, subsystem_hash):
     utils.log(f'({mag_name}) Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
 
 
-def compile_genome_stats(mag_name, contig_dict, subsystem_hash):
+def compile_genome_stats(mag_name, contig_dict):
     utils.log(f'({mag_name}) Compiling genome stats...')
     genome_stats = {}
     genome_stats['genome name'] = mag_name

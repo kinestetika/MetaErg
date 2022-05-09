@@ -129,20 +129,12 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
     return filtered_contig_dict
 
 
-def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, rename_mags=True, min_length=0):
+def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_length=0):
     # (1) set and validate fasta .fna file, mag (genome) name,
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
-        exit(1)
-    if rename_mags:
-        mag_name = f'g{genome_id:0>4}'
-    else:
-        mag_name = input_fasta_file.stem
-        if len(mag_name) > 5:
-            new_mag_name = f'g{genome_id:0>4}'
-            utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
-            mag_name = new_mag_name
+        return
 
     # (2) prep temp output files, note that these file paths are relative to the current working dir
     temp_dir = create_temp_dir(working_directory)  # (doesn't overwrite)
@@ -230,9 +222,8 @@ def annotate_genome(input_fasta_file:Path, genome_id=0, rename_contigs=True, ren
         shutil.copytree(mag_antismash_result_dir, 'antismash')
         #shutil.rmtree('antismash', ignore_errors=True)
         #shutil.move(mag_antismash_result_dir.name, 'antismash')
-    genome_stats = predict.compile_genome_stats(mag_name, contig_dict, subsystem_hash)
-    visualization.html_save_all(mag_name, genome_stats, contig_dict, predict.BLAST_RESULTS, subsystem_hash)
-    utils.log(f'({mag_name}) Done. Thank you for using metaerg.py {VERSION}')
+    genome_stats = predict.compile_genome_stats(mag_name, contig_dict)
+    visualization.html_write_all(mag_name, genome_stats, contig_dict, predict.BLAST_RESULTS, subsystem_hash)
 
 
 def main():
@@ -272,16 +263,25 @@ def main():
                   f'{predict.THREADS_PER_GENOME} threads per genome.')
         with ProcessPoolExecutor(max_workers=cpus_used) as executor:
             count = 0
-            for f in contig_files:
-                utils.log(f'Now submitting {f} for annotation...')
-                executor.submit(annotate_genome, f, count, True, True, args.min_contig_length)
-                count += 1
+            with open(Path(contig_file, 'mag.name.mapping.txt'), 'w') as mapping_file:
+                for f in contig_files:
+                    new_mag_name = f'g{count:0>4}'
+                    utils.log(f'Now submitting {f} for annotation as {new_mag_name}...')
+                    executor.submit(annotate_genome, f, new_mag_name, True, args.min_contig_length)
+                    mapping_file.write(f'{new_mag_name}\t{f.name}\n')
+                    count += 1
+        visualization.html_write_mag_table(contig_file)
     else:
         # annotate a single genome
         utils.log(f'Ready to annotate genome in nucleotide fasta file "{contig_file}".')
         predict.THREADS_PER_GENOME = cpus_used
-        annotate_genome(contig_file, rename_contigs=args.rename_contigs, rename_mags=args.rename_mags,
-                        min_length=args.min_contig_length)
+        mag_name = contig_file.stem
+        if args.rename_mags or len(mag_name) > 7:
+            new_mag_name = 'g00001'
+            utils.log(f'Genome name "{mag_name}" is too long for visualization, genome renamed to {new_mag_name}...')
+            mag_name = new_mag_name
+        annotate_genome(contig_file, mag_name, rename_contigs=args.rename_contigs, min_length=args.min_contig_length)
+    utils.log(f'({mag_name}) Done. Thank you for using metaerg.py {VERSION}')
 
 
 if __name__ == "__main__":

@@ -1,11 +1,17 @@
+import json
 import os
 import re
 import pandas as pd
+import json
 
 from pathlib import Path
+
+import predict
 from metaerg import databases
 from metaerg import utils
 from metaerg import subsystems
+
+from Bio import SeqIO
 
 
 PRODUCT_RE = re.compile('\[(\d+)/(\d+)\w\w@([\d,.]+)%\] \[(\d+)/(\d+)\] (.+)')
@@ -467,11 +473,10 @@ $(document).ready( function () {
 <iframe src="" title="gene details" name="gene_details" style="border:none;width:100%;height:1000px;"></iframe>
 </div>
 </body>
-
 </html>''')
 
 
-def html_save_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_hash):
+def html_write_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_hash):
     utils.log(f'({mag_name}) Writing html index and overview...')
     with open('index.html', 'w') as html_writer:
         html_write_genome_stats_and_subsystems(html_writer, mag_name, genome_stats, subsystem_hash)
@@ -486,3 +491,143 @@ def html_save_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_
         for feature in contig.features:
             html_write_page_for_feature(feature, contig, blast_results, genome_stats)
     os.chdir('..')
+
+
+def html_write_mag_table(writer, dir):
+    mag_list = []
+    with open(Path(dir, 'mag.name.mapping.txt')) as handle:
+        for line in handle:
+            mag_list.append(line.split())
+
+    checkm_results = {}
+    checkm_result_file = Path(dir, 'checkm', 'storage', 'bin_stats_ext.tsv')
+    if checkm_result_file.exists():
+        with open(checkm_result_file) as handle:
+            for line in handle:
+                words = line.split('\t')
+                checkm_results[words[0]] = json.loads(words[1])
+    gtdbtk_results = {}
+    for file in  (Path(dir, 'gtdbtk', 'gtdbtk.ar53.summary.tsv'), Path(dir, 'gtdbtk', 'gtdbtk.bac120.summary.tsv')):
+        if file.exists():
+            with open(file) as handle:
+                for line in handle:
+                    if line.startswith("user_genome\t"):
+                        continue
+                    words = line.split("\t")
+                    gtdbtk_results[words[0]] = words[1]
+
+    writer.write('''<!doctype html>
+    <html>
+    <head>
+        <meta charset="utf-8">''')
+    writer.write(f'<title>all annotated genomes</title>\n')
+    writer.write('''</head>
+    <body>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+
+    <script type="text/javascript" charset="utf8">
+    $(document).ready( function () {
+        $('#table_id').DataTable({
+            "lengthMenu": [[20, 100, -1], [20, 100, "All"] ],
+            });
+    } );
+    </script>
+
+    <style>
+      th {
+    	background-color: white;
+         }
+      #f {
+        font-family: Calibri, sans-serif;
+        text-align: center;
+        padding: 0px;
+        margin: 0px;
+         }
+      #cg {
+        color: green;
+         }
+      #cr {
+        color: red;
+         }
+      #cb {
+        color: blue;
+         }
+      #co {
+        color: orange;
+         }
+      #cw {
+        color: white;
+         }
+      #al {
+        text-align: left;
+          }
+
+    </style>
+
+    <div id=f>
+    <table id="table_id" class="display">
+        <thead>
+          <tr>''')
+    left_aligned = 'file name classification'
+    for column in 'file name (Mb) N50 code completeness contamination classification'.split():
+        if column in left_aligned:
+            writer.write(f'          <th id=al>{column}</th>\n')
+        else:
+            writer.write(f'          <th>{column}</th>\n')
+    writer.write('''        </tr>
+    </thead>
+    <tbody>''')
+
+    for old_name, new_name in mag_list:
+        contig_dict = {}
+        gbk_file = Path(dir, 'gbk', new_name)
+        with open(gbk_file) as handle:
+            for gb_record in SeqIO.parse(handle, "genbank"):
+                contig_dict[gb_record.id] = gb_record
+        genome_stats = predict.compile_genome_stats(new_name, contig_dict)
+        writer.write('        <tr>')
+        writer.write(f'            <td id=al>{old_name}</td>')
+        writer.write(f'            <td id=al>{new_name}</td>')
+        writer.write(f'            <td>{genome_stats["size"]/1e6:.2f}</td>')
+        writer.write(f'            <td>{genome_stats["N50"]}</td>')
+        completeness = ''
+        contamination = ''
+        code = ''
+        gtdbtk_classification = ''
+        try:
+            checkm_result = checkm_results[old_name]
+            if not checkm_result:
+                checkm_result = checkm_results[new_name]
+            if checkm_result:
+                completeness = float(checkm_result["Completeness"])
+                contamination = float(checkm_result["Contamination"])
+                code = int(checkm_result["Translation table"])
+        except KeyError:
+            pass
+        try:
+            gtdbtk_classification = gtdbtk_results[old_name]
+            if not gtdbtk_classification:
+                gtdbtk_classification = gtdbtk_results[new_name]
+        except KeyError:
+            pass
+        writer.write(f'            <td>{genome_stats["N50"]}</td>')
+        writer.write(f'            <td>{code}</td>')
+        writer.write(f'            <td>{completeness:.1f}</td>')
+        writer.write(f'            <td>{contamination:.1f}</td>')
+        writer.write(f'            <td>{gtdbtk_classification}</td>')
+        writer.write('        </tr>')
+
+    writer.write('''    </tbody>
+</table> 
+</div>
+<div id=f>
+<iframe src="" title="gene details" name="gene_details" style="border:none;width:100%;height:1000px;"></iframe>
+</div>
+</body>
+</html>''')
