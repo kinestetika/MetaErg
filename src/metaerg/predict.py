@@ -630,9 +630,39 @@ def predict_hydrocarbon_genes_with_canthyd(mag_name, contig_dict, subsystem_hash
     else:
         utils.log(f'({mag_name}) Reusing existing results in {canthyd_file}.')
 
-    with utils.TabularBlastParser(canthyd_file) as handle:
-        for blast_result in handle:
-            pass
+    with open(canthyd_file) as hmm_handle:
+        hits = {}
+        for line in hmm_handle:
+            for line in hmm_handle:
+                if line.startswith('#'):
+                    continue
+                words = line.split()
+                if len(words) < 18 or '?' == words[16]:
+                    continue
+                try:
+                    prev_hit = hits[words[0]]
+                except KeyError:
+                    prev_hit = None
+                if not prev_hit or prev_hit['score'] < float(words[5]):
+                    hits[words[0]] = {'hmm_id': words[2],
+                                      'hit_id': words[0],
+                                      'score': float(words[5])}
+            for h in hits.values():
+                if h["hmm_id"] not in databases.CANTHYD_DESCR.keys():
+                    utils.log(f'Warning, missing description for cant-hyd hmm {h["hmm_id"]}...')
+                    continue
+                coord = utils.decipher_metaerg_id(h['hit_id'])
+                feature = contig_dict[coord["contig_id"]].features[coord["gene_number"]]
+                prev_canthyd_qualifier = utils.get_feature_qualifier(feature, 'canthyd')
+                if not prev_canthyd_qualifier:
+                    if h["score"] > databases.CANTHYD_TRUSTED_CUTOFFS[h["hmm_id"]]:
+                        confidence = 'high confidence'
+                    else:
+                        confidence = 'low confidence'
+                    utils.set_feature_qualifier(feature, 'canthyd', f'{databases.CANTHYD_DESCR[h["hmm_id"]]}'
+                                                                    f' ({h["hmm_id"]}) [{confidence}]')
+                    subsystems.add_subsystem_to_feature(feature, '[hydrocarbon degradation]',
+                                                        phrase=None, assignments=subsystem_hash)
 
 
 def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
@@ -706,7 +736,9 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
         if THREADS_PER_GENOME > 2:
             signalp_threads = int(THREADS_PER_GENOME/2 + 0.5)
             split_fasta_files = utils.split_fasta_file(contig_dict, cds_aa_file, signalp_threads, target='CDS')
-            signalp_dirs = [Path(f.parent, f'{f.name}.signalp') for f in split_fasta_files]
+            print(split_fasta_files)
+            signalp_dirs = [Path(f'{signalp_dir}.{i}') for i in range(len(split_fasta_files))]
+            print(signalp_dirs)
             with ProcessPoolExecutor(max_workers=signalp_threads) as executor:
                 for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
                     executor.submit(utils.run_external, f'signalp6 --fastafile {split_cds_aa_file} --output_dir '
@@ -716,8 +748,8 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
                 for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
                     with open(Path(split_signalp_dir, 'prediction_results.txt'), 'rb') as input:
                         shutil.copyfileobj(input, output)
-                    shutil.rmtree(split_signalp_dir)
-                    split_cds_aa_file.unlink()
+                    # shutil.rmtree(split_signalp_dir)
+                    # split_cds_aa_file.unlink()
         else:
             utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none '
                                f'--organism other')

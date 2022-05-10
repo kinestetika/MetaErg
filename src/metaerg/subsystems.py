@@ -8,6 +8,8 @@ SUBSYSTEM_HASH = {}
 
 SUBSYSTEMS = '''>[secondary-metabolites]
 # (populated by antismash)
+>[hydrocarbon degradation]
+# (populated by cant-hyd)
 >[ribosome]
 ribosomal protein L1
 ribosomal protein L2

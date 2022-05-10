@@ -33,7 +33,7 @@ def get_available_prereqs():
                ('blastn', True),
                ('rpsblast', True),
                ('antismash', False),
-               ('hmmsearch', False)
+               ('hmmsearch', False),
                ('tmhmm', False),
                ('signalp6', False)
                ]
