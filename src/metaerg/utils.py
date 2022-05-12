@@ -39,9 +39,12 @@ def format_runtime():
     return f'[{int(runtime / 3600):02d}h:{int((runtime % 3600) / 60):02d}m:{int(runtime % 60):02d}s]'
 
 
-def log(log_message, topic=''):
+def log(log_message, values=(), topic=''):
     if not topic or topic in LOG_TOPICS:
-        print(f'{format_runtime()} {log_message}')
+        if len(values):
+            print(f'{format_runtime()} {log_message.format(*values)}')
+        else:
+            print(f'{format_runtime()} {log_message}')
 
 
 def get_feature_qualifier(feature: SeqFeature, key):
