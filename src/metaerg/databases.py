@@ -368,41 +368,43 @@ def prep_prokaryote_database(settings):
             download_status = " "
             if os.path.exists(future_gff_file):
                 taxon['in_local_cache'] = True
+                download_status = "+"
             else:
+                continue
                 # print(f'now retrieving {taxon}')
-                try:
-                    download_status = "*"
-                    ftp.cwd('/genomes/all/')
-                    for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
-                        ftp.cwd(acc_part)
-                    ftp_dir_list = []
-                    ftp.dir('.', ftp_dir_list.append)
-                    ftp.cwd(ftp_dir_list[0].split()[-1])
-                    ftp_dir_list = []
-                    ftp.dir('.', ftp_dir_list.append)
-                    target = None
-                    for l in ftp_dir_list:
-                        filename = l.split()[-1]
-                        if filename.endswith('_genomic.gff.gz'):
-                            target = filename
-                            break
-                    if target:
-                        success_count += 1
-                        with open(future_gff_file, "wb") as local_handle:
-                            ftp.retrbinary("RETR " + target, local_handle.write)
-                        taxon['in_local_cache'] = True
-                    else:
-                        continue
-                except EOFError:
-                    utils.log('FTP Error at NCBI - resetting connection')
-                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
-                    ftp.login()
-                    continue
-                except BrokenPipeError:
-                    utils.log('FTP Error at NCBI - resetting connection')
-                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
-                    ftp.login()
-                    continue
+                # try:
+                #     download_status = "*"
+                #     ftp.cwd('/genomes/all/')
+                #     for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
+                #         ftp.cwd(acc_part)
+                #     ftp_dir_list = []
+                #     ftp.dir('.', ftp_dir_list.append)
+                #     ftp.cwd(ftp_dir_list[0].split()[-1])
+                #     ftp_dir_list = []
+                #     ftp.dir('.', ftp_dir_list.append)
+                #     target = None
+                #     for l in ftp_dir_list:
+                #         filename = l.split()[-1]
+                #         if filename.endswith('_genomic.gff.gz'):
+                #             target = filename
+                #             break
+                #     if target:
+                #         success_count += 1
+                #         with open(future_gff_file, "wb") as local_handle:
+                #             ftp.retrbinary("RETR " + target, local_handle.write)
+                #         taxon['in_local_cache'] = True
+                #     else:
+                #         continue
+                # except EOFError:
+                #     utils.log('FTP Error at NCBI - resetting connection')
+                #     ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                #     ftp.login()
+                #     continue
+                # except BrokenPipeError:
+                #     utils.log('FTP Error at NCBI - resetting connection')
+                #     ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                #     ftp.login()
+                #     continue
             genomes_in_cash_count += 1
             utils.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
             extract_proteins_and_rna_prok(settings, taxon)
