@@ -5,6 +5,7 @@ import re
 import warnings
 import time
 from pathlib import Path
+from ftplib import FTP
 
 from metaerg import utils
 import shutil
@@ -19,11 +20,11 @@ import ncbi.datasets
 
 VERSION = "2.0.17"
 RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
-                     'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA'.split()
+                     'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA autocatalytically_spliced_intron'.split()
 IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
                    'repeat_region ribosome_entry_site minus_10_signal minus_35_signal protein_binding_site regulatory' \
                    ' transcript mRNA gap assembly_gap source misc_feature variation misc_structure transcript' \
-                   ' 3\'UTR 5\'UTR intron'.split()
+                   ' 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 EUK_ROOT_TAXA = 'Amoebozoa Ancyromonadida Apusozoa Breviatea CRuMs Cryptophyceae Discoba Glaucocystophyceae ' \
                 'Haptista Hemimastigophora Malawimonadida Metamonada Rhodelphea Rhodophyta Sar Aphelida ' \
                 'Choanoflagellata Filasterea Fungi Ichthyosporea Rotosphaerida'.split()
@@ -220,56 +221,68 @@ def update_descriptions_and_get_id(description, dictionary, file_handle, kingdom
 def extract_proteins_and_rna_prok(settings, t):
     contig_dict = dict()
     descr_dict = settings["description_dict"]
-    with gzip.open(t["gtdb_seq_file"], "rt") as handle:
-        for seq in SeqIO.parse(handle, "fasta"):
-            contig_dict[seq.id] = seq
-    with gzip.open(t["cached_gff_file"], "rt") as gff_handle, \
-            open(os.path.join(settings['ncbi_cache_pro'], settings["faa_db_name"]), 'a') as prot_fasta_out_handle, \
-            open(os.path.join(settings['ncbi_cache_pro'], settings["fna_db_name"]), 'a') as rna_fasta_out_handle, \
-            open(os.path.join(settings['ncbi_cache_pro'], settings["descr_db_name"]), 'a') as description_handle:
-        gene_counter = 0
-        for line in gff_handle:
-            if line.startswith("#"):
-                continue
-            if 'similar to' in line or 'identical to' in line:
-                continue
-            words = line.split('\t')
-            if len(words) < 9:
-                continue
-            if 'CDS' == words[2]:
-                gene_counter += 1
-                feature = utils.gff_words_to_seqfeature(words)
-                translation_table = int(feature.qualifiers['transl_table'])
-                contig = contig_dict[words[0]]
-                feature_seq = utils.pad_seq(feature.extract(contig))
-                prot_seq = feature_seq.translate(table=translation_table)
-                prot_seq = prot_seq[:-1]
-                if '*' in prot_seq:
+    try:
+        with gzip.open(t["gtdb_seq_file"], "rt") as handle:
+            for seq in SeqIO.parse(handle, "fasta"):
+                contig_dict[seq.id] = seq
+        with gzip.open(t["cached_gff_file"], "rt") as gff_handle, \
+                open(os.path.join(settings['ncbi_cache_pro'], settings["faa_db_name"]), 'a') as prot_fasta_out_handle, \
+                open(os.path.join(settings['ncbi_cache_pro'], settings["fna_db_name"]), 'a') as rna_fasta_out_handle, \
+                open(os.path.join(settings['ncbi_cache_pro'], settings["descr_db_name"]), 'a') as description_handle:
+            gene_counter = 0
+            for line in gff_handle:
+                if line.startswith("#"):
                     continue
-
-                prot_seq.description = feature.qualifiers["product"]
-                descr_id = update_descriptions_and_get_id(prot_seq.description, descr_dict, description_handle, 'p')
-                prot_seq.id = f'{t["accession"]}~{feature.qualifiers["id"]}~p~{gene_counter}~{descr_id}~{t["id"]}~{len(prot_seq.seq)}'
-                SeqIO.write(prot_seq, prot_fasta_out_handle, "fasta")
-            elif words[2] in RELEVANT_RNA_GENES:
-                gene_counter += 1
-                feature = utils.gff_words_to_seqfeature(words)
-                contig = contig_dict[words[0]]
-                feature_seq = feature.extract(contig)
-                try:
-                    feature_seq.description = feature.qualifiers["product"]
-                except KeyError:
-                    if "note" in feature.qualifiers.keys():
-                        feature_seq.description = feature.qualifiers["note"]
-                    else:
+                if 'similar to' in line or 'identical to' in line:
+                    continue
+                words = line.split('\t')
+                if len(words) < 9:
+                    continue
+                if 'CDS' == words[2]:
+                    gene_counter += 1
+                    feature = utils.gff_words_to_seqfeature(words)
+                    translation_table = int(feature.qualifiers['transl_table'])
+                    try:
+                        contig = contig_dict[words[0]]
+                    except KeyError:
                         continue
-                descr_id = update_descriptions_and_get_id(feature_seq.description, descr_dict, description_handle, 'p')
-                feature_seq.id = f'{t["accession"]}~{feature.qualifiers["id"]}~p~{gene_counter}~{descr_id}~{t["id"]}~{len(feature_seq.seq)}'
-                SeqIO.write(feature_seq, rna_fasta_out_handle, "fasta")
-            elif words[2] in IGNORED_FEATURES:
-                pass
-            else:
-                utils.log(f'  Warning: unknown feature type in line "{line}"')
+                    feature_seq = utils.pad_seq(feature.extract(contig))
+                    prot_seq = feature_seq.translate(table=translation_table)
+                    prot_seq = prot_seq[:-1]
+                    if '*' in prot_seq:
+                        continue
+                    product = utils.get_feature_qualifier(feature, "product")
+                    if not product:
+                        continue
+                    prot_seq.description = product
+                    descr_id = update_descriptions_and_get_id(prot_seq.description, descr_dict, description_handle, 'p')
+                    prot_seq.id = f'{t["accession"]}~{feature.qualifiers["id"]}~p~{gene_counter}~{descr_id}~{t["id"]}~{len(prot_seq.seq)}'
+                    SeqIO.write(prot_seq, prot_fasta_out_handle, "fasta")
+                elif words[2] in RELEVANT_RNA_GENES:
+                    gene_counter += 1
+                    feature = utils.gff_words_to_seqfeature(words)
+                    try:
+                        contig = contig_dict[words[0]]
+                    except KeyError:
+                        continue
+                    feature_seq = feature.extract(contig)
+                    try:
+                        feature_seq.description = feature.qualifiers["product"]
+                    except KeyError:
+                        if "note" in feature.qualifiers.keys():
+                            feature_seq.description = feature.qualifiers["note"]
+                        else:
+                            continue
+                    descr_id = update_descriptions_and_get_id(feature_seq.description, descr_dict, description_handle, 'p')
+                    feature_seq.id = f'{t["accession"]}~{feature.qualifiers["id"]}~p~{gene_counter}~{descr_id}~{t["id"]}~{len(feature_seq.seq)}'
+                    SeqIO.write(feature_seq, rna_fasta_out_handle, "fasta")
+                elif words[2] in IGNORED_FEATURES:
+                    pass
+                else:
+                    utils.log(f'  Warning: unknown feature type in line "{line}"')
+    except EOFError:
+        utils.log(f'Incomplete file detected for {t["cached_gff_file"]}. Deleting...')
+        t["cached_gff_file"].unlink()
 
 
 def download_genomes_with_datasets(settings, taxon_list):
@@ -320,6 +333,91 @@ def download_genomes_with_datasets(settings, taxon_list):
 
 
 def prep_prokaryote_database(settings):
+    # (1) Delete some previous files
+    fasta_protein_db = os.path.join(settings['ncbi_cache_pro'], settings["faa_db_name"])
+    fasta_nt_db = os.path.join(settings['ncbi_cache_pro'], settings["fna_db_name"])
+    taxon_db = os.path.join(settings['ncbi_cache_pro'], settings["taxon_db_name"])
+    descr_db = os.path.join(settings['ncbi_cache_pro'], settings["descr_db_name"])
+    unlink_files((fasta_protein_db, fasta_nt_db, descr_db, taxon_db))
+
+    # (2) Load and prep list of target taxa from GTDB
+    taxa_count = 0
+    # determine line count for tqdm
+    with open(settings["gtdbtk_taxonomy_file"]) as taxonomy_handle:
+        for line in taxonomy_handle:
+            taxa_count += 1
+    taxon_list = []
+    with open(settings["gtdbtk_taxonomy_file"]) as taxonomy_handle:
+        # determine line count for tqdm
+        ftp = FTP('ftp.ncbi.nlm.nih.gov')
+        ftp.login()
+        success_count = 0
+        genomes_in_cash_count = 0
+        count = 0
+        for line in taxonomy_handle:
+            count += 1
+            words = line.split()
+            accession = words[0][3:]
+            taxonomy = re.sub("\w__", "", words[1]).split(';')
+            seq_file = Path(settings["gtdbtk_genome_sequences_root"], accession[0:3], accession[4:7],
+                            accession[7:10], accession[10:13], f'{accession}_genomic.fna.gz')
+            future_gff_file = Path(settings["ncbi_cache_pro"], f'{accession}.gff.gz')
+            taxon = {'id': len(taxon_list), 'accession': accession, 'taxonomy': taxonomy,
+                    'cached_gff_file': future_gff_file, 'gtdb_seq_file': seq_file, 'in_local_cache': False}
+            taxon_list.append(taxon)
+            download_status = " "
+            if os.path.exists(future_gff_file):
+                taxon['in_local_cache'] = True
+            else:
+                # print(f'now retrieving {taxon}')
+                try:
+                    download_status = "*"
+                    ftp.cwd('/genomes/all/')
+                    for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
+                        ftp.cwd(acc_part)
+                    ftp_dir_list = []
+                    ftp.dir('.', ftp_dir_list.append)
+                    ftp.cwd(ftp_dir_list[0].split()[-1])
+                    ftp_dir_list = []
+                    ftp.dir('.', ftp_dir_list.append)
+                    target = None
+                    for l in ftp_dir_list:
+                        filename = l.split()[-1]
+                        if filename.endswith('_genomic.gff.gz'):
+                            target = filename
+                            break
+                    if target:
+                        success_count += 1
+                        with open(future_gff_file, "wb") as local_handle:
+                            ftp.retrbinary("RETR " + target, local_handle.write)
+                        taxon['in_local_cache'] = True
+                    else:
+                        continue
+                except EOFError:
+                    utils.log('FTP Error at NCBI - resetting connection')
+                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                    ftp.login()
+                    continue
+                except BrokenPipeError:
+                    utils.log('FTP Error at NCBI - resetting connection')
+                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                    ftp.login()
+                    continue
+            genomes_in_cash_count += 1
+            utils.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
+            extract_proteins_and_rna_prok(settings, taxon)
+    utils.log(f'downloaded {success_count} new genomes. Total genomes in cache: {genomes_in_cash_count}.')
+    # (4) save taxonomy (includes status)
+    utils.log(f'Writing taxonomy file.')
+    with open(taxon_db, "w") as taxon_handle:
+        for t in taxon_list:
+            taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["in_local_cache"]}\t{t["accession"]}\n')
+    # (5) clean up
+    #unlink_files((os.path.join(settings["db_dir"], 'ncbi_genomes.zip'), os.path.join(settings["db_dir"],
+    #                                                                                 '../../README.md')))
+
+
+def prep_prokaryote_database_o(settings):
     # (1) Delete some previous files
     fasta_protein_db = os.path.join(settings['ncbi_cache_pro'], settings["faa_db_name"])
     fasta_nt_db = os.path.join(settings['ncbi_cache_pro'], settings["fna_db_name"])

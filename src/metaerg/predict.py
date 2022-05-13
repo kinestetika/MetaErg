@@ -746,10 +746,14 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
             signalp_dir.mkdir()
             with open(Path(signalp_dir, 'prediction_results.txt'), 'wb') as output:
                 for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
-                    with open(Path(split_signalp_dir, 'prediction_results.txt'), 'rb') as input:
-                        shutil.copyfileobj(input, output)
-                    # shutil.rmtree(split_signalp_dir)
-                    # split_cds_aa_file.unlink()
+                    signalp_result_file = Path(split_signalp_dir, 'prediction_results.txt')
+                    if signalp_result_file.exists():
+                        with open(signalp_result_file, 'rb') as input:
+                            shutil.copyfileobj(input, output)
+                    else:
+                        utils.log(f'({mag_name}) WARNING - missing part of signalp output!')
+                    shutil.rmtree(split_signalp_dir)
+                    split_cds_aa_file.unlink()
         else:
             utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none '
                                f'--organism other')
