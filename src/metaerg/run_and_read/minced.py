@@ -1,11 +1,14 @@
-from metaerg.run_and_read.abc import AbstractBaseClass
 from metaerg.run_and_read.data import MetaergSeqRecord
 from metaerg.run_and_read.data import MetaergSeqFeature
+from metaerg.run_and_read import abc
 from metaerg import utils
 
-class Minced(AbstractBaseClass):
-    def __init__(self, genome, subsystem_hash, force=False, multi_mode=False):
-        super().__init__(genome, subsystem_hash, force, multi_mode)
+class Minced(abc.AbstractBaseClass):
+    def __init__(self, genome, exec:abc.ExecutionEnvironment):
+        super().__init__(genome, exec)
+
+    def __repr__(self):
+        return f'Minced({self.genome}, {self.exec})'
 
     def __purpose__(self) -> str:
         """Should return the purpose of the tool"""
@@ -13,11 +16,11 @@ class Minced(AbstractBaseClass):
 
     def __programs__(self) -> tuple:
         """Should return a tuple with the programs needed"""
-        return tuple('minced')
+        return 'minced',
 
     def __result_files__(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
-        return tuple(self.spawn_file('minced'))
+        return self.spawn_file('minced'),
 
     def __run_programs__(self):
         """Should execute the helper programs to complete the analysis"""
@@ -37,13 +40,8 @@ class Minced(AbstractBaseClass):
                 if 'repeat_region' == words[2]:
                     crispr_region_count += 1
                 elif 'repeat_unit' == words[2]:
-                    contig:MetaergSeqRecord = self.contig_dictionary[words[0]]
+                    contig:MetaergSeqRecord = self.genome.contigs[words[0]]
                     feature = MetaergSeqFeature(parent=contig, gff_line=line)
                     feature.type = 'crispr_repeat'
                     contig.features.append(feature)
         return crispr_region_count
-
-    def __repr__(self):
-        return f'minced({self.genome_name}, force={self.force}, multi_mode={self.multi_mode})'
-
-

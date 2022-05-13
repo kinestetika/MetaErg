@@ -90,6 +90,8 @@ class MetaergSeqFeature:
             qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
         qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
         for key, value in qal:
+            if key in ('parent', 'location'):
+                continue
             try:
                 setattr(self, key, value)
             except AttributeError:
@@ -135,5 +137,9 @@ class MetaergGenome:
         self.name = name
         self.translation_table = translation_table
         self.contigs = {}
+        self.subsystems = {}
         for name, c in contig_dict:
             self.contigs[name] = MetaergSeqRecord(self, seq_record=c)
+
+    def __repr__(self):
+        return f'MetaergGenome(name={self.name}, {len(self.contigs)} contigs)'

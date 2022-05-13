@@ -1,11 +1,14 @@
 from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.abc import AbstractBaseClass
 from metaerg.run_and_read.data import MetaergSeqFeature
+from metaerg.run_and_read import abc
 from metaerg import utils
 
-class Aragorn(AbstractBaseClass):
-    def __init__(self, genome, subsystem_hash, force=False, multi_mode=False):
-        super().__init__(genome, subsystem_hash, force, multi_mode)
+class Aragorn(abc.AbstractBaseClass):
+    def __init__(self, genome, exec:abc.ExecutionEnvironment):
+        super().__init__(genome, exec)
+
+    def __repr__(self):
+        return f'Aragorn({self.genome}, {self.exec})'
 
     def __purpose__(self) -> str:
         """Should return the purpose of the tool"""
@@ -13,11 +16,11 @@ class Aragorn(AbstractBaseClass):
 
     def __programs__(self) -> tuple:
         """Should return a tuple with the programs needed"""
-        return tuple('aragorn')
+        return 'aragorn',
 
     def __result_files__(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
-        return tuple(self.spawn_file('aragorn'))
+        return self.spawn_file('aragorn'),
 
     def __run_programs__(self):
         """Should execute the helper programs to complete the analysis"""
@@ -55,6 +58,3 @@ class Aragorn(AbstractBaseClass):
                 f.description = f'{words[1]}-{words[4]}'
                 current_contig.features.append(f)
         return trna_count
-
-    def __repr__(self):
-        return f'aragorn({self.genome.name}, force={self.force}, multi_mode={self.multi_mode})'

@@ -12,12 +12,22 @@ from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import FeatureLocation
 
 
-class AbstractBaseClass:
-    def __init__(self, genome:MetaergGenome, subsystem_hash, force=False, multi_mode=False):
-        self.genome = genome
-        self.subsystem_hash = subsystem_hash
+class ExecutionEnvironment:
+    def __init__(self, database_dir: Path, force=False, multi_mode=False, threads=1):
+        self.database_dir = database_dir
         self.force = force
         self.multi_mode = multi_mode
+        self.threads = threads
+
+    def __repr__(self):
+        return 'ExecutionEnvironment(database_dir={}, force={}, multi_mode={}, threads={})'.format(
+            self.database_dir, self.force, self.multi_mode, self.threads)
+
+
+class AbstractBaseClass:
+    def __init__(self, genome:MetaergGenome, exec:ExecutionEnvironment):
+        self.genome = genome
+        self.exec = exec
 
     def __purpose__(self) -> str:
         """Should return the purpose of the tool"""
@@ -58,12 +68,12 @@ class AbstractBaseClass:
                 if not f.exists() or not f.stat().st_size:
                     previous_results_missing = True
                     break
-            if self.force or previous_results_missing:
+            if self.exec.force or previous_results_missing:
                 self.__run_programs__()
             else:
                 utils.log('({}) Reusing existing results in {}.', (self.genome.name,
                                                                    self.__result_files__()))
-        # (2) If all results files are there, read the results:
+        # (3) If all results files are there, read the results:
         all_results_created = True
         for f in self.__result_files__():
             if not f.exists() or not f.stat().st_size:
@@ -78,12 +88,12 @@ class AbstractBaseClass:
                                                   positive_count))
 
     def spawn_file(self, program_name):
-        if self.multi_mode:
+        if self.exec.multi_mode:
             dir =  Path(program_name)
             if not dir.exists():
                 dir.mkdir()
             elif dir.is_file():
-                if self.force:
+                if self.exec.force:
                     dir.unlink()
                     dir.mkdir()
                 else:
@@ -92,7 +102,7 @@ class AbstractBaseClass:
         else:
             file = Path(f'{self.genome.name}.{program_name}')
             if file.exists() and file.is_dir():
-                if self.force:
+                if self.exec.force:
                     shutil.rmtree(file)
             return file
 
@@ -106,7 +116,8 @@ class AbstractBaseClass:
                 continue
             fl:FeatureLocation = f.location
             self.nt_masked += fl.end - fl.start
-            seq = seq[:fl.start] + 'N' * (fl.end - fl.start) + seq[fl.end:]
+            seq[fl.start:fl.end] = 'N' * (fl.end - fl.start)
+            #seq = seq[:fl.start] + 'N' * (fl.end - fl.start) + seq[fl.end:]
         return SeqRecord(Seq(seq), id=record.id, description=record.description)
 
     def make_masked_contig_fasta_file(self, exceptions=None, min_mask_length=50) -> Path:
@@ -120,3 +131,25 @@ class AbstractBaseClass:
         utils.log(f'Masked {self.nt_masked / self.nt_total * 100:.1f}% of sequence data.')
         return masked_fasta_file
 
+    def make_split_fasta_files(self, base_file: Path, target):
+            if 'CDS' == target:
+                count = sum(1 for contig in self.genome.contigs.values() for f in contig.features if f.type == 'CDS')
+            else:
+                count = len(self.genome.contigs)
+            number_of_files = min(self.exec.threads, count)
+            seqs_per_file = count / number_of_files
+            paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(number_of_files)]
+            filehandles = [open(paths[i], 'w') for i in range(number_of_files)]
+            count = 0
+            for contig in self.genome.contigs.values():
+                if 'CDS' == target:
+                    for f in contig.features:
+                        if f.type == 'CDS':
+                            SeqIO.write(f.make_biopython_record(), filehandles[int(count / seqs_per_file)], "fasta")
+                            count += 1
+                else:
+                    SeqIO.write(contig.make_biopython_record(False), filehandles[int(count / seqs_per_file)], "fasta")
+                    count += 1
+            for f in filehandles:
+                f.close()
+            return paths
