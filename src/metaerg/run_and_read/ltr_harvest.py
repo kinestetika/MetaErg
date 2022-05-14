@@ -1,12 +1,13 @@
 from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data import MetaergSeqFeature
-from metaerg.run_and_read.data import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqRecord
 from metaerg.run_and_read import abc
 from metaerg import utils
 
+
 class LTRHarvest(abc.AbstractBaseClass):
-    def __init__(self, genome, exec:abc.ExecutionEnvironment):
+    def __init__(self, genome, exec: abc.ExecutionEnvironment):
         super().__init__(genome, exec)
+        self.ltr_harvest_file = self.spawn_file('ltr_harvest')
 
     def __repr__(self):
         return f'LTRHarvest({self.genome}, {self.exec})'
@@ -21,24 +22,24 @@ class LTRHarvest(abc.AbstractBaseClass):
 
     def __result_files__(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.spawn_file('aragorn'),
+        return self.ltr_harvest_file,
 
     def __run_programs__(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.make_masked_contig_fasta_file()
+        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         ltr_index_file = self.spawn_file('ltr_index')
-        ltr_harvest_file = self.spawn_file('ltr_harvest')
 
-        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
-        utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
+        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp '
+                           f'-des -ssp -sds -dna')
+        utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {self.ltr_harvest_file} -seqids')
         # remove index files
-        for file in ltr_harvest_file.parent.glob(f'{self.genome.name}.ltr_index*'):
+        for file in ltr_index_file.parent.glob(f'{self.genome.name}.ltr_index*'):
             file.unlink()
 
     def __read_results__(self) -> int:
         """Should parse the result files and return the # of positives"""
         retrotransposon_count = 0
-        with open(self.spawn_file('ltr_harvest')) as ltr_handle:
+        with open(self.ltr_harvest_file) as ltr_handle:
             for line in ltr_handle:
                 if line.startswith('#'):
                     continue
@@ -48,7 +49,6 @@ class LTRHarvest(abc.AbstractBaseClass):
                 if 'repeat_region' == words[2]:
                     retrotransposon_count += 1
                     contig: MetaergSeqRecord = self.genome.contigs[words[0]]
-                    feature = MetaergSeqFeature(contig, gff_line=line)
-                    feature.type = 'retrotransposon'
-                    contig.features.append(feature)
+                    location = FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)
+                    contig.spawn_feature('retrotransposon', location, 'ltr_harvest')
         return retrotransposon_count

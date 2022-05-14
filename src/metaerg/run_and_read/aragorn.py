@@ -1,11 +1,12 @@
 from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data import MetaergSeqFeature
+from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read import abc
 from metaerg import utils
 
 class Aragorn(abc.AbstractBaseClass):
     def __init__(self, genome, exec:abc.ExecutionEnvironment):
         super().__init__(genome, exec)
+        self.aragorn_file = self.spawn_file("aragorn")
 
     def __repr__(self):
         return f'Aragorn({self.genome}, {self.exec})'
@@ -20,19 +21,18 @@ class Aragorn(abc.AbstractBaseClass):
 
     def __result_files__(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.spawn_file('aragorn'),
+        return self.aragorn_file,
 
     def __run_programs__(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.make_masked_contig_fasta_file()
-        aragorn_file = self.spawn_file("aragorn")
-        utils.run_external(f'aragorn -l -t -gc{self.genome.translation_table} {fasta_file} -w -o {aragorn_file}')
+        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        utils.run_external(f'aragorn -l -t -gc{self.genome.translation_table} {fasta_file} -w -o {self.aragorn_file}')
 
     def __read_results__(self) -> int:
         """Should parse the result files and return the # of positives"""
         trna_count = 0
         current_contig = None
-        with open(self.spawn_file("aragorn")) as aragorn_handle:
+        with open(self.aragorn_file) as aragorn_handle:
             for line in aragorn_handle:
                 if line.startswith('>end'):
                     break
@@ -51,10 +51,6 @@ class Aragorn(abc.AbstractBaseClass):
                 pos_str = words[2][1:-1].split(',')
                 start = max(0, int(pos_str[0]) - 1)
                 end = min(len(current_contig.seq), int(pos_str[1]))
-                f = MetaergSeqFeature(current_contig)
-                f.location = FeatureLocation(start, end, strand=strand)
-                f.type = 'tRNA'
-                f.inference = 'aragorn'
+                f = current_contig.spawn_feature('tRNA', FeatureLocation(start, end, strand=strand), 'aragorn')
                 f.description = f'{words[1]}-{words[4]}'
-                current_contig.features.append(f)
         return trna_count

@@ -1,6 +1,7 @@
 import re
 import time
 import subprocess
+from collections import namedtuple
 
 from pathlib import Path
 from Bio import SeqIO
@@ -45,6 +46,11 @@ def log(log_message, values=(), topic=''):
             print(f'{format_runtime()} {log_message.format(*values)}')
         else:
             print(f'{format_runtime()} {log_message}')
+
+
+def get_location_from_gff_words(words):
+    strand = -1 if '+' == words[6] else 1
+    return FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)
 
 
 def get_feature_qualifier(feature: SeqFeature, key):
@@ -183,32 +189,21 @@ def decipher_metaerg_id(id):
             'gene_type': m.group(3)}
 
 
-def words_to_hit(words):
-    return {'query_id': words[0],
-            'hit_id': words[1],
-            'percent_id': float(words[2]),
-            'aligned_length': int(words[3]),
-            'mismatches': int(words[4]),
-            'gaps': int(words[5]),
-            'query_start': int(words[6]),
-            'query_end': int(words[7]),
-            'hit_start': int(words[8]),
-            'hit_end': int(words[9]),
-            'evalue': float(words[10]),
-            'score': float(words[11]),
-            }
+BlastHit = namedtuple('BlastHit', ['query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
+                                   'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score'])
 
+BlastResult = namedtuple('BlastResult', ['query', 'hits'])
 
 class TabularBlastParser:
     def __init__(self, filename):
         self.filename = filename
-        self.next_hit = None
-        self.current_query_id = None
+        self.next_hit: BlastHit
+        self.current_query = None
 
     def __enter__(self):
         self.file = open(self.filename)
         if self.load_next_hit_from_file():
-            self.current_query_id = self.next_hit['query_id']
+            self.current_query = self.next_hit.query
             return self
         else:
             raise StopIteration
@@ -230,7 +225,8 @@ class TabularBlastParser:
             words = line.strip().split('\t')
             if len(words) < 12:
                 continue
-            self.next_hit = words_to_hit(words)
+            self.next_hit = BlastHit(words[0], words[1], float(words[2]), int(words[3]), int(words[4]), int(words[5]),
+                    int(words[6]), int(words[7]), int(words[8]), int(words[9]), float(words[10]), float(words[11]))
             return True
 
     def __next__(self):
@@ -238,11 +234,64 @@ class TabularBlastParser:
         if self.next_hit:
             all_hits.append(self.next_hit)
         while self.load_next_hit_from_file():
-            if self.current_query_id != self.next_hit['query_id']:
-                prev_query_id = self.current_query_id
-                self.current_query_id = self.next_hit['query_id']
-                return prev_query_id, all_hits
+            if self.current_query != self.next_hit.query:
+                prev_query = self.current_query
+                self.current_query = self.next_hit.query
+                return BlastResult(prev_query, tuple(all_hits))
             all_hits.append(self.next_hit)
         if len(all_hits):
-            return self.current_query_id, all_hits
+            return BlastResult(self.current_query, tuple(all_hits))
         raise StopIteration
+
+
+HmmHit = namedtuple('HmmHit', ['query', 'hit', 'evalue', 'score'])
+
+
+class TabularHMMSearchParser:
+    def __init__(self, filename):
+        self.filename = filename
+        self.next_hit: BlastHit
+        self.current_query = None
+
+    def __enter__(self):
+        self.file = open(self.filename)
+        if self.load_next_hit_from_file():
+            self.current_query = self.next_hit.query
+            return self
+        else:
+            raise StopIteration
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.file.close()
+
+    def __iter__(self):
+        return self
+
+    def load_next_hit_from_file(self):
+        self.next_hit = None
+        while self.file:
+            line = self.file.readline()
+            if not line:
+                return False
+            if line.startswith("#"):
+                continue
+            words = line.strip().split('\t')
+            if len(words) < 18:
+                continue
+            self.next_hit = HmmHit(words[0], words[2], float(words[4]), float(words[5]))
+            return True
+
+    def __next__(self):
+        all_hits = list()
+        if self.next_hit:
+            all_hits.append(self.next_hit)
+        while self.load_next_hit_from_file():
+            if self.current_query != self.next_hit.query:
+                prev_query = self.current_query
+                self.current_query = self.next_hit.query
+                return BlastResult(prev_query, tuple(all_hits))
+            all_hits.append(self.next_hit)
+        if len(all_hits):
+            return BlastResult(self.current_query, tuple(all_hits))
+        raise StopIteration
+
