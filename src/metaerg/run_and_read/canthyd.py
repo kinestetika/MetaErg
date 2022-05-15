@@ -1,7 +1,4 @@
 from pathlib import Path
-import shutil
-from collections import namedtuple
-from concurrent.futures import ProcessPoolExecutor
 from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read import abc
 from metaerg import utils
@@ -58,7 +55,7 @@ class CantHyd(abc.AbstractBaseClass):
 
     def __programs__(self) -> tuple:
         """Should return a tuple with the programs needed"""
-        return 'hmmsearch',
+        return 'hmmscan',
 
     def __databases__(self) -> tuple:
         """Should return a tuple with database files needed"""
@@ -71,7 +68,7 @@ class CantHyd(abc.AbstractBaseClass):
     def __run_programs__(self):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
-        utils.run_external(f'hmmsearch --cut_nc --tblout {self.canthyd_file} {self.db_canthyd} {cds_aa_file}')
+        utils.run_external(f'hmmscan --cut_nc --tblout {self.canthyd_file} {self.db_canthyd} {cds_aa_file}')
 
     def __read_results__(self) -> int:
         """Should parse the result files and return the # of positives."""
@@ -83,25 +80,18 @@ class CantHyd(abc.AbstractBaseClass):
                         current_name = line.split()[1]
                     elif line.startswith('TC'):
                         self.canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
-
-        with utils.TabularHMMSearchParser(self.canthyd_file) as handle:
+            utils.log(f'Parsed {len(self.canthyd_trusted_cutoffs)} entries from CantHyd database.')
+        with utils.TabularBlastParser(self.canthyd_file, 'HMMSCAN') as handle:
+            canthyd_hit_count = 0
             for blast_result in handle:
                 feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
-
-
-                for h in hits.values():
-                    if h["hmm_id"] not in databases.CANTHYD_DESCR.keys():
-                        utils.log(f'Warning, missing description for cant-hyd hmm {h["hmm_id"]}...')
-                        continue
-                    coord = utils.decipher_metaerg_id(h['hit_id'])
-                    feature = contig_dict[coord["contig_id"]].features[coord["gene_number"]]
-                    prev_canthyd_qualifier = utils.get_feature_qualifier(feature, 'canthyd')
-                    if not prev_canthyd_qualifier:
-                        if h["score"] > databases.CANTHYD_TRUSTED_CUTOFFS[h["hmm_id"]]:
-                            confidence = 'high confidence'
-                        else:
-                            confidence = 'low confidence'
-                        utils.set_feature_qualifier(feature, 'canthyd', f'{databases.CANTHYD_DESCR[h["hmm_id"]]}'
-                                                                        f' ({h["hmm_id"]}) [{confidence}]')
-                        subsystems.add_subsystem_to_feature(feature, '[hydrocarbon degradation]',
-                                                            phrase=None, assignments=subsystem_hash)
+                for h in blast_result.hits:
+                    descr = self.canthyd_descr.get(h.hit, None)
+                    if descr:
+                        canthyd_hit_count += 1
+                        confidence = 'high' if h.score > self.canthyd_trusted_cutoffs[h.hit] else 'low'
+                        feature.description = f'{descr}, {h.hit} (CantHyd DB, {confidence} confidence)'
+                        feature.subsystem.append('[hydrocarbon degradation]')
+                    else:
+                        utils.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
+            return canthyd_hit_count

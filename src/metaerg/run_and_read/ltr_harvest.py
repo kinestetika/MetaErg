@@ -41,14 +41,13 @@ class LTRHarvest(abc.AbstractBaseClass):
         retrotransposon_count = 0
         with open(self.ltr_harvest_file) as ltr_handle:
             for line in ltr_handle:
-                if line.startswith('#'):
-                    continue
-                words = line.split('\t')
-                if len(words) < 9:
-                    continue
-                if 'repeat_region' == words[2]:
-                    retrotransposon_count += 1
-                    contig: MetaergSeqRecord = self.genome.contigs[words[0]]
-                    location = FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)
-                    contig.spawn_feature('retrotransposon', location, 'ltr_harvest')
+                words = line.strip().split('\t')
+                match words:
+                    case [str(word), *_] if word.startswith('#'):
+                        continue
+                    case [contig_name, _, 'repeat_region', start, end, score, strand, frame, _]:
+                        retrotransposon_count += 1
+                        contig: MetaergSeqRecord = self.genome.contigs[contig_name]
+                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
+                        contig.spawn_feature('retrotransposon', location, 'ltr_harvest')
         return retrotransposon_count

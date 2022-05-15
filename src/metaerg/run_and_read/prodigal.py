@@ -35,15 +35,15 @@ class Prodigal(abc.AbstractBaseClass):
         cds_found = 0
         with open(self.prodigal_file) as prodigal_handle:
             for line in prodigal_handle:
-                if line.startswith("#"):
-                    continue
-                words = line.split('\t')
-                if len(words) < 9:
-                    continue
-                contig: MetaergSeqRecord = self.genome.contigs[words[0]]
-                location = FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)
-                feature = contig.spawn_feature('CDS', location, 'prodigal')
-                if 'partial=01' in words[8] or 'partial=01' in words[8] or 'partial=11' in words[8]:
-                    feature.note = 'partial'
-                cds_found += 1
+                words = line.strip().split('\t')
+                match(words):
+                    case [str(word), *_] if word.startswith('#'):
+                        continue
+                    case [contig_name, _, _, start, end, _, strand, _, attributes]:
+                        cds_found += 1
+                        contig: MetaergSeqRecord = self.genome.contigs[contig_name]
+                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
+                        feature = contig.spawn_feature('CDS', location, 'prodigal')
+                        if 'partial=01' in attributes or 'partial=01' in attributes or 'partial=11' in attributes:
+                            feature.note = 'partial'
         return cds_found

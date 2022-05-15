@@ -64,22 +64,21 @@ class CMScan(abc.AbstractBaseClass):
     def __read_results__(self) -> int:
         """Should parse the result files and return the # of positives"""
         hits = []
+        Hit = namedtuple('Hit', ('query_id', 'hit_id', 'query_start', 'query_end',
+                                 'query_strand', 'score', 'descr'))
         with open(self.cmscan_file) as hmm_handle:
             for line in hmm_handle:
-                if line.startswith('#'):
-                    continue
-                words = line.split()
-                if len(words) < 18 or '?' == words[16]:
-                    continue
+                words = line.strip().split()
                 words[17] = ' '.join(words[17:])
-                Hit = namedtuple('Hit', ('hit_id', 'query_id', 'query_start', 'query_end',
-                                         'query_strand', 'score', 'descr'))
-                if '-' == words[9]:  # this is the strand, if it is -, reverse start and end
-                    hit = Hit(hit_id=words[0], query_id=words[2], query_start=int(words[8]), query_end=int(words[7]),
-                              query_strand=-1, score=float(words[14]), descr=words[17])
-                else:
-                    hit = Hit(hit_id=words[0], query_id=words[2], query_start=int(words[7]), query_end=int(words[8]),
-                              query_strand=1, score=float(words[14]), descr=words[17])
+                match (words):
+                    case [*_] if line.startswith('#'):
+                        continue
+                    case [hit, _, query, _, _, _, _, start, end, '-', _, _, _, _, score, _, '!', descr]:
+                        hit = Hit(query, hit, int(end), int(start), -1, float(score), descr)
+                    case [hit, _, query, _, _, _, _, start, end, '+', _, _, _, _, score, _, '!', descr]:
+                        hit = Hit(query, hit, int(start), int(end), 1, float(score), descr)
+                    case [*_]:
+                        continue
                 overlap = None
                 for prev_hit in hits:
                     if hit.query_id == prev_hit.query_id and hit.query_start < prev_hit.query_end and \

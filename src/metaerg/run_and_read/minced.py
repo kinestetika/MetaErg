@@ -32,17 +32,16 @@ class Minced(abc.AbstractBaseClass):
     def __read_results__(self) -> int:
         """Should parse the result files and return the # of positives"""
         crispr_region_count = 0
-        with open(self.minced_file) as crispr_handle:
+        with open(self.minced_file) as crispr_handle:  # this file is in gff format
             for line in crispr_handle:
-                if line.startswith('#'):
-                    continue
-                words = line.split('\t')
-                if len(words) < 9:
-                    continue
-                if 'repeat_region' == words[2]:
-                    crispr_region_count += 1
-                elif 'repeat_unit' == words[2]:
-                    contig: MetaergSeqRecord = self.genome.contigs[words[0]]
-                    location = FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)
-                    contig.spawn_feature('crispr_repeat', location, 'minced')
+                words = line.strip().split('\t')
+                match words:
+                    case [str(word), *_] if word.startswith('#'):
+                        continue
+                    case [contig_name, _, 'repeat_region', start, end, score, strand, frame, _]:
+                        crispr_region_count += 1
+                    case [contig_name, _, 'repeat_unit', start, end, score, strand, frame, _]:
+                        contig: MetaergSeqRecord = self.genome.contigs[contig_name]
+                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
+                        contig.spawn_feature('crispr_repeat', location, 'minced')
         return crispr_region_count

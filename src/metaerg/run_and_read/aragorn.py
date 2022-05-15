@@ -1,3 +1,4 @@
+import re
 from Bio.SeqFeature import FeatureLocation
 from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read import abc
@@ -32,25 +33,21 @@ class Aragorn(abc.AbstractBaseClass):
         """Should parse the result files and return the # of positives"""
         trna_count = 0
         current_contig = None
+        coord_regexp = re.compile(r'(c*)\[(\d+),(\d+)]')
         with open(self.aragorn_file) as aragorn_handle:
             for line in aragorn_handle:
-                if line.startswith('>end'):
-                    break
-                if line.startswith('>'):
-                    current_contig = self.genome.contigs[line[1:].strip()]
-                if not current_contig:
-                    continue
-                words = line.split()
-                if len(words) < 5:
-                    continue
-                trna_count += 1
-                strand = 1
-                if words[2].startswith('c'):
-                    strand = -1
-                    words[2] = words[2][1:]
-                pos_str = words[2][1:-1].split(',')
-                start = max(0, int(pos_str[0]) - 1)
-                end = min(len(current_contig.seq), int(pos_str[1]))
-                f = current_contig.spawn_feature('tRNA', FeatureLocation(start, end, strand=strand), 'aragorn')
-                f.description = f'{words[1]}-{words[4]}'
+                words = line.strip().split()
+                match words:
+                    case ['>end']:
+                        break
+                    case [contig_name] if contig_name.startswith('>'):
+                        current_contig = self.genome.contigs[contig_name[1:]]
+                    case [_, trna, coordinates, _, codon]:
+                        trna_count += 1
+                        coord_match = coord_regexp.fullmatch(coordinates)
+                        strand = -1 if 'c' == coord_match.group(1) else 1
+                        start = max(0, int(coord_match.group(2)) - 1)
+                        end = min(len(current_contig.seq), int(coord_match.group(3)))
+                        f = current_contig.spawn_feature('tRNA', FeatureLocation(start, end, strand=strand), 'aragorn')
+                        f.description = f'{trna}-{codon}'
         return trna_count

@@ -191,13 +191,15 @@ def decipher_metaerg_id(id):
 
 BlastHit = namedtuple('BlastHit', ['query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
                                    'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score'])
+HmmHit = namedtuple('HmmHit', ['query', 'hit', 'evalue', 'score'])
 
 BlastResult = namedtuple('BlastResult', ['query', 'hits'])
 
 class TabularBlastParser:
-    def __init__(self, filename):
+    def __init__(self, filename, mode):
         self.filename = filename
-        self.next_hit: BlastHit
+        self.mode = mode
+        self.next_hit = None
         self.current_query = None
 
     def __enter__(self):
@@ -220,13 +222,21 @@ class TabularBlastParser:
             line = self.file.readline()
             if not line:
                 return False
-            if line.startswith("#"):
-                continue
             words = line.strip().split('\t')
-            if len(words) < 12:
-                continue
-            self.next_hit = BlastHit(words[0], words[1], float(words[2]), int(words[3]), int(words[4]), int(words[5]),
-                    int(words[6]), int(words[7]), int(words[8]), int(words[9]), float(words[10]), float(words[11]))
+            match(words):
+                case [str(word), *_] if word.startswith('#'):
+                    continue
+                case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
+                      hit_end, evalue, score] if 'BLAST' == self.mode:
+                    self.next_hit = BlastHit(query, hit, float(percent_id), int(aligned_length), int(mismatches),
+                                             int(gaps), int(query_start), int(query_end), int(hit_start),
+                                             int(hit_end), float(evalue), float(score))
+                case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
+                    self.next_hit = HmmHit(query, hit, float(evalue), float(score))
+                case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
+                    self.next_hit = HmmHit(query, hit, float(evalue), float(score))
+                case [*_]:
+                    continue
             return True
 
     def __next__(self):
@@ -244,54 +254,27 @@ class TabularBlastParser:
         raise StopIteration
 
 
-HmmHit = namedtuple('HmmHit', ['query', 'hit', 'evalue', 'score'])
-
-
-class TabularHMMSearchParser:
-    def __init__(self, filename):
-        self.filename = filename
-        self.next_hit: BlastHit
-        self.current_query = None
-
-    def __enter__(self):
-        self.file = open(self.filename)
-        if self.load_next_hit_from_file():
-            self.current_query = self.next_hit.query
-            return self
-        else:
-            raise StopIteration
-
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        self.file.close()
-
-    def __iter__(self):
-        return self
-
-    def load_next_hit_from_file(self):
-        self.next_hit = None
-        while self.file:
-            line = self.file.readline()
-            if not line:
-                return False
-            if line.startswith("#"):
-                continue
-            words = line.strip().split('\t')
-            if len(words) < 18:
-                continue
-            self.next_hit = HmmHit(words[0], words[2], float(words[4]), float(words[5]))
-            return True
-
-    def __next__(self):
-        all_hits = list()
-        if self.next_hit:
-            all_hits.append(self.next_hit)
-        while self.load_next_hit_from_file():
-            if self.current_query != self.next_hit.query:
-                prev_query = self.current_query
-                self.current_query = self.next_hit.query
-                return BlastResult(prev_query, tuple(all_hits))
-            all_hits.append(self.next_hit)
-        if len(all_hits):
-            return BlastResult(self.current_query, tuple(all_hits))
-        raise StopIteration
+    # def load_next_hit_from_file(self):
+    #     self.next_hit = None
+    #     while self.file:
+    #         line = self.file.readline()
+    #         if not line:
+    #             return False
+    #         if line.startswith("#"):
+    #             continue
+    #         words = line.strip().split('\t')
+    #         if 'BLAST' == self.mode:
+    #             if len(words) < 12:
+    #                 continue
+    #             self.next_hit = BlastHit(words[0], words[1], float(words[2]), int(words[3]), int(words[4]), int(words[5]),
+    #                     int(words[6]), int(words[7]), int(words[8]), int(words[9]), float(words[10]), float(words[11]))
+    #         if 'HMMSCAN' == self.mode:
+    #             if len(words) < 18:
+    #                 continue
+    #             self.next_hit = HmmHit(words[2], words[0], float(words[4]), float(words[5]))
+    #         elif 'HMMSEARCH' == self.mode:
+    #             if len(words) < 18:
+    #                 continue
+    #             self.next_hit = HmmHit(words[0], words[2], float(words[4]), float(words[5]))
+    #         return True
 

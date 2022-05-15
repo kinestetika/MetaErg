@@ -92,7 +92,7 @@ class DiamondAndBlastN(abc.AbstractBaseClass):
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
         # (3) parse diamond blast results
         blast_result_count = 0
-        with utils.TabularBlastParser(self.diamond_file) as handle:
+        with utils.TabularBlastParser(self.diamond_file, 'BLAST') as handle:
             for blast_result in handle:
                 blast_result_count += 1
                 self._process_blast_result(blast_result)

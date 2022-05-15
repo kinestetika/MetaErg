@@ -25,7 +25,6 @@ class MetaergSeqFeature:
         self.antismash = ''
         self.canthyd_function = ''
         self.transmembrane_helixes = ''
-        self.tmh_topology = ''
         self.signal_peptide = ''
         self.subsystem = []
         if seq_feature:
@@ -200,5 +199,3 @@ class MetaergGenome:
         for f in filehandles:
             f.close()
         return paths
-
-
