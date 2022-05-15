@@ -38,9 +38,9 @@ class Minced(abc.AbstractBaseClass):
                 match words:
                     case [str(word), *_] if word.startswith('#'):
                         continue
-                    case [contig_name, _, 'repeat_region', start, end, score, strand, frame, _]:
+                    case [_, _, 'repeat_region', _, _, _, _, _, _]:
                         crispr_region_count += 1
-                    case [contig_name, _, 'repeat_unit', start, end, score, strand, frame, _]:
+                    case [contig_name, _, 'repeat_unit', start, end, _, strand, _, _]:
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
                         location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
                         contig.spawn_feature('crispr_repeat', location, 'minced')

@@ -70,7 +70,7 @@ class CMScan(abc.AbstractBaseClass):
             for line in hmm_handle:
                 words = line.strip().split()
                 words[17] = ' '.join(words[17:])
-                match (words):
+                match  words:
                     case [*_] if line.startswith('#'):
                         continue
                     case [hit, _, query, _, _, _, _, start, end, '-', _, _, _, _, score, _, '!', descr]:

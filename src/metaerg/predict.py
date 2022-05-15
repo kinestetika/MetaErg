@@ -736,7 +736,6 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
         if THREADS_PER_GENOME > 2:
             signalp_threads = int(THREADS_PER_GENOME/2 + 0.5)
             split_fasta_files = utils.split_fasta_file(contig_dict, cds_aa_file, signalp_threads, target='CDS')
-            print(split_fasta_files)
             signalp_dirs = [Path(f'{signalp_dir}.{i}') for i in range(len(split_fasta_files))]
             print(signalp_dirs)
             with ProcessPoolExecutor(max_workers=signalp_threads) as executor:

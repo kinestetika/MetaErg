@@ -36,7 +36,7 @@ class Prodigal(abc.AbstractBaseClass):
         with open(self.prodigal_file) as prodigal_handle:
             for line in prodigal_handle:
                 words = line.strip().split('\t')
-                match(words):
+                match words:
                     case [str(word), *_] if word.startswith('#'):
                         continue
                     case [contig_name, _, _, start, end, _, strand, _, attributes]:

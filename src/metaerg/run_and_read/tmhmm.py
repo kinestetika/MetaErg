@@ -1,6 +1,4 @@
 import shutil
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqRecord
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -8,7 +6,7 @@ from metaerg import utils
 class TMHMM(abc.AbstractBaseClass):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
-        self.tmhmm_file = self.spawn_file('minced')
+        self.tmhmm_file = self.spawn_file('signalp')
 
     def __repr__(self):
         return f'TMHMM({self.genome}, {self.exec})'
@@ -30,6 +28,7 @@ class TMHMM(abc.AbstractBaseClass):
         cds_aa_file = self.spawn_file('cds.faa')
         with open(self.tmhmm_file, 'w') as output, open(cds_aa_file) as input:
             utils.run_external('tmhmm', stdin=input, stdout=output)
+        # this is not thread-safe:
         for file in self.tmhmm_file.parent.glob(f'TMHMM_*'):
             if file.is_dir():
                 shutil.rmtree(file)

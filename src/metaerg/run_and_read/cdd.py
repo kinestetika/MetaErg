@@ -43,7 +43,7 @@ class CDD(abc.AbstractBaseClass):
         if self.exec.threads > 1:
             split_fasta_files = self.genome.make_split_fasta_files(cds_aa_file, self.exec.threads, target='CDS')
             split_cdd_files = [Path(self.cdd_file.parent, f'{self.cdd_file.name}.{i}')
-                                  for i in range(len(split_fasta_files))]
+                               for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:
                 for split_input, split_output in zip(split_fasta_files, split_cdd_files):
                     executor.submit(utils.run_external, f'rpsblast -db {self.db_cdd} -query {split_input} '
@@ -66,11 +66,11 @@ class CDD(abc.AbstractBaseClass):
             with open(self.db_cdd_index) as db_handle:
                 for line in db_handle:
                     words = line.split("\t")
-                    CDD[int(words[0])] = DBEntry(words[1], words[2], words[3], int(words[4]))
+                    self.cdd[int(words[0])] = DBEntry(words[1], words[2], words[3], int(words[4]))
             utils.log(f'Parsed {len(self.cdd)} entries from conserved domain database.')
         # parse cdd results
         cdd_result_count = 0
-        with utils.TabularBlastParser(self.cdd_file) as handle:
+        with utils.TabularBlastParser(self.cdd_file, 'BLAST') as handle:
             for blast_result in handle:
                 feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
                 self.feature_hits[blast_result.query] = blast_result.hits

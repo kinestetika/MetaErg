@@ -49,7 +49,7 @@ class DiamondAndBlastN(abc.AbstractBaseClass):
     def get_db_entry(self, db_id):
         words = db_id.split('~')  # org_acc gene_acc [pev] gene# decr# taxon#
         return DBEntry(self.taxonomy[words[2]][int(words[5])], self.descriptions[words[2]][int(words[4])],
-                            int(words[6]), int(words[3]))
+                       int(words[6]), int(words[3]))
 
     def _process_blast_result(self, blast_result):
         feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
@@ -96,7 +96,7 @@ class DiamondAndBlastN(abc.AbstractBaseClass):
             for blast_result in handle:
                 blast_result_count += 1
                 self._process_blast_result(blast_result)
-        with utils.TabularBlastParser(self.blastn_file) as handle:
+        with utils.TabularBlastParser(self.blastn_file, 'BLAST') as handle:
             for blast_result in handle:
                 blast_result_count += 1
                 self._process_blast_result(blast_result)

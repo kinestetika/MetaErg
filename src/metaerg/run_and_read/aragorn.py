@@ -1,11 +1,11 @@
 import re
 from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read import abc
 from metaerg import utils
 
+
 class Aragorn(abc.AbstractBaseClass):
-    def __init__(self, genome, exec:abc.ExecutionEnvironment):
+    def __init__(self, genome, exec: abc.ExecutionEnvironment):
         super().__init__(genome, exec)
         self.aragorn_file = self.spawn_file("aragorn")
 
