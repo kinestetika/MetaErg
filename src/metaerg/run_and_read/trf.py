@@ -13,25 +13,25 @@ class TandemRepeatFinder(abc.AbstractBaseClass):
     def __repr__(self):
         return f'TandemRepeatFinder({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'tandem repeat prediction with trf'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'trf',
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.trf_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         with open(self.trf_file, 'w') as output:
             utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives"""
         tr_count = 0
         with open(self.trf_file) as trf_handle:

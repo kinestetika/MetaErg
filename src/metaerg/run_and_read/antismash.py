@@ -19,26 +19,26 @@ class Antismash(abc.AbstractBaseClass):
     def __repr__(self):
         return f'Antismash({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'prediction of secondary metabolite genes with antismash'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'antismash',
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.antismash_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         gbk_file = self.spawn_file('gbk')
         if self.antismash_file.exists():
             shutil.rmtree(self.antismash_file)
         utils.run_external(f'antismash --genefinding-tool none --output-dir {self.antismash_file} {gbk_file}')
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
         antismash_hit_count = 0
         for f in sorted(self.antismash_file.glob("*region*.gbk")):
@@ -61,7 +61,8 @@ class Antismash(abc.AbstractBaseClass):
                                                              antismash_region_name,
                                                              antismash_gene_function,
                                                              antismash_gene_category))
-                                feature.subsystem.append('[secondary-metabolites]')
+                                feature.subsystem.add('[secondary-metabolites]')
+                                self.genome.subsystems['[secondary-metabolites]'].add_hit(feature.id)
         if not antismash_hit_count:
             self.antismash_file.mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
         return antismash_hit_count

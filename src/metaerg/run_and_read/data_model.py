@@ -1,11 +1,15 @@
 import re
 import ast
+from collections import Counter
 from pathlib import Path
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
-from metaerg import utils
+from Bio import SeqUtils
 from Bio import SeqIO
+
+import subsystems
+from metaerg import utils
 
 
 class MetaergSeqFeature:
@@ -26,7 +30,7 @@ class MetaergSeqFeature:
         self.canthyd_function = ''
         self.transmembrane_helixes = ''
         self.signal_peptide = ''
-        self.subsystem = []
+        self.subsystem = set()
         if seq_feature:
             self._clone_biopython_feature(seq_feature)
         elif gff_line:
@@ -154,7 +158,9 @@ class MetaergGenome:
         self.name = name
         self.translation_table = translation_table
         self.contigs = {}
-        self.subsystems = {}
+        self.subsystems = subsystems.init_subsystems()
+        self.properties = {}
+        self.blast_results = {}
         for name, c in contig_dict:
             self.contigs[name] = MetaergSeqRecord(self, seq_record=c)
 
@@ -199,3 +205,46 @@ class MetaergGenome:
         for f in filehandles:
             f.close()
         return paths
+
+    def compute_properties(self):
+        utils.log(f'({self.name}) Compiling genome stats...')
+        self.properties['size'] = sum((len(contig) for contig in self.contigs.values()))
+        self.properties['percent GC'] = int(sum((len(contig) * SeqUtils.GC(contig.sequence) for contig in
+                                                 self.contigs.values())) / self.properties['size'] + 0.5)
+        cum_size = 0
+        for contig in sorted(self.contigs.values(), key=len, reverse=True):
+            cum_size += len(contig)
+            if cum_size > self.properties['size'] / 2:
+                self.properties["N50"] = len(contig)
+                break
+        self.properties['#proteins'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                           if f.type == 'CDS')
+        self.properties['percent coding'] = sum(len(f) for contig in self.contigs.values() for f in contig.features
+                                                if f.type == 'CDS') / self.properties['size']
+        self.properties['mean protein length (aa)'] = int(self.properties['percent coding'] * self.properties['size']
+                                                          / 3 / self.properties['#proteins'])
+        self.properties['#ribosomal RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                                if f.type == 'rRNA')
+        self.properties['#transfer RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                               if f.type == 'tRNA')
+        self.properties['#non coding RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                                 if f.type == 'tRNA')
+        self.properties['#retrotransposons'] =  sum(1 for contig in self.contigs.values() for f in contig.features
+                                                    if f.type == 'retrotransposon')
+        self.properties['#CRISPR repeats'] =  sum(1 for contig in self.contigs.values() for f in contig.features
+                                                    if f.type == 'crispr_repeat')
+        self.properties['#other repeats'] =  sum(1 for contig in self.contigs.values() for f in contig.features
+                                                 if f.type == 'repeat region')
+        self.properties['percent repeats'] = int(100 * sum(len(f) for contig in self.contigs.values() for f in
+                                                           contig.features if f.type
+                                                           in {'repeat region', 'retrotransposon', 'crispr_repeat'}) \
+                                                 / self.properties['size'] + 0.5)
+        self.properties['total # features'] = sum(1 for contig in self.contigs.values() for f in contig.features)
+
+        taxon_counts = Counter()
+        taxon_counts.update(f.taxonomy for contig in self.contigs.values() for f in contig.features)
+        dominant_taxon, highest_count = taxon_counts.most_common(1)[0]
+        self.properties['dominant taxon'] = f'{dominant_taxon} ({highest_count/sum(taxon_counts.values()) * 100:.1f}%)'
+
+        utils.log(f'({self.name}) Compilation of stats complete...')
+        return self.properties

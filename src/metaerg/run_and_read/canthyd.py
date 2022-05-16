@@ -49,28 +49,28 @@ class CantHyd(abc.AbstractBaseClass):
     def __repr__(self):
         return f'CantHyd({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'prediction of hydrocarbon degradation genes with canthyd'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'hmmscan',
 
-    def __databases__(self) -> tuple:
+    def _databases(self) -> tuple:
         """Should return a tuple with database files needed"""
         return self.db_canthyd,
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.canthyd_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         utils.run_external(f'hmmscan --cut_nc --tblout {self.canthyd_file} {self.db_canthyd} {cds_aa_file}')
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
         if self.db_canthyd.exists():
             current_name = None
@@ -91,7 +91,8 @@ class CantHyd(abc.AbstractBaseClass):
                         canthyd_hit_count += 1
                         confidence = 'high' if h.score > self.canthyd_trusted_cutoffs[h.hit] else 'low'
                         feature.description = f'{descr}, {h.hit} (CantHyd DB, {confidence} confidence)'
-                        feature.subsystem.append('[hydrocarbon degradation]')
+                        feature.subsystem.add('[hydrocarbon degradation]')
+                        self.genome.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
                     else:
                         utils.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
             return canthyd_hit_count

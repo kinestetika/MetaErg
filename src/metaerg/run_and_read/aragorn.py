@@ -12,24 +12,24 @@ class Aragorn(abc.AbstractBaseClass):
     def __repr__(self):
         return f'Aragorn({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'tRNA prediction with aragorn'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'aragorn',
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.aragorn_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         utils.run_external(f'aragorn -l -t -gc{self.genome.translation_table} {fasta_file} -w -o {self.aragorn_file}')
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives"""
         trna_count = 0
         current_contig = None

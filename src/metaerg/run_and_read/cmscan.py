@@ -28,19 +28,19 @@ class CMScan(abc.AbstractBaseClass):
     def __repr__(self):
         return f'CMScan({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'noncoding (RNA) gene prediction with cmscan'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'cmscan',
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.cmscan_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         rfam_database = Path(self.exec.database_dir, "Rfam.cm")
@@ -61,7 +61,7 @@ class CMScan(abc.AbstractBaseClass):
         else:
             utils.run_external(f'cmscan --rfam --tblout {self.cmscan_file} {rfam_database} {fasta_file}')
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives"""
         hits = []
         Hit = namedtuple('Hit', ('query_id', 'hit_id', 'query_start', 'query_end',

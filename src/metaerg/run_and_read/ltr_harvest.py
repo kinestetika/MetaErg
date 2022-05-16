@@ -12,19 +12,19 @@ class LTRHarvest(abc.AbstractBaseClass):
     def __repr__(self):
         return f'LTRHarvest({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'retrotransposon prediction with ltrharvest'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'ltr_index', 'ltr_harvest'
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.ltr_harvest_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         ltr_index_file = self.spawn_file('ltr_index')
@@ -36,7 +36,7 @@ class LTRHarvest(abc.AbstractBaseClass):
         for file in ltr_index_file.parent.glob(f'{self.genome.name}.ltr_index*'):
             file.unlink()
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives"""
         retrotransposon_count = 0
         with open(self.ltr_harvest_file) as ltr_handle:

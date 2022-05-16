@@ -15,19 +15,19 @@ class RepeatMasker(abc.AbstractBaseClass):
     def __repr__(self):
         return f'TandemRepeatFinder({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'tandem repeat prediction with trf'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'build_lmer_table', 'RepeatScout', 'filter-stage-1.prl', 'RepeatMasker'
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.repeatmasker_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         lmer_table_file = self.spawn_file('lmer-table')
@@ -47,7 +47,7 @@ class RepeatMasker(abc.AbstractBaseClass):
             else:
                 file.unlink()
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives. Repeatmasker finds two types of repeats:
             (1) simple repeats, these are consecutive
             (2) unspecified repeats, these occur scattered and are identified by an id in words[9]. We only

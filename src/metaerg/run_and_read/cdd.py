@@ -5,6 +5,7 @@ from concurrent.futures import ProcessPoolExecutor
 from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read import abc
 from metaerg import utils
+from metaerg import subsystems
 
 DBEntry = namedtuple('CDDEntry', ['name', 'gene', 'descr', 'length'])
 
@@ -16,28 +17,27 @@ class CDD(abc.AbstractBaseClass):
         self.db_cdd_index = Path(self.exec.database_dir, 'cddid.tbl')
         self.db_cdd = Path(self.exec.database_dir, "cdd", "Cdd")
         self.cdd = {}  # this is the cdd index
-        self.feature_hits = {}  # these are all the cdd results
 
     def __repr__(self):
         return f'CDD({self.genome}, {self.exec})'
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         return 'function prediction using RPSBlast and the conserved domain database'
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         return 'rpsblast',
 
-    def __databases__(self) -> tuple:
+    def _databases(self) -> tuple:
         """Should return a tuple with database files needed"""
         return self.db_cdd_index, self.db_cdd
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         return self.cdd_file,
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.threads > 1:
@@ -59,7 +59,7 @@ class CDD(abc.AbstractBaseClass):
             utils.run_external(f'rpsblast -db {self.db_cdd} -query {cds_aa_file} '
                                f'-out {self.cdd_file} -outfmt 6 -evalue 1e-7')
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
         # load cdd index
         if self.db_cdd_index.exists():
@@ -70,18 +70,26 @@ class CDD(abc.AbstractBaseClass):
             utils.log(f'Parsed {len(self.cdd)} entries from conserved domain database.')
         # parse cdd results
         cdd_result_count = 0
+        self.genome.blast_results['blast'] = {}  # html modules will need this later on
+        subsystem_cues = {}
+        for subsystem in self.genome.subsystems.values():
+            subsystem_cues |= subsystem.get_cues_as_hash()
         with utils.TabularBlastParser(self.cdd_file, 'BLAST') as handle:
             for blast_result in handle:
                 feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
-                self.feature_hits[blast_result.query] = blast_result.hits
+                self.genome.blast_results['cdd'][blast_result.query] = blast_result.hits
                 for h in blast_result[1]:
                     cdd_result_count += 1
-                    hit_length = abs(h.hit_end - h.hit_start)
                     cdd_item: DBEntry = self.cdd[int(h.hit[4:])]
                     cdd_descr = f'{cdd_item.name}|{cdd_item.gene} {cdd_item.descr}'
-                    feature.cdd = '[{}/{}]@{:.1f}% [{}-{}] {}'.format(hit_length, cdd_item.length,
-                                                                      h.percent_id,
-                                                                      h.query_start, h.query_end,
-                                                                      cdd_descr)
-                    break
+                    if not feature.cdd:
+                        feature.cdd = '[{}/{}]@{:.1f}% [{}-{}] {}'.format(h.aligned_length, cdd_item.length,
+                                                                          h.percent_id,
+                                                                          h.query_start, h.query_end,
+                                                                          cdd_descr)
+                    if h.aligned_length / cdd_item.length >= 0.8:
+                        cue, subsystem_name = subsystems.match_subsystem(cdd_descr, subsystem_cues)
+                        if subsystem_name:
+                            feature.subsystem.add(subsystem_name)
+                            self.genome.subsystems[subsystem_name].add_hit(feature.id, cue)
         return cdd_result_count

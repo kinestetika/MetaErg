@@ -4,7 +4,6 @@ from pathlib import Path
 
 from metaerg import utils
 from metaerg.run_and_read.data_model import MetaergGenome
-from metaerg.run_and_read.database import MetaergDatabase
 
 
 class ExecutionEnvironment:
@@ -24,27 +23,27 @@ class AbstractBaseClass:
         self.genome = genome
         self.exec = exec_env
 
-    def __purpose__(self) -> str:
+    def _purpose(self) -> str:
         """Should return the purpose of the tool"""
         pass
 
-    def __programs__(self) -> tuple:
+    def _programs(self) -> tuple:
         """Should return a tuple with the programs needed"""
         pass
 
-    def __databases__(self) -> tuple:
+    def _databases(self) -> tuple:
         """Should return a tuple with database files needed"""
         return ()
 
-    def __result_files__(self) -> tuple:
+    def _result_files(self) -> tuple:
         """Should return a tuple with the result files (Path objects) created by the programs"""
         pass
 
-    def __run_programs__(self):
+    def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         pass
 
-    def __read_results__(self) -> int:
+    def _read_results(self) -> int:
         """Should parse the result files and return the # of positives"""
         pass
 

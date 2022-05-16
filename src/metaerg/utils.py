@@ -189,6 +189,8 @@ def decipher_metaerg_id(id):
             'gene_type': m.group(3)}
 
 
+
+
 BlastHit = namedtuple('BlastHit', ['query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
                                    'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score'])
 HmmHit = namedtuple('HmmHit', ['query', 'hit', 'evalue', 'score'])
