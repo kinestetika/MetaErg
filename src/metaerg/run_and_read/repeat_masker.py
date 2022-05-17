@@ -1,8 +1,6 @@
 import shutil
 from pathlib import Path
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqFeature
-from metaerg.run_and_read.data_model import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergSeqRecord, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -59,13 +57,14 @@ class RepeatMasker(abc.AbstractBaseClass):
                 words = line.split()
                 if len(words) < 11:
                     continue
-                location = FeatureLocation(int(words[5]) - 1, int(words[6]), strand=-1 if 'C' == words[8] else 1)
                 contig: MetaergSeqRecord = self.genome.contigs[words[4]]
-                feature = MetaergSeqFeature(contig, 'repeat_region', location, 'repeatmasker')
+                feature = MetaergSeqFeature(int(words[5]) - 1, int(words[6]), -1 if 'C' == words[8] else 1,
+                                            FeatureType.repeat, 'repeatmasker', parent_sequence=contig.sequence,
+                                            translation_table=contig.translation_table)
                 if 'Simple_repeat' == words[10]:
                     repeat_count += 1
                     contig.features.append(feature)
-                    feature.note = f'repeat {words[9]}'
+                    feature.notes.add(f'repeat {words[9]}')
                 else:
                     try:
                         repeat_list = repeat_hash[words[9]]
@@ -78,5 +77,5 @@ class RepeatMasker(abc.AbstractBaseClass):
                 for f in repeat_list:
                     repeat_count += 1
                     contig.features.append(f)
-                    f.note = f' (occurs {len(repeat_list)}x)'
+                    f.notes.add(f' (occurs {len(repeat_list)}x)')
         return repeat_count

@@ -1,5 +1,4 @@
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -42,6 +41,6 @@ class Minced(abc.AbstractBaseClass):
                         crispr_region_count += 1
                     case [contig_name, _, 'repeat_unit', start, end, _, strand, _, _]:
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
-                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
-                        contig.spawn_feature('crispr_repeat', location, 'minced')
+                        contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
+                                             FeatureType.crispr_repeat, 'minced')
         return crispr_region_count

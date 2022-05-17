@@ -3,21 +3,21 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
-from Bio.SeqFeature import FeatureLocation
 from metaerg.run_and_read import abc
+from metaerg.run_and_read.data_model import FeatureType
 from metaerg import utils
 
-NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': 'rRNA',
-                        'LSU_rRNA_archaea':  'rRNA',
-                        'LSU_rRNA_eukarya':  'rRNA',
-                        'SSU_rRNA_bacteria': 'rRNA',
-                        'SSU_rRNA_archaea':  'rRNA',
-                        'SSU_rRNA_eukarya':  'rRNA',
-                        'SSU_rRNA_microsporidia': 'rRNA',
-                        '5S_rRNA': 'rRNA',
-                        '5_8S_rRNA': 'rRNA',
-                        'tmRNA': 'tmRNA',
-                        'tRNA': 'tRNA'}
+NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': FeatureType.rRNA,
+                        'LSU_rRNA_archaea':  FeatureType.rRNA,
+                        'LSU_rRNA_eukarya':  FeatureType.rRNA,
+                        'SSU_rRNA_bacteria': FeatureType.rRNA,
+                        'SSU_rRNA_archaea':  FeatureType.rRNA,
+                        'SSU_rRNA_eukarya':  FeatureType.rRNA,
+                        'SSU_rRNA_microsporidia': FeatureType.rRNA,
+                        '5S_rRNA': FeatureType.rRNA,
+                        '5_8S_rRNA': FeatureType.rRNA,
+                        'tmRNA': FeatureType.tmRNA,
+                        'tRNA': FeatureType.tRNA}
 
 
 class CMScan(abc.AbstractBaseClass):
@@ -45,7 +45,7 @@ class CMScan(abc.AbstractBaseClass):
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         rfam_database = Path(self.exec.database_dir, "Rfam.cm")
         if self.exec.threads > 1:
-            split_fasta_files = self.genome.make_split_fasta_files(fasta_file, self.exec.threads, target='contig')
+            split_fasta_files = self.genome.make_split_fasta_files(fasta_file, self.exec.threads)
             split_cmscan_files = [Path(self.cmscan_file.parent, f'{self.cmscan_file.name}.{i}')
                                   for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:
@@ -95,11 +95,10 @@ class CMScan(abc.AbstractBaseClass):
             if hit.hit_id in NON_CODING_RNA_TYPES.keys():
                 f_type = NON_CODING_RNA_TYPES[hit.hit_id]
             elif hit.hit_id.startswith('CRISPR'):
-                f_type = 'crispr'
+                f_type = FeatureType.crispr_repeat
             else:
-                f_type = 'ncRNA'
+                f_type = FeatureType.ncRNA
             contig = self.genome.contigs[hit.query_id]
-            location = FeatureLocation(hit.query_start - 1, hit.query_end, strand=hit.query_strand)
-            f = contig.spawn_feature(f_type, location, 'cmscan')
+            f = contig.spawn_feature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type,  'cmscan')
             f.description = "{} {}".format(hit.hit_id, hit.descr)
         return len(hits)

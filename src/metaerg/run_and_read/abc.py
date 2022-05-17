@@ -48,48 +48,48 @@ class AbstractBaseClass:
         pass
 
     def __call__(self):
-        utils.log('({}) {} started...', (self.genome.name,
-                                         self.__purpose__()))
+        utils.log('({}) {} started...', (self.genome.id,
+                                         self._purpose()))
         # (1) First make sure that the helper programs are available:
         all_programs_in_path = True
-        for p in self.__programs__():
+        for p in self._programs():
             program_path = shutil.which(p, mode=os.X_OK)
             if not program_path:
                 all_programs_in_path = False
-                utils.log('({}) Unable to run {}, helper program "{}" not in path', (self.genome.name,
-                                                                                     self.__purpose__(),
+                utils.log('({}) Unable to run {}, helper program "{}" not in path', (self.genome.id,
+                                                                                     self._purpose(),
                                                                                      p))
         # (2) Then, make sure required databases are available
-        for d in self.__databases__():
+        for d in self._databases():
             if not d.exists() or not d.stat().st_size:
-                utils.log('({}) Unable to run {}, or parse results, database "{}" missing', (self.genome.name,
-                                                                                             self.__purpose__(),
+                utils.log('({}) Unable to run {}, or parse results, database "{}" missing', (self.genome.id,
+                                                                                             self._purpose(),
                                                                                              d))
                 return
         # (3) Then, if force or the results files are not yet there, run the programs:
         if all_programs_in_path:
             previous_results_missing = False
-            for f in self.__result_files__():
+            for f in self._result_files():
                 if not f.exists() or not f.stat().st_size:
                     previous_results_missing = True
                     break
             if self.exec.force or previous_results_missing:
-                self.__run_programs__()
+                self._run_programs()
             else:
-                utils.log('({}) Reusing existing results in {}.', (self.genome.name,
-                                                                   self.__result_files__()))
+                utils.log('({}) Reusing existing results in {}.', (self.genome.id,
+                                                                   self._result_files()))
         # (4) If all results files are there, read the results:
         all_results_created = True
-        for f in self.__result_files__():
+        for f in self._result_files():
             if not f.exists() or not f.stat().st_size:
                 all_results_created = False
-                utils.log('({}) Missing expected result file {}.', (self.genome.name, f))
+                utils.log('({}) Missing expected result file {}.', (self.genome.id, f))
         if all_results_created:
-            positive_count = self.__read_results__()
+            positive_count = self._read_results()
         else:
             positive_count = 0
-        utils.log('({}) {} complete. Found {}.', (self.genome.name,
-                                                  self.__purpose__(),
+        utils.log('({}) {} complete. Found {}.', (self.genome.id,
+                                                  self._purpose(),
                                                   positive_count))
 
     def spawn_file(self, program_name):
@@ -103,9 +103,9 @@ class AbstractBaseClass:
                     folder.mkdir()
                 else:
                     raise Exception("Use force to overwrite existing results")
-            return Path(folder, self.genome.name)
+            return Path(folder, self.genome.id)
         else:
-            file = Path(f'{self.genome.name}.{program_name}')
+            file = Path(f'{self.genome.id}.{program_name}')
             if file.exists() and file.is_dir():
                 if self.exec.force:
                     shutil.rmtree(file)

@@ -30,7 +30,7 @@ class SignalP(abc.AbstractBaseClass):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.threads > 1:
-            split_fasta_files = self.genome.make_split_fasta_files(cds_aa_file, self.exec.threads, target='CDS')
+            split_fasta_files = self.genome.make_split_fasta_files(cds_aa_file, self.exec.threads)
             split_signalp_files = [Path(self.signalp_file.parent, f'{self.signalp_file.name}.{i}')
                                    for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:
@@ -46,7 +46,7 @@ class SignalP(abc.AbstractBaseClass):
                         with open(signalp_result_file, 'rb') as input:
                             shutil.copyfileobj(input, output)
                     else:
-                        utils.log(f'({self.genome.name}) WARNING - missing part of signalp output!')
+                        utils.log(f'({self.genome.id}) WARNING - missing part of signalp output!')
                     shutil.rmtree(split_signalp_dir)
                     split_cds_aa_file.unlink()
         else:

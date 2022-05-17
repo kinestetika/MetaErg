@@ -1,5 +1,4 @@
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -33,7 +32,7 @@ class LTRHarvest(abc.AbstractBaseClass):
                            f'-des -ssp -sds -dna')
         utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {self.ltr_harvest_file} -seqids')
         # remove index files
-        for file in ltr_index_file.parent.glob(f'{self.genome.name}.ltr_index*'):
+        for file in ltr_index_file.parent.glob(f'{self.genome.id}.ltr_index*'):
             file.unlink()
 
     def _read_results(self) -> int:
@@ -48,6 +47,6 @@ class LTRHarvest(abc.AbstractBaseClass):
                     case [contig_name, _, 'repeat_region', start, end, score, strand, frame, _]:
                         retrotransposon_count += 1
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
-                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
-                        contig.spawn_feature('retrotransposon', location, 'ltr_harvest')
+                        contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
+                                             FeatureType.retrotransposon, 'ltr_harvest')
         return retrotransposon_count

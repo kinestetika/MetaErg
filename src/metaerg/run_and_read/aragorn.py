@@ -1,6 +1,5 @@
 import re
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read import abc
+from metaerg.run_and_read import abc, data_model
 from metaerg import utils
 
 
@@ -47,7 +46,7 @@ class Aragorn(abc.AbstractBaseClass):
                         coord_match = coord_regexp.fullmatch(coordinates)
                         strand = -1 if 'c' == coord_match.group(1) else 1
                         start = max(0, int(coord_match.group(2)) - 1)
-                        end = min(len(current_contig.seq), int(coord_match.group(3)))
-                        f = current_contig.spawn_feature('tRNA', FeatureLocation(start, end, strand=strand), 'aragorn')
+                        end = min(len(current_contig.sequence), int(coord_match.group(3)))
+                        f = current_contig.spawn_feature(start, end, strand, data_model.FeatureType.tRNA, 'aragorn')
                         f.description = f'{trna}-{codon}'
         return trna_count

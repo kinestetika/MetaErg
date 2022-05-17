@@ -1,6 +1,4 @@
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqFeature
-from metaerg.run_and_read.data_model import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -42,11 +40,7 @@ class TandemRepeatFinder(abc.AbstractBaseClass):
                 if not contig:
                     continue
                 words = line.split()
-                f = MetaergSeqFeature(contig)
-                f.type = 'repeat_region'
-                f.location = FeatureLocation(int(words[0]) - 1, int(words[1]))
-                f.inference = 'tandem-repeat-finder'
-                f.note = f'period size {words[2]}; copies {words[3]}'
-                contig.features.append(f)
+                f = contig.spawn_feature(int(words[0]) - 1, int(words[1]), 1, FeatureType.repeat, 'tandem-repeat-finder')
+                f.notes.add(f'period size {words[2]}; copies {words[3]}')
                 tr_count += 1
         return tr_count

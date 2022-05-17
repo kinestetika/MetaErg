@@ -1,5 +1,4 @@
-from Bio.SeqFeature import FeatureLocation
-from metaerg.run_and_read.data_model import MetaergSeqRecord
+from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
@@ -42,8 +41,8 @@ class Prodigal(abc.AbstractBaseClass):
                     case [contig_name, _, _, start, end, _, strand, _, attributes]:
                         cds_found += 1
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
-                        location = FeatureLocation(int(start) - 1, int(end), strand=-1 if '+' == strand else 1)
-                        feature = contig.spawn_feature('CDS', location, 'prodigal')
+                        feature = contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
+                                                       FeatureType.CDS, 'prodigal')
                         if 'partial=01' in attributes or 'partial=01' in attributes or 'partial=11' in attributes:
-                            feature.note = 'partial'
+                            feature.notes.add('partial protein')
         return cds_found
