@@ -1,7 +1,12 @@
 import re
 import ast
+from enum import Enum, auto
+from dataclasses import dataclass, field, InitVar
 from collections import Counter
 from pathlib import Path
+from collections import namedtuple
+
+
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
@@ -11,63 +16,80 @@ from Bio import SeqIO
 import subsystems
 from metaerg import utils
 
+class FeatureType(Enum):
+    CDS = auto()
+    rRNA = auto()
+    tRNA = auto()
+    ncRNA = auto()
+    repeat = auto()
+    crispr_repeat = auto()
 
+
+BlastHit = namedtuple('BlastHit', ['query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
+                                   'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score', 'db_entry'])
+
+
+@dataclass
 class MetaergSeqFeature:
-    def __init__(self, parent, type='', location=None, inference='', seq_feature: SeqFeature = None, gff_line=None):
-        assert parent, 'Attempt to construct MetaergSeqFeature without a parent'
-        self.id = ''
-        self.parent = parent
-        self.sequence = ''
-        self.description = ''
-        self.location = location
-        self.type = type
-        self.inference = inference
-        self.taxonomy = ''
-        self.note = ''
-        self.warning = ''
-        self.cdd = ''
-        self.antismash = ''
-        self.canthyd_function = ''
-        self.transmembrane_helixes = ''
-        self.signal_peptide = ''
-        self.subsystem = set()
-        if seq_feature:
-            self._clone_biopython_feature(seq_feature)
-        elif gff_line:
-            self._clone_gff_line(gff_line)
+    """Describes a sequence feature, such as a gene."""
+    type: FeatureType
+    start: int
+    end: int
+    strand: int
+    id: str
+    description: str
+    inference: str
+    cdd: list[BlastHit] = field(default_factory=list)
+    blast: list[BlastHit] = field(default_factory=list)
+    antismash: str = ''
+    transmembrane_helixes: str = ''
+    signal_peptide: str = ''
+    subsystem: set[str] = field(default_factory=set)
+    notes: set[str] = field(default_factory=set)
+    sequence: str = None
+    parent_sequence: InitVar[str] = None
+    translation_table: InitVar[int] = 11
 
-    def __repr__(self):
-        return f'MetaergSeqFeature(parent={self.parent}, id={self.id}, type={self.type}, location={self.location})'
-
-    def __len__(self):
-        return len(self.location)
-
-    def make_sequence(self) -> str:
+    def __post_init__(self, parent_sequence, translation_table):
         """Sets and returns self.sequence using location and parent sequence"""
-        biopython_parent = self.parent.make_biopython_record(make_features=False)
-        biopython_feature = self.make_biopython_feature()
-        if 'CDS' == self.type:
-            seq = biopython_feature.extract(biopython_parent)
+        seq = Seq(parent_sequence[self.start:self.end:self.strand])
+        if FeatureType.CDS == self.type:
             remainder = len(seq) % 3
             if remainder:
                 seq = seq + Seq('N' * (3 - remainder))
-            self.sequence = str(seq.translate(table=self.parent.parent.translation_table)[:-1])
-            if '*' in self.sequence:
-                self.warning = 'internal stop codon(s) in CDS'
+            if '*' in seq:
+                self.notes.add('contains internal stop codon(s).')
+            seq = seq.translate(table=translation_table)[:-1]
+        self.sequence = str(seq)
+
+    def __len__(self):
+        return self.start - self.end
+
+    def get_description(self) -> str:
+        if self.blast:
+            identical_function_count = sum((1 for h in self.blast[1:] if h.db_entry.description
+                                            == self.blast[0].db_entry.description))
+            return '[{}/{}] aa@{}% [{}/{}] {}'.format(self.blast[0].aligned_length,
+                                                      self.blast[0].db_entry.length,
+                                                      self.blast[0].percent_id,
+                                                      identical_function_count,
+                                                      len(self.blast),
+                                                      self.blast[0].db_entry.description)
         else:
-            self.sequence = str(biopython_feature.extract(biopython_parent))
-        return self.sequence
+            return ''
+
 
     def make_biopython_feature(self) -> SeqFeature:
         """Returns a BioPython SeqFeature with this content"""
-        qal = {key: getattr(self, key) for key in dir(self) if not key.startswith('_')
-               and key not in ('type', 'location', 'make_biopython_feature', 'make_biopython_record')}
-        return SeqFeature(location=self.location, type=self.type, qualifiers=qal)
+        loc = FeatureLocation(self.start, self.end, self.strand)
+        qal = {key: getattr(self, key) for key in
+               'id sequence inference antismash transmembrane_helixes signal_peptide subsystem notes'.split()}
+        qal['description'] = self.get_description()
+
+        return SeqFeature(location=loc, type=self.type, qualifiers=qal)
 
     def make_biopython_record(self) -> SeqRecord:
-        if not self.sequence:
-            self.make_sequence()
-        return SeqRecord(Seq(self.sequence), id=self.id, description=self.description)
+        return SeqRecord(Seq(self.get_sequence()), id=self.id, description=self.description)
 
     def _clone_biopython_feature(self, seq_feature: SeqFeature):
         """Initializes the content from a BioPython SeqFeature"""
@@ -76,31 +98,6 @@ class MetaergSeqFeature:
         for key, value in seq_feature.qualifiers.items():
             setattr(self, key, value)
         self.subsystem = ast.literal_eval(self.subsystem)
-
-    def _clone_gff_line(self, line: str):
-        """Initializes the content from a line of a .gff file"""
-        words = line.split('\t')
-        self.inference = words[1]
-        self.type = words[2]
-        strand = None
-        if '+' == words[6]:
-            strand = +1
-        elif '-' == words[6]:
-            strand = -1
-        self.location = FeatureLocation(int(words[3]) - 1, int(words[4]), strand=strand)
-
-        qal = re.split(r"[=;]", words[8])
-        qal = [utils.unescape_str(str) for str in qal]
-        if len(qal) % 2 != 0:
-            qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
-        qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
-        for key, value in qal:
-            if key in ('parent', 'location'):
-                continue
-            try:
-                setattr(self, key, value)
-            except AttributeError:
-                continue
 
 
 class MetaergSeqRecord:

@@ -9,15 +9,15 @@ class AbstractBaseClass:
         self.genome = genome
 
     def _make_html_template(self) -> str:
-        '''should return the html base for injecting the content in. Returns the html'''
+        """should return the html base for injecting the content in. Returns the html"""
         pass
 
     def make_html(self) -> str:
-        '''injects the content into the html base, returns the html'''
+        """injects the content into the html base, returns the html"""
         pass
 
     def write(self):
-        '''writes the html to a file'''
+        """writes the html to a file"""
         pass
 
     def make_feature_link(self, feature_id, description)-> str:

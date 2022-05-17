@@ -6,7 +6,7 @@ class HTMLOneGenoeOverviewPage(abc.AbstractBaseClass):
         super().__init__(genome)
 
     def make_html(self) -> str:
-        '''injects the content into the html base, returns the html'''
+        """injects the content into the html base, returns the html"""
         html = self._make_html_template()
         html = html.replace('GENOME_NAME', self.genome.name)
         # genome properties
@@ -37,7 +37,7 @@ class HTMLOneGenoeOverviewPage(abc.AbstractBaseClass):
 
 
     def _make_html_template(self) -> str:
-        '''should return the html base for injecting the content in. Returns the html'''
+        """should return the html base for injecting the content in. Returns the html"""
         return '''<!doctype html>
     <html>
     <head>
