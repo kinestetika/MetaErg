@@ -20,7 +20,7 @@ NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': FeatureType.rRNA,
                         'tRNA': FeatureType.tRNA}
 
 
-class CMScan(abc.AbstractBaseClass):
+class CMScan(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.cmscan_file = self.spawn_file('cmscan')
@@ -45,7 +45,7 @@ class CMScan(abc.AbstractBaseClass):
         fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
         rfam_database = Path(self.exec.database_dir, "Rfam.cm")
         if self.exec.threads > 1:
-            split_fasta_files = self.genome.make_split_fasta_files(fasta_file, self.exec.threads)
+            split_fasta_files = self.genome.write_fasta_files(fasta_file, self.exec.threads)
             split_cmscan_files = [Path(self.cmscan_file.parent, f'{self.cmscan_file.name}.{i}')
                                   for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:

@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class Minced(abc.AbstractBaseClass):
+class Minced(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.minced_file = self.spawn_file('minced')
@@ -25,7 +25,7 @@ class Minced(abc.AbstractBaseClass):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'minced -gffFull {fasta_file} {self.minced_file}')
 
     def _read_results(self) -> int:
@@ -42,5 +42,5 @@ class Minced(abc.AbstractBaseClass):
                     case [contig_name, _, 'repeat_unit', start, end, _, strand, _, _]:
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
                         contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
-                                             FeatureType.crispr_repeat, 'minced')
+                                             FeatureType.crispr_repeat, inference = 'minced')
         return crispr_region_count

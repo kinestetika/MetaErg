@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class TandemRepeatFinder(abc.AbstractBaseClass):
+class TandemRepeatFinder(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.trf_file = self.spawn_file('tandem-repeat-finder')
@@ -25,7 +25,7 @@ class TandemRepeatFinder(abc.AbstractBaseClass):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         with open(self.trf_file, 'w') as output:
             utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
@@ -40,7 +40,8 @@ class TandemRepeatFinder(abc.AbstractBaseClass):
                 if not contig:
                     continue
                 words = line.split()
-                f = contig.spawn_feature(int(words[0]) - 1, int(words[1]), 1, FeatureType.repeat, 'tandem-repeat-finder')
+                f = contig.spawn_feature(int(words[0]) - 1, int(words[1]), 1, FeatureType.repeat,
+                                         inference='tandem-repeat-finder')
                 f.notes.add(f'period size {words[2]}; copies {words[3]}')
                 tr_count += 1
         return tr_count

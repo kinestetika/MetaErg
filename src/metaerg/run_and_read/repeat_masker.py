@@ -5,7 +5,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class RepeatMasker(abc.AbstractBaseClass):
+class RepeatMasker(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.repeatmasker_file = self.spawn_file('repeatmasker')
@@ -27,7 +27,7 @@ class RepeatMasker(abc.AbstractBaseClass):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         lmer_table_file = self.spawn_file('lmer-table')
         repeatscout_file_raw = self.spawn_file('repeatscout-raw')
         repeatscout_file_filtered = self.spawn_file('repeatscout-filtered')

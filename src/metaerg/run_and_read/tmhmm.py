@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class TMHMM(abc.AbstractBaseClass):
+class TMHMM(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.tmhmm_file = self.spawn_file('signalp')

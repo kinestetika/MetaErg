@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class Prodigal(abc.AbstractBaseClass):
+class Prodigal(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.prodigal_file = self.spawn_file('prodigal')
@@ -25,7 +25,7 @@ class Prodigal(abc.AbstractBaseClass):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'prodigal -g {self.genome.translation_table} -m -f gff -q -i {fasta_file} -o '
                            f'{self.prodigal_file}')
 
@@ -42,7 +42,7 @@ class Prodigal(abc.AbstractBaseClass):
                         cds_found += 1
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
                         feature = contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
-                                                       FeatureType.CDS, 'prodigal')
+                                                       FeatureType.CDS, inference='prodigal')
                         if 'partial=01' in attributes or 'partial=01' in attributes or 'partial=11' in attributes:
                             feature.notes.add('partial protein')
         return cds_found

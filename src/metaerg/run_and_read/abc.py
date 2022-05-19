@@ -1,53 +1,78 @@
 import shutil
 import os
 from pathlib import Path
-
 from metaerg import utils
 from metaerg.run_and_read.data_model import MetaergGenome
 
 
 class ExecutionEnvironment:
-    def __init__(self, database_dir: Path, force=False, multi_mode=False, threads=1):
-        self.database_dir = database_dir
-        self.force = force
-        self.multi_mode = multi_mode
-        self.threads = threads
+    def __init__(self, **kwargs):
+        self.database_dir = kwargs['database_dir']
+        self.force = kwargs['force']
+        self.multi_mode = kwargs['multi_mode']
+        self.threads = kwargs['threads']
 
     def __repr__(self):
         return 'ExecutionEnvironment(database_dir={}, force={}, multi_mode={}, threads={})'.format(
             self.database_dir, self.force, self.multi_mode, self.threads)
 
+    def spawn_file(self, program_name, genome_id) -> Path:
+        if self.multi_mode:
+            folder = Path(program_name)
+            if not folder.exists():
+                folder.mkdir()
+            elif folder.is_file():
+                if self.force:
+                    folder.unlink()
+                    folder.mkdir()
+                else:
+                    raise Exception("Use force to overwrite existing results")
+            return Path(folder, genome_id)
+        else:
+            file = Path(f'{genome_id}.{program_name}')
+            if file.exists() and file.is_dir():
+                if self.force:
+                    shutil.rmtree(file)
+            return file
 
-class AbstractBaseClass:
+
+class Annotator:
     def __init__(self, genome: MetaergGenome, exec_env: ExecutionEnvironment):
         self.genome = genome
         self.exec = exec_env
 
     def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
+        """Returns the purpose of the annotaton tool."""
         pass
 
     def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
+        """Returns a tuple with the programs needed."""
         pass
 
     def _databases(self) -> tuple:
-        """Should return a tuple with database files needed"""
+        """Returns a tuple with database files needed."""
         return ()
 
     def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
+        """Returns a tuple with the result files (Path objects) created by the programs."""
         pass
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis."""
         pass
 
     def _read_results(self) -> int:
-        """Should parse the result files and return the # of positives"""
+        """Parses the result files and returns the # of positives."""
         pass
 
     def __call__(self):
+        self.run_and_read()
+
+    def spawn_file(self, program_name) -> Path:
+        """Comvenience wrapper for exec.spawn_file."""
+        return self.exec.spawn_file(program_name, self.genome.id)
+
+    def run_and_read(self):
         utils.log('({}) {} started...', (self.genome.id,
                                          self._purpose()))
         # (1) First make sure that the helper programs are available:
@@ -91,22 +116,7 @@ class AbstractBaseClass:
         utils.log('({}) {} complete. Found {}.', (self.genome.id,
                                                   self._purpose(),
                                                   positive_count))
-
-    def spawn_file(self, program_name):
-        if self.exec.multi_mode:
-            folder = Path(program_name)
-            if not folder.exists():
-                folder.mkdir()
-            elif folder.is_file():
-                if self.exec.force:
-                    folder.unlink()
-                    folder.mkdir()
-                else:
-                    raise Exception("Use force to overwrite existing results")
-            return Path(folder, self.genome.id)
-        else:
-            file = Path(f'{self.genome.id}.{program_name}')
-            if file.exists() and file.is_dir():
-                if self.exec.force:
-                    shutil.rmtree(file)
-            return file
+        # (5) Save (intermediate) results:
+        gbk_file = self.exec.spawn_file("gbk", self.genome.id)
+        gff_file = self.exec.spawn_file("gff", self.genome.id)
+        self.genome.write_gbk_gff(gbk_file=gbk_file, gff_file=gff_file)

@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class LTRHarvest(abc.AbstractBaseClass):
+class LTRHarvest(abc.Annotator):
     def __init__(self, genome, exec: abc.ExecutionEnvironment):
         super().__init__(genome, exec)
         self.ltr_harvest_file = self.spawn_file('ltr_harvest')

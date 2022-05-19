@@ -4,7 +4,7 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class CantHyd(abc.AbstractBaseClass):
+class CantHyd(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.canthyd_file = self.spawn_file('canthyd')

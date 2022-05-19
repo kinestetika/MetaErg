@@ -3,7 +3,7 @@ from metaerg.run_and_read import abc, data_model
 from metaerg import utils
 
 
-class Aragorn(abc.AbstractBaseClass):
+class Aragorn(abc.Annotator):
     def __init__(self, genome, exec: abc.ExecutionEnvironment):
         super().__init__(genome, exec)
         self.aragorn_file = self.spawn_file("aragorn")

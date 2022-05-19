@@ -1,14 +1,11 @@
 from pathlib import Path
-from collections import namedtuple
-from metaerg.run_and_read.data_model import MetaergSeqFeature
+from metaerg.run_and_read.data_model import MetaergSeqFeature, BlastResult, DBentry
+from metaerg.run_and_read.blast_reader import TabularBlastParser
 from metaerg.run_and_read import abc
 from metaerg import utils
-from metaerg import subsystems
-
-DBEntry = namedtuple('DiamondEntry', ['taxon', 'description', 'length', 'pos'])
 
 
-class DiamondAndBlastN(abc.AbstractBaseClass):
+class DiamondAndBlastN(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.diamond_file = self.spawn_file('diamond')
@@ -48,31 +45,14 @@ class DiamondAndBlastN(abc.AbstractBaseClass):
 
     def get_db_entry(self, db_id):
         words = db_id.split('~')  # org_acc gene_acc [pev] gene# decr# taxon#
-        return DBEntry(self.taxonomy[words[2]][int(words[5])], self.descriptions[words[2]][int(words[4])],
+        return DBentry(db_id, '', self.descriptions[words[2]][int(words[4])], self.taxonomy[words[2]][int(words[5])],
                        int(words[6]), int(words[3]))
 
-    def _process_blast_result(self, blast_result, subsystem_cues):
+    def _process_blast_result(self, blast_result: BlastResult):
         feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
-        top_hit: utils.BlastHit = blast_result.hits[0]
-        top_entry = self.get_db_entry(top_hit.hit)
-        self.genome.blast_results['blast'][blast_result.query] = blast_result.hits
-        identical_function_count = 1
-        for hit in blast_result.hits[1:]:
-            db_entry = self.get_db_entry(hit.hit)
-            if db_entry.description == top_entry.description:
-                identical_function_count += 1
-            if hit.aligned_length / db_entry.length >= 0.8:
-                cue, subsystem_name = subsystems.match_subsystem(db_entry.description, subsystem_cues)
-                if subsystem_name:
-                    feature.subsystem.add(subsystem_name)
-                    self.genome.subsystems[subsystem_name].add_hit(feature.id, cue)
-        feature.taxonomy = top_entry.taxon
-        feature.description = '[{}/{}] aa@{}% [{}/{}] {}'.format(top_hit.aligned_length,
-                                                                 top_entry.length,
-                                                                 top_hit.percent_id,
-                                                                 identical_function_count,
-                                                                 len(blast_result.hits),
-                                                                 top_entry.description)
+        feature.blast = blast_result.hits
+        feature.description = blast_result.summary()
+        self.genome.subsystems.match(feature, blast_result)
 
     def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
@@ -97,16 +77,12 @@ class DiamondAndBlastN(abc.AbstractBaseClass):
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
         # (3) parse diamond blast results
         blast_result_count = 0
-        self.genome.blast_results['blast'] = {}
-        subsystem_cues = {}
-        for subsystem in self.genome.subsystems.values():
-            subsystem_cues |= subsystem.get_cues_as_hash()
-        with utils.TabularBlastParser(self.diamond_file, 'BLAST') as handle:
+        with TabularBlastParser(self.diamond_file, 'BLAST', self.get_db_entry) as handle:
             for blast_result in handle:
                 blast_result_count += 1
-                self._process_blast_result(blast_result, subsystem_cues)
-        with utils.TabularBlastParser(self.blastn_file, 'BLAST') as handle:
+                self._process_blast_result(blast_result)
+        with TabularBlastParser(self.blastn_file, 'BLAST', self.get_db_entry) as handle:
             for blast_result in handle:
                 blast_result_count += 1
-                self._process_blast_result(blast_result, subsystem_cues)
+                self._process_blast_result(blast_result)
         return blast_result_count

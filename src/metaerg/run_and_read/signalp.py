@@ -1,12 +1,12 @@
 import shutil
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
-from metaerg.run_and_read.data_model import MetaergSeqFeature
+from metaerg.run_and_read.data_model import MetaergSeqFeature, FeatureType
 from metaerg.run_and_read import abc
 from metaerg import utils
 
 
-class SignalP(abc.AbstractBaseClass):
+class SignalP(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.signalp_file = self.spawn_file('signalp')
@@ -30,7 +30,7 @@ class SignalP(abc.AbstractBaseClass):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.threads > 1:
-            split_fasta_files = self.genome.make_split_fasta_files(cds_aa_file, self.exec.threads)
+            split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.threads, target=FeatureType.CDS)
             split_signalp_files = [Path(self.signalp_file.parent, f'{self.signalp_file.name}.{i}')
                                    for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:

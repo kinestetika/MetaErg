@@ -1,4 +1,5 @@
 import argparse
+import inspect
 import os
 import shutil
 from pathlib import Path
@@ -8,49 +9,29 @@ from concurrent.futures import ProcessPoolExecutor
 from Bio import SeqIO
 from BCBio import GFF
 
+from metaerg import run_and_read
+from metaerg.run_and_read.data_model import MetaergGenome
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment
+from metaerg.run_and_read.antismash import Antismash
+from metaerg.run_and_read.aragorn import Aragorn
+from metaerg.run_and_read.canthyd import CantHyd
+from metaerg.run_and_read.cdd import CDD
+from metaerg.run_and_read.cmscan import CMScan
+from metaerg.run_and_read.diamond_and_blastn import DiamondAndBlastN
+from metaerg.run_and_read.ltr_harvest import LTRHarvest
+from metaerg.run_and_read.minced import Minced
+from metaerg.run_and_read.prodigal import Prodigal
+from metaerg.run_and_read.repeat_masker import RepeatMasker
+from metaerg.run_and_read.signalp import SignalP
+from metaerg.run_and_read.tmhmm import TMHMM
 from metaerg import databases
 from metaerg import predict
 from metaerg import utils
 from metaerg import visualization
 from metaerg import subsystems
 
-VERSION = "2.0.17"
 
-
-def get_available_prereqs():
-    utils.log("Checking available dependencies (helper programs)...")
-    prereqs = [('minced', False),
-               ('aragorn', False),
-               ('cmscan', True),
-               ('gt', False), # LTR Harvest
-               ('trf', False), # Tandem Repeat Finder
-               ('build_lmer_table', False),
-               ('RepeatScout', False),
-               ('filter-stage-1.prl', False),
-               ('RepeatMasker', False),
-               ('prodigal', True),
-               ('diamond', True),
-               ('blastn', True),
-               ('rpsblast', True),
-               ('antismash', False),
-               ('hmmsearch', False),
-               ('tmhmm', False),
-               ('signalp6', False)
-               ]
-    prereqs_failed = False
-    for (program, required) in prereqs:
-        program_path = shutil.which(program, mode=os.X_OK)
-        if program_path:
-            utils.log(f'{program} => {program_path}')
-            predict.AVAILABLE_PREREQS.add(program)
-        elif required:
-            prereqs_failed = True
-            utils.log(f'{program} => (FATAL ERROR)')
-        else:
-            utils.log(f'{program} => (not found))')
-    if prereqs_failed:
-        utils.log('Aborting... missing required dependency.')
-        exit(1)
+VERSION = "2.1.0"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
@@ -71,9 +52,9 @@ def parse_arguments():
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
 
+    return parser.parse_args()
 
-    args = parser.parse_args()
-    return args
+
 
 
 def create_temp_dir(parent_dir:Path):
@@ -130,6 +111,29 @@ def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_le
                 mapping_writer.write(f'{key}\t{value}\n')
 
     return filtered_contig_dict
+
+
+def annotate_genome_2(exec:ExecutionEnvironment, genome_name, input_fasta_file:Path, rename_contigs=True, min_length=0):
+    # (1) set and validate fasta .fna file, load data
+    utils.log(f'Now starting to annotate {genome_name}...')
+    if not input_fasta_file.exists() or input_fasta_file.is_dir():
+        utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
+        return
+    genome = MetaergGenome(genome_name, input_fasta_file, rename_contigs=rename_contigs, min_contig_length=min_length)
+    if rename_contigs:
+        contig_name_mappings_file = exec.spawn_file('contig.name.mappings', genome.id)
+        genome.write_contig_name_mappings(contig_name_mappings_file)
+
+    # (2) prep temp output files, note that these file paths are relative to the current working dir
+    working_directory = input_fasta_file.parent # eventually: os.getcwd()
+    temp_dir = create_temp_dir(working_directory)  # (doesn't overwrite)
+    os.chdir(temp_dir)
+    # (3) Filter, rename and load contigs
+
+    inspect.getmembers(run_and_read, inspect.isclass)
+    for annotator in (Minced(genome, exec),):
+        annotator.run_and_read()
+
 
 
 def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_length=0):

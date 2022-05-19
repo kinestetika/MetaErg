@@ -7,10 +7,8 @@ from metaerg.run_and_read import abc
 from metaerg import utils
 from metaerg import subsystems
 
-DBEntry = namedtuple('CDDEntry', ['name', 'gene', 'descr', 'length'])
 
-
-class CDD(abc.AbstractBaseClass):
+class CDD(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.cdd_file = self.spawn_file('cdd')
@@ -41,7 +39,7 @@ class CDD(abc.AbstractBaseClass):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.threads > 1:
-            split_fasta_files = self.genome.make_split_fasta_files(cds_aa_file, self.exec.threads, target='CDS')
+            split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.threads, target='CDS')
             split_cdd_files = [Path(self.cdd_file.parent, f'{self.cdd_file.name}.{i}')
                                for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:

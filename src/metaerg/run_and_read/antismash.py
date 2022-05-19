@@ -11,7 +11,7 @@ from metaerg import utils
 DBEntry = namedtuple('CDDEntry', ['name', 'gene', 'descr', 'length'])
 
 
-class Antismash(abc.AbstractBaseClass):
+class Antismash(abc.Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.antismash_file = self.spawn_file('antismash')
