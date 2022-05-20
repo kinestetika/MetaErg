@@ -47,7 +47,6 @@ def log(log_message, values=(), topic=''):
         else:
             print(f'{format_runtime()} {log_message}')
 
-
 def get_location_from_gff_words(words):
     strand = -1 if '+' == words[6] else 1
     return FeatureLocation(int(words[3]) - 1, int(words[4]), strand=-1 if '+' == words[6] else 1)

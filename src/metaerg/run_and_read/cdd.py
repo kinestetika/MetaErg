@@ -14,7 +14,7 @@ class CDD(Annotator):
         self.db_cdd_index = Path(self.exec.database_dir, 'cddid.tbl')
         self.db_cdd = Path(self.exec.database_dir, "cdd", "Cdd")
         self.cdd = {}  # this is the cdd index
-        self.pipeline_position = 81
+        self.pipeline_position = 71
 
     def __repr__(self):
         return f'CDD({self.genome}, {self.exec})'
@@ -78,4 +78,8 @@ class CDD(Annotator):
                 feature.cdd = blast_result
                 self.genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
                                                        if h.aligned_length / h.hit.length >= 0.8))
+                top_entry = blast_result.hits[0].hit
+                feature.product = f'{top_entry.id}|{top_entry.gene} {top_entry.descr}'
+                if len(feature.product) > 35:
+                        feature.product = feature.product[:35] + '...'
         return cdd_result_count

@@ -44,6 +44,15 @@ class BlastHit(NamedTuple):
 class BlastResult(NamedTuple):
     hits: tuple[BlastHit]
 
+    def query(self):
+        return self.hits[0].query
+
+    def percent_aligned(self) -> float:
+        return 100 * self.hits[0].aligned_length / self.hits[0].hit.length
+
+    def percent_recall(self) -> float:
+        return 100 * sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr)) / len(self.hits)
+
     def summary(self) -> str:
         identical_function_count = sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr))
         return '[{}/{}] aa@{}% [{}/{}] {}'.format(self.hits[0].aligned_length,
@@ -52,10 +61,6 @@ class BlastResult(NamedTuple):
                                                   identical_function_count,
                                                   len(self.hits),
                                                   self.hits[0].hit.descr)
-
-    def query(self):
-        return self.hits[0].query
-
 
 class TabularBlastParser:
     def __init__(self, filename, mode, retrieve_db_entry):
@@ -177,6 +182,18 @@ class MetaergSeqFeature:
 
     def __len__(self):
         return self.end - self.start
+
+    def tmh_count(self):
+        try:
+            return int(self.transmembrane_helixes.split()[0])
+        except ValueError:
+            return 0
+
+    def taxon_at_genus(self) -> str:
+        for t in reversed(self.taxon.split("; ")):
+            if " " not in t:
+                return t
+        return ''
 
     def make_biopython_feature(self) -> SeqFeature:
         """Returns a BioPython SeqFeature with this content"""

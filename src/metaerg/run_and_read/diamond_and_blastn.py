@@ -14,7 +14,7 @@ class DiamondAndBlastN(Annotator):
         self.db_taxon_file = Path(self.exec.database_dir, 'db_taxonomy.txt')
         self.taxonomy = {}  # this is associated with the blast database
         self.descriptions = {}  # this is associated with the blast database
-        self.pipeline_position = 71
+        self.pipeline_position = 81
 
     def __repr__(self):
         return f'DiamondAndBlastN({self.genome}, {self.exec})'
@@ -52,7 +52,7 @@ class DiamondAndBlastN(Annotator):
     def _process_blast_result(self, blast_result: BlastResult):
         feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query())
         feature.blast = blast_result
-        feature.description = blast_result.summary()
+        feature.product = blast_result.summary()
         self.genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
                                                if h.aligned_length / h.hit.length >= 0.8))
 

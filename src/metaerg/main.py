@@ -76,6 +76,7 @@ def annotate_genome(exec:ExecutionEnvironment, genome_name, input_fasta_file:Pat
     genome.write_fasta_files(exec.spawn_file("rna.fna", genome.id), target=(FeatureType.ncRNA, FeatureType.rRNA))
     genome.write_gbk_gff(gbk_file=exec.spawn_file("gbk", genome.id), gff_file=exec.spawn_file("gff", genome.id))
     # (6) visualize
+    genome.compute_properties()
     utils.log(f'({genome.id}) Now writing final result as .html for visualization...')
     genome_html_dir = exec.spawn_file("html", genome.id)
     shutil.rmtree(genome_html_dir, ignore_errors=True)

@@ -1,7 +1,7 @@
-from metaerg.html import abc
+from metaerg.html.abc import HTMLwriter, register
 
-
-class HTMLOneGenoeOverviewPage(abc.AbstractBaseClass):
+@register
+class HTMLOneGenoeOverviewPage(HTMLwriter):
     def __init__(self, genome):
         super().__init__(genome)
 

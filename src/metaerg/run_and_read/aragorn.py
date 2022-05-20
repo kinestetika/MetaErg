@@ -1,5 +1,5 @@
 import re
-from metaerg.run_and_read import data_model
+from metaerg.run_and_read.data_model import FeatureType
 from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
@@ -50,7 +50,7 @@ class Aragorn(Annotator):
                         strand = -1 if 'c' == coord_match.group(1) else 1
                         start = max(0, int(coord_match.group(2)) - 1)
                         end = min(len(current_contig.sequence), int(coord_match.group(3)))
-                        f = current_contig.spawn_feature(start, end, strand, data_model.FeatureType.tRNA,
+                        f = current_contig.spawn_feature(start, end, strand, FeatureType.tRNA,
                                                          inference='aragorn')
                         f.description = f'{trna}-{codon}'
         return trna_count

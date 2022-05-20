@@ -91,9 +91,6 @@ class Annotator:
         """Parses the result files and returns the # of positives."""
         pass
 
-    def get_pipeline_position(self) -> int:
-        pass
-
     def __call__(self):
         self.run_and_read()
 
@@ -102,6 +99,7 @@ class Annotator:
         return self.exec.spawn_file(program_name, self.genome.id)
 
     def run_and_read(self):
+        """Runs programs and reads results."""
         utils.log('({}) {} started...', (self.genome.id,
                                          self._purpose()))
         # (1) First make sure that the helper programs are available:
