@@ -1,12 +1,12 @@
 from pathlib import Path
-from metaerg.run_and_read.data_model import MetaergSeqFeature, BlastResult, DBentry
-from metaerg.run_and_read.blast_reader import TabularBlastParser
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.data_model import MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class DiamondAndBlastN(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class DiamondAndBlastN(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.diamond_file = self.spawn_file('diamond')
         self.blastn_file = self.spawn_file('blastn')
@@ -14,6 +14,7 @@ class DiamondAndBlastN(abc.Annotator):
         self.db_taxon_file = Path(self.exec.database_dir, 'db_taxonomy.txt')
         self.taxonomy = {}  # this is associated with the blast database
         self.descriptions = {}  # this is associated with the blast database
+        self.pipeline_position = 71
 
     def __repr__(self):
         return f'DiamondAndBlastN({self.genome}, {self.exec})'
@@ -39,7 +40,7 @@ class DiamondAndBlastN(abc.Annotator):
         cds_aa_file = self.spawn_file('cds.faa')
         rna_nt_file = self.spawn_file('rna.nt')
         utils.run_external(f'diamond blastp -d {Path(self.exec.database_dir, "db_protein.faa")} -q {cds_aa_file} '
-                           f'-o {self.diamond_file} -f 6  --threads {self.exec.threads} --max-target-seqs 10')
+                           f'-o {self.diamond_file} -f 6  --threads {self.exec.cpus_per_genome} --max-target-seqs 10')
         utils.run_external(f'blastn -db {Path(self.exec.database_dir, "db_rna.fna")} -query {rna_nt_file} '
                            f'-out {self.blastn_file} -max_target_seqs 10 -outfmt 6')
 
@@ -49,10 +50,11 @@ class DiamondAndBlastN(abc.Annotator):
                        int(words[6]), int(words[3]))
 
     def _process_blast_result(self, blast_result: BlastResult):
-        feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
-        feature.blast = blast_result.hits
+        feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query())
+        feature.blast = blast_result
         feature.description = blast_result.summary()
-        self.genome.subsystems.match(feature, blast_result)
+        self.genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
+                                               if h.aligned_length / h.hit.length >= 0.8))
 
     def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""

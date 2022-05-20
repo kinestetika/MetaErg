@@ -2,7 +2,7 @@ import re
 import copy
 from enum import Enum, auto
 from dataclasses import dataclass, field, InitVar
-from collections import Counter
+from collections import Counter, Sequence
 from pathlib import Path
 from typing import NamedTuple
 
@@ -15,20 +15,6 @@ from BCBio import GFF
 
 from metaerg import utils
 from metaerg.run_and_read import subsystems_data
-
-
-NON_IUPAC_RE = re.compile(r'[^ACTGN]')
-
-
-class FeatureType(Enum):
-    CDS = auto()
-    rRNA = auto()
-    tRNA = auto()
-    tmRNA = auto()
-    ncRNA = auto()
-    repeat = auto()
-    crispr_repeat = auto()
-    retrotransposon = auto()
 
 
 class DBentry(NamedTuple):
@@ -56,7 +42,6 @@ class BlastHit(NamedTuple):
 
 
 class BlastResult(NamedTuple):
-    query: str
     hits: tuple[BlastHit]
 
     def summary(self) -> str:
@@ -67,6 +52,85 @@ class BlastResult(NamedTuple):
                                                   identical_function_count,
                                                   len(self.hits),
                                                   self.hits[0].hit.descr)
+
+    def query(self):
+        return self.hits[0].query
+
+
+class TabularBlastParser:
+    def __init__(self, filename, mode, retrieve_db_entry):
+        self.filename = filename
+        self.mode = mode
+        self.next_hit = None
+        self.current_query = None
+        self.retrieve_db_entry = retrieve_db_entry
+
+    def __enter__(self):
+        self.file = open(self.filename)
+        if self.load_next_hit_from_file():
+            self.current_query = self.next_hit.query
+            return self
+        else:
+            raise StopIteration
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.file.close()
+
+    def __iter__(self):
+        return self
+
+    def load_next_hit_from_file(self):
+        self.next_hit = None
+        while self.file:
+            line = self.file.readline()
+            if not line:
+                return False
+            words = line.strip().split('\t')
+            match words:
+                case [str(word), *_] if word.startswith('#'):
+                    continue
+                case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
+                      hit_end, evalue, score] if 'BLAST' == self.mode:
+                    hit_db_entry = self.retrieve_db_entry(hit)
+                    self.next_hit = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
+                                             int(mismatches), int(gaps), int(query_start), int(query_end),
+                                             int(hit_start), int(hit_end), float(evalue), float(score))
+                case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
+                    hit_db_entry = self.retrieve_db_entry(hit)
+                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
+                    hit_db_entry = self.retrieve_db_entry(hit)
+                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                case [*_]:
+                    continue
+            return True
+
+    def __next__(self):
+        all_hits: list[BlastHit] = []
+        if self.next_hit:
+            all_hits.append(self.next_hit)
+        while self.load_next_hit_from_file():
+            if self.current_query != self.next_hit.query:
+                self.current_query = self.next_hit.query
+                return BlastResult(tuple(all_hits))
+            all_hits.append(self.next_hit)
+        if len(all_hits):
+            return BlastResult(tuple(all_hits))
+        raise StopIteration
+
+
+NON_IUPAC_RE = re.compile(r'[^ACTGN]')
+
+
+class FeatureType(Enum):
+    CDS = auto()
+    rRNA = auto()
+    tRNA = auto()
+    tmRNA = auto()
+    ncRNA = auto()
+    repeat = auto()
+    crispr_repeat = auto()
+    retrotransposon = auto()
 
 
 @dataclass(order=True)
@@ -80,8 +144,8 @@ class MetaergSeqFeature:
     id: str = ''
     product: str = ''
     taxon: str = ''
-    cdd: tuple[BlastHit] = field(init=False)
-    blast: tuple[BlastHit] = field(init=False)
+    cdd: BlastResult = field(init=False)
+    blast: BlastResult = field(init=False)
     antismash: str = ''
     transmembrane_helixes: str = ''
     signal_peptide: str = ''
@@ -133,6 +197,9 @@ class SubSystem:
     def add_hit(self, feature_id: str, target: str = 'none'):
         self.hits.setdefault(feature_id, set()).add(target)
 
+    def get_hits(self, target):
+        return (k for k, v in self.hits.items() if target in v)
+
     def get_stats(self):
         if self.targets:
             genes_present = len(set(self.hits.values()))
@@ -157,17 +224,16 @@ class SubSystems:
             current_subsystem.targets.append(line)
             self.cues[line] = current_subsystem
 
-    def match(self, feature: MetaergSeqFeature, blast_result: BlastResult):
-        for hit in blast_result.hits:
-            if hit.aligned_length / hit.hit.length >= 0.8:
-                for cue, subsystem in self.cues.items():
-                    if len(hit.hit.descr) > len(cue) + 20:
-                        continue
-                    match = re.search(r'\b' + cue + r'\b', hit.hit.descr)
-                    if match and match.start() < 10:
-                        subsystem.add_hit(feature.id, cue)
-                        feature.subsystem.add(subsystem.id)
-                        return True
+    def match(self, feature: MetaergSeqFeature, descriptions):
+        for d in descriptions:
+            for cue, subsystem in self.cues.items():
+                if len(d.descr) > len(cue) + 20:
+                    continue
+                match = re.search(r'\b' + cue + r'\b', d)
+                if match and match.start() < 10:
+                    subsystem.add_hit(feature.id, cue)
+                    feature.subsystem.add(subsystem.id)
+                    return True
         return False
 
 
@@ -203,7 +269,7 @@ class MetaergSeqRecord:
                 record.features.append(f.make_biopython_feature())
         return record
 
-    def spawn_feature(self, start:int, end:int, strand:int, type:FeatureType, **kwargs) -> MetaergSeqFeature:
+    def spawn_feature(self, start: int, end: int, strand: int, type: FeatureType, **kwargs) -> MetaergSeqFeature:
         f = MetaergSeqFeature(start, end, strand, type, parent_sequence=self.sequence,
                               translation_table=self.translation_table, **kwargs)
         self.features.append(f)
@@ -215,8 +281,8 @@ class MetaergSeqRecord:
                 f_copy = copy.deepcopy(f)
                 self.features.append(f_copy)
             elif isinstance(f, SeqFeature):
-                feature = self.spawn_feature(f.location.start, f.location.end, f.location.strand,
-                                               FeatureType[f.type], **f.qualifiers)
+                self.spawn_feature(f.location.start, f.location.end, f.location.strand, FeatureType[f.type],
+                                   **f.qualifiers)
 
 
 @dataclass()
@@ -233,7 +299,8 @@ class MetaergGenome:
     min_contig_length: InitVar[int] = 500
 
     def __post_init__(self, contig_file, rename_contigs, min_contig_length):
-        assert self.delimiter not in self.id, f'({self.id}) Genome name contains ".", rename or change delimiter.'
+        assert self.delimiter not in self.id, f'({self.id}) Genome name contains "{self.delimiter}",' \
+                                              f' rename or change delimiter.'
         self.subsystems = SubSystems()
         if contig_file:
             i = 0
@@ -246,7 +313,7 @@ class MetaergGenome:
                     self.contig_name_mappings[c.id] = new_id
                 else:
                     assert self.delimiter not in c.id, \
-                        f'({self.id}) Contig name {c.id} contain ".", rename or change delimiter.'
+                        f'({self.id}) Contig name {c.id} contain "{self.delimiter}", rename or change delimiter.'
                     new_id = c.id
                 contig = MetaergSeqRecord(new_id, c.seq, c.description, self.translation_table)
                 self.contigs[contig.id] = contig
@@ -268,22 +335,23 @@ class MetaergGenome:
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
 
-    def write_fasta_files(self, base_file: Path, split=1, target:FeatureType = None, **kwargs_masking) -> ():
-        if FeatureType.CDS == target:
-            number_of_records = sum(1 for c in self.contigs.values() for f in c.features if f.type == FeatureType.CDS)
+    def write_fasta_files(self, base_file: Path, split=1, target = None, **kwargs_masking):
+        if target:
+            number_of_records = sum(1 for c in self.contigs.values() for f in c.features if f.type == target
+                                    or (isinstance(target, Sequence) and f.type in target))
         else:
             number_of_records = len(self.contigs)
         split = min(split, number_of_records)
         records_per_file = number_of_records / split
-        paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else (base_file)
+        paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
         filehandles = [open(p, 'w') for p in paths]
         number_of_records = 0
         nt_masked = 0
 
         for contig in self.contigs.values():
-            if FeatureType.CDS == target:
+            if target:
                 for f in contig.features:
-                    if f.type == FeatureType.CDS:
+                    if f.type == target or (isinstance(target, Sequence) and f.type in target):
                         SeqIO.write(f.make_biopython_record(), filehandles[int(number_of_records / records_per_file)],
                                     "fasta")
                         number_of_records += 1
@@ -296,15 +364,18 @@ class MetaergGenome:
             f.close()
         if kwargs_masking['masked']:
             utils.log(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
-        return paths
+        if split > 1:
+            return paths
+        else:
+            return base_file
 
-    def write_gbk_gff(self, gbk_file = None, gff_file = None):
+    def write_gbk_gff(self, gbk_file=None, gff_file=None):
         record_generator = (c.make_biopython_record() for c in self.contigs.values())
         if gbk_file:
             SeqIO.write(record_generator, gbk_file, "genbank")
         if gff_file:
             with open(gff_file, "w") as gff_handle:
-                 GFF.write(record_generator, gff_handle)
+                GFF.write(record_generator, gff_handle)
 
     def write_contig_name_mappings(self, mappings_file):
         with open(mappings_file, 'w') as mapping_writer:
@@ -334,17 +405,17 @@ class MetaergGenome:
                                                if f.type == FeatureType.tRNA)
         self.properties['#non coding RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features
                                                  if f.type == FeatureType.ncRNA)
-        self.properties['#retrotransposons'] =  sum(1 for contig in self.contigs.values() for f in contig.features
-                                                    if f.type == FeatureType.retrotransposon)
-        self.properties['#CRISPR repeats'] =  sum(1 for contig in self.contigs.values() for f in contig.features
-                                                    if f.type == FeatureType.crispr_repeat)
-        self.properties['#other repeats'] =  sum(1 for contig in self.contigs.values() for f in contig.features
-                                                 if f.type == FeatureType.repeat)
+        self.properties['#retrotransposons'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                                   if f.type == FeatureType.retrotransposon)
+        self.properties['#CRISPR repeats'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                                 if f.type == FeatureType.crispr_repeat)
+        self.properties['#other repeats'] = sum(1 for contig in self.contigs.values() for f in contig.features
+                                                if f.type == FeatureType.repeat)
         self.properties['percent repeats'] = int(100 * sum(len(f) for contig in self.contigs.values() for f in
                                                            contig.features if f.type in (FeatureType.repeat,
-                                                            FeatureType.retrotransposon, FeatureType.crispr_repeat))
+                                                           FeatureType.retrotransposon, FeatureType.crispr_repeat))
                                                  / self.properties['size'] + 0.5)
-        self.properties['total # features'] = sum(1 for contig in self.contigs.values() for f in contig.features)
+        self.properties['total # features'] = sum(len(contig.features) for contig in self.contigs.values())
 
         taxon_counts = Counter()
         taxon_counts.update(f.taxon for contig in self.contigs.values() for f in contig.features)

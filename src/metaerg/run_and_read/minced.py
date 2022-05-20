@@ -1,12 +1,13 @@
 from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, register
 from metaerg import utils
 
-
-class Minced(abc.Annotator):
+@register
+class Minced(Annotator):
     def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.minced_file = self.spawn_file('minced')
+        self.pipeline_position = 1
 
     def __repr__(self):
         return f'Minced({self.genome}, {self.exec})'
@@ -25,7 +26,7 @@ class Minced(abc.Annotator):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
+        fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'minced -gffFull {fasta_file} {self.minced_file}')
 
     def _read_results(self) -> int:

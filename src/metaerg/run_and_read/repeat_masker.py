@@ -1,14 +1,16 @@
 import shutil
 from pathlib import Path
 from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergSeqRecord, FeatureType
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class RepeatMasker(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class RepeatMasker(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.repeatmasker_file = self.spawn_file('repeatmasker')
+        self.pipeline_position = 51
 
     def __repr__(self):
         return f'TandemRepeatFinder({self.genome}, {self.exec})'
@@ -36,7 +38,7 @@ class RepeatMasker(abc.Annotator):
         utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
         with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
             utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-        utils.run_external(f'RepeatMasker -pa {self.exec.threads} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
+        utils.run_external(f'RepeatMasker -pa {self.exec.cpus_per_genome} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
         repeatmasker_output_file = Path(f'{fasta_file.name}.out')  # nothing we can do about that
         shutil.move(repeatmasker_output_file, self.repeatmasker_file)
         for file in Path.cwd().glob(f'{fasta_file.name}.*'):

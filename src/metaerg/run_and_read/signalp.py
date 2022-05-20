@@ -2,14 +2,16 @@ import shutil
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from metaerg.run_and_read.data_model import MetaergSeqFeature, FeatureType
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class SignalP(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class SignalP(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.signalp_file = self.spawn_file('signalp')
+        self.pipeline_position = 121
 
     def __repr__(self):
         return f'SignalP({self.genome}, {self.exec})'
@@ -29,11 +31,11 @@ class SignalP(abc.Annotator):
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
-        if self.exec.threads > 1:
-            split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.threads, target=FeatureType.CDS)
+        if self.exec.cpus_per_genome > 1:
+            split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.cpus_per_genome, target=FeatureType.CDS)
             split_signalp_files = [Path(self.signalp_file.parent, f'{self.signalp_file.name}.{i}')
                                    for i in range(len(split_fasta_files))]
-            with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:
+            with ProcessPoolExecutor(max_workers=self.exec.cpus_per_genome) as executor:
                 for split_input, split_output in zip(split_fasta_files, split_signalp_files):
                     executor.submit(utils.run_external, f'signalp6 --fastafile {split_input} --output_dir '
                                                         f'{split_output} --format none --organism other')

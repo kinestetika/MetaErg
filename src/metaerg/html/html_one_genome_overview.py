@@ -8,33 +8,34 @@ class HTMLOneGenoeOverviewPage(abc.AbstractBaseClass):
     def make_html(self) -> str:
         """injects the content into the html base, returns the html"""
         html = self._make_html_template()
-        html = html.replace('GENOME_NAME', self.genome.name)
+        html = html.replace('GENOME_NAME', self.genome.id)
         # genome properties
         html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{key}</td><td>{value}</td></tr>\n'
                                                            for key, value in self.genome.properties.items())))
         subsystem_html = ''
-        for subsystem in self.genome.subsystems.values():
+        for subsystem in self.genome.subsystems.subsystems.values():
             subsystem_html += f'<button class="accordion">{str(subsystem)}</button>\n<div class="panel">\n'
             if '[secondary-metabolites]' == subsystem.name:
                 if len(subsystem.hits):
                     subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
-                elif not len(subsystem.targets):
-                    subsystem_html += '<p>\n'
-                    for feature_id in subsystem.hits.values():
-                        subsystem_html += '<a target="_blank" href="features/{}.html">{}</a>\n'.format(feature_id, feature_id)
-                    subsystem_html += '</p>\n'
+            elif not len(subsystem.targets):
+                subsystem_html += '<p>\n'
+                for feature_id in subsystem.hits.keys():
+                    subsystem_html += '<a target="_blank" href="features/{}.html">{}</a>\n'.format(feature_id,
+                                                                                                   feature_id)
+                subsystem_html += '</p>\n'
             else:
                 subsystem_html += '<table>\n'
-                for gene, hits in self.genome.subsystems.hits.items():
+                for gene in subsystem.targets():
                     subsystem_html += f'<tr><td>{gene}</td><td>\n'
-                    for h in hits:
-                        subsystem_html += '<a target="_blank" href="features/{}.html">{}</a>'.format(h, h)
+                    for feature_id in subsystem.get_hits(gene):
+                        subsystem_html += '<a target="_blank" href="features/{}.html">{}</a>'.format(feature_id,
+                                                                                                     feature_id)
                     subsystem_html += f'</td></tr>\n'
                 subsystem_html += '</table>\n'
             subsystem_html += '</div>\n'
         html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)
         return html
-
 
     def _make_html_template(self) -> str:
         """should return the html base for injecting the content in. Returns the html"""
@@ -111,4 +112,3 @@ CONTENT_SUBSYSTEMS
         }
     </script>
     </div></body></html>'''
-

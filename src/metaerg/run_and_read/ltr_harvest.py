@@ -1,12 +1,14 @@
 from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, register, ExecutionEnvironment
 from metaerg import utils
 
 
-class LTRHarvest(abc.Annotator):
-    def __init__(self, genome, exec: abc.ExecutionEnvironment):
+@register
+class LTRHarvest(Annotator):
+    def __init__(self, genome, exec: ExecutionEnvironment):
         super().__init__(genome, exec)
         self.ltr_harvest_file = self.spawn_file('ltr_harvest')
+        self.pipeline_position = 31
 
     def __repr__(self):
         return f'LTRHarvest({self.genome}, {self.exec})'
@@ -25,7 +27,7 @@ class LTRHarvest(abc.Annotator):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         ltr_index_file = self.spawn_file('ltr_index')
 
         utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp '
@@ -48,5 +50,5 @@ class LTRHarvest(abc.Annotator):
                         retrotransposon_count += 1
                         contig: MetaergSeqRecord = self.genome.contigs[contig_name]
                         contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
-                                             FeatureType.retrotransposon, 'ltr_harvest')
+                                             FeatureType.retrotransposon, inference='ltr_harvest')
         return retrotransposon_count

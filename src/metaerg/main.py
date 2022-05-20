@@ -6,29 +6,9 @@ from pathlib import Path
 from multiprocessing import cpu_count
 from concurrent.futures import ProcessPoolExecutor
 
-from Bio import SeqIO
-from BCBio import GFF
-
-from metaerg import run_and_read
-from metaerg.run_and_read.data_model import MetaergGenome
-from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment
-from metaerg.run_and_read.antismash import Antismash
-from metaerg.run_and_read.aragorn import Aragorn
-from metaerg.run_and_read.canthyd import CantHyd
-from metaerg.run_and_read.cdd import CDD
-from metaerg.run_and_read.cmscan import CMScan
-from metaerg.run_and_read.diamond_and_blastn import DiamondAndBlastN
-from metaerg.run_and_read.ltr_harvest import LTRHarvest
-from metaerg.run_and_read.minced import Minced
-from metaerg.run_and_read.prodigal import Prodigal
-from metaerg.run_and_read.repeat_masker import RepeatMasker
-from metaerg.run_and_read.signalp import SignalP
-from metaerg.run_and_read.tmhmm import TMHMM
-from metaerg import databases
-from metaerg import predict
+from metaerg.run_and_read.data_model import MetaergGenome, FeatureType
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, annotator_registry
 from metaerg import utils
-from metaerg import visualization
-from metaerg import subsystems
 
 
 VERSION = "2.1.0"
@@ -41,11 +21,11 @@ def parse_arguments():
     parser.add_argument('--rename_contigs', default=False,  action=argparse.BooleanOptionalAction,
                         help='Renaming contigs can improve visualization. It will be enforced when original '
                              'contig names are long')
-    parser.add_argument('--rename_mags', default=False,  action=argparse.BooleanOptionalAction,
-                        help='Renaming mags can improve visualization. It will be enforced when original '
-                             'file names are long (>7 chars)')
+    parser.add_argument('--rename_genomes', default=False,  action=argparse.BooleanOptionalAction,
+                        help='Renaming genomes can improve visualization.')
     parser.add_argument('--min_contig_length', default=0,  help='Shorter contigs will be filtered before annotaton.')
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
+    parser.add_argument('--force', default=False, help='Use force to overwrite previous result files.')
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, the extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
     parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
@@ -53,8 +33,6 @@ def parse_arguments():
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
 
     return parser.parse_args()
-
-
 
 
 def create_temp_dir(parent_dir:Path):
@@ -70,70 +48,41 @@ def create_temp_dir(parent_dir:Path):
     return temp_dir
 
 
-def filter_and_rename_contigs(mag_name, input_fasta_file, rename_contigs, min_length):
-    filtered_fasta_file = predict.spawn_file('filtered.fna', mag_name)
-    contig_dict = SeqIO.to_dict(SeqIO.parse(input_fasta_file, "fasta"))
-    if not rename_contigs: # check if contig names are short enough
-        for contig_name in contig_dict.keys():
-            if len(contig_name) > 5:
-                utils.log(f'Contig name "{contig_name}" is too long for visualization, will rename contigs...')
-                rename_contigs = True
-                break
-    if rename_contigs:
-        rename_txt = ' renaming contigs,'
-    else:
-        rename_txt = ''
-    contig_name_mappings = {}
-    utils.log(f'Filtering contigs for length, removing gaps,{rename_txt} replacing non-IUPAC bases with N, '
-              'capitalizing...')
-    i = 0
-    filtered_contig_dict = {}
-    with open(filtered_fasta_file, 'w') as fasta_writer:
-        for contig in contig_dict.values():
-            if len(contig) < min_length:
-                continue
-            filtered_contig = utils.filter_seq(contig)
-            if rename_contigs:
-                new_id = f'{mag_name}.c{i:0>4}'
-                contig_name_mappings[new_id] = contig.id
-                filtered_contig.id = new_id
-                filtered_contig.description = filtered_contig.id
-            i += 1
-            filtered_contig.annotations['molecule_type'] = 'DNA'
-            SeqIO.write(filtered_contig, fasta_writer, "fasta")
-            filtered_contig_dict[filtered_contig.id] = filtered_contig
-    utils.log(f'Wrote {i} contigs of length >{min_length} nt to {filtered_fasta_file}')
-
-    if rename_contigs:
-        contig_name_mappings_file = predict.spawn_file('contig.name.mappings', mag_name)
-        with open(contig_name_mappings_file, 'w') as mapping_writer:
-            for key, value in contig_name_mappings.items():
-                mapping_writer.write(f'{key}\t{value}\n')
-
-    return filtered_contig_dict
-
-
-def annotate_genome_2(exec:ExecutionEnvironment, genome_name, input_fasta_file:Path, rename_contigs=True, min_length=0):
+def annotate_genome(exec:ExecutionEnvironment, genome_name, input_fasta_file:Path):
     # (1) set and validate fasta .fna file, load data
     utils.log(f'Now starting to annotate {genome_name}...')
     if not input_fasta_file.exists() or input_fasta_file.is_dir():
         utils.log(f'Input file "{input_fasta_file}" is missing or not a valid file. Expecting a nt fasta file.')
         return
-    genome = MetaergGenome(genome_name, input_fasta_file, rename_contigs=rename_contigs, min_contig_length=min_length)
-    if rename_contigs:
-        contig_name_mappings_file = exec.spawn_file('contig.name.mappings', genome.id)
-        genome.write_contig_name_mappings(contig_name_mappings_file)
-
     # (2) prep temp output files, note that these file paths are relative to the current working dir
     working_directory = input_fasta_file.parent # eventually: os.getcwd()
     temp_dir = create_temp_dir(working_directory)  # (doesn't overwrite)
     os.chdir(temp_dir)
-    # (3) Filter, rename and load contigs
-
-    inspect.getmembers(run_and_read, inspect.isclass)
-    for annotator in (Minced(genome, exec),):
+    # (3) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
+    genome = MetaergGenome(genome_name, input_fasta_file, rename_contigs=exec.rename_contigs,
+                           min_contig_length=exec.min_contig_length)
+    if exec.rename_contigs:
+        contig_name_mappings_file = exec.spawn_file('contig.name.mappings', genome.id)
+        genome.write_contig_name_mappings(contig_name_mappings_file)
+    # (4) now annotate
+    for annotator in annotator_registry:
+        annotator = Annotator(genome, exec)
         annotator.run_and_read()
-
+    #mag_antismash_result_dir = exec.spawn_file('antismash', mag_name).absolute()
+    # (5) save results
+    utils.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
+    os.chdir(working_directory)
+    genome.write_fasta_files(exec.spawn_file("faa", genome.id), target=FeatureType.CDS)
+    genome.write_fasta_files(exec.spawn_file("rna.fna", genome.id), target=(FeatureType.ncRNA, FeatureType.rRNA))
+    genome.write_gbk_gff(gbk_file=exec.spawn_file("gbk", genome.id), gff_file=exec.spawn_file("gff", genome.id))
+    # (6) visualize
+    utils.log(f'({genome.id}) Now writing final result as .html for visualization...')
+    genome_html_dir = exec.spawn_file("html", genome.id)
+    shutil.rmtree(genome_html_dir, ignore_errors=True)
+    genome_html_dir.mkdir()
+    os.chdir(genome_html_dir)
+    #if mag_antismash_result_dir.exists():
+    #    shutil.copytree(mag_antismash_result_dir, 'antismash')
 
 
 def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_length=0):
@@ -238,39 +187,9 @@ def annotate_genome(input_fasta_file:Path, mag_name, rename_contigs=True, min_le
 def main():
     utils.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    get_available_prereqs()
-    utils.TRANSLATION_TABLE = args.translation_table
-    # (1) set and validate database dir
-    dbdir = Path(args.database_dir)
-    databases.DBDIR = dbdir
-    if databases.does_db_appear_valid():
-        utils.log(f'Metaerg database at "{dbdir}" appears valid.')
-    else:
-        utils.log(f'Metaerg database at "{dbdir}" appears missing or invalid.')
-        exit(1)
-    databases.load_descriptions_taxonomy_cdd()
-    # (2) prep subsystems
-    subsystems.prep_subsystems()
-    # (3) determine # of threads available and how many we're using
-    cpus_available = cpu_count()
-    cpus_used = int(args.cpus)
-    if cpus_used > 0:
-        cpus_used = min(cpus_used, cpus_available)
-    else:
-        cpus_used = cpus_available
-    utils.log(f'Detected {cpus_available} available threads/cpus, will use {cpus_used}.')
-    # (4) determine how many genomes we're annotating and annotate...
-    contig_file = Path(args.contig_file).absolute()
-    if contig_file.is_dir():
-        contig_files = [x.absolute() for x in sorted(contig_file.glob(f'*{args.file_extension}'))]
-        if not len(contig_files):
-            utils.log(f'Did not find any contig files with extension "{args.file_extension}" in dir "{contig_file}"')
-            exit(1)
-        predict.MULTI_MODE = True
-        predict.THREADS_PER_GENOME = max(1, int(cpus_used / len(contig_files)))
-        utils.log(f'Ready to annotate {len(contig_files)} genomes in dir "{contig_file}" with '
-                  f'{predict.THREADS_PER_GENOME} threads per genome.')
-        with ProcessPoolExecutor(max_workers=cpus_used) as executor:
+    exec = ExecutionEnvironment(**args.__dict__)
+    if exec.multi_mode:
+        with ProcessPoolExecutor(max_workers=exec.parallel_annotations) as executor:
             count = 0
             with open(Path(contig_file, 'mag.name.mapping.txt'), 'w') as mapping_file:
                 for f in contig_files:

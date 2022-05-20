@@ -3,7 +3,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, register, ExecutionEnvironment
 from metaerg.run_and_read.data_model import FeatureType
 from metaerg import utils
 
@@ -20,10 +20,12 @@ NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': FeatureType.rRNA,
                         'tRNA': FeatureType.tRNA}
 
 
-class CMScan(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class CMScan(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.cmscan_file = self.spawn_file('cmscan')
+        self.pipeline_position = 21
 
     def __repr__(self):
         return f'CMScan({self.genome}, {self.exec})'
@@ -42,13 +44,13 @@ class CMScan(abc.Annotator):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         rfam_database = Path(self.exec.database_dir, "Rfam.cm")
-        if self.exec.threads > 1:
-            split_fasta_files = self.genome.write_fasta_files(fasta_file, self.exec.threads)
+        if self.exec.cpus_per_genome > 1:
+            split_fasta_files = self.genome.write_fasta_files(fasta_file, self.exec.cpus_per_genome)
             split_cmscan_files = [Path(self.cmscan_file.parent, f'{self.cmscan_file.name}.{i}')
                                   for i in range(len(split_fasta_files))]
-            with ProcessPoolExecutor(max_workers=self.exec.threads) as executor:
+            with ProcessPoolExecutor(max_workers=self.exec.cpus_per_genome) as executor:
                 for split_input, split_output in zip(split_fasta_files, split_cmscan_files):
                     executor.submit(utils.run_external, f'cmscan --rfam --tblout {split_output} '
                                                         f'{rfam_database} {split_input}')
@@ -99,6 +101,7 @@ class CMScan(abc.Annotator):
             else:
                 f_type = FeatureType.ncRNA
             contig = self.genome.contigs[hit.query_id]
-            f = contig.spawn_feature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type,  'cmscan')
+            f = contig.spawn_feature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type,
+                                     inference='cmscan')
             f.description = "{} {}".format(hit.hit_id, hit.descr)
         return len(hits)

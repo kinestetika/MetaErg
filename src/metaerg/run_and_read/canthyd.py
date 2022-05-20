@@ -1,12 +1,14 @@
 from pathlib import Path
-from metaerg.run_and_read.data_model import MetaergSeqFeature
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.data_model import MetaergSeqFeature, TabularBlastParser, DBentry
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class CantHyd(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class CantHyd(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
+        self.pipeline_position = 101
         self.canthyd_file = self.spawn_file('canthyd')
         self.db_canthyd = Path(self.exec.database_dir, "canthyd", "CANT-HYD.hmm")
         self.canthyd_trusted_cutoffs = {}
@@ -70,6 +72,9 @@ class CantHyd(abc.Annotator):
         cds_aa_file = self.spawn_file('cds.faa')
         utils.run_external(f'hmmscan --cut_nc --tblout {self.canthyd_file} {self.db_canthyd} {cds_aa_file}')
 
+    def get_db_entry(self, db_id) -> DBentry:
+        return DBentry(db_id, '', self.canthyd_descr.get(db_id, ''), '', 0, self.canthyd_trusted_cutoffs[db_id])
+
     def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
         if self.db_canthyd.exists():
@@ -81,18 +86,17 @@ class CantHyd(abc.Annotator):
                     elif line.startswith('TC'):
                         self.canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
             utils.log(f'Parsed {len(self.canthyd_trusted_cutoffs)} entries from CantHyd database.')
-        with utils.TabularBlastParser(self.canthyd_file, 'HMMSCAN') as handle:
+        with TabularBlastParser(self.canthyd_file, 'HMMSCAN', self.get_db_entry) as handle:
             canthyd_hit_count = 0
             for blast_result in handle:
                 feature: MetaergSeqFeature = self.genome.get_feature(blast_result.query)
                 for h in blast_result.hits:
-                    descr = self.canthyd_descr.get(h.hit, None)
-                    if descr:
+                    if descr := h.hit.descr:
                         canthyd_hit_count += 1
-                        confidence = 'high' if h.score > self.canthyd_trusted_cutoffs[h.hit] else 'low'
-                        feature.description = f'{descr}, {h.hit} (CantHyd DB, {confidence} confidence)'
+                        confidence = 'high' if h.score > h.hit.pos else 'low'  # cutoff is stored in 'pos'
+                        feature.description = f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
                         feature.subsystem.add('[hydrocarbon degradation]')
-                        self.genome.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
+                        self.genome.subsystems.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
                     else:
                         utils.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
             return canthyd_hit_count

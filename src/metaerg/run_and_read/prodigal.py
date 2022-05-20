@@ -1,12 +1,14 @@
 from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
-from metaerg.run_and_read import abc
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class Prodigal(abc.Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+@register
+class Prodigal(Annotator):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.prodigal_file = self.spawn_file('prodigal')
+        self.pipeline_position = 61
 
     def __repr__(self):
         return f'Prodigal({self.genome}, {self.exec})'

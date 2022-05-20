@@ -1,12 +1,15 @@
 import re
-from metaerg.run_and_read import abc, data_model
+from metaerg.run_and_read import data_model
+from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
 from metaerg import utils
 
 
-class Aragorn(abc.Annotator):
-    def __init__(self, genome, exec: abc.ExecutionEnvironment):
+@register
+class Aragorn(Annotator):
+    def __init__(self, genome, exec: ExecutionEnvironment):
         super().__init__(genome, exec)
         self.aragorn_file = self.spawn_file("aragorn")
+        self.pipeline_position = 11
 
     def __repr__(self):
         return f'Aragorn({self.genome}, {self.exec})'
@@ -25,7 +28,7 @@ class Aragorn(abc.Annotator):
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
-        fasta_file = self.genome.make_masked_contig_fasta_file(self.spawn_file('masked'))
+        fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'aragorn -l -t -gc{self.genome.translation_table} {fasta_file} -w -o {self.aragorn_file}')
 
     def _read_results(self) -> int:
@@ -47,6 +50,7 @@ class Aragorn(abc.Annotator):
                         strand = -1 if 'c' == coord_match.group(1) else 1
                         start = max(0, int(coord_match.group(2)) - 1)
                         end = min(len(current_contig.sequence), int(coord_match.group(3)))
-                        f = current_contig.spawn_feature(start, end, strand, data_model.FeatureType.tRNA, 'aragorn')
+                        f = current_contig.spawn_feature(start, end, strand, data_model.FeatureType.tRNA,
+                                                         inference='aragorn')
                         f.description = f'{trna}-{codon}'
         return trna_count
