@@ -1,9 +1,14 @@
-from metaerg.html.abc import HTMLwriter, register
+from pathlib import Path
+from metaerg.html.abc import HTMLwriter, register_html_writer, MetaergGenome
+from metaerg.run_and_read.abc import ExecutionEnvironment
 
-@register
+
+@register_html_writer
 class HTMLOneGenoeOverviewPage(HTMLwriter):
-    def __init__(self, genome):
-        super().__init__(genome)
+    def __init__(self, genome, exec: ExecutionEnvironment):
+        super().__init__(genome, exec)
+        self.genome: MetaergGenome = genome
+        self.exec = exec
 
     def make_html(self) -> str:
         """injects the content into the html base, returns the html"""
@@ -36,6 +41,13 @@ class HTMLOneGenoeOverviewPage(HTMLwriter):
             subsystem_html += '</div>\n'
         html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)
         return html
+
+    def write_html(self, file=None):
+        if not file:
+            file = Path(self.exec.html_dir, self.genome.id, 'index.html')
+        file.parent.mkdir(exist_ok=True, parents=True)
+        with open(file, 'w') as handle:
+            handle.write(self.make_html())
 
     def _make_html_template(self) -> str:
         """should return the html base for injecting the content in. Returns the html"""
@@ -111,4 +123,10 @@ CONTENT_SUBSYSTEMS
           });
         }
     </script>
-    </div></body></html>'''
+    </div>
+    <div id=f>
+    <iframe src="" title="gene details" name="gene_details" style="border:none;width:100%;height:1000px;"></iframe>
+    </div>
+    
+    
+    </body></html>'''

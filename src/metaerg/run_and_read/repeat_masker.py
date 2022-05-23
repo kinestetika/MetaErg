@@ -10,25 +10,13 @@ class RepeatMasker(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.repeatmasker_file = self.spawn_file('repeatmasker')
-        self.pipeline_position = 51
-
-    def __repr__(self):
-        return f'TandemRepeatFinder({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'tandem repeat prediction with trf'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'build_lmer_table', 'RepeatScout', 'filter-stage-1.prl', 'RepeatMasker'
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.repeatmasker_file,
+        self._pipeline_position = 51
+        self._purpose = 'tandem repeat prediction with trf'
+        self._programs = ('build_lmer_table', 'RepeatScout', 'filter-stage-1.prl', 'RepeatMasker')
+        self._result_files = (self.repeatmasker_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         lmer_table_file = self.spawn_file('lmer-table')
         repeatscout_file_raw = self.spawn_file('repeatscout-raw')
@@ -60,24 +48,22 @@ class RepeatMasker(Annotator):
                 if len(words) < 11:
                     continue
                 contig: MetaergSeqRecord = self.genome.contigs[words[4]]
-                feature = MetaergSeqFeature(int(words[5]) - 1, int(words[6]), -1 if 'C' == words[8] else 1,
-                                            FeatureType.repeat, 'repeatmasker', parent_sequence=contig.sequence,
-                                            translation_table=contig.translation_table)
                 if 'Simple_repeat' == words[10]:
                     repeat_count += 1
-                    contig.features.append(feature)
+                    feature = contig.spawn_feature(int(words[5]) - 1, int(words[6]), -1 if 'C' == words[8] else 1,
+                                            FeatureType.repeat, inference='repeatmasker')
                     feature.notes.add(f'repeat {words[9]}')
                 else:
-                    try:
-                        repeat_list = repeat_hash[words[9]]
-                    except KeyError:
-                        repeat_list = []
-                        repeat_hash[words[9]] = repeat_list
-                    repeat_list.append(feature)
+                    repeat_list = repeat_hash.setdefault(words[9], list())
+                    repeat_list.append({'start': int(words[5]) - 1,
+                                        'end': int(words[6]),
+                                        'strand': -1 if 'C' == words[8] else 1,
+                                        'type': FeatureType.repeat,
+                                        'inference': 'repeatmasker'})
         for repeat_list in repeat_hash.values():
             if len(repeat_list) >= 10:
                 for f in repeat_list:
                     repeat_count += 1
-                    contig.features.append(f)
-                    f.notes.add(f' (occurs {len(repeat_list)}x)')
+                    feature = contig.spawn_feature(**f)
+                    feature.notes.add(f' (occurs {len(repeat_list)}x)')
         return repeat_count

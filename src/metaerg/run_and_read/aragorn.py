@@ -9,22 +9,10 @@ class Aragorn(Annotator):
     def __init__(self, genome, exec: ExecutionEnvironment):
         super().__init__(genome, exec)
         self.aragorn_file = self.spawn_file("aragorn")
-        self.pipeline_position = 11
-
-    def __repr__(self):
-        return f'Aragorn({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'tRNA prediction with aragorn'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'aragorn',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.aragorn_file,
+        self._pipeline_position = 11
+        self._purpose = 'tRNA prediction with aragorn'
+        self._programs = ('aragorn',)
+        self._result_files = (self.aragorn_file,)
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""

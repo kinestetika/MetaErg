@@ -14,29 +14,14 @@ class CDD(Annotator):
         self.db_cdd_index = Path(self.exec.database_dir, 'cddid.tbl')
         self.db_cdd = Path(self.exec.database_dir, "cdd", "Cdd")
         self.cdd = {}  # this is the cdd index
-        self.pipeline_position = 71
-
-    def __repr__(self):
-        return f'CDD({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'function prediction using RPSBlast and the conserved domain database'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'rpsblast',
-
-    def _databases(self) -> tuple:
-        """Should return a tuple with database files needed"""
-        return self.db_cdd_index, self.db_cdd
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.cdd_file,
+        self._pipeline_position = 71
+        self._purpose = 'function prediction using RPSBlast and the conserved domain database'
+        self._programs = ('rpsblast',)
+        self._databases = (self.db_cdd_index, self.db_cdd)
+        self._result_files = (self.cdd_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.cpus_per_genome > 1:
             split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.cpus_per_genome, target=FeatureType.CDS)

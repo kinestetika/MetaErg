@@ -14,29 +14,14 @@ class DiamondAndBlastN(Annotator):
         self.db_taxon_file = Path(self.exec.database_dir, 'db_taxonomy.txt')
         self.taxonomy = {}  # this is associated with the blast database
         self.descriptions = {}  # this is associated with the blast database
-        self.pipeline_position = 81
-
-    def __repr__(self):
-        return f'DiamondAndBlastN({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'function prediction and taxonomic classification of proteins and RNA genes with diamond and blastn'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'diamond', 'blastn'
-
-    def _databases(self) -> tuple:
-        """Should return a tuple with database files needed"""
-        return self.db_descr_file, self.db_taxon_file
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.diamond_file, self.blastn_file
+        self._pipeline_position = 81
+        self._purpose = 'function prediction and taxonomic classification of proteins and RNA genes with diamond and blastn'
+        self._programs = ('diamond', 'blastn')
+        self._databases = (self.db_descr_file, self.db_taxon_file)
+        self._result_files = (self.diamond_file, self.blastn_file)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         rna_nt_file = self.spawn_file('rna.nt')
         utils.run_external(f'diamond blastp -d {Path(self.exec.database_dir, "db_protein.faa")} -q {cds_aa_file} '
@@ -58,7 +43,6 @@ class DiamondAndBlastN(Annotator):
 
     def _read_results(self) -> int:
         """Should parse the result files and return the # of positives."""
-
         # (1) load databse descriptions
         if self.db_descr_file.exists():
             with open(self.db_descr_file) as descr_handle:

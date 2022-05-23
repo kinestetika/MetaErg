@@ -1,10 +1,12 @@
 from metaerg.run_and_read.data_model import MetaergGenome
+from metaerg.run_and_read.abc import ExecutionEnvironment
 
 html_registry = []
 
 class HTMLwriter:
-    def __init__(self, genome: MetaergGenome):
+    def __init__(self, genome, exec: ExecutionEnvironment):
         self.genome = genome
+        self.exec = exec
 
     def _make_html_template(self) -> str:
         """Creates and returns the html base for injecting the content in."""
@@ -14,13 +16,12 @@ class HTMLwriter:
         """Injects the content into the html base, returns the html"""
         pass
 
-    def write(self, filename):
+    def write_html(self, file=None):
         """writes the html to a file"""
-        with open(filename, 'w') as handle:
-            handle.write(self.make_html())
+        pass
 
     def make_feature_link(self, feature_id, description)-> str:
-        return '<a target="_blank" href="features/{}.html">{}</a>'.format(feature_id, description)
+        return '<a target="gene details" href="features/{}.html">{}</a>'.format(feature_id, description)
 
     def get_color(self, value, thresholds = (80, 60, 40, 20)):
         if value > thresholds[0]:
@@ -32,6 +33,6 @@ class HTMLwriter:
         elif value > thresholds[3]:
             return 'id=cr'
 
-def register(html_writer):
+def register_html_writer(html_writer):
     html_registry.append(html_writer)
     return html_writer

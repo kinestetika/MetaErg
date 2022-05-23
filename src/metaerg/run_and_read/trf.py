@@ -8,25 +8,13 @@ class TandemRepeatFinder(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.trf_file = self.spawn_file('tandem-repeat-finder')
-        self.pipeline_position = 41
-
-    def __repr__(self):
-        return f'TandemRepeatFinder({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'tandem repeat prediction with trf'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'trf',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.trf_file,
+        self._pipeline_position = 41
+        self._purpose = 'tandem repeat prediction with trf'
+        self._programs = ('trf',)
+        self._result_files = (self.trf_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         with open(self.trf_file, 'w') as output:
             utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)

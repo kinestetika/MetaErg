@@ -1,33 +1,24 @@
 import shutil
+from pathlib import Path
 
 from Bio import SeqIO
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature
 from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
+from metaerg.html.abc import register_html_writer
 from metaerg import utils
 
 
 @register
+@register_html_writer
 class Antismash(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
-        self.antismash_file = self.spawn_file('antismash')
-        self.pipeline_position = 91
-
-    def __repr__(self):
-        return f'Antismash({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'prediction of secondary metabolite genes with antismash'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'antismash',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.antismash_file,
+        self.antismash_file = self.spawn_file('antismash').absolute()
+        self._pipeline_position = 91
+        self._purpose = 'prediction of secondary metabolite genes with antismash'
+        self._programs = ('antismash',)
+        self._result_files = (self.antismash_file,)
 
     def _run_programs(self):
         """Should execute the helper programs to complete the analysis"""
@@ -64,3 +55,7 @@ class Antismash(Annotator):
         if not antismash_hit_count:
             self.antismash_file.mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
         return antismash_hit_count
+
+    def write_html(self, filename=None):
+        """need to copy the antismash result dir to the metaerg html dir."""
+        shutil.copytree(self.antismash_file, Path(self.exec.html_dir, self.genome.id, 'antismash'))

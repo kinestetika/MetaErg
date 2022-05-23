@@ -8,25 +8,13 @@ class LTRHarvest(Annotator):
     def __init__(self, genome, exec: ExecutionEnvironment):
         super().__init__(genome, exec)
         self.ltr_harvest_file = self.spawn_file('ltr_harvest')
-        self.pipeline_position = 31
-
-    def __repr__(self):
-        return f'LTRHarvest({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'retrotransposon prediction with ltrharvest'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'ltr_index', 'ltr_harvest'
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.ltr_harvest_file,
+        self._pipeline_position = 31
+        self._purpose = 'retrotransposon prediction with ltrharvest'
+        self._programs = ('ltr_index', 'ltr_harvest')
+        self._result_files = (self.ltr_harvest_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         ltr_index_file = self.spawn_file('ltr_index')
 

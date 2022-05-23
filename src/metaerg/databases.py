@@ -214,7 +214,7 @@ def update_descriptions_and_get_id(description, dictionary, file_handle, kingdom
     except KeyError:
         descr_id = len(dictionary)
         dictionary[description] = descr_id
-        file_handle.write(f'{kingdom}\t{descr_id}\t{description}\n')
+        file_handle.write_html(f'{kingdom}\t{descr_id}\t{description}\n')
     return descr_id
 
 

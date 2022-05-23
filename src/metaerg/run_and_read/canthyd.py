@@ -8,9 +8,13 @@ from metaerg import utils
 class CantHyd(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
-        self.pipeline_position = 101
         self.canthyd_file = self.spawn_file('canthyd')
         self.db_canthyd = Path(self.exec.database_dir, "canthyd", "CANT-HYD.hmm")
+        self._pipeline_position = 101
+        self._purpose = 'prediction of hydrocarbon degradation genes with canthyd'
+        self._programs = ('hmmscan',)
+        self._databases = (self.db_canthyd,)
+        self._result_files = (self.canthyd_file,)
         self.canthyd_trusted_cutoffs = {}
         self.canthyd_descr = {'AlkB': 'alkane hydrolase',
                  'AlmA_GroupI':	'flavin-binding alkane monooxygenase',
@@ -48,27 +52,8 @@ class CantHyd(Annotator):
                  'K27540': 'naphtalene carboxylase',
                  'NmsA': 'naphtylmethyl succinate synthase'}
 
-    def __repr__(self):
-        return f'CantHyd({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'prediction of hydrocarbon degradation genes with canthyd'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'hmmscan',
-
-    def _databases(self) -> tuple:
-        """Should return a tuple with database files needed"""
-        return self.db_canthyd,
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.canthyd_file,
-
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         utils.run_external(f'hmmscan --cut_nc --tblout {self.canthyd_file} {self.db_canthyd} {cds_aa_file}')
 

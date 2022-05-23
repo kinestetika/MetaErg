@@ -1,31 +1,19 @@
 from metaerg.run_and_read.data_model import MetaergSeqRecord, FeatureType
-from metaerg.run_and_read.abc import Annotator, register
+from metaerg.run_and_read.abc import Annotator, register, ExecutionEnvironment
 from metaerg import utils
 
 @register
 class Minced(Annotator):
-    def __init__(self, genome, exec_env: abc.ExecutionEnvironment):
+    def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.minced_file = self.spawn_file('minced')
-        self.pipeline_position = 1
-
-    def __repr__(self):
-        return f'Minced({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'CRISPR prediction with minced'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'minced',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.minced_file,
+        self._pipeline_position = 1
+        self._purpose = 'CRISPR prediction with minced'
+        self._programs = ('minced',)
+        self._result_files = (self.minced_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'minced -gffFull {fasta_file} {self.minced_file}')
 

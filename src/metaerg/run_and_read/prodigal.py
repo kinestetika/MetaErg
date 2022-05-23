@@ -8,25 +8,13 @@ class Prodigal(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.prodigal_file = self.spawn_file('prodigal')
-        self.pipeline_position = 61
-
-    def __repr__(self):
-        return f'Prodigal({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'coding sequence prediction with prodigal'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'prodigal',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.prodigal_file,
+        self._pipeline_position = 61
+        self._purpose = 'coding sequence prediction with prodigal'
+        self._programs = ('prodigal',)
+        self._result_files = (self.prodigal_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file, = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         utils.run_external(f'prodigal -g {self.genome.translation_table} -m -f gff -q -i {fasta_file} -o '
                            f'{self.prodigal_file}')

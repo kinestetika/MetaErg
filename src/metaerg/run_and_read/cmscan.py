@@ -25,25 +25,13 @@ class CMScan(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.cmscan_file = self.spawn_file('cmscan')
-        self.pipeline_position = 21
-
-    def __repr__(self):
-        return f'CMScan({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'noncoding (RNA) gene prediction with cmscan'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'cmscan',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.cmscan_file,
+        self._pipeline_position = 21
+        self._purpose = 'noncoding (RNA) gene prediction with cmscan'
+        self._programs = ('cmscan',)
+        self._result_files = (self.cmscan_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         fasta_file = self.genome.write_fasta_files(self.spawn_file('masked'), masked=True)
         rfam_database = Path(self.exec.database_dir, "Rfam.cm")
         if self.exec.cpus_per_genome > 1:

@@ -25,6 +25,12 @@ class DBentry(NamedTuple):
     length: int
     pos: int
 
+    def taxon_at_genus(self) -> str:
+        for t in reversed(self.taxon.split("; ")):
+            if " " not in t:
+                return t
+        return ''
+
 
 class BlastHit(NamedTuple):
     query: str
@@ -146,19 +152,18 @@ class MetaergSeqFeature:
     strand: int
     type: FeatureType
     inference: str
+    sequence: str
     id: str = ''
     product: str = ''
     taxon: str = ''
-    cdd: BlastResult = field(init=False)
-    blast: BlastResult = field(init=False)
     antismash: str = ''
     transmembrane_helixes: str = ''
     signal_peptide: str = ''
-    subsystem: set[str] = field(default_factory=set, init=False)
-    notes: set[str] = field(default_factory=set, init=False)
-    sequence: str = None
-    parent_sequence: InitVar[str] = None
-    translation_table: InitVar[int] = 11
+    cdd: BlastResult = field(init=False)
+    blast: BlastResult = field(init=False)
+    subsystem: set[str] = field(default_factory=set)
+    notes: set[str] = field(default_factory=set)
+    # because it does not have a type, exported_keys becomes a class attribute
     exported_keys = 'id sequence inference product taxon antismash transmembrane_helixes signal_peptide'.split()
 
     def __post_init__(self, parent_sequence, translation_table):
@@ -287,8 +292,20 @@ class MetaergSeqRecord:
         return record
 
     def spawn_feature(self, start: int, end: int, strand: int, type: FeatureType, **kwargs) -> MetaergSeqFeature:
-        f = MetaergSeqFeature(start, end, strand, type, parent_sequence=self.sequence,
-                              translation_table=self.translation_table, **kwargs)
+        assert strand == 1 or strand == -1, f'invalid value {strand} for strand, needs to be 1 or -1.'
+        assert end > start, f'invalid coordinates, end needs to be greater than start.'
+        assert 0 <= start < len(self), f'start coordinate out of range.'
+        assert 0 <= end < len(self), f'end coordinate out of range.'
+        seq = Seq(self.sequence[start:end:strand])
+        notes = kwargs.get("notes", set())
+        if FeatureType.CDS == type:
+            remainder = len(seq) % 3
+            if remainder:
+                seq = seq + Seq('N' * (3 - remainder))
+            if '*' in seq:
+                notes.add('contains internal stop codon(s).')
+            seq = str(seq.translate(self.translation_table)[:-1])
+        f = MetaergSeqFeature(start, end, strand, type, sequence=seq, notes=notes, **kwargs)
         self.features.append(f)
         return f
 
@@ -316,6 +333,7 @@ class MetaergGenome:
     min_contig_length: InitVar[int] = 500
 
     def __post_init__(self, contig_file, rename_contigs, min_contig_length):
+        """Reads contig fasta file, sorts by len, filters for min len, whitespace, and funny chars"""
         assert self.delimiter not in self.id, f'({self.id}) Genome name contains "{self.delimiter}",' \
                                               f' rename or change delimiter.'
         self.subsystems = SubSystems()
@@ -332,7 +350,10 @@ class MetaergGenome:
                     assert self.delimiter not in c.id, \
                         f'({self.id}) Contig name {c.id} contain "{self.delimiter}", rename or change delimiter.'
                     new_id = c.id
-                contig = MetaergSeqRecord(new_id, c.seq, c.description, self.translation_table)
+                seq = NON_IUPAC_RE.sub('N', str(c.seq))
+                seq = ''.join(seq.split()).upper()
+
+                contig = MetaergSeqRecord(new_id, seq, c.description, self.translation_table)
                 self.contigs[contig.id] = contig
                 contig.spawn_features(c.features)
                 i += 1
@@ -353,6 +374,8 @@ class MetaergGenome:
         return self.contigs[id[1]].features[int(id[2])]
 
     def write_fasta_files(self, base_file: Path, split=1, target = None, **kwargs_masking):
+        """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
+        optionally masking features with N"""
         if target:
             number_of_records = sum(1 for c in self.contigs.values() for f in c.features if f.type == target
                                     or (isinstance(target, Sequence) and f.type in target))
@@ -407,13 +430,13 @@ class MetaergGenome:
         cum_size = 0
         for contig in sorted(self.contigs.values(), key=len, reverse=True):
             cum_size += len(contig)
-            if cum_size > self.properties['size'] / 2:
+            if cum_size >+ self.properties['size'] / 2:
                 self.properties["N50"] = len(contig)
                 break
         self.properties['#proteins'] = sum(1 for contig in self.contigs.values() for f in contig.features
                                            if f.type == FeatureType.CDS)
-        self.properties['percent coding'] = sum(len(f) for contig in self.contigs.values() for f in contig.features
-                                                if f.type == FeatureType.CDS) / self.properties['size']
+        self.properties['percent coding'] = int(sum(len(f) for contig in self.contigs.values() for f in contig.features
+                                                if f.type == FeatureType.CDS) / self.properties['size'] * 100 + 0.5)
         self.properties['mean protein length (aa)'] = int(self.properties['percent coding'] * self.properties['size']
                                                           / 3 / self.properties['#proteins'])
         self.properties['#ribosomal RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features

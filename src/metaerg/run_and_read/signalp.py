@@ -11,25 +11,13 @@ class SignalP(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.signalp_file = self.spawn_file('signalp')
-        self.pipeline_position = 121
-
-    def __repr__(self):
-        return f'SignalP({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'signal peptide prediction with signalp'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'signalp6',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.signalp_file,
+        self._pipeline_position = 121
+        self._purpose = 'signal peptide prediction with signalp'
+        self._programs = ('signalp6',)
+        self._result_files = (self.signalp_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         if self.exec.cpus_per_genome > 1:
             split_fasta_files = self.genome.write_fasta_files(cds_aa_file, self.exec.cpus_per_genome, target=FeatureType.CDS)

@@ -8,25 +8,13 @@ class TMHMM(Annotator):
     def __init__(self, genome, exec_env: ExecutionEnvironment):
         super().__init__(genome, exec_env)
         self.tmhmm_file = self.spawn_file('signalp')
-        self.pipeline_position = 111
-
-    def __repr__(self):
-        return f'TMHMM({self.genome}, {self.exec})'
-
-    def _purpose(self) -> str:
-        """Should return the purpose of the tool"""
-        return 'transmembrane helix prediction with tmhmm'
-
-    def _programs(self) -> tuple:
-        """Should return a tuple with the programs needed"""
-        return 'tmhmm',
-
-    def _result_files(self) -> tuple:
-        """Should return a tuple with the result files (Path objects) created by the programs"""
-        return self.tmhmm_file,
+        self._pipeline_position = 111
+        self._purpose = 'transmembrane helix prediction with tmhmm'
+        self._programs = ('tmhmm',)
+        self._result_files = (self.tmhmm_file,)
 
     def _run_programs(self):
-        """Should execute the helper programs to complete the analysis"""
+        """Executes the helper programs to complete the analysis"""
         cds_aa_file = self.spawn_file('cds.faa')
         with open(self.tmhmm_file, 'w') as output, open(cds_aa_file) as input:
             utils.run_external('tmhmm', stdin=input, stdout=output)

@@ -1,10 +1,15 @@
-from metaerg.run_and_read.data_model import FeatureType
-from metaerg.html.abc import HTMLwriter, register
+from pathlib import Path
+from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
+from metaerg.html.abc import HTMLwriter, register_html_writer
+from metaerg.run_and_read.abc import ExecutionEnvironment
 
-@register
+@register_html_writer
 class HTMLFeatureTable(HTMLwriter):
-    def __init__(self, genome):
-        super().__init__(genome)
+
+    def __init__(self, genome, exec: ExecutionEnvironment):
+        super().__init__(genome, exec)
+        self.genome: MetaergGenome = genome
+        self.exec = exec
 
     def make_html(self) -> str:
         """Injects the content into the html base, returns the html."""
@@ -25,7 +30,10 @@ class HTMLFeatureTable(HTMLwriter):
                 format_hash = {'f_id': f.id,
                                'description': f.product,
                                'taxon': f.taxon_at_genus()}
-                if f.type in (FeatureType.CDS, FeatureType.tRNA, FeatureType.rRNA, FeatureType.ncRNA):
+                if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
+                    format_hash['f_id'] = self.make_feature_link(f.id, f.id)
+                if f.type in (FeatureType.CDS, FeatureType.tRNA, FeatureType.rRNA, FeatureType.ncRNA,
+                              FeatureType.tmRNA, FeatureType.retrotransposon):
                     format_hash['strand'] = "+" if f.strand > 0 else "-"
                 else:
                     format_hash['strand'] = ''
@@ -70,10 +78,17 @@ class HTMLFeatureTable(HTMLwriter):
         html = html.replace('TABLE_BODY', table_body)
         return html
 
+    def write_html(self, file=None):
+        if not file:
+            file = Path(self.exec.html_dir, self.genome.id, "index_of_features.html")
+        file.parent.mkdir(exist_ok=True, parents=True)
+        with open(Path(file), 'w') as handle:
+            handle.write(self.make_html())
 
     def _make_html_template(self) -> str:
         """Creates and returns the html base for injecting the content in."""
-        return '''<html>
+        return '''<!DOCTYPE html>
+<html>
 <head>
     <meta charset="utf-8">
     <title>GENOME_NAME - all features</title>\n')

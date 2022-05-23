@@ -43,12 +43,12 @@ def html_make_link(feature_id, description):
 
 
 def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsystems_hash):
-    writer.write('''<!doctype html>
+    writer.write_html('''<!doctype html>
     <html>
     <head>
         <meta charset="utf-8">''')
-    writer.write(f'<title>{mag_name} - properties and subsystems</title>\n')
-    writer.write('''</head>
+    writer.write_html(f'<title>{mag_name} - properties and subsystems</title>\n')
+    writer.write_html('''</head>
     <body>
 
     <style>
@@ -97,32 +97,32 @@ def html_write_genome_stats_and_subsystems(writer, mag_name, genome_stats, subsy
     for (key, value) in genome_stats.items():
         if key == 'total # features':
             value = '<a href="index_of_features.html">{}</a>'.format(genome_stats['total # features'])
-        writer.write(f'          <tr><td>{key}</td><td>{value}</td></tr>\n')
-    writer.write('        </tbody></table>\n')
-    writer.write('        <h4 id=f>Subsystems overview</h4>\n')
+        writer.write_html(f'          <tr><td>{key}</td><td>{value}</td></tr>\n')
+    writer.write_html('        </tbody></table>\n')
+    writer.write_html('        <h4 id=f>Subsystems overview</h4>\n')
 
     for subsystem in subsystems_hash.keys():
         s = subsystems.get_subsystem_stats(subsystems_hash[subsystem])
         subsystem_txt = ')'
         if s[0]:
             subsystem_txt = f'/{s[0]}): {s[2]*100:.0f}%'
-        writer.write(f'          <button class="accordion">{subsystem} ({s[1]}{subsystem_txt}</button>\n')
-        writer.write('          <div class="panel">\n')
+        writer.write_html(f'          <button class="accordion">{subsystem} ({s[1]}{subsystem_txt}</button>\n')
+        writer.write_html('          <div class="panel">\n')
         if '[secondary-metabolites]' == subsystem:
             if len(subsystems_hash[subsystem]):
-                writer.write('          <p><a href="antismash/index.html" target="">View antismash results.</a></p>\n')
+                writer.write_html('          <p><a href="antismash/index.html" target="">View antismash results.</a></p>\n')
         elif isinstance(subsystems_hash[subsystem], list):
-            writer.write('          <p>\n')
+            writer.write_html('          <p>\n')
             for feature_id in subsystems_hash[subsystem]:
-                writer.write(f'{html_make_link(feature_id, feature_id)} ')
-            writer.write('\n          </p>\n')
+                writer.write_html(f'{html_make_link(feature_id, feature_id)} ')
+            writer.write_html('\n          </p>\n')
         else:
-            writer.write('          <table>\n')
+            writer.write_html('          <table>\n')
             for phrase in subsystems_hash[subsystem].keys():
-                writer.write(f'<tr><td>{phrase}</td><td>{" ".join(html_make_link(g, g) for g in subsystems_hash[subsystem][phrase])}</td></tr>\n')
-            writer.write('          </table>\n')
-        writer.write('          </div>\n')
-    writer.write('''<script>
+                writer.write_html(f'<tr><td>{phrase}</td><td>{" ".join(html_make_link(g, g) for g in subsystems_hash[subsystem][phrase])}</td></tr>\n')
+            writer.write_html('          </table>\n')
+        writer.write_html('          </div>\n')
+    writer.write_html('''<script>
     var acc = document.getElementsByClassName("accordion");
     var i;
     
@@ -283,12 +283,12 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
 
 
 def html_write_feature_overview(writer, mag_name, contig_dict, genome_stats, blast_results):
-    writer.write('''<!doctype html>
+    writer.write_html('''<!doctype html>
 <html>
 <head>
     <meta charset="utf-8">''')
-    writer.write(f'<title>{mag_name} - all features</title>\n')
-    writer.write('''</head>
+    writer.write_html(f'<title>{mag_name} - all features</title>\n')
+    writer.write_html('''</head>
 <body>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -346,10 +346,10 @@ $(document).ready( function () {
     left_aligned = 'id description'
     for column in 'id strand length type location subsystem CDD ident align recall description taxon'.split():
         if column in left_aligned:
-            writer.write(f'          <th id=al>{column}</th>\n')
+            writer.write_html(f'          <th id=al>{column}</th>\n')
         else:
-            writer.write(f'          <th>{column}</th>\n')
-    writer.write('''        </tr>
+            writer.write_html(f'          <th>{column}</th>\n')
+    writer.write_html('''        </tr>
     </thead>
     <tbody>''')
     for contig in contig_dict.values():
@@ -358,47 +358,47 @@ $(document).ready( function () {
             feature_id = utils.get_feature_qualifier(feature, "id")
             description = ''
             signal_peptide = utils.get_feature_qualifier(feature, 'signal_peptide')
-            writer.write('      <tr>\n')
+            writer.write_html('      <tr>\n')
             # id
-            writer.write(f'          <td id=al>{feature_id}</td>\n')
+            writer.write_html(f'          <td id=al>{feature_id}</td>\n')
             # strand
             if feature.type in ['CDS', 'tRNA', 'rRNA', 'ncRNA']:
                 if feature.location.strand > 0:
-                    writer.write('          <td>+</td>\n')
+                    writer.write_html('          <td>+</td>\n')
                 else:
-                    writer.write('          <td>-</td>\n')
+                    writer.write_html('          <td>-</td>\n')
             else:
-                writer.write('          <td></td>\n')
+                writer.write_html('          <td></td>\n')
             # length
             if feature.type == 'CDS':
-                writer.write(f'          <td>{int(len(feature.location)/3-1)}</td>\n')
+                writer.write_html(f'          <td>{int(len(feature.location) / 3 - 1)}</td>\n')
             else:
-                writer.write(f'          <td>{len(feature.location)}</td>\n')
+                writer.write_html(f'          <td>{len(feature.location)}</td>\n')
             # type:
-            writer.write(f'          <td>{feature.type}</td>\n')
+            writer.write_html(f'          <td>{feature.type}</td>\n')
             # location
             try:
                 number_of_tmh = int(utils.get_feature_qualifier(feature, 'transmembrane_helixes'))
             except ValueError:
                 number_of_tmh = 0
             if number_of_tmh > 1:
-                writer.write('          <td>membrane</td>\n')
+                writer.write_html('          <td>membrane</td>\n')
             elif number_of_tmh == 1:
-                writer.write('          <td>membrane anchor</td>\n')
+                writer.write_html('          <td>membrane anchor</td>\n')
             elif 'LIPO' in signal_peptide:
-                writer.write('          <td>(lipoprotein)</td>\n')
+                writer.write_html('          <td>(lipoprotein)</td>\n')
             elif signal_peptide:
-                writer.write('          <td>envelope</td>\n')
+                writer.write_html('          <td>envelope</td>\n')
             elif 'CDS' == feature.type and product:
-                writer.write('          <td>cytoplasm</td>\n')
+                writer.write_html('          <td>cytoplasm</td>\n')
             else:
-                writer.write('          <td></td>\n')
+                writer.write_html('          <td></td>\n')
             # subsystem
             subsystem = utils.get_feature_qualifier(feature, 'subsystem')
-            writer.write(f'          <td>{subsystem}</td>\n')
+            writer.write_html(f'          <td>{subsystem}</td>\n')
             # homology blast hits (cdd)
             if utils.get_feature_qualifier(feature, 'cdd'):
-                writer.write(f'          <td>Y</td>\n')
+                writer.write_html(f'          <td>Y</td>\n')
                 # construct a description in case of no blast hit below
                 cdd_result = blast_results['cdd'][feature_id]
                 if len(cdd_result):
@@ -409,7 +409,7 @@ $(document).ready( function () {
                         txt = txt[:30] + '...'
                     description = f'{cdd_item[0]}|{cdd_item[1]} {txt}'
             else:
-                writer.write(f'          <td></td>\n')
+                writer.write_html(f'          <td></td>\n')
             # homology blast hits (metaerg database)
             match = re.match(PRODUCT_RE, product)
             if match:
@@ -419,29 +419,29 @@ $(document).ready( function () {
                     color = 'cr'
                 elif blast_percent_id < 50:
                     color = 'co'
-                writer.write(f'<td id={color}>{blast_percent_id:.0f}</td>\n')
+                writer.write_html(f'<td id={color}>{blast_percent_id:.0f}</td>\n')
                 blast_aligned = (int(match.group(1)) / int(match.group(2))) * 100
                 color = 'cg'
                 if blast_aligned < 60:
                     color = 'cr'
                 elif blast_aligned < 80:
                     color = 'co'
-                writer.write(f'<td id={color}>{blast_aligned:.0f} </td>\n')
+                writer.write_html(f'<td id={color}>{blast_aligned:.0f} </td>\n')
                 blast_hit_count = (int(match.group(4)) / int(match.group(5))) * 100
                 color = 'cg'
                 if blast_hit_count < 50:
                     color = 'cr'
                 elif blast_hit_count < 80:
                     color = 'co'
-                writer.write(f'<td id={color}>{blast_hit_count:.0f} </td>\n')
+                writer.write_html(f'<td id={color}>{blast_hit_count:.0f} </td>\n')
                 description = match.group(6)
             else:
-                writer.write('          <td></td><td></td><td></td>\n')
+                writer.write_html('          <td></td><td></td><td></td>\n')
 
             if description:
-                writer.write('<td id=al><a target="gene_details" href="features/{}.html">{}</a></td>\n'.format(feature_id, description))
+                writer.write_html('<td id=al><a target="gene_details" href="features/{}.html">{}</a></td>\n'.format(feature_id, description))
             else:
-                writer.write(f'          <td id=al>{product}</td>\n')
+                writer.write_html(f'          <td id=al>{product}</td>\n')
             # taxon
             taxonomy = utils.get_feature_qualifier(feature, 'taxonomy')
             if taxonomy:
@@ -459,12 +459,12 @@ $(document).ready( function () {
                     taxon_color = 'co'
                 elif score < 5:
                     taxon_color = 'cb'
-                writer.write(f'          <td id={taxon_color}>{taxon}</td>\n')
+                writer.write_html(f'          <td id={taxon_color}>{taxon}</td>\n')
             else:
-                writer.write('          <td></td>\n')
-            writer.write('      </tr>\n')
+                writer.write_html('          <td></td>\n')
+            writer.write_html('      </tr>\n')
 
-    writer.write('''    </tbody>
+    writer.write_html('''    </tbody>
 </table> 
 </div>
 <div id=f>
@@ -517,12 +517,12 @@ def html_write_mag_table(writer, target_dir, checkm_dir='checkm', gtdbtk_dir='gt
                     words[1] = re.sub('[a-z]__', ' ', words[1])
                     gtdbtk_results[words[0]] = words[1]
 
-    writer.write('''<!doctype html>
+    writer.write_html('''<!doctype html>
     <html>
     <head>
         <meta charset="utf-8">''')
-    writer.write(f'<title>all annotated genomes</title>\n')
-    writer.write('''</head>
+    writer.write_html(f'<title>all annotated genomes</title>\n')
+    writer.write_html('''</head>
     <body>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
@@ -578,10 +578,10 @@ def html_write_mag_table(writer, target_dir, checkm_dir='checkm', gtdbtk_dir='gt
     left_aligned = 'file name classification'
     for column in 'file name (Mb) N50 code completeness contamination classification'.split():
         if column in left_aligned:
-            writer.write(f'          <th id=al>{column}</th>\n')
+            writer.write_html(f'          <th id=al>{column}</th>\n')
         else:
-            writer.write(f'          <th>{column}</th>\n')
-    writer.write('''        </tr>
+            writer.write_html(f'          <th>{column}</th>\n')
+    writer.write_html('''        </tr>
     </thead>
     <tbody>''')
 
@@ -592,11 +592,11 @@ def html_write_mag_table(writer, target_dir, checkm_dir='checkm', gtdbtk_dir='gt
             for gb_record in SeqIO.parse(handle, "genbank"):
                 contig_dict[gb_record.id] = gb_record
         genome_stats = predict.compile_genome_stats(new_name, contig_dict)
-        writer.write('        <tr>')
-        writer.write(f'            <td id=al>{old_name}</td>')
-        writer.write(f'            <td id=al><a href="{new_name}/index.html">{new_name}</a></td>')
-        writer.write(f'            <td>{genome_stats["size"]/1e6:.2f}</td>')
-        writer.write(f'            <td>{genome_stats["N50"]}</td>')
+        writer.write_html('        <tr>')
+        writer.write_html(f'            <td id=al>{old_name}</td>')
+        writer.write_html(f'            <td id=al><a href="{new_name}/index.html">{new_name}</a></td>')
+        writer.write_html(f'            <td>{genome_stats["size"] / 1e6:.2f}</td>')
+        writer.write_html(f'            <td>{genome_stats["N50"]}</td>')
         completeness = ''
         contamination = ''
         code = ''
@@ -617,13 +617,13 @@ def html_write_mag_table(writer, target_dir, checkm_dir='checkm', gtdbtk_dir='gt
                 gtdbtk_classification = gtdbtk_results[new_name]
         except KeyError:
             pass
-        writer.write(f'            <td>{code}</td>')
-        writer.write(f'            <td>{completeness}</td>')
-        writer.write(f'            <td>{contamination}</td>')
-        writer.write(f'            <td id=al>{gtdbtk_classification}</td>')
-        writer.write('        </tr>')
+        writer.write_html(f'            <td>{code}</td>')
+        writer.write_html(f'            <td>{completeness}</td>')
+        writer.write_html(f'            <td>{contamination}</td>')
+        writer.write_html(f'            <td id=al>{gtdbtk_classification}</td>')
+        writer.write_html('        </tr>')
 
-    writer.write('''    </tbody>
+    writer.write_html('''    </tbody>
 </table> 
 </div>
 <div id=f>
