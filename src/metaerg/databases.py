@@ -7,6 +7,8 @@ import time
 from pathlib import Path
 from ftplib import FTP
 
+import run_and_read.data_model
+import run_and_read.context
 from metaerg import utils
 import shutil
 from tqdm import tqdm
@@ -88,14 +90,14 @@ def load_descriptions_taxonomy_cdd():
         for line in descr_handle:
             words = line.split('\t')
             DESCRIPTIONS[words[0]][int(words[1])] = words[2].strip()
-    utils.log(f'Parsed ({len(DESCRIPTIONS["p"])}, {len(DESCRIPTIONS["e"])}, {len(DESCRIPTIONS["v"])}) gene descriptions '
+    run_and_read.execution.log(f'Parsed ({len(DESCRIPTIONS["p"])}, {len(DESCRIPTIONS["e"])}, {len(DESCRIPTIONS["v"])}) gene descriptions '
               f'from db for (prokaryotes, eukaryotes and viruses) respectively. ')
     # load taxonomy
     with open(Path(DBDIR, DB_TAXON_FILENAME)) as taxon_handle:
         for line in taxon_handle:
             words = line.split('\t')
             TAXONOMY[words[0]][int(words[1])] = words[2].strip()
-    utils.log(f'Parsed ({len(TAXONOMY["p"])}, {len(TAXONOMY["e"])}, {len(TAXONOMY["v"])}) taxa from db for (prokaryotes,'
+    run_and_read.execution.log(f'Parsed ({len(TAXONOMY["p"])}, {len(TAXONOMY["e"])}, {len(TAXONOMY["v"])}) taxa from db for (prokaryotes,'
           f'eukaryotes and viruses) respectively.')
     # load cdd
     cdd_descriptions_file = Path(DBDIR, CDD_INDEX_FILENAME)
@@ -163,9 +165,9 @@ def parse_arguments():
 
 def prep_database_folder(settings):
     if os.path.exists(settings["db_dir"]):
-        utils.log('Warning: may overwrite existing database files...')
+        run_and_read.execution.log('Warning: may overwrite existing database files...')
         if os.path.isfile(settings["db_dir"]):
-            utils.log(f'Expected folder at {settings["db_dir"]}, found regular file, terminating now.')
+            run_and_read.execution.log(f'Expected folder at {settings["db_dir"]}, found regular file, terminating now.')
             exit(1)
     else:
         os.mkdir(settings["db_dir"])
@@ -246,7 +248,7 @@ def extract_proteins_and_rna_prok(settings, t):
                         contig = contig_dict[words[0]]
                     except KeyError:
                         continue
-                    feature_seq = utils.pad_seq(feature.extract(contig))
+                    feature_seq = run_and_read.data_model.pad_seq(feature.extract(contig))
                     prot_seq = feature_seq.translate(table=translation_table)
                     prot_seq = prot_seq[:-1]
                     if '*' in prot_seq:
@@ -279,9 +281,9 @@ def extract_proteins_and_rna_prok(settings, t):
                 elif words[2] in IGNORED_FEATURES:
                     pass
                 else:
-                    utils.log(f'  Warning: unknown feature type in line "{line}"')
+                    run_and_read.execution.log(f'  Warning: unknown feature type in line "{line}"')
     except EOFError:
-        utils.log(f'Incomplete file detected for {t["cached_gff_file"]}. Deleting...')
+        run_and_read.execution.log(f'Incomplete file detected for {t["cached_gff_file"]}. Deleting...')
         t["cached_gff_file"].unlink()
 
 
@@ -305,7 +307,7 @@ def download_genomes_with_datasets(settings, taxon_list):
             if not os.path.exists(zipfilename):
                 return
             try:
-                utils.run_external(f'unzip -qq -o -d {settings["db_dir"]} {zipfilename}', log_cmd=False)
+                run_and_read.execution.run_external(f'unzip -qq -o -d {settings["db_dir"]} {zipfilename}', log_cmd=False)
             except:
                 return
             unlink_files((zipfilename, ))
@@ -321,15 +323,15 @@ def download_genomes_with_datasets(settings, taxon_list):
 
             return
         except ncbi.datasets.openapi.exceptions.ServiceException:
-            utils.log(f'NCBI error for accessions {accessions}, aborting.')
+            run_and_read.execution.log(f'NCBI error for accessions {accessions}, aborting.')
             break
         except ncbi.datasets.openapi.exceptions.ApiException:
-            utils.log(f'NCBI has flagged us for too many requests, taking a 20 s breath.')
+            run_and_read.execution.log(f'NCBI has flagged us for too many requests, taking a 20 s breath.')
             time.sleep(10)
 
         #except:
         #    utils.log("Error, perhaps while decompressing zipfile, retrying...")
-    utils.log("Three failed retrieval attempts - giving up for this batch.")
+    run_and_read.execution.log("Three failed retrieval attempts - giving up for this batch.")
 
 
 def prep_prokaryote_database(settings):
@@ -406,11 +408,11 @@ def prep_prokaryote_database(settings):
                 #     ftp.login()
                 #     continue
             genomes_in_cash_count += 1
-            utils.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
+            run_and_read.execution.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
             extract_proteins_and_rna_prok(settings, taxon)
-    utils.log(f'downloaded {success_count} new genomes. Total genomes in cache: {genomes_in_cash_count}.')
+    run_and_read.execution.log(f'downloaded {success_count} new genomes. Total genomes in cache: {genomes_in_cash_count}.')
     # (4) save taxonomy (includes status)
-    utils.log(f'Writing taxonomy file.')
+    run_and_read.execution.log(f'Writing taxonomy file.')
     with open(taxon_db, "w") as taxon_handle:
         for t in taxon_list:
             taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["in_local_cache"]}\t{t["accession"]}\n')
@@ -444,7 +446,7 @@ def prep_prokaryote_database_o(settings):
                                'gtdb_seq_file': seq_file})
 
     # (3) Download corresponding gff files from NCBI and extracting seqs
-    utils.log(f'Acquiring {len(taxon_list)} genomes from GTDB template.')
+    run_and_read.execution.log(f'Acquiring {len(taxon_list)} genomes from GTDB template.')
     current_targets_for_download = []
     for t in tqdm(taxon_list):
         if t["is_gbk"]:
@@ -461,7 +463,7 @@ def prep_prokaryote_database_o(settings):
     download_genomes_with_datasets(settings, current_targets_for_download)
 
     # (4) save taxonomy (includes status)
-    utils.log(f'Writing taxonomy file.')
+    run_and_read.execution.log(f'Writing taxonomy file.')
     with open(taxon_db, "w") as taxon_handle:
         for t in taxon_list:
             taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["retrieved"]}\t{t["accession"]}\n')
@@ -488,19 +490,19 @@ def prep_viral_database(settings):
             f = os.path.join(settings["ncbi_cache_vir"], f'viral.{i}.protein.gpff.gz')
             if not os.path.exists(f):
                 url = 'https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
-                utils.run_external(f'wget -P {settings["ncbi_cache_vir"]} {url}.{i}.protein.gpff.gz')
+                run_and_read.execution.run_external(f'wget -P {settings["ncbi_cache_vir"]} {url}.{i}.protein.gpff.gz')
             gene_count = 0
             with gzip.open(f, 'rt') as file_handle:
                 for gb_record in SeqIO.parse(file_handle, "genbank"):
                     if gb_record.annotations['molecule_type'] != 'protein':
-                        utils.log("warning: skipping non-coding gene in viral refseq")
+                        run_and_read.execution.log("warning: skipping non-coding gene in viral refseq")
                         continue
                     match = pattern.search(gb_record.description)
                     if match:
                         gb_record.annotations['taxonomy'].append(match.group(1))
                         gb_record.description = gb_record.description[0:match.start()]
                     else:
-                        utils.log(f'Warning, Failed to parse viral species from {gb_record.description}')
+                        run_and_read.execution.log(f'Warning, Failed to parse viral species from {gb_record.description}')
 
                     taxon_str = "~".join(gb_record.annotations['taxonomy'])
 
@@ -551,13 +553,13 @@ def prep_eukaryote_database(settings):
             total_count = int(genome_summary.total_count)
         except TypeError:
             total_count = 0
-        utils.log(f"({count}/{total_count}) taxon-unique assemblies for {tax_name}")
+        run_and_read.execution.log(f"({count}/{total_count}) taxon-unique assemblies for {tax_name}")
     total_target_count = len(targets)
-    utils.log(f'Found  {total_target_count} targets for download in total.')
+    run_and_read.execution.log(f'Found  {total_target_count} targets for download in total.')
     # (2) Download new assemblies not yet in local cache
     targets = [accession for accession in targets.values() if
                not os.path.exists(os.path.join(settings['ncbi_cache_euk'], f'{accession}.gbk.gz'))]
-    utils.log(f'Of those, {total_target_count - len(targets)} already in local cache. ')
+    run_and_read.execution.log(f'Of those, {total_target_count - len(targets)} already in local cache. ')
 
     api_response = api_instance.download_assembly_package(targets, exclude_sequence = False,
                                                           include_annotation_type = ['GENOME_GBFF'],
@@ -569,7 +571,7 @@ def prep_eukaryote_database(settings):
         f.write(api_response.data)
     if not os.path.exists(zipfilename):
         return
-    utils.run_external(f'unzip -qq -o -d {settings["db_dir"]} {zipfilename}', log_cmd=False)
+    run_and_read.execution.run_external(f'unzip -qq -o -d {settings["db_dir"]} {zipfilename}', log_cmd=False)
     # (3) move gbk file into local cache gzipped
     count=0
     for accession in targets:
@@ -578,7 +580,7 @@ def prep_eukaryote_database(settings):
         dest_file = os.path.join(settings['ncbi_cache_euk'], f'{accession}.gbk.gz')
         if os.path.exists(dest_file):
             continue
-        utils.log(f'({count}/{len(targets)}) Now extracting {accession} into ncbi-cache as {dest_file}...')
+        run_and_read.execution.log(f'({count}/{len(targets)}) Now extracting {accession} into ncbi-cache as {dest_file}...')
         gbff_count = 0
         for file in os.listdir(src_dir):
             if file.endswith(".gbff"):
@@ -586,9 +588,9 @@ def prep_eukaryote_database(settings):
                     f_out.writelines(f_in)
                 gbff_count += 1
         if gbff_count > 1:
-            utils.log(f'WARNING: {src_dir} has {gbff_count} gbff files')
+            run_and_read.execution.log(f'WARNING: {src_dir} has {gbff_count} gbff files')
         elif gbff_count == 0:
-            utils.log(f'WARNING: {src_dir} has no gbff files')
+            run_and_read.execution.log(f'WARNING: {src_dir} has no gbff files')
     unlink_files((zipfilename, os.path.join(settings["db_dir"], '../../README.md')))
     # (4) build blast databases
     descr_dict = dict()
@@ -601,7 +603,7 @@ def prep_eukaryote_database(settings):
             genome_count += 1
             if not file.endswith('.gbk.gz'):
                 continue
-            utils.log(f'({genome_count}/{len(targets)}) Now extracting "{file}"')
+            run_and_read.execution.log(f'({genome_count}/{len(targets)}) Now extracting "{file}"')
             file_path = os.path.join(settings['ncbi_cache_euk'], file)
             feature_success_counter = 0
             feature_total_counter = 0
@@ -629,7 +631,7 @@ def prep_eukaryote_database(settings):
                             seq_record = SeqRecord(Seq(feature.qualifiers['translation'][0]))
                             seq_record.description = parse_euk_feature_description(feature)
                             if not seq_record.description:
-                                utils.log(f"WARNING: No description for feature {feature}")
+                                run_and_read.execution.log(f"WARNING: No description for feature {feature}")
                                 continue
                             descr_id = update_descriptions_and_get_id(seq_record.description, descr_dict, desrc_handle,
                                                                       'e')
@@ -640,7 +642,7 @@ def prep_eukaryote_database(settings):
                             seq_record = SeqRecord(feature.extract(gb_record.seq))
                             seq_record.description = parse_euk_feature_description(feature)
                             if not seq_record.description:
-                                utils.log(f"WARNING: No description for feature {feature}")
+                                run_and_read.execution.log(f"WARNING: No description for feature {feature}")
                                 continue
                             descr_id = update_descriptions_and_get_id(seq_record.description, descr_dict, desrc_handle,
                                                                       'e')
@@ -650,8 +652,8 @@ def prep_eukaryote_database(settings):
                         elif feature.type in IGNORED_FEATURES:
                             pass
                         else:
-                            utils.log(f'  Warning: unknown feature "{feature}"')
-            utils.log(f'  ... extracted ({feature_success_counter}/{feature_total_counter}) proteins and RNAs. '
+                            run_and_read.execution.log(f'  Warning: unknown feature "{feature}"')
+            run_and_read.execution.log(f'  ... extracted ({feature_success_counter}/{feature_total_counter}) proteins and RNAs. '
                       f'{without_translation_counter} proteins skipped for lack of translation.')
     unlink_files((os.path.join(settings["db_dir"], 'ncbi_genomes.zip'), os.path.join(settings["db_dir"],
                                                                                      '../../README.md')))
@@ -667,56 +669,56 @@ def build_blast_db(settings):
                     with open(os.path.join(dir, filename), mode="rb") as source:
                         shutil.copyfileobj(source, destination)
     fasta_protein_db = os.path.join(settings['db_dir'], settings['faa_db_name'])
-    utils.run_external(f'diamond makedb --in {fasta_protein_db} --db {fasta_protein_db}')
+    run_and_read.execution.run_external(f'diamond makedb --in {fasta_protein_db} --db {fasta_protein_db}')
     fasta_nt_db = os.path.join(settings['db_dir'], settings['fna_db_name'])
-    utils.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
+    run_and_read.execution.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
 
 
 def prep_rfam(settings):
     rfam_file = settings["rfam"]
     if not os.path.exists(rfam_file):
-        utils.log(f'Installing the RFAM database to {rfam_file}...')
-        utils.run_external(f'wget -P {settings["db_dir"]} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
-        utils.run_external(f'gunzip {rfam_file}.gz')
+        run_and_read.execution.log(f'Installing the RFAM database to {rfam_file}...')
+        run_and_read.execution.run_external(f'wget -P {settings["db_dir"]} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
+        run_and_read.execution.run_external(f'gunzip {rfam_file}.gz')
     else:
-        utils.log('Keeping previously installed RFAM database...')
-    utils.log(f'Running cmpress...')
+        run_and_read.execution.log('Keeping previously installed RFAM database...')
+    run_and_read.execution.log(f'Running cmpress...')
     if not os.path.exists(os.path.join(settings["db_dir"], "Rfam.cm.i1f")):
-        utils.run_external(f'cmpress -F {rfam_file}')
+        run_and_read.execution.run_external(f'cmpress -F {rfam_file}')
     else:
-        utils.log('Skipping cmpress for previously cmpressed RFAM database...')
+        run_and_read.execution.log('Skipping cmpress for previously cmpressed RFAM database...')
 
 
 def prep_cdd(settings):
     cdd_dir = settings["cdd"]
     if not os.path.exists(cdd_dir):
-        utils.log(f'Installing the conserved domain database to {cdd_dir}...')
+        run_and_read.execution.log(f'Installing the conserved domain database to {cdd_dir}...')
         os.mkdir(cdd_dir)
         os.chdir(cdd_dir)
-        utils.run_external(f'wget https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
+        run_and_read.execution.run_external(f'wget https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
         cdd_index = Path(cdd_dir, CDD_INDEX_FILENAME)
-        utils.run_external(f'gunzip {cdd_index}.gz')
-        utils.run_external(f'cp {cdd_index} {settings["db_dir"]}')
-        utils.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-        utils.run_external(f'tar -xf cdd.tar.gz')
-        utils.run_external(f'makeprofiledb -title CDD.v.3.12 -in Cdd.pn -out Cdd'
+        run_and_read.execution.run_external(f'gunzip {cdd_index}.gz')
+        run_and_read.execution.run_external(f'cp {cdd_index} {settings["db_dir"]}')
+        run_and_read.execution.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
+        run_and_read.execution.run_external(f'tar -xf cdd.tar.gz')
+        run_and_read.execution.run_external(f'makeprofiledb -title CDD.v.3.12 -in Cdd.pn -out Cdd'
                            f' -threshold 9.82 -scale 100.0 -dbtype rps -index true')
     else:
-        utils.log('Keeping previously installed conserved domain database...')
+        run_and_read.execution.log('Keeping previously installed conserved domain database...')
 
 
 def prep_other(settings):
     canthyd_dir = settings["canthyd"]
     if not os.path.exists(canthyd_dir):
-        utils.log(f'Installing the conserved domain database to {canthyd_dir}...')
+        run_and_read.execution.log(f'Installing the conserved domain database to {canthyd_dir}...')
         os.mkdir(canthyd_dir)
         os.chdir(canthyd_dir)
-        utils.run_external(f'wget https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
-        utils.run_external(f'hmmpress -f CANT-HYD.hmm')
+        run_and_read.execution.run_external(f'wget https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
+        run_and_read.execution.run_external(f'hmmpress -f CANT-HYD.hmm')
 
 
 def main():
-    utils.log(f'This is metaerg.py\'s make database script {VERSION}')
+    run_and_read.execution.log(f'This is metaerg.py\'s make database script {VERSION}')
     args = parse_arguments()
     gtdbtk_root = args.gtdbtk_dir
     for f in os.listdir(args.gtdbtk_dir):
@@ -741,30 +743,30 @@ def main():
                 'description_dict': dict()}
 
     if 'F' in args.tasks:
-        utils.log('Creating folders...')
+        run_and_read.execution.log('Creating folders...')
         prep_database_folder(settings)
     if 'P' in args.tasks:
-        utils.log('Now adding prokaryote proteins and rna to search databases from GTDBtk data and NCBI annotations...')
+        run_and_read.execution.log('Now adding prokaryote proteins and rna to search databases from GTDBtk data and NCBI annotations...')
         prep_prokaryote_database(settings)
     if 'V' in args.tasks:
-        utils.log('Now adding viral proteins to search databases from viral refseq...')
+        run_and_read.execution.log('Now adding viral proteins to search databases from viral refseq...')
         prep_viral_database(settings)
     if 'E' in args.tasks:
-        utils.log('Now adding eukaryote proteins and rna to search databases from NCBI...')
+        run_and_read.execution.log('Now adding eukaryote proteins and rna to search databases from NCBI...')
         prep_eukaryote_database(settings)
     if 'B' in args.tasks:
-        utils.log('Now building diamond and blast databases...')
+        run_and_read.execution.log('Now building diamond and blast databases...')
         build_blast_db(settings)
     if 'R' in args.tasks:
-        utils.log('Now downloading and installing rfam...')
+        run_and_read.execution.log('Now downloading and installing rfam...')
         prep_rfam(settings)
     if 'C' in args.tasks:
-        utils.log('Now downloading and installing cdd...')
+        run_and_read.execution.log('Now downloading and installing cdd...')
         prep_cdd(settings)
     if 'S' in args.tasks:
-        utils.log('Now downloading and installing specialized databases...')
+        run_and_read.execution.log('Now downloading and installing specialized databases...')
         prep_other(settings)
-    utils.log("Done.")
+    run_and_read.execution.log("Done.")
 
 if __name__ == '__main__':
     main()

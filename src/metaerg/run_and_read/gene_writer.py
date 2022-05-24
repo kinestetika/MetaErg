@@ -1,21 +1,21 @@
-from metaerg.run_and_read.abc import Annotator, ExecutionEnvironment, register
-from metaerg.run_and_read.data_model import FeatureType
+from metaerg.run_and_read.context import register
+from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
+
+
+def _run_programs(genome:MetaergGenome, result_files):
+    genome.write_fasta_files(result_files[0], target=FeatureType.CDS)
+    genome.write_fasta_files(result_files[1], target=(FeatureType.rRNA, FeatureType.ncRNA))
+
+
+def _read_results(genome:MetaergGenome, result_files) -> int:
+    return 0
 
 
 @register
-class GeneWriter(Annotator):
-    def __init__(self, genome, exec: ExecutionEnvironment):
-        super().__init__(genome, exec)
-        self.cds_aa_file = self.spawn_file('cds.faa')
-        self.rna_nt_file = self.spawn_file('rna.nt')
-        self._pipeline_position = 66
-        self._purpose = 'Write files for proteins and rna genes.'
-        self._result_files = (self.cds_aa_file, self.rna_nt_file)
-
-    def _run_programs(self):
-        """No helper progarms needed, simply writes genes to files."""
-        self.genome.write_fasta_files(self.cds_aa_file, target=FeatureType.CDS)
-        self.genome.write_fasta_files(self.rna_nt_file, target=(FeatureType.rRNA, FeatureType.ncRNA))
-
-    def _read_results(self) -> int:
-        return 0
+def run_and_read_trf():
+    return ({'pipeline_position': 66,
+             'purpose': 'rrite files for proteins and rna genes',
+             'programs': (),
+             'result_files': ('cds.faa', 'rna.nt'),
+             'run': _run_programs,
+             'read': _read_results})

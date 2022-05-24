@@ -1,17 +1,14 @@
 import re
-import time
-import subprocess
-from collections import namedtuple
 
 from pathlib import Path
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
-from Bio.SeqRecord import SeqRecord
+
+from run_and_read.data_model import pad_seq
+from run_and_read.context import log
 
 SILENT = False
-START_TIME = time.monotonic()
-LOG_TOPICS = set()
 NON_IUPAC_RE = re.compile(r'[^ACTGN]')
 UNWANTED_FEATURE_QUALIFIERS = 'gc_cont conf score cscore sscore rscore uscore tscore rpt_type rpt_family ' \
                               'ltr_similarity seq_number'.split()
@@ -35,17 +32,6 @@ ESCAPE_CHARS = {'%2C': ',',
                 '%25': '%',
                 '%26': '&'}
 
-def format_runtime():
-    runtime = time.monotonic() - START_TIME
-    return f'[{int(runtime / 3600):02d}h:{int((runtime % 3600) / 60):02d}m:{int(runtime % 60):02d}s]'
-
-
-def log(log_message, values=(), topic=''):
-    if not topic or topic in LOG_TOPICS:
-        if len(values):
-            print(f'{format_runtime()} {log_message.format(*values)}')
-        else:
-            print(f'{format_runtime()} {log_message}')
 
 def get_location_from_gff_words(words):
     strand = -1 if '+' == words[6] else 1
@@ -146,23 +132,6 @@ def gff_words_to_seqfeature(words: list, inference=''):
                 pass
 
     return seq_feature
-
-
-def pad_seq(sequence):
-    """ Pad sequence to multiple of 3 with N """
-    remainder = len(sequence) % 3
-    return sequence if remainder == 0 else sequence + Seq('N' * (3 - remainder))
-
-
-def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, log_cmd=True):
-    if log_cmd:
-        log(exec)
-    if SILENT:
-        return
-    result = subprocess.run(exec.split(), stdout=stdout, stdin=stdin, stderr=stderr)
-    if result.returncode != 0:
-        # print(result.stderr)
-        raise Exception(f'Error while trying to run "{exec}"')
 
 
 def non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict):

@@ -3,11 +3,11 @@ import re
 from pathlib import Path
 from Bio import SeqIO, SeqRecord
 from metaerg.run_and_read.data_model import MetaergGenome
-from metaerg.run_and_read.abc import ExecutionEnvironment
+from metaerg.run_and_read.context import Executor
 from metaerg.html.abc import HTMLwriter
 
 class HTMLAllGenomesTable(HTMLwriter):
-    def __init__(self, genome, exec: ExecutionEnvironment):
+    def __init__(self, genome, exec: Executor):
         super().__init__(genome, exec)
         self.genome = genome
         self.exec = exec

@@ -6,6 +6,8 @@ import ast
 from pathlib import Path
 
 import predict
+import run_and_read.data_model
+import run_and_read.context
 from metaerg import databases
 from metaerg import utils
 from metaerg import subsystems
@@ -242,7 +244,7 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
     feature_id = utils.get_feature_qualifier(feature, 'id')
     header = f'>{feature_id} {make_feature_short_description(feature)}'
     if 'CDS' == feature.type:
-        seq = utils.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
+        seq = run_and_read.data_model.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
     else:
         seq = feature.extract(contig).seq
 
@@ -475,7 +477,7 @@ $(document).ready( function () {
 
 
 def html_write_all(mag_name, genome_stats, contig_dict, blast_results, subsystem_hash):
-    utils.log(f'({mag_name}) Writing html index and overview...')
+    run_and_read.execution.log(f'({mag_name}) Writing html index and overview...')
     with open('index.html', 'w') as html_writer:
         html_write_genome_stats_and_subsystems(html_writer, mag_name, genome_stats, subsystem_hash)
     with open('index_of_features.html', 'w') as html_writer:
@@ -484,7 +486,7 @@ def html_write_all(mag_name, genome_stats, contig_dict, blast_results, subsystem
     feature_dir = Path('features')
     feature_dir.mkdir()
     os.chdir(feature_dir)
-    utils.log(f'({mag_name}) Writing html page for each gene...')
+    run_and_read.execution.log(f'({mag_name}) Writing html page for each gene...')
     for contig in contig_dict.values():
         for feature in contig.features:
             html_write_page_for_feature(feature, contig, blast_results, genome_stats)

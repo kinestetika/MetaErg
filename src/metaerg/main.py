@@ -6,8 +6,9 @@ from pathlib import Path
 from multiprocessing import cpu_count
 from concurrent.futures import ProcessPoolExecutor
 
+import run_and_read.context
 from metaerg.run_and_read.data_model import MetaergGenome, FeatureType
-from metaerg.run_and_read.abc import ExecutionEnvironment, annotator_registry
+from metaerg.run_and_read.context import Executor, annotator_registry
 from metaerg.html.abc import html_registry
 from metaerg.html.html_all_genomes import HTMLAllGenomesTable
 from metaerg import utils
@@ -38,8 +39,8 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def annotate_genome(exec:ExecutionEnvironment, genome_name, input_fasta_file:Path):
-    utils.log(f'Now starting to annotate {genome_name}...')
+def annotate_genome(exec:Executor, genome_name, input_fasta_file:Path):
+    run_and_read.execution.log(f'Now starting to annotate {genome_name}...')
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
     genome = MetaergGenome(genome_name, input_fasta_file, rename_contigs=exec.rename_contigs,
                            min_contig_length=exec.min_contig_length)
@@ -51,7 +52,7 @@ def annotate_genome(exec:ExecutionEnvironment, genome_name, input_fasta_file:Pat
         annotator = annotator_class(genome, exec)
         annotator.run_and_read()
     # (3) save results
-    utils.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
+    run_and_read.execution.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
     genome.write_fasta_files(exec.spawn_file("faa", genome.id, exec.base_dir), target=FeatureType.CDS)
     genome.write_fasta_files(exec.spawn_file("rna.fna", genome.id, exec.base_dir),
                              target=(FeatureType.ncRNA, FeatureType.rRNA, FeatureType.retrotransposon,
@@ -60,26 +61,26 @@ def annotate_genome(exec:ExecutionEnvironment, genome_name, input_fasta_file:Pat
                          gff_file=exec.spawn_file("gff", genome.id))
     # (4) visualize
     genome.compute_properties()
-    utils.log(f'({genome.id}) Now writing final result as .html for visualization...')
+    run_and_read.execution.log(f'({genome.id}) Now writing final result as .html for visualization...')
     for html_writer_class in html_registry:
         html_writer = html_writer_class(genome)
         html_writer.write_html()
-    utils.log(f'({genome.id}) Completed html visualization.')
+    run_and_read.execution.log(f'({genome.id}) Completed html visualization.')
 
 
 def main():
-    utils.log(f'This is metaerg.py {VERSION}')
+    run_and_read.execution.log(f'This is metaerg.py {VERSION}')
     args = parse_arguments()
-    exec = ExecutionEnvironment(**args.__dict__)
+    exec = Executor(**args.__dict__)
     exec.prep_environment()
 
     with ProcessPoolExecutor(max_workers=exec.parallel_annotations) as executor:
         for genome_name, contig_file in zip(exec.genome_names, exec.contig_files):
             executor.submit(annotate_genome, contig_file, genome_name)
         os.chdir(exec.contig_file)
-    utils.log('Now writing all-genome overview html...')
+    run_and_read.execution.log('Now writing all-genome overview html...')
     HTMLAllGenomesTable(None, exec).write_html()
-    utils.log(f'Done. Thank you for using metaerg.py {VERSION}')
+    run_and_read.execution.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 
 if __name__ == "__main__":

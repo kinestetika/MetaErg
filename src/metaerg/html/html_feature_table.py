@@ -1,12 +1,12 @@
 from pathlib import Path
 from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
 from metaerg.html.abc import HTMLwriter, register_html_writer
-from metaerg.run_and_read.abc import ExecutionEnvironment
+from metaerg.run_and_read.context import Executor
 
 @register_html_writer
 class HTMLFeatureTable(HTMLwriter):
 
-    def __init__(self, genome, exec: ExecutionEnvironment):
+    def __init__(self, genome, exec: Executor):
         super().__init__(genome, exec)
         self.genome: MetaergGenome = genome
         self.exec = exec

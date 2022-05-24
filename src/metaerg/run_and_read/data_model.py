@@ -13,7 +13,6 @@ from Bio import SeqUtils
 from Bio import SeqIO
 from BCBio import GFF
 
-from metaerg import utils
 from metaerg.run_and_read import subsystems_data
 
 
@@ -165,25 +164,6 @@ class MetaergSeqFeature:
     notes: set[str] = field(default_factory=set)
     # because it does not have a type, exported_keys becomes a class attribute
     exported_keys = 'id sequence inference product taxon antismash transmembrane_helixes signal_peptide'.split()
-
-    def __post_init__(self, parent_sequence, translation_table):
-        """Sets and returns self.sequence using location and parent sequence"""
-        assert self.strand == 1 or self.strand == -1, f'invalid value {self.strand} for strand, needs to be 1 or -1.'
-        assert self.end > self.start, f'invalid coordinates, end needs to be greater than start.'
-        assert 0 <= self.start < len(parent_sequence), f'start coordinate out of range.'
-        assert 0 <= self.end < len(parent_sequence), f'end coordinate out of range.'
-        if parent_sequence:
-            seq = Seq(parent_sequence[self.start:self.end:self.strand])
-            if FeatureType.CDS == self.type:
-                remainder = len(seq) % 3
-                if remainder:
-                    seq = seq + Seq('N' * (3 - remainder))
-                if '*' in seq:
-                    self.notes.add('contains internal stop codon(s).')
-                seq = seq.translate(table=translation_table)[:-1]
-            self.sequence = str(seq)
-        else:
-            assert len(self.sequence), 'No sequence or parent sequence provided to MetaergseqFeature'
 
     def __len__(self):
         return self.end - self.start
@@ -373,7 +353,7 @@ class MetaergGenome:
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
 
-    def write_fasta_files(self, base_file: Path, split=1, target = None, **kwargs_masking):
+    def write_fasta_files(self, base_file: Path, split=1, target=None, **kwargs_masking):
         """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
         optionally masking features with N"""
         if target:
@@ -403,7 +383,7 @@ class MetaergGenome:
         for f in filehandles:
             f.close()
         if kwargs_masking['masked']:
-            utils.log(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
+            exec.log(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
         if split > 1:
             return paths
         else:
@@ -423,7 +403,6 @@ class MetaergGenome:
                 mapping_writer.write(f'{key}\t{value}\n')
 
     def compute_properties(self):
-        utils.log(f'({self.id}) Compiling genome stats...')
         self.properties['size'] = len(self)
         self.properties['percent GC'] = int(sum((len(contig) * SeqUtils.GC(contig.sequence) for contig in
                                                  self.contigs.values())) / self.properties['size'] + 0.5)
@@ -461,6 +440,10 @@ class MetaergGenome:
         taxon_counts.update(f.taxon for contig in self.contigs.values() for f in contig.features)
         dominant_taxon, highest_count = taxon_counts.most_common(1)[0]
         self.properties['dominant taxon'] = f'{dominant_taxon} ({highest_count/sum(taxon_counts.values()) * 100:.1f}%)'
-
-        utils.log(f'({self.id}) Compilation of stats complete...')
         return self.properties
+
+
+def pad_seq(sequence):
+    """ Pad sequence to multiple of 3 with N """
+    remainder = len(sequence) % 3
+    return sequence if remainder == 0 else sequence + Seq('N' * (3 - remainder))

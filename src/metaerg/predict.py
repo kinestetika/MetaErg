@@ -9,6 +9,8 @@ from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
+import run_and_read.data_model
+import run_and_read.context
 from metaerg import utils
 from metaerg import databases
 from metaerg import subsystems
@@ -53,7 +55,7 @@ def create_masked_contig_fasta_file(mag_name, contig_dict:dict, exceptions=None,
     seq_iterator = (mask_seq(record, exceptions=exceptions, min_mask_length=min_mask_length)
                     for record in contig_dict.values())
     SeqIO.write(seq_iterator, masked_fasta_file, "fasta")
-    utils.log(f'Masked {MASKED_SEQ/TOTAL_SEQ*100:.1f}% of sequence data.')
+    run_and_read.execution.log(f'Masked {MASKED_SEQ / TOTAL_SEQ * 100:.1f}% of sequence data.')
     return masked_fasta_file
 
 
@@ -126,14 +128,14 @@ def predict_crisprs_with_minced(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     minced_file = spawn_file('minced', mag_name)
 
-    utils.log(f'({mag_name}) Predicting CRISPR arrays with minced...')
+    run_and_read.execution.log(f'({mag_name}) Predicting CRISPR arrays with minced...')
     if not 'minced' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find minced in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find minced in $PATH.')
         return
     if not (minced_file.exists() and minced_file.stat().st_size) or FORCE:
-        utils.run_external(f'minced -gffFull {fasta_file} {minced_file}')
+        run_and_read.execution.run_external(f'minced -gffFull {fasta_file} {minced_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {minced_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {minced_file}.')
 
     crispr_region_count = 0
     with open(minced_file) as crispr_handle:
@@ -149,7 +151,7 @@ def predict_crisprs_with_minced(mag_name, contig_dict, subsystem_hash):
             feature = utils.gff_words_to_seqfeature(words, words[1])
             feature.type = 'crispr_repeat'
             contig.features.append(feature)
-    utils.log(f'({mag_name}) CRISPR prediction complete. Found {crispr_region_count} repeat regions.')
+    run_and_read.execution.log(f'({mag_name}) CRISPR prediction complete. Found {crispr_region_count} repeat regions.')
 
 
 def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
@@ -166,14 +168,14 @@ def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     aragorn_file = spawn_file('aragorn', mag_name)
 
-    utils.log(f'({mag_name}) Predicting tRNAs with aragorn...')
+    run_and_read.execution.log(f'({mag_name}) Predicting tRNAs with aragorn...')
     if not 'aragorn' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find aragorn in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find aragorn in $PATH.')
         return
     if not (aragorn_file.exists() and aragorn_file.stat().st_size) or FORCE:
-        utils.run_external(f'aragorn -l -t -gc{utils.TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
+        run_and_read.execution.run_external(f'aragorn -l -t -gc{utils.TRANSLATION_TABLE} {fasta_file} -w -o {aragorn_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {aragorn_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {aragorn_file}.')
 
     trna_count = 0
     current_contig = None
@@ -200,16 +202,16 @@ def predict_trnas_with_aragorn(mag_name, contig_dict, subsystem_hash):
                            qualifiers={'name': [f'{words[1]}-{words[4]}'],
                                        'inference': ['aragorn']})
             current_contig.features.append(f)
-    utils.log(f'({mag_name}) tRNA prediction complete. Found {trna_count} tRNAs.')
+    run_and_read.execution.log(f'({mag_name}) tRNA prediction complete. Found {trna_count} tRNAs.')
 
 
 def predict_non_coding_rna_features_with_infernal_cmscan(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     cmscan_file = spawn_file('cmscan', mag_name)
 
-    utils.log(f'({mag_name}) Predicting non-coding RNAs (rRNA, tRNA, CRISPRs, etc.) with infernal (cmscan)...')
+    run_and_read.execution.log(f'({mag_name}) Predicting non-coding RNAs (rRNA, tRNA, CRISPRs, etc.) with infernal (cmscan)...')
     if not 'cmscan' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find cmscan in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find cmscan in $PATH.')
         return
     if not (cmscan_file.exists() and cmscan_file.stat().st_size) or FORCE:
         # Although cmscan has a --cpu option, it does not actually work. Compute time seems to scale up with the #
@@ -219,7 +221,7 @@ def predict_non_coding_rna_features_with_infernal_cmscan(mag_name, contig_dict, 
             split_cmscan_files = [Path(cmscan_file.parent, f'{cmscan_file.name}.{i}') for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=THREADS_PER_GENOME) as executor:
                 for split_input, split_output in zip(split_fasta_files, split_cmscan_files):
-                    executor.submit(utils.run_external, f'cmscan --rfam --tblout {split_output} '
+                    executor.submit(run_and_read.execution.run_external, f'cmscan --rfam --tblout {split_output} '
                                                         f'{Path(databases.DBDIR, "Rfam.cm")} {split_input}')
             with open(cmscan_file, 'wb') as output:
                 for split_input_file, split_output_file in zip(split_fasta_files, split_cmscan_files):
@@ -228,9 +230,9 @@ def predict_non_coding_rna_features_with_infernal_cmscan(mag_name, contig_dict, 
                     split_input_file.unlink()
                     split_output_file.unlink()
         else:
-            utils.run_external(f'cmscan --rfam --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
+            run_and_read.execution.run_external(f'cmscan --rfam --tblout {cmscan_file} {Path(databases.DBDIR, "Rfam.cm")} {fasta_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {cmscan_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {cmscan_file}.')
 
     hits = []
     with open(cmscan_file) as hmm_handle:
@@ -269,7 +271,7 @@ def predict_non_coding_rna_features_with_infernal_cmscan(mag_name, contig_dict, 
                 hits.append(hit)
     for hit in hits:
         utils.non_coding_rna_hmm_hit_to_seq_record(hit, contig_dict)
-    utils.log(f'({mag_name}) Non-coding RNA prediction complete. Found {len(hits)} ncRNAs.')
+    run_and_read.execution.log(f'({mag_name}) Non-coding RNA prediction complete. Found {len(hits)} ncRNAs.')
 
 
 def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_hash):
@@ -277,18 +279,18 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_ha
     ltr_index_file = spawn_file('ltr_index', mag_name)
     ltr_harvest_file = spawn_file('ltr_harvest', mag_name)
 
-    utils.log(f'({mag_name}) Predicting retrotransposons with genometools/ltrharvest...')
+    run_and_read.execution.log(f'({mag_name}) Predicting retrotransposons with genometools/ltrharvest...')
     if not 'gt' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find gt in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find gt in $PATH.')
         return
     if not (ltr_harvest_file.exists() and ltr_harvest_file.stat().st_size) or FORCE:
-        utils.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
-        utils.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
+        run_and_read.execution.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
+        run_and_read.execution.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {ltr_harvest_file} -seqids')
         # remove index files
         for file in ltr_harvest_file.parent.glob(f'{mag_name}.ltr_index*'):
             file.unlink()
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {ltr_harvest_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {ltr_harvest_file}.')
 
     retrotransposon_count = 0
     with open(ltr_harvest_file) as ltr_handle:
@@ -305,22 +307,22 @@ def predict_retrotransposons_with_ltrharvest(mag_name, contig_dict, subsystem_ha
                 gbk_feature = utils.gff_words_to_seqfeature(words, 'LTRharvest')
                 gbk_feature.type = 'retrotransposon'
                 contig.features.append(gbk_feature)
-    utils.log(f'({mag_name}) Retrotransposon prediction complete. Found {retrotransposon_count} repeat regions.')
+    run_and_read.execution.log(f'({mag_name}) Retrotransposon prediction complete. Found {retrotransposon_count} repeat regions.')
 
 
 def predict_tandem_repeats_with_trf(mag_name, contig_dict, subsystem_hash):
     fasta_file = create_masked_contig_fasta_file(mag_name, contig_dict)
     trf_file = spawn_file('tandem-repeat-finder', mag_name)
 
-    utils.log('({mag_name}) Predicting tandem repeats with trf...')
+    run_and_read.execution.log('({mag_name}) Predicting tandem repeats with trf...')
     if not 'trf' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find trf in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find trf in $PATH.')
         return
     if not (trf_file.exists() and trf_file.stat().st_size) or FORCE:
         with open(trf_file, 'w') as output:
-            utils.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
+            run_and_read.execution.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {trf_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {trf_file}.')
 
     tdr_count = 0
     with open(trf_file) as trf_handle:
@@ -336,7 +338,7 @@ def predict_tandem_repeats_with_trf(mag_name, contig_dict, subsystem_hash):
                    'note': [f'period size {words[2]}; copies {words[3]}']}
             contig.features.append(SeqFeature(location=loc, type='repeat_region', qualifiers=qal))
             tdr_count += 1
-    utils.log(f'({mag_name}) Tandem repeat prediction complete. Found {tdr_count} repeat regions.')
+    run_and_read.execution.log(f'({mag_name}) Tandem repeat prediction complete. Found {tdr_count} repeat regions.')
 
 
 def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem_hash):
@@ -346,17 +348,17 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
     repeatscout_file_filtered = spawn_file('repeatscout-filtered', mag_name)
     repeatmasker_file = spawn_file('repeatmasker', mag_name)
 
-    utils.log(f'({mag_name}) Predicting remaining repeats with repeatmasker...')
+    run_and_read.execution.log(f'({mag_name}) Predicting remaining repeats with repeatmasker...')
     for program in 'build_lmer_table RepeatScout filter-stage-1.prl RepeatMasker'.split():
         if not program in AVAILABLE_PREREQS:
-            utils.log(f'({mag_name}) Skipping analysis - could not find {program} in $PATH.')
+            run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find {program} in $PATH.')
             return
     if not (repeatmasker_file.exists() and repeatmasker_file.stat().st_size) or FORCE:
-        utils.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
-        utils.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
+        run_and_read.execution.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
+        run_and_read.execution.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
         with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
-            utils.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-        utils.run_external(f'RepeatMasker -pa {THREADS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
+            run_and_read.execution.run_external('filter-stage-1.prl', stdin=input, stdout=output)
+        run_and_read.execution.run_external(f'RepeatMasker -pa {THREADS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
         repeatmasker_output_file = Path(f'{fasta_file.name}.out') # nothing we can do about that
         shutil.move(repeatmasker_output_file, repeatmasker_file)
         for file in Path.cwd().glob(f'{fasta_file.name}.*'):
@@ -365,7 +367,7 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
             else:
                 file.unlink()
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {repeatmasker_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {repeatmasker_file}.')
 
     repeat_count = 0
     repeat_hash = dict()
@@ -402,7 +404,7 @@ def predict_remaining_repeats_with_repeatmasker(mag_name, contig_dict, subsystem
                 utils.set_feature_qualifier(f, "note", utils.get_feature_qualifier(f, "note") + f' (occurs {len(repeat_list)}x)')
                 del f.qualifiers['contig']
                 repeat_count += 1
-    utils.log(f'Remaining repeat prediction complete. Found {repeat_count} repeat regions.')
+    run_and_read.execution.log(f'Remaining repeat prediction complete. Found {repeat_count} repeat regions.')
 
 
 def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash):
@@ -411,14 +413,14 @@ def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash
     #fna_file = Path(fasta_file.stem + '.cds.fna')
     prodigal_file = spawn_file('prodigal', mag_name)
 
-    utils.log(f'({mag_name}) Predicting coding sequences with prodigal...')
+    run_and_read.execution.log(f'({mag_name}) Predicting coding sequences with prodigal...')
     if not 'prodigal' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find prodigal in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find prodigal in $PATH.')
         return
     if not (prodigal_file.exists() and prodigal_file.stat().st_size) or FORCE:
-        utils.run_external(f'prodigal -g {utils.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -o {prodigal_file}')
+        run_and_read.execution.run_external(f'prodigal -g {utils.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -o {prodigal_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {prodigal_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {prodigal_file}.')
 
     cds_found = 0
     cds_id_re = re.compile(r'^ID=[0-9]+_[0-9]+;')
@@ -447,21 +449,21 @@ def predict_coding_sequences_with_prodigal(mag_name, contig_dict, subsystem_hash
                 feature.qualifiers['start_type']
             contig.features.append(feature)
             cds_found += 1
-    utils.log(f'({mag_name}) Prediction of coding sequences complete, found {cds_found} CDS.')
+    run_and_read.execution.log(f'({mag_name}) Prediction of coding sequences complete, found {cds_found} CDS.')
 
 
 def write_gene_files(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
-    utils.log(f'({mag_name}) Translating CDS and writing CDS and RNA genes to file...')
+    run_and_read.execution.log(f'({mag_name}) Translating CDS and writing CDS and RNA genes to file...')
     if not (cds_aa_file.exists() and cds_aa_file.stat().st_size) or not \
             (rna_nt_file.exists() and rna_nt_file.stat().st_size) or FORCE:
         with open(cds_aa_file, 'w') as faa_handle, open(rna_nt_file, 'w') as fna_handle:
             for contig in contig_dict.values():
                 for f in contig.features:
                     if f.type == 'CDS':
-                        feature_seq = utils.pad_seq(f.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1]
+                        feature_seq = run_and_read.data_model.pad_seq(f.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1]
                         utils.set_feature_qualifier(f, 'translation', feature_seq.seq)
                         feature_seq.id = utils.get_feature_qualifier(f, 'id')
                         feature_seq.description = utils.get_feature_qualifier(f, 'product')
@@ -474,18 +476,18 @@ def write_gene_files(mag_name, contig_dict, subsystem_hash):
                         feature_seq.description = ''
                         SeqIO.write(feature_seq, fna_handle, "fasta")
     else:
-        utils.log(f'({mag_name}) Reusing existing data in {cds_aa_file} and {rna_nt_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing data in {cds_aa_file} and {rna_nt_file}.')
 
 
 def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_hash):
     diamond_file = spawn_file('diamond', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
-    utils.log(f'({mag_name}) Performing homology searches with diamond...')
+    run_and_read.execution.log(f'({mag_name}) Performing homology searches with diamond...')
     if not 'diamond' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find diamond in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find diamond in $PATH.')
         return
     if not (diamond_file.exists() and diamond_file.stat().st_size) or FORCE:
-        utils.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} '
+        run_and_read.execution.run_external(f'diamond blastp -d {Path(databases.DBDIR, "db_protein.faa")} -q {cds_aa_file} -o {diamond_file} '
                            f'-f 6  --threads {THREADS_PER_GENOME}')
         # --fast                   enable fast mode
         # --mid-sensitive          enable mid-sensitive mode
@@ -495,44 +497,44 @@ def predict_functions_and_taxa_with_diamond(mag_name, contig_dict, subsystem_has
         # --ultra-sensitive        enable ultra sensitive mode
 
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {diamond_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {diamond_file}.')
 
     BLAST_RESULTS['diamond'] = {}
     with utils.TabularBlastParser(diamond_file) as handle:
         for blast_result in handle:
             BLAST_RESULTS['diamond'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'aa')
-    utils.log(f'({mag_name}) Diamond search complete - found {len(BLAST_RESULTS["diamond"])} proteins with hits.')
+    run_and_read.execution.log(f'({mag_name}) Diamond search complete - found {len(BLAST_RESULTS["diamond"])} proteins with hits.')
 
 
 def predict_functions_and_taxa_with_blastn(mag_name, contig_dict, subsystem_hash):
     blastn_file = spawn_file('blastn', mag_name)
     rna_nt_file = spawn_file('rna.nt', mag_name)
 
-    utils.log(f'({mag_name}) Performing homology searches with blastn ...')
+    run_and_read.execution.log(f'({mag_name}) Performing homology searches with blastn ...')
     if not 'blastn' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find blastn in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find blastn in $PATH.')
         return
     if not (blastn_file.exists() and blastn_file.stat().st_size) or FORCE:
-        utils.run_external(f'blastn -db {Path(databases.DBDIR, "db_rna.fna")} -query {rna_nt_file} -out {blastn_file} -max_target_seqs 25 -outfmt 6')
+        run_and_read.execution.run_external(f'blastn -db {Path(databases.DBDIR, "db_rna.fna")} -query {rna_nt_file} -out {blastn_file} -max_target_seqs 25 -outfmt 6')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {blastn_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {blastn_file}.')
 
     BLAST_RESULTS['blastn'] = {}
     with utils.TabularBlastParser(blastn_file) as handle:
         for blast_result in handle:
             BLAST_RESULTS['blastn'][blast_result[0]] = blast_result[1]
             add_homology_search_results_to_feature(blast_result, contig_dict, 'nt')
-    utils.log(f'({mag_name}) Blastn search complete - found {len(BLAST_RESULTS["blastn"])} RNA genes with hits.')
+    run_and_read.execution.log(f'({mag_name}) Blastn search complete - found {len(BLAST_RESULTS["blastn"])} RNA genes with hits.')
 
 
 def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
     cds_aa_file = spawn_file('cds.faa', mag_name)
     cdd_file = spawn_file('cdd', mag_name)
 
-    utils.log(f'({mag_name}) Performing homology searches with rpsblast/cdd ...')
+    run_and_read.execution.log(f'({mag_name}) Performing homology searches with rpsblast/cdd ...')
     if not 'rpsblast' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find rpsblast in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find rpsblast in $PATH.')
         return
     if not (cdd_file.exists() and cdd_file.stat().st_size) or FORCE:
         if THREADS_PER_GENOME > 1:
@@ -540,7 +542,7 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
             split_cdd_files = [Path(cdd_file.parent, f'{cdd_file.name}.{i}') for i in range(len(split_fasta_files))]
             with ProcessPoolExecutor(max_workers=THREADS_PER_GENOME) as executor:
                 for split_input, split_output in zip(split_fasta_files, split_cdd_files):
-                    executor.submit(utils.run_external, f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query '
+                    executor.submit(run_and_read.execution.run_external, f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query '
                                                         f'{split_input} -out {split_output} -outfmt 6 -evalue 1e-7')
             with open(cdd_file, 'wb') as output:
                 for split_input_file, split_output_file in zip(split_fasta_files, split_cdd_files):
@@ -549,10 +551,10 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
                     split_input_file.unlink()
                     split_output_file.unlink()
         else:
-            utils.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} '
+            run_and_read.execution.run_external(f'rpsblast -db {Path(databases.DBDIR, "cdd", "Cdd")} -query {cds_aa_file} -out {cdd_file} '
                                f'-outfmt 6 -evalue 1e-7')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {cdd_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {cdd_file}.')
 
     BLAST_RESULTS['cdd'] = {}
     with utils.TabularBlastParser(cdd_file) as handle:
@@ -569,23 +571,23 @@ def predict_functions_with_cdd(mag_name, contig_dict, subsystem_hash):
                 utils.set_feature_qualifier(target_feature, 'cdd',
                     f'[{hit_length}/{cdd_item[3]}]@{h["percent_id"]:.1f}% [{h["query_start"]}-{h["query_end"]}] {cdd_descr}')
                 break
-    utils.log(f'({mag_name}) RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} functions for proteins.')
+    run_and_read.execution.log(f'({mag_name}) RPSBlast CDD search complete - found {len(BLAST_RESULTS["cdd"])} functions for proteins.')
 
 
 def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
     antismash_dir = spawn_file('antismash', mag_name)
     gbk_file = spawn_file('gbk', mag_name)
 
-    utils.log(f'({mag_name}) Performing homology searches with antismash ...')
+    run_and_read.execution.log(f'({mag_name}) Performing homology searches with antismash ...')
     if not 'antismash' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find antismash in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find antismash in $PATH.')
         return
     if not antismash_dir.exists() or FORCE:
         if antismash_dir.exists():
             shutil.rmtree(antismash_dir)
-        utils.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {gbk_file}')
+        run_and_read.execution.run_external(f'antismash --genefinding-tool none --output-dir {antismash_dir} {gbk_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {antismash_dir}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {antismash_dir}.')
 
     antismash_hit_count = 0
     for f in sorted(antismash_dir.glob("*region*.gbk")):
@@ -614,21 +616,21 @@ def predict_functions_with_antismash(mag_name, contig_dict, subsystem_hash):
                         antismash_hit_count += 1
     if not antismash_hit_count:
         antismash_dir.mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
-    utils.log(f'({mag_name}) Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
+    run_and_read.execution.log(f'({mag_name}) Antismash search complete. Found hits for {antismash_hit_count} proteins (CDS).')
 
 
 def predict_hydrocarbon_genes_with_canthyd(mag_name, contig_dict, subsystem_hash):
     canthyd_file = spawn_file('canthyd', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
-    utils.log(f'({mag_name}) Searching genes involved in hydrocarbon metabolism with canthyd...')
+    run_and_read.execution.log(f'({mag_name}) Searching genes involved in hydrocarbon metabolism with canthyd...')
     if not 'hmmsearch' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find hmmsearch in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find hmmsearch in $PATH.')
         return
     if not (canthyd_file.exists() and canthyd_file.stat().st_size) or FORCE:
-        utils.run_external(f'hmmsearch --cut_nc --tblout '
+        run_and_read.execution.run_external(f'hmmsearch --cut_nc --tblout '
                            f'{canthyd_file} {Path(databases.DBDIR, "canthyd", "CANT-HYD.hmm")} {cds_aa_file}')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {canthyd_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {canthyd_file}.')
 
     with open(canthyd_file) as hmm_handle:
         hits = {}
@@ -649,7 +651,7 @@ def predict_hydrocarbon_genes_with_canthyd(mag_name, contig_dict, subsystem_hash
                                       'score': float(words[5])}
             for h in hits.values():
                 if h["hmm_id"] not in databases.CANTHYD_DESCR.keys():
-                    utils.log(f'Warning, missing description for cant-hyd hmm {h["hmm_id"]}...')
+                    run_and_read.execution.log(f'Warning, missing description for cant-hyd hmm {h["hmm_id"]}...')
                     continue
                 coord = utils.decipher_metaerg_id(h['hit_id'])
                 feature = contig_dict[coord["contig_id"]].features[coord["gene_number"]]
@@ -669,18 +671,18 @@ def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
     tmhmm_file =  spawn_file('tmhmm', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
-    utils.log(f'({mag_name}) Discovering transmembrane helixes with tmhmm...')
+    run_and_read.execution.log(f'({mag_name}) Discovering transmembrane helixes with tmhmm...')
     if not 'tmhmm' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find tmhmm in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find tmhmm in $PATH.')
         return
     if not (tmhmm_file.exists() and tmhmm_file.stat().st_size) or FORCE:
         with open(tmhmm_file, 'w') as output, open(cds_aa_file) as input:
-            utils.run_external('tmhmm', stdin=input, stdout=output)
+            run_and_read.execution.run_external('tmhmm', stdin=input, stdout=output)
         for file in tmhmm_file.parent.glob(f'TMHMM_*'):
             if file.is_dir():
                 shutil.rmtree(file)
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {tmhmm_file}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {tmhmm_file}.')
 
     count = 0
     current_feature = None
@@ -717,16 +719,16 @@ def predict_transmembrane_helixes(mag_name, contig_dict, subsystem_hash):
             utils.set_feature_qualifier(current_feature, 'transmembrane_helixes', feature_tmh_count)
             utils.set_feature_qualifier(current_feature, 'tmh_topology', current_txt[:-1])
             count += 1
-    utils.log(f'({mag_name}) Transmembrane helix discovery complete. Found {count} membrane proteins.')
+    run_and_read.execution.log(f'({mag_name}) Transmembrane helix discovery complete. Found {count} membrane proteins.')
 
 
 def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
     signalp_dir = spawn_file('signalp', mag_name)
     cds_aa_file = spawn_file('cds.faa', mag_name)
 
-    utils.log(f'({mag_name}) Discovering signal peptides with signalp...')
+    run_and_read.execution.log(f'({mag_name}) Discovering signal peptides with signalp...')
     if not 'signalp6' in AVAILABLE_PREREQS:
-        utils.log(f'({mag_name}) Skipping analysis - could not find signalp6 in $PATH.')
+        run_and_read.execution.log(f'({mag_name}) Skipping analysis - could not find signalp6 in $PATH.')
         return
     if not signalp_dir.exists() or FORCE:
         if signalp_dir.exists():
@@ -740,7 +742,7 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
             print(signalp_dirs)
             with ProcessPoolExecutor(max_workers=signalp_threads) as executor:
                 for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, signalp_dirs):
-                    executor.submit(utils.run_external, f'signalp6 --fastafile {split_cds_aa_file} --output_dir '
+                    executor.submit(run_and_read.execution.run_external, f'signalp6 --fastafile {split_cds_aa_file} --output_dir '
                                                         f'{split_signalp_dir} --format none --organism other')
             signalp_dir.mkdir()
             with open(Path(signalp_dir, 'prediction_results.txt'), 'wb') as output:
@@ -750,14 +752,14 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
                         with open(signalp_result_file, 'rb') as input:
                             shutil.copyfileobj(input, output)
                     else:
-                        utils.log(f'({mag_name}) WARNING - missing part of signalp output!')
+                        run_and_read.execution.log(f'({mag_name}) WARNING - missing part of signalp output!')
                     shutil.rmtree(split_signalp_dir)
                     split_cds_aa_file.unlink()
         else:
-            utils.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none '
+            run_and_read.execution.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {signalp_dir} --format none '
                                f'--organism other')
     else:
-        utils.log(f'({mag_name}) Reusing existing results in {signalp_dir}.')
+        run_and_read.execution.log(f'({mag_name}) Reusing existing results in {signalp_dir}.')
 
     count = 0
     with open(Path(signalp_dir, 'prediction_results.txt')) as signalp_handle:
@@ -771,12 +773,12 @@ def predict_signal_peptides(mag_name, contig_dict, subsystem_hash):
             feature = contig_dict[d_id["contig_id"]].features[d_id["gene_number"]]
             utils.set_feature_qualifier(feature, "signal_peptide", words[1])
             count += 1
-        utils.log(f'({mag_name}) Signal peptide discovery complete. Found {count} proteins with signal peptide.')
+        run_and_read.execution.log(f'({mag_name}) Signal peptide discovery complete. Found {count} proteins with signal peptide.')
 
 
 def predict_subsystems(mag_name, contig_dict, subsystem_hash):
     subsystems_file = spawn_file('subsystems', mag_name)
-    utils.log(f'({mag_name}) Assigning genes to subsystems...')
+    run_and_read.execution.log(f'({mag_name}) Assigning genes to subsystems...')
     for contig in contig_dict.values():
         for f in contig.features:
             subsystems.match_feature_to_subsystems(f, BLAST_RESULTS, subsystem_hash)
@@ -795,11 +797,11 @@ def predict_subsystems(mag_name, contig_dict, subsystem_hash):
                 for phrase in subsystem_hash[subsystem].keys():
                     writer.write(f'\t{phrase}\t{"; ".join(subsystem_hash[subsystem][phrase])}\n')
                     gene_count += len(subsystem_hash[subsystem][phrase])
-    utils.log(f'({mag_name}) Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
+    run_and_read.execution.log(f'({mag_name}) Subsystem assignment complete. Assigned {gene_count} genes to subsystems.')
 
 
 def compile_genome_stats(mag_name, contig_dict):
-    utils.log(f'({mag_name}) Compiling genome stats...')
+    run_and_read.execution.log(f'({mag_name}) Compiling genome stats...')
     genome_stats = {}
     genome_stats['genome name'] = mag_name
     genome_stats["#contigs"] = len(contig_dict)
@@ -861,13 +863,13 @@ def compile_genome_stats(mag_name, contig_dict):
     genome_stats['% coding'] = f'{genome_stats["% coding"]/total_size*100:.2f}%'
     genome_stats['% repeats'] = f'{genome_stats["% repeats"]/total_size*100:.2f}%'
     genome_stats['dominant taxon'] = f'{max(taxon_dict, key=taxon_dict.get)} ({max(taxon_dict.values())/total_taxon_hits*100:.1f}%)'
-    utils.log(f'({mag_name}) Compilation of stats complete...')
+    run_and_read.execution.log(f'({mag_name}) Compilation of stats complete...')
     return genome_stats
 
 
 def write_databases(mag_name, contig_dict, subsystem_hash):
     db_dir = spawn_file('db', mag_name)
     db_dir.mkdir(exist_ok=True)
-    utils.log(f'({mag_name}) Saving relative portion of blast databases to {db_dir}')
+    run_and_read.execution.log(f'({mag_name}) Saving relative portion of blast databases to {db_dir}')
     databases.save_cache(db_dir)
 

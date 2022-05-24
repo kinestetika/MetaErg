@@ -1,10 +1,10 @@
 from metaerg.run_and_read.data_model import MetaergGenome
-from metaerg.run_and_read.abc import ExecutionEnvironment
+from metaerg.run_and_read.context import Executor
 
 html_registry = []
 
 class HTMLwriter:
-    def __init__(self, genome, exec: ExecutionEnvironment):
+    def __init__(self, genome, exec: Executor):
         self.genome = genome
         self.exec = exec
 
@@ -35,4 +35,5 @@ class HTMLwriter:
 
 def register_html_writer(html_writer):
     html_registry.append(html_writer)
+
     return html_writer

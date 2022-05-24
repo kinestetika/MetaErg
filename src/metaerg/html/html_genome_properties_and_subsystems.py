@@ -1,11 +1,11 @@
 from pathlib import Path
 from metaerg.html.abc import HTMLwriter, register_html_writer, MetaergGenome
-from metaerg.run_and_read.abc import ExecutionEnvironment
+from metaerg.run_and_read.context import Executor
 
 
 @register_html_writer
 class HTMLOneGenoeOverviewPage(HTMLwriter):
-    def __init__(self, genome, exec: ExecutionEnvironment):
+    def __init__(self, genome, exec: Executor):
         super().__init__(genome, exec)
         self.genome: MetaergGenome = genome
         self.exec = exec
