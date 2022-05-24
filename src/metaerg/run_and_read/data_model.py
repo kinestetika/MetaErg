@@ -163,7 +163,10 @@ class MetaergSeqFeature:
     subsystem: set[str] = field(default_factory=set)
     notes: set[str] = field(default_factory=set)
     # because it does not have a type, exported_keys becomes a class attribute
-    exported_keys = 'id sequence inference product taxon antismash transmembrane_helixes signal_peptide'.split()
+    exported_keys = 'id sequence inference product taxon antismash transmembrane_helixes signal_peptide subsystem ' \
+                    'notes'.split()
+    displayed_keys = 'start end strand type inference product taxon antismash transmembrane_helixes signal_peptide' \
+                     'subsystem notes'.split()
 
     def __len__(self):
         return self.end - self.start

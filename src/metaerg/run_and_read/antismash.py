@@ -4,7 +4,7 @@ from pathlib import Path
 from Bio import SeqIO
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergGenome
-from metaerg.run_and_read.context import register, spawn_file, run_external
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
 from metaerg import utils
 
 
@@ -51,7 +51,7 @@ def write_html(self, filename=None):
     shutil.copytree(self.antismash_file, Path(self.exec.html_dir, self.genome.id, 'antismash'))
 
 
-@register
+@register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 91,
              'purpose': 'prediction of secondary metabolite genes with antismash',

@@ -1,20 +1,24 @@
 from pathlib import Path
 
 from metaerg.run_and_read.data_model import FeatureType, MetaergSeqFeature, BlastResult, MetaergGenome
-from metaerg.html.abc import HTMLwriter, register_html_writer
-from metaerg.run_and_read.context import Executor
+from metaerg.run_and_read.context import register_html_writer
 
 
 @register_html_writer
-class HTMLFeaturePages(HTMLwriter):
-
-    def __init__(self, genome, exec: Executor):
-        super().__init__(genome, exec)
-        self.genome: MetaergGenome = genome
-        self.exec = exec
+def write_html(genome: MetaergGenome, dir):
+    """Writes a html file for each feature to dir <file>"""
+    dir = Path(dir, genome.id, 'features')
+    dir.mkdir(exist_ok=True, parents=True)
+    for c in genome.contigs.values():
+        for f in c.features:
+            if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
+                f_filename = Path(dir, f'{f.id}.html')
+                with open(f_filename, 'w') as handle:
+                    handle.write(make_feature_html(f, genome.properties['dominant_taxon']))
 
 
 def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -> str:
+    colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     if blast_result:
         html = '<table>'
         html += '<thead><tr> '
@@ -26,15 +30,14 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -
         html += '</tr><thead>\n<tbody>\n'
         for h in blast_result.hits:
             html += '<tr><td {}>{}</td {}><td {}>{}</td><td>{}</td><td>{}</td><td {}>{}</td></tr>'.format(
-                self.get_color(h.percent_id),
+                colors[int(h.percent_id/5)],
                 h.percent_id,
-                self.get_color(100 * h.aligned_length/f_length),
+                colors[int(100 * h.aligned_length/f_length / 5)],
                 100 * h.aligned_length/f_length,
-                self.get_color(100 * h.aligned_length/h.hit.length),
+                colors[int(100 * h.aligned_length/h.hit.length / 5)],
                 100 * h.aligned_length/h.hit.length,
                 h.hit.descr,
-                self.get_color(20 * len(set(h.hit.taxon.split()) &
-                                        set(dominant_taxon.split()))),
+                colors[int(20 * len(set(h.hit.taxon.split()) & set(dominant_taxon.split())) / 5)],
                 h.hit.taxon_at_genus()
             )
         html += '</tbody>\n'
@@ -44,7 +47,7 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -
         return ''
 
 
-def make_feature_html(f: MetaergSeqFeature) -> str:
+def make_feature_html(f: MetaergSeqFeature, dominant_taxon) -> str:
     html = _make_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
@@ -52,27 +55,14 @@ def make_feature_html(f: MetaergSeqFeature) -> str:
     else:
         html = html.replace('HEADER', f'>{f.id} {f.product}')
     html = html.replace('SEQUENCE', f.sequence)
-    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, len(f)))
-    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, len(f)))
+    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, len(f), dominant_taxon))
+    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, len(f), dominant_taxon))
     attribute_html = '<table>\n'
-    attribute_html += ''.join(f'<tr><td>{k}</td><td>{v}</td></tr>\n' for k, v in f self.genome.properties.items())
+    attribute_html += ''.join(f'<tr><td>{k}</td><td>{f.__dict__[k]}</td></tr>\n' for k in
+                              MetaergSeqFeature.displayed_keys)
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html
-
-
-@register_html_writer
-def write_html(exec:Executor, genome: MetaergGenome, file=None):
-    """Writes a html file for each feature to dir <file>"""
-    if not file:
-        file = Path(exec.html_dir, genome.id, "features")
-    file.mkdir(exist_ok=True, parents=True)
-    for c in genome.contigs.values():
-        for f in c.features:
-            if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
-                f_filename = Path(file, f'{f.id}.html')
-                with open(f_filename, 'w') as handle:
-                    handle.write(make_feature_html(f))
 
 
 def _make_html_template() -> str:

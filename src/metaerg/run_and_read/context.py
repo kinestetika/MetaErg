@@ -30,7 +30,7 @@ LOG_TOPICS = set()
 FILE_EXTENSION = ''
 
 ANNOTATOR_REGISTRY = {}
-
+HTML_WRITER_REGISTRY = []
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, checkm_dir, gtdbtk_dir, log_topics=''):
@@ -87,9 +87,9 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             PARAlLEL_ANNOTATIONS = CPUS_PER_GENOME
             CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
             PARAlLEL_ANNOTATIONS = int(PARAlLEL_ANNOTATIONS / CPUS_PER_GENOME)
-
         else:
             CONTIG_FILES = [contig_file]
+            PARAlLEL_ANNOTATIONS = 1
         if RENAME_GENOMES:
             GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
         else:
@@ -150,7 +150,11 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         raise Exception(f'Error while trying to run "{exec}"')
 
 
-def register(define_annotator):
+def sorted_annotators():
+    return (ANNOTATOR_REGISTRY[a] for a in sorted[ANNOTATOR_REGISTRY.keys()])
+
+
+def register_annotator(define_annotator):
     param = define_annotator()
     def annotator(genome: MetaergGenome):
         """Runs programs and reads results."""
@@ -199,3 +203,8 @@ def register(define_annotator):
 
     ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
     return annotator
+
+
+def register_html_writer(writer):
+    HTML_WRITER_REGISTRY.append(writer)
+    return writer

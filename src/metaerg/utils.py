@@ -26,6 +26,7 @@ NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria':'rRNA',
                         'tRNA': 'tRNA'}
 FEATURE_ID_PATTERN = re.compile("(.+)\.(\d{5})\.(crispr|trna|rna|ltr|tr|repeat|cds)$")
 TRANSLATION_TABLE = 11
+#urllib.unquote
 ESCAPE_CHARS = {'%2C': ',',
                 '%3B': ';',
                 '%3D': '=',

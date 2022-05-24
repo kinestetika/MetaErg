@@ -1,5 +1,5 @@
 from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
-from metaerg.run_and_read.context import register, spawn_file, run_external
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -25,7 +25,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return tr_count
 
 
-@register
+@register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 41,
              'purpose': 'tandem repeat prediction with trf',

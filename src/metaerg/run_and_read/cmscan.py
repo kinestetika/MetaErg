@@ -3,7 +3,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
-from metaerg.run_and_read.context import register, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME
 from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
 
 
@@ -81,7 +81,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return len(hits)
 
 
-@register
+@register_annotator
 def run_and_read_cmscan():
     return ({'pipeline_position': 21,
              'purpose': 'noncoding (RNA) gene prediction with cmscan',

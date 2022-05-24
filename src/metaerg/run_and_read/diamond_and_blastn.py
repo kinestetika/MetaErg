@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser
-from metaerg.run_and_read.context import register, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, log
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, log
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -57,7 +57,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return blast_result_count
 
 
-@register
+@register_annotator
 def run_and_read_diamond_blastn():
     return ({'pipeline_position': 81,
              'purpose': 'function prediction and taxonomic classification of genes with diamond and blastn',

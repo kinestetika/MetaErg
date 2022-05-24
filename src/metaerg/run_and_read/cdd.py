@@ -3,7 +3,7 @@ import shutil
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergGenome, FeatureType, TabularBlastParser, DBentry
-from metaerg.run_and_read.context import register, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, log
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, log
 
 def _run_programs(genome:MetaergGenome, result_files):
     cds_aa_file = spawn_file('cds.faa', genome.id)
@@ -53,7 +53,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return cdd_result_count
 
 
-@register
+@register_annotator
 def run_and_read_cdd():
     return ({'pipeline_position': 71,
              'purpose': 'function prediction using RPSBlast and the conserved domain database',

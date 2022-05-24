@@ -3,7 +3,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature, FeatureType, MetaergGenome
-from metaerg.run_and_read.context import register, spawn_file, run_external, CPUS_PER_GENOME, log
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, CPUS_PER_GENOME, log
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -47,7 +47,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return count
 
 
-@register
+@register_annotator
 def run_and_read_signalp():
     return ({'pipeline_position': 121,
              'purpose': 'signal peptide prediction with signalp',

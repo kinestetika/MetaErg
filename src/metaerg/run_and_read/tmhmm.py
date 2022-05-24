@@ -1,6 +1,6 @@
 import shutil
 
-from metaerg.run_and_read.context import register, spawn_file, run_external
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
 from metaerg.run_and_read.data_model import MetaergGenome
 
 
@@ -43,7 +43,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return count
 
 
-@register
+@register_annotator
 def run_and_read_tmhmm():
     return ({'pipeline_position': 111,
              'purpose': 'transmembrane helix prediction with tmhmm',

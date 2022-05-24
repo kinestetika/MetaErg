@@ -1,93 +1,89 @@
 from pathlib import Path
 from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
-from metaerg.html.abc import HTMLwriter, register_html_writer
-from metaerg.run_and_read.context import Executor
+from metaerg.run_and_read.context import register_html_writer
 
 @register_html_writer
-class HTMLFeatureTable(HTMLwriter):
+def write_html(genome: MetaergGenome, dir):
+    dir.mkdir(exist_ok=True, parents=True)
+    file = Path(dir, genome.id, "index_of_features.html")
+    file.parent.mkdir(exist_ok=True, parents=True)
+    with open(Path(file), 'w') as handle:
+        handle.write(make_html(genome))
 
-    def __init__(self, genome, exec: Executor):
-        super().__init__(genome, exec)
-        self.genome: MetaergGenome = genome
-        self.exec = exec
 
-    def make_html(self) -> str:
-        """Injects the content into the html base, returns the html."""
-        html = self._make_html_template()
-        html = html.replace('GENOME_NAME', self.genome.id)
-        # table header
-        table_headers = ''
-        for column in 'id strand length type location subsystem CDD ident align recall description taxon'.split():
-            if column in 'id description':
-                table_headers += f'<th id=al>{column}</th>\n'
+def make_html(genome: MetaergGenome) -> str:
+    """Injects the content into the html base, returns the html."""
+    html = _make_html_template()
+    html = html.replace('GENOME_NAME', genome.id)
+    colors = 'id=cr id=cr id=co id=cb id=cg'.split()
+
+    # table header
+    table_headers = ''
+    for column in 'id strand length type location subsystem CDD ident align recall description taxon'.split():
+        if column in 'id description':
+            table_headers += f'<th id=al>{column}</th>\n'
+        else:
+            table_headers += f'<th>{column}</th>\n'
+    html = html.replace('TABLE_HEADERS', table_headers)
+    # table body
+    table_body = ''
+    for c in genome.contigs.values():
+        for f in c.features:
+            format_hash = {'f_id': f.id,
+                           'description': f.product,
+                           'taxon': f.taxon_at_genus()}
+            if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
+                format_hash['f_id'] = '<a target="gene details" href="features/{}.html">{}</a>'.format(f.id, f.id)
+            if f.type in (FeatureType.CDS, FeatureType.tRNA, FeatureType.rRNA, FeatureType.ncRNA,
+                          FeatureType.tmRNA, FeatureType.retrotransposon):
+                format_hash['strand'] = "+" if f.strand > 0 else "-"
             else:
-                table_headers += f'<th>{column}</th>\n'
-        html = html.replace('TABLE_HEADERS', table_headers)
-        # table body
-        table_body = ''
-        for c in self.genome.contigs.values():
-            for f in c.features:
-                format_hash = {'f_id': f.id,
-                               'description': f.product,
-                               'taxon': f.taxon_at_genus()}
-                if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
-                    format_hash['f_id'] = self.make_feature_link(f.id, f.id)
-                if f.type in (FeatureType.CDS, FeatureType.tRNA, FeatureType.rRNA, FeatureType.ncRNA,
-                              FeatureType.tmRNA, FeatureType.retrotransposon):
-                    format_hash['strand'] = "+" if f.strand > 0 else "-"
-                else:
-                    format_hash['strand'] = ''
-                format_hash['length'] = len(f) / 3 if f.type == FeatureType.CDS else len(f)
-                match f.tmh_count(), f.signal_peptide, f.type:
-                    case [_, 'LIPO', _]:
-                        format_hash['destination'] = 'lipoprotein'
-                    case [1, _, _]:
-                        format_hash['destination'] = 'membrane anchor'
-                    case [tmh, _, _] if tmh > 1:
-                        format_hash['destination'] = 'membrane'
-                    case [_, sp, _]:
-                        format_hash['destination'] = 'envelope'
-                    case [_, _, FeatureType.CDS]:
-                        format_hash['destination'] = 'cytoplasm'
-                    case [*_]:
-                       format_hash['destination'] = ''
-                format_hash['subsystem'] = ', '.join(f.subsystem)
-                format_hash['has_cdd'] = 'Y' if len(f.cdd) else ''
-                if len(f.blast):
-                    format_hash['ident'] = f'{f.blast.hits[0].percent_id:.0f}'
-                    format_hash['ci'] = self.get_color(f.blast.hits[0].percent_id)
-                    format_hash['align'] = f'{f.blast.percent_aligned():0f}'
-                    format_hash['ca'] = self.get_color(f.blast.percent_aligned())
-                    format_hash['recall'] = f'{f.blast.percent_recall():0f}'
-                    format_hash['cr'] = self.get_color(f.blast.percent_recall())
-                else:
-                    format_hash['ident'] = ''
-                    format_hash['align'] = ''
-                    format_hash['recall'] = ''
-                    format_hash['ci'] = ''
-                    format_hash['ca'] = ''
-                    format_hash['cr'] = ''
-                    format_hash['ct'] = self.get_color(20* len(set(f.taxon.split()) &
-                                                               set(self.genome.properties['dominant taxon'].split())))
-                table_body += ''''<tr>
-                <td id=al>{f_id}</td> <td>{strand}</td> <td>{length}</td> <td>{destination}</td> <td>{subsystem}</td>
-                <td>{has_cdd}</td> <td {ci}>{ident}</td> <td {ca}>{align}</td> <td {cr}>{recall}</td> 
-                <td id=al>{descr}</td>
-                <td {ct}>{taxon}</td>
-                </tr>'''.format(**format_hash)
-        html = html.replace('TABLE_BODY', table_body)
-        return html
+                format_hash['strand'] = ''
+            format_hash['length'] = len(f) / 3 if f.type == FeatureType.CDS else len(f)
+            match f.tmh_count(), f.signal_peptide, f.type:
+                case [_, 'LIPO', _]:
+                    format_hash['destination'] = 'lipoprotein'
+                case [1, _, _]:
+                    format_hash['destination'] = 'membrane anchor'
+                case [tmh, _, _] if tmh > 1:
+                    format_hash['destination'] = 'membrane'
+                case [_, sp, _]:
+                    format_hash['destination'] = 'envelope'
+                case [_, _, FeatureType.CDS]:
+                    format_hash['destination'] = 'cytoplasm'
+                case [*_]:
+                   format_hash['destination'] = ''
+            format_hash['subsystem'] = ', '.join(f.subsystem)
+            format_hash['has_cdd'] = 'Y' if len(f.cdd) else ''
+            if len(f.blast):
+                format_hash['ident'] = f'{f.blast.hits[0].percent_id:.0f}'
+                format_hash['ci'] = colors[int(f.blast.hits[0].percent_id/5)]
+                format_hash['align'] = f'{f.blast.percent_aligned():0f}'
+                format_hash['ca'] = colors[int(f.blast.percent_aligned()/5)]
+                format_hash['recall'] = f'{f.blast.percent_recall():0f}'
+                format_hash['cr'] = colors[int(f.blast.percent_recall()/5)]
+            else:
+                format_hash['ident'] = ''
+                format_hash['align'] = ''
+                format_hash['recall'] = ''
+                format_hash['ci'] = ''
+                format_hash['ca'] = ''
+                format_hash['cr'] = ''
+            format_hash['ct'] = colors[int(20 * len(set(f.taxon.split())
+                                                    & set(genome.properties['dominant taxon'].split())) / 5)]
+            table_body += ''''<tr>
+            <td id=al>{f_id}</td> <td>{strand}</td> <td>{length}</td> <td>{destination}</td> <td>{subsystem}</td>
+            <td>{has_cdd}</td> <td {ci}>{ident}</td> <td {ca}>{align}</td> <td {cr}>{recall}</td> 
+            <td id=al>{descr}</td>
+            <td {ct}>{taxon}</td>
+            </tr>'''.format(**format_hash)
+    html = html.replace('TABLE_BODY', table_body)
+    return html
 
-    def write_html(self, file=None):
-        if not file:
-            file = Path(self.exec.html_dir, self.genome.id, "index_of_features.html")
-        file.parent.mkdir(exist_ok=True, parents=True)
-        with open(Path(file), 'w') as handle:
-            handle.write(self.make_html())
 
-    def _make_html_template(self) -> str:
-        """Creates and returns the html base for injecting the content in."""
-        return '''<!DOCTYPE html>
+def _make_html_template() -> str:
+    """Creates and returns the html base for injecting the content in."""
+    return '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
