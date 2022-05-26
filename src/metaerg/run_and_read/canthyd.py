@@ -1,7 +1,8 @@
 from pathlib import Path
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature, TabularBlastParser, DBentry, MetaergGenome
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, log
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, log,\
+        register_database_installer, FORCE
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -85,3 +86,14 @@ def run_and_read_canthyd():
              'result_files': ('canthyd'),
              'run': _run_programs,
              'read': _read_results})
+
+
+@register_database_installer
+def install_database():
+    canthyd_dir = Path(DATABASE_DIR, 'canthyd')
+    if FORCE or not canthyd_dir.exists():
+        log(f'Installing the conserved domain database to {canthyd_dir}...')
+        canthyd_dir.mkdir()
+        run_external(f'wget -P {canthyd_dir} https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/'
+                     f'main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
+        run_external(f'hmmpress -f {Path(canthyd_dir, "CANT-HYD.hmm")}')

@@ -3,7 +3,8 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME
+from metaerg.run_and_read.context import register_annotator, register_database_installer, spawn_file, run_external, \
+    log, DATABASE_DIR, CPUS_PER_GENOME, FORCE
 from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
 
 
@@ -90,3 +91,20 @@ def run_and_read_cmscan():
              'databses': ('Rfam.cm',),
              'run': _run_programs,
              'read': _read_results})
+
+
+@register_database_installer
+def install_database():
+    rfam_file = Path(DATABASE_DIR, 'Rfam.cm')
+    if FORCE or not rfam_file.exists() and not rfam_file.stat().st_size:
+        log(f'Installing the RFAM database to {rfam_file}...')
+        run_external(
+            f'wget -P {DATABASE_DIR} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
+        run_external(f'gunzip {rfam_file}.gz')
+    else:
+        log('Keeping previously installed RFAM database...')
+    log(f'Running cmpress...')
+    if not Path(DATABASE_DIR, "Rfam.cm.i1f").exists():
+        run_external(f'cmpress -F {rfam_file}')
+    else:
+        log('Skipping cmpress for previously cmpressed RFAM database...')

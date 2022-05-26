@@ -31,6 +31,7 @@ FILE_EXTENSION = ''
 
 ANNOTATOR_REGISTRY = {}
 HTML_WRITER_REGISTRY = []
+DATABASE_INSTALLER_REGISTRY = []
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, checkm_dir, gtdbtk_dir, log_topics=''):
@@ -208,3 +209,7 @@ def register_annotator(define_annotator):
 def register_html_writer(writer):
     HTML_WRITER_REGISTRY.append(writer)
     return writer
+
+def register_database_installer(database_installer):
+    DATABASE_INSTALLER_REGISTRY.append(database_installer)
+    return database_installer

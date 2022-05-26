@@ -3,7 +3,8 @@ import shutil
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergGenome, FeatureType, TabularBlastParser, DBentry
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, log
+from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, \
+    log, register_database_installer, FORCE
 
 def _run_programs(genome:MetaergGenome, result_files):
     cds_aa_file = spawn_file('cds.faa', genome.id)
@@ -62,3 +63,21 @@ def run_and_read_cdd():
              'result_files': ('cdd',),
              'run': _run_programs,
              'read': _read_results})
+
+
+@register_database_installer
+def install_database():
+    cdd_dir = Path(DATABASE_DIR, 'cdd')
+    if FORCE or not cdd_dir.exists():
+        log(f'Installing the conserved domain database to {cdd_dir}...')
+        cdd_dir.mkdir()
+        run_external(f'wget -P {DATABASE_DIR} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
+        cdd_index = Path(cdd_dir, 'cddid.tbl')
+        run_external(f'gunzip {cdd_index}.gz')
+        run_external(f'cp {cdd_index} {DATABASE_DIR}')
+        run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
+        run_external(f'tar -xf {Path(cdd_dir, "cdd.tar.gz")}')
+        run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(cdd_dir, "Cdd.pn")} -out {Path(DATABASE_DIR, "Cdd")}'
+                           f' -threshold 9.82 -scale 100.0 -dbtype rps -index true')
+    else:
+        log('Keeping previously installed conserved domain database...')
