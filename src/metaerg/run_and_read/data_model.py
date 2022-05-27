@@ -1,5 +1,6 @@
 import re
 import copy
+import gzip
 from enum import Enum, auto
 from dataclasses import dataclass, field, InitVar
 from collections import Counter, Sequence
@@ -285,9 +286,11 @@ class MetaergSeqRecord:
             remainder = len(seq) % 3
             if remainder:
                 seq = seq + Seq('N' * (3 - remainder))
+            translation_table = kwargs['translation_table'] if 'translation_table' in kwargs.keys() else \
+                self.translation_table
+            seq = str(seq.translate(translation_table)[:-1])
             if '*' in seq:
                 notes.add('contains internal stop codon(s).')
-            seq = str(seq.translate(self.translation_table)[:-1])
         f = MetaergSeqFeature(start, end, strand, type, sequence=seq, notes=notes, **kwargs)
         self.features.append(f)
         return f
@@ -313,7 +316,7 @@ class MetaergGenome:
     subsystems: SubSystems = field(init=False)
     contig_name_mappings: dict[str, str] = field(init=False, default_factory=dict)
     rename_contigs: InitVar[bool] = True
-    min_contig_length: InitVar[int] = 500
+    min_contig_length: InitVar[int] = 0
 
     def __post_init__(self, contig_file, rename_contigs, min_contig_length):
         """Reads contig fasta file, sorts by len, filters for min len, whitespace, and funny chars"""
@@ -321,9 +324,15 @@ class MetaergGenome:
                                               f' rename or change delimiter.'
         self.subsystems = SubSystems()
         if contig_file:
+            if contig_file.name.endswith('.gz'):
+                with gzip.open(contig_file, "rt") as handle:
+                    contigs = SeqIO.parse(handle, "fasta")
+            else:
+                with open(contig_file) as handle:
+                    contigs = SeqIO.parse(handle, "fasta")
             i = 0
             c: SeqRecord
-            for c in sorted([SeqIO.parse(contig_file, "fasta")], key=len, reverse=True):
+            for c in sorted(contigs, key=len, reverse=True):
                 if len(c) < min_contig_length:
                     break
                 if rename_contigs:

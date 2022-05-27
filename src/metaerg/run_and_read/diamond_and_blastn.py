@@ -9,7 +9,8 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser
+from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser,\
+    FeatureType
 from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, \
     log, register_database_installer, GTDBTK_DIR
 
@@ -347,16 +348,15 @@ def install_prokaryote_database():
 
 
 def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
-    contig_dict = dict()
     try:
-        with gzip.open(taxon["gtdb_seq_file"], "rt") as handle:
-            for seq in SeqIO.parse(handle, "fasta"):
-                contig_dict[seq.id] = seq
+        genome: MetaergGenome = MetaergGenome(contig_file=taxon["gtdb_seq_file"], rename_contigs=False,
+                                              min_contig_length=0, id =taxon["gtdb_seq_file"].name)
         with gzip.open(taxon["cached_gff_file"], "rt") as gff_handle, \
                 open(Path(prok_db_dir, DB_PROTEINS_FILENAME), 'a') as prot_fasta_out_handle, \
                 open(Path(prok_db_dir, DB_RNA_FILENAME), 'a') as rna_fasta_out_handle, \
                 open(Path(prok_db_dir, DB_DESCRIPTIONS_FILENAME), 'a') as description_handle:
             gene_counter = 0
+            line: str
             for line in gff_handle:
                 if line.startswith("#"):
                     continue
@@ -365,7 +365,12 @@ def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
                 words = line.split('\t')
                 if len(words) < 9:
                     continue
-                if 'CDS' == words[2]:
+                contig = genome.contigs[words[0]]
+                if words[2] =='CDS'  or words[2] in RELEVANT_RNA_GENES:
+                    feature: MetaergSeqFeature = contig.spawn_feature(int(words[3]) - 1,
+                                                                      int(words[4]),
+                                                                      -1 if words[6] == '-' else 1,
+                                                                      FeatureType(words[2]))
                     gene_counter += 1
                     feature = utils.gff_words_to_seqfeature(words)
                     translation_table = int(feature.qualifiers['transl_table'])
