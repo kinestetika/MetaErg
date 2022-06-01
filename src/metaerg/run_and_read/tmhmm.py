@@ -1,13 +1,13 @@
 import shutil
 
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
-from metaerg.run_and_read.data_model import MetaergGenome
+from metaerg import context
+from metaerg.data_model import MetaergGenome
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    cds_aa_file = spawn_file('cds.faa', genome.id)
+    cds_aa_file = context.spawn_file('cds.faa', genome.id)
     with open(result_files[0], 'w') as output, open(cds_aa_file) as input:
-        run_external('tmhmm', stdin=input, stdout=output)
+        context.run_external('tmhmm', stdin=input, stdout=output)
     # this is not thread-safe:
     for file in result_files[0].parent.glob(f'TMHMM_*'):
         if file.is_dir():
@@ -43,7 +43,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_tmhmm():
     return ({'pipeline_position': 111,
              'purpose': 'transmembrane helix prediction with tmhmm',

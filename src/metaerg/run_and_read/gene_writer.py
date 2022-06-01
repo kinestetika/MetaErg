@@ -1,5 +1,5 @@
-from metaerg.run_and_read.context import register_annotator
-from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
+from metaerg import context
+from metaerg.data_model import FeatureType, MetaergGenome
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -11,7 +11,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return 0
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 66,
              'purpose': 'rrite files for proteins and rna genes',

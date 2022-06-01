@@ -1,6 +1,6 @@
 from pathlib import Path
-from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
-from metaerg.run_and_read.context import register_html_writer
+from data_model import FeatureType, MetaergGenome
+from context import register_html_writer
 
 @register_html_writer
 def write_html(genome: MetaergGenome, dir):

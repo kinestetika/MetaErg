@@ -1,11 +1,11 @@
-from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
+from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
+from metaerg import context
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = genome.write_fasta_files(spawn_file('masked', genome.id), masked=True)
+    fasta_file, = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
     with open(result_files[0], 'w') as output:
-        run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
+        context.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
@@ -25,7 +25,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return tr_count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 41,
              'purpose': 'tandem repeat prediction with trf',

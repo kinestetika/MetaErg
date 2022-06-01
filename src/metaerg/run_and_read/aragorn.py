@@ -1,11 +1,11 @@
 import re
-from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
+from metaerg.data_model import FeatureType, MetaergGenome
+from metaerg import context
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file = genome.write_fasta_files(spawn_file('masked', genome.id), masked=True)
-    run_external(f'aragorn -l -t -gc{genome.translation_table} {fasta_file} -w -o {result_files[0]}')
+    fasta_file = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    context.run_external(f'aragorn -l -t -gc{genome.translation_table} {fasta_file} -w -o {result_files[0]}')
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
     trna_count = 0
@@ -31,7 +31,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return trna_count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_aragorn():
     return ({'pipeline_position': 11,
              'purpose': 'tRNA prediction with aragorn',

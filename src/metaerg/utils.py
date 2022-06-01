@@ -5,8 +5,8 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqFeature import SeqFeature, FeatureLocation
 
-from run_and_read.data_model import pad_seq
-from run_and_read.context import log
+from data_model import pad_seq
+from context import log
 
 SILENT = False
 NON_IUPAC_RE = re.compile(r'[^ACTGN]')

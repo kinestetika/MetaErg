@@ -2,8 +2,7 @@ import ast
 import re
 from pathlib import Path
 from Bio import SeqIO
-from metaerg.run_and_read.data_model import MetaergGenome
-from metaerg.run_and_read.context import GENOME_NAME_MAPPING_FILE, GTDBTK_DIR, CHECKM_DIR
+from context import GENOME_NAME_MAPPING_FILE, GTDBTK_DIR, CHECKM_DIR
 
 
 def write_html(dir):

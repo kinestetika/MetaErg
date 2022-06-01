@@ -1,9 +1,11 @@
+import collections
 import re
 import copy
 import gzip
+from urllib.parse import unquote
 from enum import Enum, auto
 from dataclasses import dataclass, field, InitVar
-from collections import Counter, Sequence
+from collections import Counter
 from pathlib import Path
 from typing import NamedTuple
 
@@ -131,6 +133,15 @@ class TabularBlastParser:
 
 
 NON_IUPAC_RE = re.compile(r'[^ACTGN]')
+
+
+def parse_feature_qualifiers_from_gff(gff_str) -> {}:
+    qal = re.split(r"[=;]", gff_str)
+    qal = [unquote(str) for str in qal]
+    if len(qal) % 2 != 0:
+        qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
+    qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
+    return qal
 
 
 class FeatureType(Enum):
@@ -370,7 +381,7 @@ class MetaergGenome:
         optionally masking features with N"""
         if target:
             number_of_records = sum(1 for c in self.contigs.values() for f in c.features if f.type == target
-                                    or (isinstance(target, Sequence) and f.type in target))
+                                    or (isinstance(target, collections.Sequence) and f.type in target))
         else:
             number_of_records = len(self.contigs)
         split = min(split, number_of_records)
@@ -383,7 +394,7 @@ class MetaergGenome:
         for contig in self.contigs.values():
             if target:
                 for f in contig.features:
-                    if f.type == target or (isinstance(target, Sequence) and f.type in target):
+                    if f.type == target or (isinstance(target, collections.Sequence) and f.type in target):
                         SeqIO.write(f.make_biopython_record(), filehandles[int(number_of_records / records_per_file)],
                                     "fasta")
                         number_of_records += 1

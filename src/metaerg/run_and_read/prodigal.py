@@ -1,11 +1,10 @@
-import run_and_read.context
-from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
+from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
+from metaerg import context
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = genome.write_fasta_files(spawn_file('masked', genome.id), masked=True)
-    run_external(f'prodigal -g {genome.translation_table} -m -f gff -q -i {fasta_file} -o {result_files[0]}')
+    fasta_file, = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    context.run_external(f'prodigal -g {genome.translation_table} -m -f gff -q -i {fasta_file} -o {result_files[0]}')
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
@@ -26,7 +25,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return cds_found
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_prodigal():
     return ({'pipeline_position': 61,
              'purpose': 'coding sequence prediction with prodigal',

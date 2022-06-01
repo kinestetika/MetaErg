@@ -1,5 +1,6 @@
 import re
 import gzip
+import shutil
 from os import chdir
 from ftplib import FTP
 from pathlib import Path
@@ -9,46 +10,53 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser,\
-    FeatureType
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, CPUS_PER_GENOME, \
-    log, register_database_installer, GTDBTK_DIR
+from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser,\
+    FeatureType, parse_feature_qualifiers_from_gff
+from metaerg import context
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
 DB_PROTEINS_FILENAME = 'db_protein.faa'
 DB_RNA_FILENAME = 'db_rna.fna'
 
+RELEVANT_FEATURE_TYPES = 'CDS rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
+                         'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA ' \
+                         'autocatalytically_spliced_intron'.split()
+IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
+                        'repeat_region ribosome_entry_site minus_10_signal minus_35_signal protein_binding_site ' \
+                        'regulatory transcript mRNA gap assembly_gap source misc_feature variation misc_structure ' \
+                        'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
+
 
 def _run_programs(genome:MetaergGenome, result_files):
-    cds_aa_file = spawn_file('cds.faa', genome.id)
-    rna_nt_file = spawn_file('rna.nt', genome.id)
-    blastn_db = Path(DATABASE_DIR, DB_RNA_FILENAME)
-    diamond_db = Path(DATABASE_DIR, DB_PROTEINS_FILENAME)
-    run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
-                 f'--threads {CPUS_PER_GENOME} --max-target-seqs 10')
-    run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 -outfmt 6')
+    cds_aa_file = context.spawn_file('cds.faa', genome.id)
+    rna_nt_file = context.spawn_file('rna.nt', genome.id)
+    blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+    diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
+    context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
+                         f'--threads {context.CPUS_PER_GENOME} --max-target-seqs 10')
+    context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 -outfmt 6')
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
     # (1) load databse descriptions
-    db_descr = Path(DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
+    db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
     with open(db_descr) as descr_handle:
         for line in descr_handle:
             words = line.split('\t')
             descriptions[words[0]][int(words[1])] = words[2].strip()
-    log(f'Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])}) '
-        f'gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. ')
+    context.log(f'Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])}) '
+                f'gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. ')
     # (2) load database taxonomy
-    db_taxonomy = Path(DATABASE_DIR, DB_TAXONOMY_FILENAME)
+    db_taxonomy = Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)
     taxonomy = {'p': {}, 'e': {}, 'v': {}}
     with open(db_taxonomy) as taxon_handle:
         for line in taxon_handle:
             words = line.split('\t')
             taxonomy[words[0]][int(words[1])] = words[2].strip().replace('~', '; ')
-    log(f'Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
-        f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
+    context.log(f'Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
+                f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
     # (3) parse diamond blast results
     def get_db_entry(db_id):
         words = db_id.split('~')  # org_acc gene_acc [pev] gene# decr# taxon#
@@ -73,12 +81,15 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return blast_result_count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_diamond_blastn():
     return ({'pipeline_position': 81,
              'purpose': 'function prediction and taxonomic classification of genes with diamond and blastn',
              'programs': ('diamond', 'blastn'),
-             'databases': (DB_PROTEINS_FILENAME, DB_RNA_FILENAME, DB_DESCRIPTIONS_FILENAME, DB_TAXONOMY_FILENAME),
+             'databases': (Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME),
+                           Path(context.DATABASE_DIR, DB_RNA_FILENAME),
+                           Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME),
+                           Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)),
              'result_files': ('diamond', 'blastn'),
              'run': _run_programs,
              'read': _read_results})
@@ -89,14 +100,14 @@ def init_pristine_db_dir(dir) -> tuple[Path, Path, Path, Path]:
     fasta_nt_db = Path(dir, DB_RNA_FILENAME)
     descr_db = Path(dir, DB_DESCRIPTIONS_FILENAME)
     taxon_db = Path(dir, DB_TAXONOMY_FILENAME)
-    fasta_protein_db.unlink()
-    fasta_nt_db.unlink()
-    descr_db.unlink()
-    taxon_db.unlink()
+    fasta_protein_db.unlink(missing_ok=True)
+    fasta_nt_db.unlink(missing_ok=True)
+    descr_db.unlink(missing_ok=True)
+    taxon_db.unlink(missing_ok=True)
     return fasta_protein_db, fasta_nt_db, descr_db, taxon_db
 
 
-def update_descriptions_and_get_id(description, dictionary, file_handle, kingdom):
+def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingdom):
     try:
         descr_id = dictionary[description]
     except KeyError:
@@ -106,11 +117,17 @@ def update_descriptions_and_get_id(description, dictionary, file_handle, kingdom
     return descr_id
 
 
-@register_database_installer
+@context.register_database_installer
 def install_viral_database():
-    vir_db_dir = Path(DATABASE_DIR, 'ncbi-cache', 'vir')
-    vir_db_dir.mkdir(exist_ok=True, parents=True)
-    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(vir_db_dir)
+    if 'V' not in context.CREATE_DB_TASKS:
+        return
+    context.log('Downloading viral refseq from the NCBI...')
+    VIR_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'vir')
+    VIR_DB_DIR.mkdir(exist_ok=True, parents=True)
+    if Path(VIR_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+        context.log(f'Keeping existing viral database in {VIR_DB_DIR}, use --force to overwrite.')
+        return
+    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(VIR_DB_DIR)
 
     descr_dict = dict()
     taxon_dict = dict()
@@ -120,22 +137,22 @@ def install_viral_database():
             open(descr_db, 'w') as descr_handle,\
             open(taxon_db, 'w') as taxon_handle:
         for i in range(1,5):
-            f = Path(vir_db_dir, f'viral.{i}.protein.gpff.gz')
+            f = Path(VIR_DB_DIR, f'viral.{i}.protein.gpff.gz')
             if not f.exists() or not f.stat().st_size:
                 url = 'https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
-                run_external(f'wget -P {vir_db_dir} {url}.{i}.protein.gpff.gz')
+                context.run_external(f'wget -P {VIR_DB_DIR} {url}.{i}.protein.gpff.gz')
             gene_count = 0
             with gzip.open(f, 'rt') as file_handle:
                 for gb_record in SeqIO.parse(file_handle, "genbank"):
                     if gb_record.annotations['molecule_type'] != 'protein':
-                        log("warning: skipping non-coding gene in viral refseq")
+                        context.log("warning: skipping non-coding gene in viral refseq")
                         continue
                     match = pattern.search(gb_record.description)
                     if match:
                         gb_record.annotations['taxonomy'].append(match.group(1))
                         gb_record.description = gb_record.description[0:match.start()]
                     else:
-                        log(f'Warning, Failed to parse viral species from {gb_record.description}')
+                        context.log(f'Warning, Failed to parse viral species from {gb_record.description}')
                     taxon_str = "~".join(gb_record.annotations['taxonomy'])
                     try:
                         taxon_id = taxon_dict[taxon_str]
@@ -143,28 +160,27 @@ def install_viral_database():
                         taxon_id = len(taxon_dict)
                         taxon_dict[taxon_str] = taxon_id
                         taxon_handle.write(f'v\t{taxon_id}\t{taxon_str}\n')
-                    descr_id = update_descriptions_and_get_id(gb_record.description, descr_dict, descr_handle, 'v')
+                    descr_id = update_db_descriptions_get_db_id(gb_record.description, descr_dict, descr_handle, 'v')
                     seq_record = SeqRecord(gb_record.seq)
-                    seq_record.id = f'{taxon_id}~{gb_record.id}~v~{gene_count}~{descr_id}~{taxon_id}~{len(seq_record.seq)}'
+                    seq_record.id = '{}~{}~v~{}~{}~{}~{}'.format(taxon_id, gb_record.id, gene_count, descr_id,
+                                                                 taxon_id, len(seq_record.seq))
                     seq_record.description = gb_record.description
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")
                     gene_count += 1
 
 
-RELEVANT_RNA_GENES = 'rRNA tRNA RNase_P_RNA SRP_RNA riboswitch snoRNA ncRNA tmRNA antisense_RNA binding_site ' \
-                     'hammerhead_ribozyme scRNA mobile_element mobile_genetic_element misc_RNA autocatalytically_spliced_intron'.split()
-IGNORED_FEATURES = 'gene pseudogene exon direct_repeat region sequence_feature pseudogenic_tRNA pseudogenic_rRNA ' \
-                   'repeat_region ribosome_entry_site minus_10_signal minus_35_signal protein_binding_site regulatory' \
-                   ' transcript mRNA gap assembly_gap source misc_feature variation misc_structure transcript' \
-                   ' 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
-
-
-@register_database_installer
+@context.register_database_installer
 def install_eukaryote_database():
-    euk_db_dir = Path(DATABASE_DIR, 'ncbi-cache', 'euk')
-    euk_db_dir.mkdir(exist_ok=True, parents=True)
-    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(euk_db_dir)
-    chdir(DATABASE_DIR)
+    if 'E' not in context.CREATE_DB_TASKS:
+        return
+    context.log('Downloading taxon-unique eukaryotic genomes using NCBI Datasets...')
+    EUK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'euk')
+    EUK_DB_DIR.mkdir(exist_ok=True, parents=True)
+    if Path(EUK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+        context.log(f'Keeping existing eukaryote database in {EUK_DB_DIR}, use --force to overwrite.')
+        return
+    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(EUK_DB_DIR)
+    chdir(context.DATABASE_DIR)
     # (1) probe the NCBI for available eukaryotic assemblies
     api_instance = ncbi.datasets.GenomeApi(ncbi.datasets.ApiClient())
     ASSEMBLY_LEVELS = 'Scaffold', 'Chromosome', 'Complete Genome'
@@ -195,43 +211,43 @@ def install_eukaryote_database():
             total_count = int(genome_summary.total_count)
         except TypeError:
             total_count = 0
-        log(f"({count}/{total_count}) taxon-unique assemblies for {tax_name}")
+        context.log(f"({count}/{total_count}) taxon-unique assemblies for {tax_name}")
     total_target_count = len(targets)
-    log(f'Found  {total_target_count} targets for download in total.')
+    context.log(f'Found  {total_target_count} targets for download in total.')
     # (2) Download new assemblies not yet in local cache
-    targets = [accession for accession in targets.values() if not Path(euk_db_dir, f'{accession}.gbk.gz').exists()]
-    log(f'Of those, {total_target_count - len(targets)} already in local cache. ')
+    targets = [accession for accession in targets.values() if not Path(EUK_DB_DIR, f'{accession}.gbk.gz').exists()]
+    context.log(f'Of those, {total_target_count - len(targets)} already in local cache. ')
 
     api_response = api_instance.download_assembly_package(targets, exclude_sequence = False,
                                                           include_annotation_type = ['GENOME_GBFF'],
                                                           _preload_content = False)
-    zipfile = Path(DATABASE_DIR, 'ncbi_genomes.zip')
+    zipfile = Path(context.DATABASE_DIR, 'ncbi_genomes.zip')
     zipfile.unlink(missing_ok=True)
     with open(zipfile, 'wb') as f:
         f.write(api_response.data)
     if not zipfile.exists():
-        log('No success in downloading eukaryote genomes, aborting...')
+        context.log('No success in downloading eukaryote genomes, aborting...')
         return
-    run_external(f'unzip -qq -o -d {DATABASE_DIR} {zipfile}', log_cmd=False)
+    context.run_external(f'unzip -qq -o -d {context.DATABASE_DIR} {zipfile}', log_cmd=False)
     # (3) move gbk file into local cache gzipped
     count=0
     for accession in targets:
         count += 1
-        src_dir = Path(DATABASE_DIR, 'ncbi_dataset', 'data', accession)
-        dest_file = Path(euk_db_dir, f'{accession}.gbk.gz')
+        src_dir = Path(context.DATABASE_DIR, 'ncbi_dataset', 'data', accession)
+        dest_file = Path(EUK_DB_DIR, f'{accession}.gbk.gz')
         if dest_file.exists():
             continue
-        log(f'({count}/{len(targets)}) Now extracting {accession} into ncbi-cache as {dest_file}...')
+        context.log(f'({count}/{len(targets)}) Now extracting {accession} into ncbi-cache as {dest_file}...')
         gbff_count = 0
         for file in src_dir.glob('*.gbff'):
             with open(Path(src_dir, file), 'rb') as f_in, gzip.open(dest_file, 'wb') as f_out:
                 f_out.writelines(f_in)
             gbff_count += 1
         if gbff_count > 1:
-            log(f'WARNING: {src_dir} has {gbff_count} gbff files')
+            context.log(f'WARNING: {src_dir} has {gbff_count} gbff files')
         elif gbff_count == 0:
-            log(f'WARNING: {src_dir} has no gbff files')
-    for file in zipfile, Path(DATABASE_DIR, '../../README.md'):
+            context.log(f'WARNING: {src_dir} has no gbff files')
+    for file in zipfile, Path(context.DATABASE_DIR, '../../README.md'):
         file.unlink()
     # (4) build blast databases
     descr_dict = dict()
@@ -239,10 +255,10 @@ def install_eukaryote_database():
     with open(fasta_protein_db, 'w') as prot_fasta_out_handle,open(fasta_nt_db, 'w')  as rna_fasta_out_handle, \
             open(descr_db, 'w') as desrc_handle, open(taxon_db, 'w') as taxon_handle:
         genome_count = 0
-        for file in euk_db_dir.glob('*.gbk.gz'):
+        for file in EUK_DB_DIR.glob('*.gbk.gz'):
             genome_count += 1
-            log(f'({genome_count}/{len(targets)}) Now extracting "{file}"')
-            file_path = Path(euk_db_dir, file)
+            context.log(f'({genome_count}/{len(targets)}) Now extracting "{file}"')
+            file_path = Path(EUK_DB_DIR, file)
             feature_success_counter = 0
             feature_total_counter = 0
             without_translation_counter = 0
@@ -262,7 +278,7 @@ def install_eukaryote_database():
                         first = False
                     feature_total_counter += len(gb_record.features)
                     for feature in gb_record.features:
-                        if feature.type == 'CDS' or feature.type in RELEVANT_RNA_GENES:
+                        if feature.type in RELEVANT_FEATURE_TYPES:
                             if feature.type == 'CDS':
                                 if not 'translation' in feature.qualifiers:
                                     without_translation_counter += 1
@@ -283,30 +299,37 @@ def install_eukaryote_database():
                             elif 'ncRNA_class' in feature.qualifiers:
                                 seq_record.description = feature.qualifiers['ncRNA_class'][0]
                             else:
-                                log(f"WARNING: No description for feature {feature}")
+                                context.log(f"WARNING: No description for feature {feature}")
                                 seq_record.description = f'Unknown {feature.type}'
-                            descr_id = update_descriptions_and_get_id(seq_record.description, descr_dict, desrc_handle,
+                            descr_id = update_db_descriptions_get_db_id(seq_record.description, descr_dict, desrc_handle,
                                                                       'e')
-                            seq_record.id = f'{gb_record.id}~0~e~{feature_success_counter}~{descr_id}~{taxon_id}~{len(seq_record.seq)}'
+                            seq_record.id = '{}~0~e~{}~{}~{}~{}'.format(gb_record.id, feature_success_counter,
+                                                                        descr_id, taxon_id, len(seq_record.seq))
                             SeqIO.write(seq_record, file_handle, "fasta")
                             feature_success_counter += 1
-                        elif feature.type in IGNORED_FEATURES:
+                        elif feature.type in IGNORED_FEATURE_TYPES:
                             pass
                         else:
-                            log(f'  Warning: unknown feature "{feature}"')
-            log(f'  ... extracted ({feature_success_counter}/{feature_total_counter}) proteins and RNAs. '
-                f'{without_translation_counter} proteins skipped for lack of translation.')
+                            context.log(f'  Warning: unknown feature "{feature}"')
+            context.log(f'  ... extracted ({feature_success_counter}/{feature_total_counter}) proteins and RNAs. '
+                        f'{without_translation_counter} proteins skipped for lack of translation.')
 
 
-@register_database_installer
+@context.register_database_installer
 def install_prokaryote_database():
-    prok_db_dir = Path(DATABASE_DIR, 'ncbi-cache', 'euk')
-    prok_db_dir.mkdir(exist_ok=True, parents=True)
-    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(prok_db_dir)
+    if 'P' not in context.CREATE_DB_TASKS:
+        return
+    context.log('Downloading a gff file from the NCBI FTP server for each prokaryotic genome in gtdbtk...')
+    PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')
+    PROK_DB_DIR.mkdir(exist_ok=True, parents=True)
+    if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+        context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
+        return
+    fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(PROK_DB_DIR)
     descr_dict = {}
     # (2) Load and prep list of target taxa from GTDB
     taxa_count = 0
-    gtdbtk_taxonomy_file = Path(GTDBTK_DIR, 'taxonomy', 'gtdb_taxonomy.tsv')
+    gtdbtk_taxonomy_file = Path(context.GTDBTK_DIR, 'taxonomy', 'gtdb_taxonomy.tsv')
     # determine line count for tqdm
     with open(gtdbtk_taxonomy_file) as taxonomy_handle:
         for line in taxonomy_handle:
@@ -324,9 +347,9 @@ def install_prokaryote_database():
             words = line.split()
             accession = words[0][3:]
             taxonomy = re.sub("\w__", "", words[1]).split(';')
-            seq_file = Path(GTDBTK_DIR, 'fastani', 'database', accession[0:3], accession[4:7],
+            seq_file = Path(context.GTDBTK_DIR, 'fastani', 'database', accession[0:3], accession[4:7],
                             accession[7:10], accession[10:13], f'{accession}_genomic.fna.gz')
-            future_gff_file = Path(prok_db_dir, f'{accession}.gff.gz')
+            future_gff_file = Path(PROK_DB_DIR, f'{accession}.gff.gz')
             taxon = {'id': len(taxon_list), 'accession': accession, 'taxonomy': taxonomy,
                     'cached_gff_file': future_gff_file, 'gtdb_seq_file': seq_file, 'in_local_cache': False}
             taxon_list.append(taxon)
@@ -337,11 +360,11 @@ def install_prokaryote_database():
             else:
                 continue
             genomes_in_cache_count += 1
-            log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
-            extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir)
-            log(f'downloaded {success_count} new genomes. Total genomes in cache: {genomes_in_cache_count}.')
+            context.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
+            extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
+    context.log(f'downloaded {success_count} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)
-    log(f'Writing taxonomy file.')
+    context.log(f'Now writing taxonomy file for prok.')
     with open(taxon_db, "w") as taxon_handle:
         for t in taxon_list:
             taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["in_local_cache"]}\t{t["accession"]}\n')
@@ -365,43 +388,57 @@ def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
                 words = line.split('\t')
                 if len(words) < 9:
                     continue
-                contig = genome.contigs[words[0]]
-                if words[2] =='CDS'  or words[2] in RELEVANT_RNA_GENES:
-                    feature: MetaergSeqFeature = contig.spawn_feature(int(words[3]) - 1,
-                                                                      int(words[4]),
-                                                                      -1 if words[6] == '-' else 1,
-                                                                      FeatureType(words[2]))
-                    gene_counter += 1
-                    feature = utils.gff_words_to_seqfeature(words)
-                    translation_table = int(feature.qualifiers['transl_table'])
-                    try:
-                        contig = contig_dict[words[0]]
-                    except KeyError:
-                        continue
-                    if 'CDS' == words[2] or words[2] in RELEVANT_RNA_GENES:
-                        seq = run_and_read.data_model.pad_seq(feature.extract(contig))
-                        seq = seq.translate(table=translation_table)
-                        seq = seq[:-1]
-                        if '*' in seq:
+                try:
+                    contig = genome.contigs[words[0]]
+                except KeyError:
+                    continue
+                if words[2] in RELEVANT_FEATURE_TYPES:
+                    qualifiers = parse_feature_qualifiers_from_gff(words[8])
+                    translation_table = qualifiers.get('transl_table', genome.translation_table)
+                    id = qualifiers.get('id', 0)
+                    if product := qualifiers.get('product', qualifiers.get('note'), ''):
+                        feature: MetaergSeqFeature = contig.spawn_feature(int(words[3]) - 1,
+                                                                          int(words[4]),
+                                                                          -1 if words[6] == '-' else 1,
+                                                                          FeatureType(words[2]),
+                                                                          translation_table=translation_table,
+                                                                          product=product,
+                                                                          id=id)
+                        if '*' in feature.sequence:
                             continue
-                        handle = prot_fasta_out_handle
-                    else:
-                        seq = feature.extract(contig)
-                        handle = rna_fasta_out_handle
-                    try:
-                        seq.description = feature.qualifiers["product"]
-                    except KeyError:
-                        if "note" in feature.qualifiers.keys():
-                            seq.description = feature.qualifiers["note"]
-                        else:
-                            continue
-                    descr_id = update_descriptions_and_get_id(seq.description, descr_dict, description_handle, 'p')
-                    seq.id = f'{taxon["accession"]}~{feature.qualifiers["id"]}~p~{gene_counter}~{descr_id}~{taxon["id"]}~{len(seq.seq)}'
-                    SeqIO.write(seq, handle, "fasta")
-                elif words[2] in IGNORED_FEATURES:
+                        handle = prot_fasta_out_handle if feature.type == FeatureType.CDS else rna_fasta_out_handle
+                        gene_counter += 1
+                        descr_id = update_db_descriptions_get_db_id(feature.product, descr_dict, description_handle, 'p')
+                        feature.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], feature.id, gene_counter,
+                                                                  descr_id, taxon["id"], len(feature))
+                        SeqIO.write(feature.make_biopython_record(), handle, "fasta")
+                elif words[2] in IGNORED_FEATURE_TYPES:
                     pass
                 else:
-                    log(f'  Warning: unknown feature type in line "{line}"')
+                    context.log(f'  Warning: unknown feature type in line "{line}"')
     except EOFError:
-        log(f'Incomplete file detected for {taxon["cached_gff_file"]}. Deleting...')
+        context.log(f'Incomplete file detected for {taxon["cached_gff_file"]}. Deleting...')
         taxon["cached_gff_file"].unlink()
+
+
+@context.register_database_installer
+def format_blast_databases():
+    if 'B' not in context.CREATE_DB_TASKS:
+        return
+    context.log('Concatenating and formatting blast databases for (prok, euk, vir)...')
+    PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')
+    EUK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'euk')
+    VIR_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'vir')
+
+    for filename in DB_PROTEINS_FILENAME, DB_RNA_FILENAME, DB_DESCRIPTIONS_FILENAME, DB_TAXONOMY_FILENAME:
+        with open(Path(context.DATABASE_DIR, filename), mode="wb") as destination:
+            for dir in PROK_DB_DIR, EUK_DB_DIR, VIR_DB_DIR:
+                src_file = Path(dir, filename)
+                if src_file.exists():
+                    with open(src_file, mode="rb") as source:
+                        shutil.copyfileobj(source, destination)
+    fasta_protein_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
+    context.run_external(f'diamond makedb --in {fasta_protein_db} --db {fasta_protein_db}')
+    fasta_nt_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+    context.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
+

@@ -6,8 +6,7 @@ import ast
 from pathlib import Path
 
 import predict
-import run_and_read.data_model
-import run_and_read.context
+import data_model
 from metaerg import databases
 from metaerg import utils
 from metaerg import subsystems
@@ -244,7 +243,7 @@ def html_write_page_for_feature(feature, contig, blast_results, genome_stats):
     feature_id = utils.get_feature_qualifier(feature, 'id')
     header = f'>{feature_id} {make_feature_short_description(feature)}'
     if 'CDS' == feature.type:
-        seq = run_and_read.data_model.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
+        seq = data_model.pad_seq(feature.extract(contig)).translate(table=utils.TRANSLATION_TABLE)[:-1].seq
     else:
         seq = feature.extract(contig).seq
 

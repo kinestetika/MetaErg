@@ -4,7 +4,10 @@ import subprocess
 import time
 from multiprocessing import cpu_count
 from pathlib import Path
-from metaerg.run_and_read.data_model import MetaergGenome
+
+from metaerg import registry
+from metaerg.data_model import MetaergGenome
+
 
 BASE_DIR = ''
 TEMP_DIR = ''
@@ -28,16 +31,14 @@ PARAlLEL_ANNOTATIONS = 0
 START_TIME = 0
 LOG_TOPICS = set()
 FILE_EXTENSION = ''
+CREATE_DB_TASKS = ''
 
-ANNOTATOR_REGISTRY = {}
-HTML_WRITER_REGISTRY = []
-DATABASE_INSTALLER_REGISTRY = []
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
-         translation_table, checkm_dir, gtdbtk_dir, log_topics=''):
+         translation_table, checkm_dir, gtdbtk_dir, log_topics='', create_db=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
-           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARAlLEL_ANNOTATIONS
+           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARAlLEL_ANNOTATIONS, CREATE_DB_TASKS
     contig_file = Path(contig_file).absolute()
     BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
     TEMP_DIR = Path(BASE_DIR, "temp")
@@ -54,12 +55,13 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     FORCE = force
     FILE_EXTENSION = file_extension
     TRANSLATION_TABLE = translation_table
+    CREATE_DB_TASKS = create_db.upper()
 
-    CPUS_PER_GENOME = cpus
+    CPUS_PER_GENOME = int(cpus)
     CPUS_AVAILABLE = cpu_count()
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
-    log('Initialized execution environment with commenad line arguments...')
+    log('Initializing execution environment with command line arguments...')
 
     if not contig_file.exists():
         log(f'Input file "{contig_file}" is missing. Expecting dir or a nt fasta file.')
@@ -69,39 +71,39 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         if TEMP_DIR.is_file():
             log(f'Expected folder at {TEMP_DIR}, found regular file, crash! Delete this file first')
             exit(1)
-        else:
-            os.mkdir(TEMP_DIR)
-        shutil.rmtree(HTML_DIR, ignore_errors=True)
-        os.mkdir(HTML_DIR)
-        if CPUS_PER_GENOME > 0:
-            CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
-        else:
-            CPUS_PER_GENOME = CPUS_AVAILABLE
-        log(f'Detected {CPUS_AVAILABLE} available threads/cpus, will use {CPUS_PER_GENOME}.')
+    else:
+        TEMP_DIR.mkdir(exist_ok=True)
+    shutil.rmtree(HTML_DIR, ignore_errors=True)
+    HTML_DIR.mkdir(exist_ok=True)
+    if CPUS_PER_GENOME > 0:
+        CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
+    else:
+        CPUS_PER_GENOME = CPUS_AVAILABLE
 
-        if contig_file.is_dir():
-            CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}'))]
-            if not len(CONTIG_FILES):
-                log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
-                          f'in dir "{contig_file}"')
-                exit(1)
-            PARAlLEL_ANNOTATIONS = CPUS_PER_GENOME
-            CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
-            PARAlLEL_ANNOTATIONS = int(PARAlLEL_ANNOTATIONS / CPUS_PER_GENOME)
-        else:
-            CONTIG_FILES = [contig_file]
-            PARAlLEL_ANNOTATIONS = 1
-        if RENAME_GENOMES:
-            GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
-        else:
-            GENOME_NAMES = [f.name for f in CONTIG_FILES]
-        log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
-        with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
-            for n, o in zip(GENOME_NAMES, CONTIG_FILES):
-                mapping_file.write(f'{n}\t{o.stem}\t{o}\n')
-        log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
-                  f'{CPUS_PER_GENOME} threads per genome.')
-        log_settings()
+    if contig_file.is_dir():
+        CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}'))]
+        if not len(CONTIG_FILES):
+            log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
+                      f'in dir "{contig_file}"')
+            exit(1)
+        PARAlLEL_ANNOTATIONS = CPUS_PER_GENOME
+        CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
+        PARAlLEL_ANNOTATIONS = int(PARAlLEL_ANNOTATIONS / CPUS_PER_GENOME)
+    else:
+        CONTIG_FILES = [contig_file]
+        PARAlLEL_ANNOTATIONS = 1
+    log(f'Detected {CPUS_AVAILABLE} available threads/cpus, will use {CPUS_PER_GENOME} per genome with '
+        f'{PARAlLEL_ANNOTATIONS} genomes annotated in parallel.')
+    if RENAME_GENOMES:
+        GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
+    else:
+        GENOME_NAMES = [f.name for f in CONTIG_FILES]
+    log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
+    with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
+        for n, o in zip(GENOME_NAMES, CONTIG_FILES):
+            mapping_file.write(f'{n}\t{o.stem}\t{o}\n')
+    log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
+              f'{CPUS_PER_GENOME} threads per genome.')
 
 
 def spawn_file(program_name, genome_id, base_dir = None) -> Path:
@@ -139,10 +141,6 @@ def format_runtime():
     return f'[{int(runtime / 3600):02d}h:{int((runtime % 3600) / 60):02d}m:{int(runtime % 60):02d}s]'
 
 
-def log_settings():
-    log(',\n'.join(f'{k.lower()}={eval(k)}' for k in dir() if not k.startswith('_')))
-
-
 def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, log_cmd=True):
     if log_cmd:
         log(exec)
@@ -152,11 +150,12 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
 
 
 def sorted_annotators():
-    return (ANNOTATOR_REGISTRY[a] for a in sorted[ANNOTATOR_REGISTRY.keys()])
+    return (registry.ANNOTATOR_REGISTRY[a] for a in sorted([registry.ANNOTATOR_REGISTRY.keys()]))
 
 
 def register_annotator(define_annotator):
     param = define_annotator()
+
     def annotator(genome: MetaergGenome):
         """Runs programs and reads results."""
         log('({}) {} started...', (genome.id, param['purpose']))
@@ -169,7 +168,6 @@ def register_annotator(define_annotator):
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome.id, param['purpose'], p))
         # (2) Then, make sure required databases are available
         for d in param.get('databases', []):
-            d = Path(DATABASE_DIR, d)
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome.id,
                                                                                        param['purpose'], d))
@@ -202,14 +200,16 @@ def register_annotator(define_annotator):
         gff_file = spawn_file("gff", genome.id)
         genome.write_gbk_gff(gbk_file=gbk_file, gff_file=gff_file)
 
-    ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
+    registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
     return annotator
 
 
 def register_html_writer(writer):
-    HTML_WRITER_REGISTRY.append(writer)
+    registry.HTML_WRITER_REGISTRY.append(writer)
     return writer
 
+
 def register_database_installer(database_installer):
-    DATABASE_INSTALLER_REGISTRY.append(database_installer)
+    registry.DATABASE_INSTALLER_REGISTRY.append(database_installer)
+    # print(len(registry.DATABASE_INSTALLER_REGISTRY))
     return database_installer

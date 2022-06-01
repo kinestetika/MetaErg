@@ -3,21 +3,21 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
-from metaerg.run_and_read.context import register_annotator, register_database_installer, spawn_file, run_external, \
-    log, DATABASE_DIR, CPUS_PER_GENOME, FORCE
-from metaerg.run_and_read.data_model import FeatureType, MetaergGenome
+from metaerg import context
+from metaerg.data_model import FeatureType, MetaergGenome
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file = genome.write_fasta_files(spawn_file('masked', genome.id), masked=True)
-    rfam_database = Path(DATABASE_DIR, "Rfam.cm")
-    if CPUS_PER_GENOME > 1:
-        split_fasta_files = genome.write_fasta_files(fasta_file, CPUS_PER_GENOME)
+    fasta_file = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    rfam_database = Path(context.DATABASE_DIR, "Rfam.cm")
+    if context.CPUS_PER_GENOME > 1:
+        split_fasta_files = genome.write_fasta_files(fasta_file, context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                               for i in range(len(split_fasta_files))]
-        with ProcessPoolExecutor(max_workers=CPUS_PER_GENOME) as executor:
+        with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
             for split_input, split_output in zip(split_fasta_files, split_cmscan_files):
-                executor.submit(run_external, f'cmscan --rfam --tblout {split_output} {rfam_database} {split_input}')
+                executor.submit(context.run_external, f'cmscan --rfam --tblout {split_output} {rfam_database} '
+                                                      f'{split_input}')
         with open(result_files[0], 'wb') as output:
             for split_input_file, split_output_file in zip(split_fasta_files, split_cmscan_files):
                 with open(split_output_file, 'rb') as input:
@@ -25,7 +25,7 @@ def _run_programs(genome:MetaergGenome, result_files):
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
+        context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
@@ -82,29 +82,34 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return len(hits)
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_cmscan():
     return ({'pipeline_position': 21,
              'purpose': 'noncoding (RNA) gene prediction with cmscan',
              'programs': ('cmscan',),
              'result_files': ("cmscan",),
-             'databses': ('Rfam.cm',),
+             'databases': (Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm'),),
              'run': _run_programs,
              'read': _read_results})
 
 
-@register_database_installer
-def install_database():
-    rfam_file = Path(DATABASE_DIR, 'Rfam.cm')
-    if FORCE or not rfam_file.exists() and not rfam_file.stat().st_size:
-        log(f'Installing the RFAM database to {rfam_file}...')
-        run_external(
-            f'wget -P {DATABASE_DIR} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
-        run_external(f'gunzip {rfam_file}.gz')
+@context.register_database_installer
+def install_cmscan_database():
+    if 'R' not in context.CREATE_DB_TASKS:
+        return
+    rfam_dir = Path(context.DATABASE_DIR, 'rfam')
+    rfam_dir.mkdir(exist_ok=True, parents=True)
+
+    rfam_file = Path(rfam_dir, 'Rfam.cm')
+    if context.FORCE or not rfam_file.exists() or not rfam_file.stat().st_size:
+        context.log(f'Installing the RFAM database to {rfam_file}...')
+        context.run_external(
+            f'wget -P {rfam_dir} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
+        context.run_external(f'gunzip {rfam_file}.gz')
     else:
-        log('Keeping previously installed RFAM database...')
-    log(f'Running cmpress...')
-    if not Path(DATABASE_DIR, "Rfam.cm.i1f").exists():
-        run_external(f'cmpress -F {rfam_file}')
+        context.log(f'Keeping existing conserved domain database in {rfam_file}, use --force to overwrite.')
+    if context.FORCE or not Path(context.DATABASE_DIR, "Rfam.cm.i1f").exists():
+        context.log(f'Running cmpress...')
+        context.run_external(f'cmpress -F {rfam_file}')
     else:
-        log('Skipping cmpress for previously cmpressed RFAM database...')
+        context.log('Skipping cmpress for previously cmpressed RFAM database...')

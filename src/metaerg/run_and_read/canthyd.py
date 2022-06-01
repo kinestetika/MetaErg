@@ -1,14 +1,13 @@
 from pathlib import Path
 
-from metaerg.run_and_read.data_model import MetaergSeqFeature, TabularBlastParser, DBentry, MetaergGenome
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, DATABASE_DIR, log,\
-        register_database_installer, FORCE
+from metaerg.data_model import MetaergSeqFeature, TabularBlastParser, DBentry, MetaergGenome
+from metaerg import context
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    cds_aa_file = spawn_file('cds.faa', genome.id)
-    canthyd_db = Path(DATABASE_DIR, 'CANT-HYD.hmm')
-    run_external(f'hmmscan --cut_nc --tblout {result_files[0]} {canthyd_db} {cds_aa_file}')
+    cds_aa_file = context.spawn_file('cds.faa', genome.id)
+    canthyd_db = Path(context.DATABASE_DIR, 'CANT-HYD.hmm')
+    context.run_external(f'hmmscan --cut_nc --tblout {result_files[0]} {canthyd_db} {cds_aa_file}')
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
@@ -49,14 +48,14 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                      'K27540': 'naphtalene carboxylase',
                      'NmsA': 'naphtylmethyl succinate synthase'}
     current_name = None
-    canthyd_db = Path(DATABASE_DIR, 'CANT-HYD.hmm')
+    canthyd_db = Path(context.DATABASE_DIR, 'CANT-HYD.hmm')
     with open(canthyd_db) as handle:
         for line in handle:
             if line.startswith('NAME'):
                 current_name = line.split()[1]
             elif line.startswith('TC'):
                 canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
-    log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
+    context.log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
 
     def get_db_entry(db_id) -> DBentry:
         return DBentry(db_id, '', canthyd_descr.get(db_id, ''), '', 0, canthyd_trusted_cutoffs[db_id])
@@ -73,27 +72,31 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                     feature.subsystem.add('[hydrocarbon degradation]')
                     genome.subsystems.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
                 else:
-                    log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
+                    context.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
         return canthyd_hit_count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_canthyd():
     return ({'pipeline_position': 101,
              'purpose': 'prediction of hydrocarbon degradation genes with canthyd',
-             'programs': ('hmmscan'),
-             'databses': ('CANT-HYD.hmm'),
+             'programs': ('hmmscan',),
+             'databases': (Path(context.DATABASE_DIR, 'canthyd', 'CANT-HYD.hmm'),),
              'result_files': ('canthyd'),
              'run': _run_programs,
              'read': _read_results})
 
 
-@register_database_installer
-def install_database():
-    canthyd_dir = Path(DATABASE_DIR, 'canthyd')
-    if FORCE or not canthyd_dir.exists():
-        log(f'Installing the conserved domain database to {canthyd_dir}...')
-        canthyd_dir.mkdir()
-        run_external(f'wget -P {canthyd_dir} https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/'
-                     f'main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
-        run_external(f'hmmpress -f {Path(canthyd_dir, "CANT-HYD.hmm")}')
+@context.register_database_installer
+def install_canthyd_database():
+    if 'S' not in context.CREATE_DB_TASKS:
+        return
+    canthyd_dir = Path(context.DATABASE_DIR, 'canthyd')
+    if context.FORCE or not canthyd_dir.exists():
+        context.log(f'Installing the conserved domain database to {canthyd_dir}...')
+        canthyd_dir.mkdir(exist_ok=True, parents=True)
+        context.run_external(f'wget -P {canthyd_dir} https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/'
+                             f'main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
+        context.run_external(f'hmmpress -f {Path(canthyd_dir, "CANT-HYD.hmm")}')
+    else:
+        context.log(f'Keeping existing cangthyd database in {canthyd_dir}, use --force to overwrite.')

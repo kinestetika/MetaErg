@@ -3,37 +3,35 @@ from pathlib import Path
 
 from Bio import SeqIO
 
-from metaerg.run_and_read.data_model import MetaergSeqFeature, MetaergGenome
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external
-from metaerg import utils
+from metaerg import context
+from metaerg.data_model import MetaergSeqFeature, MetaergGenome
 
 
 def _run_programs(genome:MetaergGenome, result_files):
     """Should execute the helper programs to complete the analysis"""
-    gbk_file = spawn_file('gbk', genome.id)
+    gbk_file = context.spawn_file('gbk', genome.id)
     if result_files[0].exists():
         shutil.rmtree(result_files[0])
-    run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
+    context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
     """Should parse the result files and return the # of positives."""
     antismash_hit_count = 0
-    for f in sorted(result_files[0].glob("*region*.gbk")):
+    for f in sorted(result_files[0].glob('*region*.gbk')):
         with open(f) as handle:
             antismash_region_name = ''
             antismash_region_number = 0
-            for antismash_record in SeqIO.parse(handle, "genbank"):
+            for antismash_record in SeqIO.parse(handle, 'genbank'):
                 for antismash_feature in antismash_record.features:
                     antismash_hit_count += 1
                     if 'region' == antismash_feature.type:
-                        antismash_region_name = utils.get_feature_qualifier(antismash_feature, "rules")
-                        antismash_region_number = int(utils.get_feature_qualifier(antismash_feature, "region_number"))
+                        antismash_region_name = antismash_feature.qualifiers['rules'][0]
+                        antismash_region_number = int(antismash_feature.qualifiers['region_number'][0])
                     elif 'CDS' in antismash_feature.type:
-                        id = utils.decipher_metaerg_id(utils.get_feature_qualifier(antismash_feature, "locus_tag"))
-                        feature: MetaergSeqFeature = genome.get_feature(id)
-                        antismash_gene_function = utils.get_feature_qualifier(antismash_feature, "gene_functions")
-                        antismash_gene_category = utils.get_feature_qualifier(antismash_feature, "gene_kind")
+                        feature: MetaergSeqFeature = genome.get_feature(antismash_feature.qualifiers['locus_tag'][0])
+                        antismash_gene_function = antismash_feature.qualifiers['gene_functions'][0]
+                        antismash_gene_category = antismash_feature.qualifiers['gene_kind']
                         if antismash_region_name:
                             feature.antismash = ' '.join((f'(region {antismash_region_number})',
                                                          antismash_region_name,
@@ -51,7 +49,7 @@ def write_html(self, filename=None):
     shutil.copytree(self.antismash_file, Path(self.exec.html_dir, self.genome.id, 'antismash'))
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 91,
              'purpose': 'prediction of secondary metabolite genes with antismash',

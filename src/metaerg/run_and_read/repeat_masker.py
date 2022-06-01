@@ -1,21 +1,22 @@
 import shutil
 from pathlib import Path
 
-from metaerg.run_and_read.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
-from metaerg.run_and_read.context import register_annotator, spawn_file, run_external, CPUS_PER_GENOME
+from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
+from metaerg import context
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = genome.write_fasta_files(spawn_file('masked', genome.id), masked=True)
-    lmer_table_file = spawn_file('lmer-table', genome.id)
-    repeatscout_file_raw = spawn_file('repeatscout-raw', genome.id)
-    repeatscout_file_filtered = spawn_file('repeatscout-filtered', genome.id)
+    fasta_file, = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    lmer_table_file = context.spawn_file('lmer-table', genome.id)
+    repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
+    repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)
 
-    run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
-    run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
+    context.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
+    context.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
     with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
-        run_external('filter-stage-1.prl', stdin=input, stdout=output)
-    run_external(f'RepeatMasker -pa {CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . {fasta_file}')
+        context.run_external('filter-stage-1.prl', stdin=input, stdout=output)
+    context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . '
+                         f'{fasta_file}')
     repeatmasker_output_file = Path(f'{fasta_file.name}.out')  # nothing we can do about that
     shutil.move(repeatmasker_output_file, result_files[0])
     for file in Path.cwd().glob(f'{fasta_file.name}.*'):
@@ -58,7 +59,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     return repeat_count
 
 
-@register_annotator
+@context.register_annotator
 def run_and_read_repeatmasker():
     return ({'pipeline_position': 51,
              'purpose': 'repeat prediction with repeatmasker',
