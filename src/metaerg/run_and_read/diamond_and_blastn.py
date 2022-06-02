@@ -248,7 +248,7 @@ def install_eukaryote_database():
         elif gbff_count == 0:
             context.log(f'WARNING: {src_dir} has no gbff files')
     for file in zipfile, Path(context.DATABASE_DIR, '../../README.md'):
-        file.unlink()
+        file.unlink(missing_ok=True)
     # (4) build blast databases
     descr_dict = dict()
     taxon_dict = dict()
