@@ -335,6 +335,7 @@ def install_prokaryote_database():
         for line in taxonomy_handle:
             taxa_count += 1
     taxon_list = []
+    context.log(f'GTDBTK comprises {taxa_count} taxa...')
     with open(gtdbtk_taxonomy_file) as taxonomy_handle:
         # determine line count for tqdm
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
@@ -358,8 +359,40 @@ def install_prokaryote_database():
                 taxon['in_local_cache'] = True
                 download_status = "+"
             else:
-                continue
-            genomes_in_cache_count += 1
+                try:
+                    download_status = "*"
+                    ftp.cwd('/genomes/all/')
+                    for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
+                        ftp.cwd(acc_part)
+                    ftp_dir_list = []
+                    ftp.dir('.', ftp_dir_list.append)
+                    ftp.cwd(ftp_dir_list[0].split()[-1])
+                    ftp_dir_list = []
+                    ftp.dir('.', ftp_dir_list.append)
+                    target = None
+                    for l in ftp_dir_list:
+                        filename = l.split()[-1]
+                        if filename.endswith('_genomic.gff.gz'):
+                            target = filename
+                            break
+                    if target:
+                        success_count += 1
+                        with open(future_gff_file, "wb") as local_handle:
+                            ftp.retrbinary("RETR " + target, local_handle.write)
+                        taxon['in_local_cache'] = True
+                        genomes_in_cache_count += 1
+                    else:
+                        continue
+                except EOFError:
+                    context.log('FTP Error at NCBI - resetting connection')
+                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                    ftp.login()
+                    continue
+                except BrokenPipeError:
+                    context.log('FTP Error at NCBI - resetting connection')
+                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
+                    ftp.login()
+                    continue
             context.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
             extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
     context.log(f'downloaded {success_count} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
@@ -373,7 +406,7 @@ def install_prokaryote_database():
 def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
     try:
         genome: MetaergGenome = MetaergGenome(contig_file=taxon["gtdb_seq_file"], rename_contigs=False,
-                                              min_contig_length=0, id =taxon["gtdb_seq_file"].name)
+                                              min_contig_length=0, id =taxon["gtdb_seq_file"].name, delimiter='~')
         with gzip.open(taxon["cached_gff_file"], "rt") as gff_handle, \
                 open(Path(prok_db_dir, DB_PROTEINS_FILENAME), 'a') as prot_fasta_out_handle, \
                 open(Path(prok_db_dir, DB_RNA_FILENAME), 'a') as rna_fasta_out_handle, \
@@ -396,11 +429,15 @@ def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
                     qualifiers = parse_feature_qualifiers_from_gff(words[8])
                     translation_table = qualifiers.get('transl_table', genome.translation_table)
                     id = qualifiers.get('id', 0)
-                    if product := qualifiers.get('product', qualifiers.get('note'), ''):
+                    try:
+                        featureType = FeatureType[words[2]]
+                    except KeyError:
+                        featureType = FeatureType.ncRNA
+                    if product := qualifiers.get('product', qualifiers.get('note', '')):
                         feature: MetaergSeqFeature = contig.spawn_feature(int(words[3]) - 1,
                                                                           int(words[4]),
                                                                           -1 if words[6] == '-' else 1,
-                                                                          FeatureType(words[2]),
+                                                                          featureType,
                                                                           translation_table=translation_table,
                                                                           product=product,
                                                                           id=id)

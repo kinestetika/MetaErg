@@ -162,8 +162,8 @@ class MetaergSeqFeature:
     end: int
     strand: int
     type: FeatureType
-    inference: str
     sequence: str
+    inference: str = ''
     id: str = ''
     product: str = ''
     taxon: str = ''
@@ -289,16 +289,19 @@ class MetaergSeqRecord:
     def spawn_feature(self, start: int, end: int, strand: int, type: FeatureType, **kwargs) -> MetaergSeqFeature:
         assert strand == 1 or strand == -1, f'invalid value {strand} for strand, needs to be 1 or -1.'
         assert end > start, f'invalid coordinates, end needs to be greater than start.'
-        assert 0 <= start < len(self), f'start coordinate out of range.'
-        assert 0 <= end < len(self), f'end coordinate out of range.'
+        start = max(0, start)
+        end = min(len(self.sequence), end)
         seq = Seq(self.sequence[start:end:strand])
         notes = kwargs.get("notes", set())
+        try:
+            translation_table = kwargs['translation_table']
+            del kwargs['translation_table']
+        except KeyError:
+            translation_table = self.translation_table
         if FeatureType.CDS == type:
             remainder = len(seq) % 3
             if remainder:
                 seq = seq + Seq('N' * (3 - remainder))
-            translation_table = kwargs['translation_table'] if 'translation_table' in kwargs.keys() else \
-                self.translation_table
             seq = str(seq.translate(translation_table)[:-1])
             if '*' in seq:
                 notes.add('contains internal stop codon(s).')
@@ -307,7 +310,7 @@ class MetaergSeqRecord:
         return f
 
     def spawn_features(self, features):
-        for f in features():
+        for f in features:
             if isinstance(f, MetaergSeqFeature):
                 f_copy = copy.deepcopy(f)
                 self.features.append(f_copy)
@@ -335,12 +338,15 @@ class MetaergGenome:
                                               f' rename or change delimiter.'
         self.subsystems = SubSystems()
         if contig_file:
+            contigs = []
             if contig_file.name.endswith('.gz'):
                 with gzip.open(contig_file, "rt") as handle:
-                    contigs = SeqIO.parse(handle, "fasta")
+                    for c in SeqIO.parse(handle, "fasta"):
+                        contigs.append(c)
             else:
                 with open(contig_file) as handle:
-                    contigs = SeqIO.parse(handle, "fasta")
+                    for c in SeqIO.parse(handle, "fasta"):
+                        contigs.append(c)
             i = 0
             c: SeqRecord
             for c in sorted(contigs, key=len, reverse=True):
@@ -406,7 +412,7 @@ class MetaergGenome:
         for f in filehandles:
             f.close()
         if kwargs_masking['masked']:
-            exec.log(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
+            print(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
         if split > 1:
             return paths
         else:
