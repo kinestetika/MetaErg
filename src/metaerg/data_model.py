@@ -19,6 +19,67 @@ from BCBio import GFF
 from metaerg.run_and_read import subsystems_data
 
 
+class Fasta(NamedTuple):
+    id: str
+    descr: str
+    seq: str
+
+    def __len__(self):
+        return len(self.seq)
+
+
+def write_fasta(handle, fasta, line_length=80):
+    handle.write(f'>{fasta.id} {fasta.descr}\n')
+    for i in range(0, fasta.seq, line_length):
+        handle.write(fasta.seq[i:min(len(fasta.seq), i+line_length)])
+        handle.write('\n')
+
+
+class FastaParser:
+    def __init__(self, file):
+        self.file = file
+        self.fasta_entry = None
+        self.header = None
+        self.handle = None
+
+    def __enter__(self):
+        if str(self.file).endswith('.gz'):
+            self.handle = gzip.open(self.file, 'rt')
+        else:
+            self.handle = open(self.file)
+        return self
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.file.close()
+
+    def __iter__(self):
+        return self
+
+    def _parse_header(self, line:str):
+        si = line.find(' ')
+        if si > 0:
+            return line[1:si], line[si+1:]
+        else:
+            return line[1], ''
+
+    def __next__(self):
+        self.fasta_entry = None
+        seq = ''
+        while line := self.handle.readline():
+            if line.startswith('>'):
+                next_header = self._parse_header(line)
+                if seq:
+                    self.fasta_entry = Fasta(self.header[0], self.header[1], seq)
+                self.header = next_header
+                if self.fasta_entry:
+                    return self.fasta_entry
+            else:
+                seq += line
+        if seq:
+            return Fasta(self.header[0], self.header[1], seq)
+        raise StopIteration
+
+
 class DBentry(NamedTuple):
     id: str
     gene: str
@@ -94,10 +155,7 @@ class TabularBlastParser:
 
     def load_next_hit_from_file(self):
         self.next_hit = None
-        while self.file:
-            line = self.file.readline()
-            if not line:
-                return False
+        while line := self.file.readline():
             words = line.strip().split('\t')
             match words:
                 case [str(word), *_] if word.startswith('#'):
@@ -117,6 +175,7 @@ class TabularBlastParser:
                 case [*_]:
                     continue
             return True
+        return False
 
     def __next__(self):
         all_hits: list[BlastHit] = []

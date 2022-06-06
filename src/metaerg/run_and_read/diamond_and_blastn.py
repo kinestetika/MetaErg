@@ -11,7 +11,7 @@ from Bio.Seq import Seq
 import ncbi.datasets
 
 from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser,\
-    FeatureType, parse_feature_qualifiers_from_gff
+    FeatureType, parse_feature_qualifiers_from_gff, FastaParser, write_fasta
 from metaerg import context
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
@@ -109,6 +109,7 @@ def init_pristine_db_dir(dir) -> tuple[Path, Path, Path, Path]:
 
 def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingdom):
     try:
+
         descr_id = dictionary[description]
     except KeyError:
         descr_id = len(dictionary)
@@ -322,6 +323,10 @@ def install_prokaryote_database():
     context.log('Downloading a gff file from the NCBI FTP server for each prokaryotic genome in gtdbtk...')
     PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')
     PROK_DB_DIR.mkdir(exist_ok=True, parents=True)
+    PROK_DB_DIR_FAA = Path(PROK_DB_DIR, 'faa')
+    PROK_DB_DIR_FAA.mkdir(exist_ok=True)
+    PROK_DB_DIR_FNA = Path(PROK_DB_DIR, 'fna')
+    PROK_DB_DIR_FNA.mkdir(exist_ok=True)
     if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
         context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
         return
@@ -348,19 +353,17 @@ def install_prokaryote_database():
             words = line.split()
             accession = words[0][3:]
             taxonomy = re.sub("\w__", "", words[1]).split(';')
-            seq_file = Path(context.GTDBTK_DIR, 'fastani', 'database', accession[0:3], accession[4:7],
-                            accession[7:10], accession[10:13], f'{accession}_genomic.fna.gz')
-            future_gff_file = Path(PROK_DB_DIR, f'{accession}.gff.gz')
-            taxon = {'id': len(taxon_list), 'accession': accession, 'taxonomy': taxonomy,
-                    'cached_gff_file': future_gff_file, 'gtdb_seq_file': seq_file, 'in_local_cache': False}
+            future_faa_file = Path(PROK_DB_DIR_FAA, f'{accession}.faa.gz')
+            future_rna_file = Path(PROK_DB_DIR_FNA, f'{accession}.rna.fna.gz')
+            taxon = {'id': len(taxon_list), 'accession': accession, 'taxonomy': taxonomy, 'in_local_cache': False}
             taxon_list.append(taxon)
-            download_status = " "
-            if future_gff_file.exists():
+            if future_faa_file.exists():
                 taxon['in_local_cache'] = True
-                download_status = "+"
+                download_status = '++'
+                genomes_in_cache_count += 1
             else:
                 try:
-                    download_status = "*"
+                    download_status = ''
                     ftp.cwd('/genomes/all/')
                     for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
                         ftp.cwd(acc_part)
@@ -369,19 +372,20 @@ def install_prokaryote_database():
                     ftp.cwd(ftp_dir_list[0].split()[-1])
                     ftp_dir_list = []
                     ftp.dir('.', ftp_dir_list.append)
-                    target = None
                     for l in ftp_dir_list:
                         filename = l.split()[-1]
-                        if filename.endswith('_genomic.gff.gz'):
-                            target = filename
-                            break
-                    if target:
-                        success_count += 1
-                        with open(future_gff_file, "wb") as local_handle:
-                            ftp.retrbinary("RETR " + target, local_handle.write)
-                        taxon['in_local_cache'] = True
-                        genomes_in_cache_count += 1
-                    else:
+                        if filename.endswith('_protein.faa.gz'):
+                            download_status += '*'
+                            success_count += 1
+                            with open(future_faa_file, "wb") as local_handle:
+                                ftp.retrbinary("RETR " + filename, local_handle.write)
+                            taxon['in_local_cache'] = True
+                            genomes_in_cache_count += 1
+                        if filename.endswith('_rna_from_genomic.fna.gz'):
+                            download_status += '*'
+                            with open(future_rna_file, "wb") as local_handle:
+                                ftp.retrbinary("RETR " + filename, local_handle.write)
+                    if not download_status:
                         continue
                 except EOFError:
                     context.log('FTP Error at NCBI - resetting connection')
@@ -393,9 +397,17 @@ def install_prokaryote_database():
                     ftp = FTP('ftp.ncbi.nlm.nih.gov')
                     ftp.login()
                     continue
-            context.log(f'({count}/{taxa_count}) {download_status} {future_gff_file.name} {taxonomy}')
-            extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
-    context.log(f'downloaded {success_count} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
+            context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
+            # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
+            with FastaParser(future_faa_file) as reader, open(fasta_protein_db, 'w') as writer:
+                gene_counter = 0
+                for f in reader:
+                    f.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], f.id, gene_counter,
+                                                        descr_id, taxon["id"], len(f))
+                    gene_counter += 1
+                    write_fasta(writer, f)
+
+    context.log(f'downloaded {int(success_count)} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)
     context.log(f'Now writing taxonomy file for prok.')
     with open(taxon_db, "w") as taxon_handle:
