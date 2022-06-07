@@ -71,7 +71,7 @@ def split_fasta_file(contig_dict, base_file:Path, number_of_files:int, target):
                 if f.type == 'CDS':
                     feature_seq = pad_seq(f.extract(contig)).translate(table=TRANSLATION_TABLE)[:-1]
                     feature_seq.id = get_feature_qualifier(f, 'id')
-                    feature_seq.description = feature_seq.id
+                    feature_seq.descr = feature_seq.id
                     SeqIO.write(feature_seq, filehandles[int(count / seqs_per_file)], "fasta")
                     count += 1
         else:

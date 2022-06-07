@@ -48,9 +48,9 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
             genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
                                               if h.aligned_length / h.hit.length >= 0.8))
             top_entry = blast_result.hits[0].hit
-            feature.product = f'{top_entry.id}|{top_entry.gene} {top_entry.descr}'
-            if len(feature.product) > 35:
-                    feature.product = feature.product[:35] + '...'
+            feature.descr = f'{top_entry.id}|{top_entry.gene} {top_entry.descr}'
+            if len(feature.descr) > 35:
+                    feature.descr = feature.descr[:35] + '...'
     return cdd_result_count
 
 

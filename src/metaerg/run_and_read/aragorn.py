@@ -24,7 +24,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                     coord_match = coord_regexp.fullmatch(coordinates)
                     strand = -1 if 'c' == coord_match.group(1) else 1
                     start = max(0, int(coord_match.group(2)) - 1)
-                    end = min(len(current_contig.sequence), int(coord_match.group(3)))
+                    end = min(len(current_contig.seq), int(coord_match.group(3)))
                     f = current_contig.spawn_feature(start, end, strand, FeatureType.tRNA,
                                                      inference='aragorn')
                     f.description = f'{trna}-{codon}'

@@ -51,10 +51,10 @@ def make_feature_html(f: MetaergSeqFeature, dominant_taxon) -> str:
     html = _make_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
-        html = html.replace('HEADER', f'>{f.id} {f.product} [{f.taxon_at_genus()}]')
+        html = html.replace('HEADER', f'>{f.id} {f.descr} [{f.taxon_at_genus()}]')
     else:
-        html = html.replace('HEADER', f'>{f.id} {f.product}')
-    html = html.replace('SEQUENCE', f.sequence)
+        html = html.replace('HEADER', f'>{f.id} {f.descr}')
+    html = html.replace('SEQUENCE', f.seq)
     html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, len(f), dominant_taxon))
     html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, len(f), dominant_taxon))
     attribute_html = '<table>\n'

@@ -30,7 +30,7 @@ def make_html(genome: MetaergGenome) -> str:
     for c in genome.contigs.values():
         for f in c.features:
             format_hash = {'f_id': f.id,
-                           'description': f.product,
+                           'description': f.descr,
                            'taxon': f.taxon_at_genus()}
             if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
                 format_hash['f_id'] = '<a target="gene details" href="features/{}.html">{}</a>'.format(f.id, f.id)

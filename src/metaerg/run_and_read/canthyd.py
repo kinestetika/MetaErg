@@ -68,7 +68,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                 if descr := h.hit.descr:
                     canthyd_hit_count += 1
                     confidence = 'high' if h.score > h.hit.pos else 'low'  # cutoff is stored in 'pos'
-                    feature.product = f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
+                    feature.descr = f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
                     feature.subsystem.add('[hydrocarbon degradation]')
                     genome.subsystems.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
                 else:

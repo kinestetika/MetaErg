@@ -1,12 +1,9 @@
-import collections
 import re
 import copy
-import gzip
-from urllib.parse import unquote
-from enum import Enum, auto
-from dataclasses import dataclass, field, InitVar
-from collections import Counter
 from pathlib import Path
+from enum import Enum, auto
+from dataclasses import dataclass, field
+from collections import Counter
 from typing import NamedTuple
 
 from Bio.SeqFeature import SeqFeature, FeatureLocation
@@ -17,67 +14,6 @@ from Bio import SeqIO
 from BCBio import GFF
 
 from metaerg.run_and_read import subsystems_data
-
-
-class Fasta(NamedTuple):
-    id: str
-    descr: str
-    seq: str
-
-    def __len__(self):
-        return len(self.seq)
-
-
-def write_fasta(handle, fasta, line_length=80):
-    handle.write(f'>{fasta.id} {fasta.descr}\n')
-    for i in range(0, fasta.seq, line_length):
-        handle.write(fasta.seq[i:min(len(fasta.seq), i+line_length)])
-        handle.write('\n')
-
-
-class FastaParser:
-    def __init__(self, file):
-        self.file = file
-        self.fasta_entry = None
-        self.header = None
-        self.handle = None
-
-    def __enter__(self):
-        if str(self.file).endswith('.gz'):
-            self.handle = gzip.open(self.file, 'rt')
-        else:
-            self.handle = open(self.file)
-        return self
-
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        self.file.close()
-
-    def __iter__(self):
-        return self
-
-    def _parse_header(self, line:str):
-        si = line.find(' ')
-        if si > 0:
-            return line[1:si], line[si+1:]
-        else:
-            return line[1], ''
-
-    def __next__(self):
-        self.fasta_entry = None
-        seq = ''
-        while line := self.handle.readline():
-            if line.startswith('>'):
-                next_header = self._parse_header(line)
-                if seq:
-                    self.fasta_entry = Fasta(self.header[0], self.header[1], seq)
-                self.header = next_header
-                if self.fasta_entry:
-                    return self.fasta_entry
-            else:
-                seq += line
-        if seq:
-            return Fasta(self.header[0], self.header[1], seq)
-        raise StopIteration
 
 
 class DBentry(NamedTuple):
@@ -131,77 +67,6 @@ class BlastResult(NamedTuple):
                                                   len(self.hits),
                                                   self.hits[0].hit.descr)
 
-class TabularBlastParser:
-    def __init__(self, filename, mode, retrieve_db_entry):
-        self.filename = filename
-        self.mode = mode
-        self.next_hit = None
-        self.current_query = None
-        self.retrieve_db_entry = retrieve_db_entry
-
-    def __enter__(self):
-        self.file = open(self.filename)
-        if self.load_next_hit_from_file():
-            self.current_query = self.next_hit.query
-            return self
-        else:
-            raise StopIteration
-
-    def __exit__(self, exception_type, exception_value, exception_traceback):
-        self.file.close()
-
-    def __iter__(self):
-        return self
-
-    def load_next_hit_from_file(self):
-        self.next_hit = None
-        while line := self.file.readline():
-            words = line.strip().split('\t')
-            match words:
-                case [str(word), *_] if word.startswith('#'):
-                    continue
-                case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
-                      hit_end, evalue, score] if 'BLAST' == self.mode:
-                    hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
-                                             int(mismatches), int(gaps), int(query_start), int(query_end),
-                                             int(hit_start), int(hit_end), float(evalue), float(score))
-                case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
-                    hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
-                case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
-                    hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
-                case [*_]:
-                    continue
-            return True
-        return False
-
-    def __next__(self):
-        all_hits: list[BlastHit] = []
-        if self.next_hit:
-            all_hits.append(self.next_hit)
-        while self.load_next_hit_from_file():
-            if self.current_query != self.next_hit.query:
-                self.current_query = self.next_hit.query
-                return BlastResult(tuple(all_hits))
-            all_hits.append(self.next_hit)
-        if len(all_hits):
-            return BlastResult(tuple(all_hits))
-        raise StopIteration
-
-
-NON_IUPAC_RE = re.compile(r'[^ACTGN]')
-
-
-def parse_feature_qualifiers_from_gff(gff_str) -> {}:
-    qal = re.split(r"[=;]", gff_str)
-    qal = [unquote(str) for str in qal]
-    if len(qal) % 2 != 0:
-        qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
-    qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
-    return qal
-
 
 class FeatureType(Enum):
     CDS = auto()
@@ -214,6 +79,8 @@ class FeatureType(Enum):
     retrotransposon = auto()
 
 
+RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureType.ncRNA, FeatureType.retrotransposon)
+
 @dataclass(order=True)
 class MetaergSeqFeature:
     """Describes a sequence feature, such as a gene."""
@@ -221,10 +88,10 @@ class MetaergSeqFeature:
     end: int
     strand: int
     type: FeatureType
-    sequence: str
+    seq: str
     inference: str = ''
     id: str = ''
-    product: str = ''
+    descr: str = ''
     taxon: str = ''
     antismash: str = ''
     transmembrane_helixes: str = ''
@@ -261,7 +128,7 @@ class MetaergSeqFeature:
         return SeqFeature(location=loc, type=self.type, qualifiers=qal)
 
     def make_biopython_record(self) -> SeqRecord:
-        return SeqRecord(Seq(self.sequence), id=self.id, description=f'{self.product} [{self.taxon}]')
+        return SeqRecord(Seq(self.seq), id=self.id, description=f'{self.descr} [{self.taxon}]')
 
 
 @dataclass()
@@ -316,41 +183,21 @@ class SubSystems:
 @dataclass()
 class MetaergSeqRecord:
     id: str
-    sequence: str
-    description: str = ''
+    seq: str
+    descr: str = ''
     translation_table: int = 11
     features: list[MetaergSeqFeature] = field(init=False, default_factory=list)
     nt_masked: field(init=False) = 0
 
-    def __post_init__(self):  # clean up sequence
-        self.sequence = NON_IUPAC_RE.sub('N', self.sequence)
-        self.sequence = ''.join(self.sequence.split()).upper()
-
     def __len__(self):
-        return len(self.sequence)
-
-    def make_biopython_record(self, make_features=True, masked=False, mask_excep=None, min_mask_length=50) -> SeqRecord:
-        """Returns a BioPython SeqRecord with this content"""
-        seq = self.sequence
-        self.nt_masked = 0
-        if masked:
-            for f in self.features:
-                if f.inference not in mask_excep and len(f) >= min_mask_length:
-                    self.nt_masked += len(f)
-                    seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
-        record = SeqRecord(Seq(seq), id=self.id, description=self.description)
-        record.annotations['molecule_type'] = 'DNA'
-        if make_features:
-            for f in self.features:
-                record.features.append(f.make_biopython_feature())
-        return record
+        return len(self.seq)
 
     def spawn_feature(self, start: int, end: int, strand: int, type: FeatureType, **kwargs) -> MetaergSeqFeature:
         assert strand == 1 or strand == -1, f'invalid value {strand} for strand, needs to be 1 or -1.'
         assert end > start, f'invalid coordinates, end needs to be greater than start.'
         start = max(0, start)
-        end = min(len(self.sequence), end)
-        seq = Seq(self.sequence[start:end:strand])
+        end = min(len(self.seq), end)
+        seq = Seq(self.seq[start:end:strand])
         notes = kwargs.get("notes", set())
         try:
             translation_table = kwargs['translation_table']
@@ -364,7 +211,7 @@ class MetaergSeqRecord:
             seq = str(seq.translate(translation_table)[:-1])
             if '*' in seq:
                 notes.add('contains internal stop codon(s).')
-        f = MetaergSeqFeature(start, end, strand, type, sequence=seq, notes=notes, **kwargs)
+        f = MetaergSeqFeature(start, end, strand, type, seq=seq, notes=notes, **kwargs)
         self.features.append(f)
         return f
 
@@ -378,56 +225,46 @@ class MetaergSeqRecord:
                                    **f.qualifiers)
 
 
+def mask(seq_record, masked=False, mask_excep=None, min_mask_length=50) -> MetaergSeqRecord:
+    seq = seq_record.seq
+    seq_record.nt_masked = 0
+    if masked:
+        for f in seq_record.features:
+            if f.inference not in mask_excep and len(f) >= min_mask_length:
+                seq_record.nt_masked += len(f)
+                seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
+    return MetaergSeqRecord(seq_record.id, seq_record.descr, seq)
+    # record.annotations['molecule_type'] = 'DNA'
+
+
 @dataclass()
 class MetaergGenome:
     id: str
-    contig_file: InitVar[Path]
-    translation_table: int = 11
-    delimiter: str = '.'
     contigs: dict[str, MetaergSeqRecord] = field(default_factory=dict)
+    delimiter: str = '.'
+    translation_table: int = 11
     properties: dict = field(init=False, default_factory=dict)
     subsystems: SubSystems = field(init=False)
-    contig_name_mappings: dict[str, str] = field(init=False, default_factory=dict)
-    rename_contigs: InitVar[bool] = True
-    min_contig_length: InitVar[int] = 0
 
-    def __post_init__(self, contig_file, rename_contigs, min_contig_length):
-        """Reads contig fasta file, sorts by len, filters for min len, whitespace, and funny chars"""
-        assert self.delimiter not in self.id, f'({self.id}) Genome name contains "{self.delimiter}",' \
-                                              f' rename or change delimiter.'
+    def __post_init__(self):
         self.subsystems = SubSystems()
-        if contig_file:
-            contigs = []
-            if contig_file.name.endswith('.gz'):
-                with gzip.open(contig_file, "rt") as handle:
-                    for c in SeqIO.parse(handle, "fasta"):
-                        contigs.append(c)
-            else:
-                with open(contig_file) as handle:
-                    for c in SeqIO.parse(handle, "fasta"):
-                        contigs.append(c)
-            i = 0
-            c: SeqRecord
-            for c in sorted(contigs, key=len, reverse=True):
-                if len(c) < min_contig_length:
-                    break
-                if rename_contigs:
-                    new_id = f'{self.id}.c{i:0>4}'
-                    self.contig_name_mappings[c.id] = new_id
-                else:
-                    assert self.delimiter not in c.id, \
-                        f'({self.id}) Contig name {c.id} contain "{self.delimiter}", rename or change delimiter.'
-                    new_id = c.id
-                seq = NON_IUPAC_RE.sub('N', str(c.seq))
-                seq = ''.join(seq.split()).upper()
 
-                contig = MetaergSeqRecord(new_id, seq, c.description, self.translation_table)
-                self.contigs[contig.id] = contig
-                contig.spawn_features(c.features)
-                i += 1
+    def validate_ids(self):
+        assert self.delimiter not in self.id, f'Genome id {self.id} may not contain delimiter {self.delimiter}!'
+        for c_id in self.contigs.keys():
+            assert self.delimiter not in c_id, f'Contig id {c_id} may not contain delimiter {self.delimiter}!'
 
     def __len__(self):
         return sum(len(c) for c in self.contigs.values())
+
+    def rename_contigs(self, mappings_file:Path):
+        i = 0
+        with open(mappings_file, 'w') as mapping_writer:
+            for c in self.contigs.values():
+                new_id = f'{self.id}.c{i:0>4}'
+                mapping_writer.write(f'{c.id}\t{new_id}\n')
+                c.id = new_id
+                i += 1
 
     def generate_feature_ids(self):
         f_id = 0
@@ -441,42 +278,6 @@ class MetaergGenome:
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
 
-    def write_fasta_files(self, base_file: Path, split=1, target=None, **kwargs_masking):
-        """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
-        optionally masking features with N"""
-        if target:
-            number_of_records = sum(1 for c in self.contigs.values() for f in c.features if f.type == target
-                                    or (isinstance(target, collections.Sequence) and f.type in target))
-        else:
-            number_of_records = len(self.contigs)
-        split = min(split, number_of_records)
-        records_per_file = number_of_records / split
-        paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
-        filehandles = [open(p, 'w') for p in paths]
-        number_of_records = 0
-        nt_masked = 0
-
-        for contig in self.contigs.values():
-            if target:
-                for f in contig.features:
-                    if f.type == target or (isinstance(target, collections.Sequence) and f.type in target):
-                        SeqIO.write(f.make_biopython_record(), filehandles[int(number_of_records / records_per_file)],
-                                    "fasta")
-                        number_of_records += 1
-            else:
-                seq_record = contig.make_biopython_record(make_features=False, **kwargs_masking)
-                SeqIO.write(seq_record, filehandles[int(number_of_records / records_per_file)], "fasta")
-                number_of_records += 1
-                nt_masked += contig.nt_masked
-        for f in filehandles:
-            f.close()
-        if kwargs_masking['masked']:
-            print(f'Masked {nt_masked / len(self) * 100:.1f}% of sequence data.')
-        if split > 1:
-            return paths
-        else:
-            return base_file
-
     def write_gbk_gff(self, gbk_file=None, gff_file=None):
         record_generator = (c.make_biopython_record() for c in self.contigs.values())
         if gbk_file:
@@ -485,14 +286,9 @@ class MetaergGenome:
             with open(gff_file, "w") as gff_handle:
                 GFF.write(record_generator, gff_handle)
 
-    def write_contig_name_mappings(self, mappings_file):
-        with open(mappings_file, 'w') as mapping_writer:
-            for key, value in self.contig_name_mappings.items():
-                mapping_writer.write(f'{key}\t{value}\n')
-
     def compute_properties(self):
         self.properties['size'] = len(self)
-        self.properties['percent GC'] = int(sum((len(contig) * SeqUtils.GC(contig.sequence) for contig in
+        self.properties['percent GC'] = int(sum((len(contig) * SeqUtils.GC(contig.seq) for contig in
                                                  self.contigs.values())) / self.properties['size'] + 0.5)
         cum_size = 0
         for contig in sorted(self.contigs.values(), key=len, reverse=True):

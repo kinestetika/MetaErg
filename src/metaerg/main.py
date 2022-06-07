@@ -3,9 +3,10 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
-from metaerg.data_model import MetaergGenome, FeatureType
+from metaerg.data_model import FeatureType, RNA_FEATURES
 from metaerg.html.html_all_genomes import write_html
 from metaerg import registry
+from metaerg import bioparsers
 from metaerg.run_and_read import *
 
 VERSION = "2.1.0"
@@ -39,20 +40,21 @@ def parse_arguments():
 def annotate_genome(genome_name, input_fasta_file:Path):
     context.log(f'Now starting to annotate {genome_name}...')
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
-    genome = MetaergGenome(genome_name, input_fasta_file, rename_contigs=context.RENAME_CONTIGS,
-                           min_contig_length=context.MIN_CONTIG_LENGTH)
+
+    genome = bioparsers.load_genome_from_file(genome_name, input_fasta_file,
+                                              min_contig_length=context.MIN_CONTIG_LENGTH)
     if context.RENAME_CONTIGS:
-        contig_name_mappings_file = context.spawn_file('contig.name.mappings', genome.id)
-        genome.write_contig_name_mappings(contig_name_mappings_file)
+        genome.rename_contigs(context.spawn_file('contig.name.mappings', genome.id))
+    genome.validate_ids()
     # (2) now annotate
     for annotator in context.sorted_annotators():
         annotator()
     # (3) save results
     context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
-    genome.write_fasta_files(context.spawn_file("faa", genome.id, context.BASE_DIR), target=FeatureType.CDS)
-    genome.write_fasta_files(context.spawn_file("rna.fna", genome.id, context.BASE_DIR),
-                             target=(FeatureType.ncRNA, FeatureType.rRNA, FeatureType.retrotransposon,
-                                     FeatureType.tRNA, FeatureType.tmRNA))
+    faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)
+    rna_file = context.spawn_file("rna.fna", genome.id, context.BASE_DIR)
+    bioparsers.write_genome_fasta_files(genome, faa_file, target=FeatureType.CDS)
+    bioparsers.write_genome_fasta_files(genome, rna_file, target=RNA_FEATURES)
     genome.write_gbk_gff(gbk_file=context.spawn_file("gbk", genome.id, context.BASE_DIR),
                          gff_file=context.spawn_file("gff", genome.id))
     # (4) visualize

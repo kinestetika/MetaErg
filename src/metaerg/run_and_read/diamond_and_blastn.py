@@ -66,7 +66,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     def process_blast_result(blast_result: BlastResult):
         feature: MetaergSeqFeature = genome.get_feature(blast_result.query())
         feature.blast = blast_result
-        feature.product = blast_result.summary()
+        feature.descr = blast_result.summary()
         genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits if h.aligned_length / h.hit.length >= 0.8))
 
     blast_result_count = 0
@@ -148,12 +148,12 @@ def install_viral_database():
                     if gb_record.annotations['molecule_type'] != 'protein':
                         context.log("warning: skipping non-coding gene in viral refseq")
                         continue
-                    match = pattern.search(gb_record.description)
+                    match = pattern.search(gb_record.descr)
                     if match:
                         gb_record.annotations['taxonomy'].append(match.group(1))
-                        gb_record.description = gb_record.description[0:match.start()]
+                        gb_record.descr = gb_record.descr[0:match.start()]
                     else:
-                        context.log(f'Warning, Failed to parse viral species from {gb_record.description}')
+                        context.log(f'Warning, Failed to parse viral species from {gb_record.descr}')
                     taxon_str = "~".join(gb_record.annotations['taxonomy'])
                     try:
                         taxon_id = taxon_dict[taxon_str]
@@ -161,11 +161,11 @@ def install_viral_database():
                         taxon_id = len(taxon_dict)
                         taxon_dict[taxon_str] = taxon_id
                         taxon_handle.write(f'v\t{taxon_id}\t{taxon_str}\n')
-                    descr_id = update_db_descriptions_get_db_id(gb_record.description, descr_dict, descr_handle, 'v')
+                    descr_id = update_db_descriptions_get_db_id(gb_record.descr, descr_dict, descr_handle, 'v')
                     seq_record = SeqRecord(gb_record.seq)
                     seq_record.id = '{}~{}~v~{}~{}~{}~{}'.format(taxon_id, gb_record.id, gene_count, descr_id,
                                                                  taxon_id, len(seq_record.seq))
-                    seq_record.description = gb_record.description
+                    seq_record.description = gb_record.descr
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")
                     gene_count += 1
 
@@ -453,11 +453,11 @@ def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
                                                                           translation_table=translation_table,
                                                                           product=product,
                                                                           id=id)
-                        if '*' in feature.sequence:
+                        if '*' in feature.seq:
                             continue
                         handle = prot_fasta_out_handle if feature.type == FeatureType.CDS else rna_fasta_out_handle
                         gene_counter += 1
-                        descr_id = update_db_descriptions_get_db_id(feature.product, descr_dict, description_handle, 'p')
+                        descr_id = update_db_descriptions_get_db_id(feature.descr, descr_dict, description_handle, 'p')
                         feature.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], feature.id, gene_counter,
                                                                   descr_id, taxon["id"], len(feature))
                         SeqIO.write(feature.make_biopython_record(), handle, "fasta")
