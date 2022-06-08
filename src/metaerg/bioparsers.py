@@ -2,8 +2,9 @@ import gzip
 import re
 import collections
 from pathlib import Path
-from metaerg.data_model import MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, mask
-
+from metaerg.data_model import FeatureType, MetaergSeqFeature, MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, Masker
+from metaerg import context
+from urllib.parse import unquote
 
 NON_IUPAC_RE = re.compile(r'[^ACTGN]')
 
@@ -82,7 +83,7 @@ def write_fasta(handle, fasta, line_length=80):
         _wf(fasta)
 
 
-def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, **kwargs_masking):
+def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, mask=True, exceptions=None, min_length=50):
     """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
     optionally masking features with N"""
     if target:
@@ -95,8 +96,7 @@ def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, **kw
     paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
     filehandles = [open(p, 'w') for p in paths]
     number_of_records = 0
-    nt_masked = 0
-
+    masker = Masker(mask=mask, exceptions=exceptions, min_length=min_length)
     for contig in genome.contigs.values():
         if target:
             for f in contig.features:
@@ -104,13 +104,12 @@ def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, **kw
                     write_fasta(filehandles[int(number_of_records / records_per_file)], f)
                     number_of_records += 1
         else:
-            write_fasta(filehandles[int(number_of_records / records_per_file)], mask(contig, **kwargs_masking))
+            write_fasta(filehandles[int(number_of_records / records_per_file)], masker.mask(contig))
             number_of_records += 1
-            nt_masked += contig.nt_masked xxx
     for f in filehandles:
         f.close()
-    if kwargs_masking['masked']:
-        print(f'Masked {nt_masked / len(genome) * 100:.1f}% of sequence data.')
+    if mask:
+        context.log(masker.stats())
     if split > 1:
         return paths
     else:
@@ -202,18 +201,24 @@ class GffParser:
         while line := self.handle.readline():
             if line.startswith('#'):
                 continue
-            words = line.strip().split('\t')
+            words: list[str] = line.strip().split('\t')
             if len(words) < 9:
                 continue
+            qal = parse_feature_qualifiers_from_gff(words[8])
+            strand = -1 if '-' == words[6] else 1
+            try:
+                type = FeatureType[words[2]]
+            except KeyError:
+                type = FeatureType.ncRNA
 
+            return MetaergSeqFeature(int(words[3])-1, int(words[4]), strand, type, words[1], '', id=words[0])
         raise StopIteration
 
-def parse_feature_qualifiers_from_gff(gff_str) -> {}:
-    qal = re.split(r"[=;]", gff_str)
+
+def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:
+    qal = re.split(r"[=;]", qualifier_str)
     qal = [unquote(str) for str in qal]
     if len(qal) % 2 != 0:
         qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
     qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
     return qal
-
-

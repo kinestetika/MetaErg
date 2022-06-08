@@ -1,10 +1,11 @@
 import re
-from metaerg.data_model import FeatureType, MetaergGenome
+from metaerg.data_model import FeatureType, MetaergGenome, MetaergSeqFeature
 from metaerg import context
+from metaerg.bioparsers import write_genome_fasta_files
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    fasta_file = write_genome_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
     context.run_external(f'aragorn -l -t -gc{genome.translation_table} {fasta_file} -w -o {result_files[0]}')
 
 def _read_results(genome:MetaergGenome, result_files) -> int:
@@ -25,9 +26,9 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                     strand = -1 if 'c' == coord_match.group(1) else 1
                     start = max(0, int(coord_match.group(2)) - 1)
                     end = min(len(current_contig.seq), int(coord_match.group(3)))
-                    f = current_contig.spawn_feature(start, end, strand, FeatureType.tRNA,
-                                                     inference='aragorn')
-                    f.description = f'{trna}-{codon}'
+                    feature = MetaergSeqFeature(start, end, strand, FeatureType.tRNA, 'aragorn', seq=ahghsag,
+                              descr=f'{trna}-{codon}')
+                    current_contig.features.append(feature)
     return trna_count
 
 

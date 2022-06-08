@@ -10,8 +10,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, TabularBlastParser,\
-    FeatureType, parse_feature_qualifiers_from_gff, FastaParser, write_fasta
+from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, FeatureType
 from metaerg import context
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'

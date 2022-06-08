@@ -1,18 +1,9 @@
 import re
-import copy
 from pathlib import Path
 from enum import Enum, auto
 from dataclasses import dataclass, field
 from collections import Counter
 from typing import NamedTuple
-
-from Bio.SeqFeature import SeqFeature, FeatureLocation
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
-from Bio import SeqUtils
-from Bio import SeqIO
-from BCBio import GFF
-
 from metaerg.run_and_read import subsystems_data
 
 
@@ -88,8 +79,8 @@ class MetaergSeqFeature:
     end: int
     strand: int
     type: FeatureType
+    inference: str
     seq: str
-    inference: str = ''
     id: str = ''
     descr: str = ''
     taxon: str = ''
@@ -120,15 +111,6 @@ class MetaergSeqFeature:
             if " " not in t:
                 return t
         return ''
-
-    def make_biopython_feature(self) -> SeqFeature:
-        """Returns a BioPython SeqFeature with this content"""
-        loc = FeatureLocation(self.start, self.end, self.strand)
-        qal = {key: getattr(self, key) for key in MetaergSeqFeature.exported_keys if getattr(self, key)}
-        return SeqFeature(location=loc, type=self.type, qualifiers=qal)
-
-    def make_biopython_record(self) -> SeqRecord:
-        return SeqRecord(Seq(self.seq), id=self.id, description=f'{self.descr} [{self.taxon}]')
 
 
 @dataclass()
@@ -185,56 +167,35 @@ class MetaergSeqRecord:
     id: str
     seq: str
     descr: str = ''
-    translation_table: int = 11
     features: list[MetaergSeqFeature] = field(init=False, default_factory=list)
-    nt_masked: field(init=False) = 0
 
     def __len__(self):
         return len(self.seq)
 
-    def spawn_feature(self, start: int, end: int, strand: int, type: FeatureType, **kwargs) -> MetaergSeqFeature:
-        assert strand == 1 or strand == -1, f'invalid value {strand} for strand, needs to be 1 or -1.'
-        assert end > start, f'invalid coordinates, end needs to be greater than start.'
-        start = max(0, start)
-        end = min(len(self.seq), end)
-        seq = Seq(self.seq[start:end:strand])
-        notes = kwargs.get("notes", set())
-        try:
-            translation_table = kwargs['translation_table']
-            del kwargs['translation_table']
-        except KeyError:
-            translation_table = self.translation_table
-        if FeatureType.CDS == type:
-            remainder = len(seq) % 3
-            if remainder:
-                seq = seq + Seq('N' * (3 - remainder))
-            seq = str(seq.translate(translation_table)[:-1])
-            if '*' in seq:
-                notes.add('contains internal stop codon(s).')
-        f = MetaergSeqFeature(start, end, strand, type, seq=seq, notes=notes, **kwargs)
-        self.features.append(f)
-        return f
 
-    def spawn_features(self, features):
-        for f in features:
-            if isinstance(f, MetaergSeqFeature):
-                f_copy = copy.deepcopy(f)
-                self.features.append(f_copy)
-            elif isinstance(f, SeqFeature):
-                self.spawn_feature(f.location.start, f.location.end, f.location.strand, FeatureType[f.type],
-                                   **f.qualifiers)
+class Masker:
+    def __init__(self, mask=True, exceptions=None, min_length=50):
+        self.mask = mask
+        self.exceptions = exceptions
+        self.min_length = min_length
+        self.nt_total = 0
+        self.nt_masked = 0
 
+    def mask(self, seq_record) -> MetaergSeqRecord:
+        seq = seq_record.seq
+        seq_record.nt_masked = 0
+        if self.mask:
+            for f in seq_record.features:
+                if f.inference not in self.exceptions and len(f) >= self.min_length:
+                    seq_record.nt_masked += len(f)
+                    seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
+                    self.nt_masked += len(f)
+        self.nt_total += len(seq_record)
+        return MetaergSeqRecord(seq_record.id, seq_record.descr, seq)
+        # record.annotations['molecule_type'] = 'DNA'
 
-def mask(seq_record, masked=False, mask_excep=None, min_mask_length=50) -> MetaergSeqRecord:
-    seq = seq_record.seq
-    seq_record.nt_masked = 0
-    if masked:
-        for f in seq_record.features:
-            if f.inference not in mask_excep and len(f) >= min_mask_length:
-                seq_record.nt_masked += len(f)
-                seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
-    return MetaergSeqRecord(seq_record.id, seq_record.descr, seq)
-    # record.annotations['molecule_type'] = 'DNA'
+    def stats(self):
+        return f'Masked {self.nt_masked / self.nt_total * 100:.1f}% of sequence data.'
 
 
 @dataclass()
@@ -288,7 +249,7 @@ class MetaergGenome:
 
     def compute_properties(self):
         self.properties['size'] = len(self)
-        self.properties['percent GC'] = int(sum((len(contig) * SeqUtils.GC(contig.seq) for contig in
+        self.properties['percent GC'] = int(sum((c.seq.count('G') + c.seq.count('G') for c in
                                                  self.contigs.values())) / self.properties['size'] + 0.5)
         cum_size = 0
         for contig in sorted(self.contigs.values(), key=len, reverse=True):
