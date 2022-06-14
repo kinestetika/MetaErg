@@ -141,7 +141,7 @@ def install_viral_database():
         for i in range(1,5):
             f = Path(VIR_DB_DIR, f'viral.{i}.protein.gpff.gz')
             if not f.exists() or not f.stat().st_size:
-                url = 'https://ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
+                url = 'ftp.ncbi.nlm.nih.gov/refseq/release/viral/'
                 context.run_external(f'wget -P {VIR_DB_DIR} {url}.{i}.protein.gpff.gz')
             gene_count = 0
             with gzip.open(f, 'rt') as file_handle:
@@ -334,7 +334,7 @@ def install_prokaryote_database():
         context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
         return
     RNA_DESCR_RE = re.compile(r'\[product=(.+?)]')
-    AA_DESCR_RE = re.compile(r'\s\[(.+?)]$')
+    AA_DESCR_RE = re.compile(r'\[(.+?)]$')
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(PROK_DB_DIR)
     descr_dict = {}
     kingdom = 'p'
@@ -363,7 +363,7 @@ def install_prokaryote_database():
             future_rna_file = Path(PROK_DB_DIR_FNA, f'{accession}.rna.fna.gz')
             taxon = {'id': len(taxon_list), 'accession': accession, 'taxonomy': taxonomy, 'in_local_cache': False}
             taxon_list.append(taxon)
-            if future_faa_file.exists():
+            if future_faa_file.exists() and future_rna_file.exists():
                 taxon['in_local_cache'] = True
                 download_status = '++'
                 genomes_in_cache_count += 1
@@ -380,14 +380,14 @@ def install_prokaryote_database():
                     ftp.dir('.', ftp_dir_list.append)
                     for l in ftp_dir_list:
                         filename = l.split()[-1]
-                        if filename.endswith('_protein.faa.gz'):
+                        if filename.endswith('_protein.faa.gz') and not future_faa_file.exists():
                             download_status += '*'
                             success_count += 1
                             with open(future_faa_file, "wb") as local_handle:
                                 ftp.retrbinary("RETR " + filename, local_handle.write)
                             taxon['in_local_cache'] = True
                             genomes_in_cache_count += 1
-                        if filename.endswith('_rna_from_genomic.fna.gz'):
+                        if filename.endswith('_rna_from_genomic.fna.gz') and not future_rna_file.exists():
                             download_status += '*'
                             with open(future_rna_file, "wb") as local_handle:
                                 ftp.retrbinary("RETR " + filename, local_handle.write)
@@ -406,13 +406,18 @@ def install_prokaryote_database():
             context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
             # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
             for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):
-                with bioparsers.FastaParser(input, cleanup_seq=False) as reader, open(output, 'w') as writer:
+                with bioparsers.FastaParser(input, cleanup_seq=False) as reader, open(output, 'a') as writer:
                     gene_counter = 0
                     for f in reader:
-
-                        descr_id = update_db_descriptions_get_db_id(f.descr, descr_dict, descr_handle, kingdom)
+                        if m:= RNA_DESCR_RE.search(f.descr):
+                            descr = m.group(1)
+                        elif m:= AA_DESCR_RE.search(f.descr):
+                            descr = f.descr[0:m.start()].strip()
+                            descr = descr.replace('MULTISPECIES: ', '')
+                        descr_id = update_db_descriptions_get_db_id(descr, descr_dict, descr_handle, kingdom)
                         f.id = '{}~{}~{}~{}~{}~{}~{}'.format(kingdom, taxon['id'], descr_id, f.id.replace('~', '-'),
                                                              '', len(f), gene_counter)
+                        f.descr = descr
                         gene_counter += 1
                         bioparsers.write_fasta(writer, f)
 
