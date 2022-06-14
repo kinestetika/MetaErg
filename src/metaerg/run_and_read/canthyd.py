@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from metaerg.data_model import MetaergSeqFeature, TabularBlastParser, DBentry, MetaergGenome
+from metaerg.data_model import MetaergSeqFeature, DBentry, MetaergGenome
 from metaerg import context
+from metaerg import bioparsers
 
 
 def _run_programs(genome:MetaergGenome, result_files):
@@ -60,7 +61,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     def get_db_entry(db_id) -> DBentry:
         return DBentry(db_id, '', canthyd_descr.get(db_id, ''), '', 0, canthyd_trusted_cutoffs[db_id])
 
-    with TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
+    with bioparsers.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         canthyd_hit_count = 0
         for blast_result in handle:
             feature: MetaergSeqFeature = genome.get_feature(blast_result.query)

@@ -1,9 +1,10 @@
 from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
 from metaerg import context
+from metaerg import bioparsers
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    fasta_file, = bioparsers.write_genome_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
     context.run_external(f'prodigal -g {genome.translation_table} -m -f gff -q -i {fasta_file} -o {result_files[0]}')
 
 

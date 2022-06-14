@@ -87,8 +87,8 @@ class MetaergSeqFeature:
     antismash: str = ''
     transmembrane_helixes: str = ''
     signal_peptide: str = ''
-    cdd: BlastResult = field(init=False)
-    blast: BlastResult = field(init=False)
+    cdd: BlastResult = None
+    blast: BlastResult = None
     subsystem: set[str] = field(default_factory=set)
     notes: set[str] = field(default_factory=set)
     # because it does not have a type, exported_keys becomes a class attribute

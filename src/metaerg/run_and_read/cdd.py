@@ -3,14 +3,16 @@ import shutil
 import os
 from concurrent.futures import ProcessPoolExecutor
 
-from metaerg.data_model import MetaergSeqFeature, MetaergGenome, FeatureType, TabularBlastParser, DBentry
+from metaerg.data_model import MetaergSeqFeature, MetaergGenome, FeatureType, DBentry
 from metaerg import context
+from metaerg import bioparsers
 
 def _run_programs(genome:MetaergGenome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = genome.write_fasta_files(cds_aa_file, context.CPUS_PER_GENOME, target=FeatureType.CDS)
+        split_fasta_files = bioparsers.write_genome_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
+                                                                target=FeatureType.CDS)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -40,7 +42,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     context.log(f'Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
-    with TabularBlastParser(result_files, 'BLAST', lambda i: cdd[int(i[4:])]) as handle:
+    with bioparsers.TabularBlastParser(result_files, 'BLAST', lambda i: cdd[int(i[4:])]) as handle:
         for blast_result in handle:
             feature: MetaergSeqFeature = genome.get_feature(blast_result.query)
             cdd_result_count += 1

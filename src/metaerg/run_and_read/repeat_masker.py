@@ -3,10 +3,11 @@ from pathlib import Path
 
 from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
 from metaerg import context
+from metaerg import bioparsers
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = genome.write_fasta_files(context.spawn_file('masked', genome.id), masked=True)
+    fasta_file, = bioparsers.write_genome_fasta_files(context.spawn_file(genome, 'masked', genome.id), mask=True)
     lmer_table_file = context.spawn_file('lmer-table', genome.id)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)

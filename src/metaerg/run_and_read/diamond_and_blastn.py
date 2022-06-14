@@ -10,8 +10,9 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry, FeatureType
+from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry
 from metaerg import context
+from metaerg import bioparsers
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
@@ -69,11 +70,11 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
         genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits if h.aligned_length / h.hit.length >= 0.8))
 
     blast_result_count = 0
-    with TabularBlastParser(result_files[0], 'BLAST', get_db_entry) as handle:
+    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', get_db_entry) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with TabularBlastParser(result_files[1], 'BLAST', get_db_entry) as handle:
+    with bioparsers.TabularBlastParser(result_files[1], 'BLAST', get_db_entry) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
@@ -398,13 +399,13 @@ def install_prokaryote_database():
                     continue
             context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
             # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
-            with FastaParser(future_faa_file) as reader, open(fasta_protein_db, 'w') as writer:
+            with bioparsers.FastaParser(future_faa_file) as reader, open(fasta_protein_db, 'w') as writer:
                 gene_counter = 0
                 for f in reader:
                     f.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], f.id, gene_counter,
-                                                        descr_id, taxon["id"], len(f))
+                                                        f.id.replace('~', '-'), taxon["id"], len(f))
                     gene_counter += 1
-                    write_fasta(writer, f)
+                    bioparsers.write_fasta(writer, f)
 
     context.log(f'downloaded {int(success_count)} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)
@@ -412,61 +413,6 @@ def install_prokaryote_database():
     with open(taxon_db, "w") as taxon_handle:
         for t in taxon_list:
             taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["in_local_cache"]}\t{t["accession"]}\n')
-
-
-def extract_proteins_and_rna_prok(taxon, descr_dict, prok_db_dir):
-    try:
-        genome: MetaergGenome = MetaergGenome(contig_file=taxon["gtdb_seq_file"], rename_contigs=False,
-                                              min_contig_length=0, id =taxon["gtdb_seq_file"].name, delimiter='~')
-        with gzip.open(taxon["cached_gff_file"], "rt") as gff_handle, \
-                open(Path(prok_db_dir, DB_PROTEINS_FILENAME), 'a') as prot_fasta_out_handle, \
-                open(Path(prok_db_dir, DB_RNA_FILENAME), 'a') as rna_fasta_out_handle, \
-                open(Path(prok_db_dir, DB_DESCRIPTIONS_FILENAME), 'a') as description_handle:
-            gene_counter = 0
-            line: str
-            for line in gff_handle:
-                if line.startswith("#"):
-                    continue
-                if 'similar to' in line or 'identical to' in line:
-                    continue
-                words = line.split('\t')
-                if len(words) < 9:
-                    continue
-                try:
-                    contig = genome.contigs[words[0]]
-                except KeyError:
-                    continue
-                if words[2] in RELEVANT_FEATURE_TYPES:
-                    qualifiers = parse_feature_qualifiers_from_gff(words[8])
-                    translation_table = qualifiers.get('transl_table', genome.translation_table)
-                    id = qualifiers.get('id', 0)
-                    try:
-                        featureType = FeatureType[words[2]]
-                    except KeyError:
-                        featureType = FeatureType.ncRNA
-                    if product := qualifiers.get('product', qualifiers.get('note', '')):
-                        feature: MetaergSeqFeature = contig.spawn_feature(int(words[3]) - 1,
-                                                                          int(words[4]),
-                                                                          -1 if words[6] == '-' else 1,
-                                                                          featureType,
-                                                                          translation_table=translation_table,
-                                                                          product=product,
-                                                                          id=id)
-                        if '*' in feature.seq:
-                            continue
-                        handle = prot_fasta_out_handle if feature.type == FeatureType.CDS else rna_fasta_out_handle
-                        gene_counter += 1
-                        descr_id = update_db_descriptions_get_db_id(feature.descr, descr_dict, description_handle, 'p')
-                        feature.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], feature.id, gene_counter,
-                                                                  descr_id, taxon["id"], len(feature))
-                        SeqIO.write(feature.make_biopython_record(), handle, "fasta")
-                elif words[2] in IGNORED_FEATURE_TYPES:
-                    pass
-                else:
-                    context.log(f'  Warning: unknown feature type in line "{line}"')
-    except EOFError:
-        context.log(f'Incomplete file detected for {taxon["cached_gff_file"]}. Deleting...')
-        taxon["cached_gff_file"].unlink()
 
 
 @context.register_database_installer

@@ -181,8 +181,11 @@ class TabularBlastParser:
 
 
 class GffParser:
-    def __init__(self, path):
+    def __init__(self, path, contig_dict, target:dict=None, inference:str=None):
         self.path = path
+        self.contig_dict = contig_dict
+        self.target = target  # should be a dictionary
+        self.inference = inference
 
     def __enter__(self):
         if str(self.path).endswith('.gz'):
@@ -197,21 +200,35 @@ class GffParser:
     def __iter__(self):
         return self
 
-    def __next__(self):
+    def __next__(self) -> MetaergSeqFeature:
         while line := self.handle.readline():
-            if line.startswith('#'):
-                continue
-            words: list[str] = line.strip().split('\t')
-            if len(words) < 9:
-                continue
-            qal = parse_feature_qualifiers_from_gff(words[8])
-            strand = -1 if '-' == words[6] else 1
-            try:
-                type = FeatureType[words[2]]
-            except KeyError:
-                type = FeatureType.ncRNA
-
-            return MetaergSeqFeature(int(words[3])-1, int(words[4]), strand, type, words[1], '', id=words[0])
+            words = line.strip().split('\t')
+            match(words):
+                case[word, *_] if word.startswith('#'):
+                    continue
+                case [contig_name, inference, feature_type, start, end, score, strand, frame, qualifiers]:
+                    if self.target and feature_type not in self.target.keys():
+                        continue
+                    try:
+                        contig: MetaergSeqRecord = self.contig_dict[contig_name]
+                    except KeyError:
+                        continue
+                    start = int(start) - 1
+                    end = int(end)
+                    strand = -1 if '-' == strand else 1
+                    seq = contig.seq[start:end]
+                    if strand < 0:
+                        seq = reverse_complement(seq)
+                    inference = self.inference if self.inference else inference
+                    qualifiers = re.split(r"[=;]", qualifiers)
+                    qualifiers = [unquote(str) for str in qualifiers]
+                    if len(qualifiers) % 2 != 0:
+                        qualifiers = qualifiers[:-1]  # this happens for example with prodigal, ending with ";"
+                    qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
+                    feature = MetaergSeqFeature(start, end, strand, self.target[feature_type],
+                                                inference=inference, seq=seq)
+                    contig.features.append(feature)
+                    return feature
         raise StopIteration
 
 
@@ -222,3 +239,9 @@ def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:
         qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
     qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
     return qal
+
+
+COMPLEMENT = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',}
+
+def reverse_complement(seq:str) -> str:
+    return ''.join(COMPLEMENT.get(b, 'N') for b in reversed(seq))
