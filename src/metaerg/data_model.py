@@ -8,10 +8,11 @@ from metaerg.run_and_read import subsystems_data
 
 
 class DBentry(NamedTuple):
-    id: str
-    gene: str
-    descr: str
+    domain: str
     taxon: str
+    descr: str
+    ncbi: str
+    gene: str
     length: int
     pos: int
 
@@ -71,6 +72,7 @@ class FeatureType(Enum):
 
 
 RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureType.ncRNA, FeatureType.retrotransposon)
+
 
 @dataclass(order=True)
 class MetaergSeqFeature:
@@ -239,13 +241,13 @@ class MetaergGenome:
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
 
-    def write_gbk_gff(self, gbk_file=None, gff_file=None):
-        record_generator = (c.make_biopython_record() for c in self.contigs.values())
-        if gbk_file:
-            SeqIO.write(record_generator, gbk_file, "genbank")
-        if gff_file:
-            with open(gff_file, "w") as gff_handle:
-                GFF.write(record_generator, gff_handle)
+    # def write_gbk_gff(self, gbk_file=None, gff_file=None):
+    #     record_generator = (c.make_biopython_record() for c in self.contigs.values())
+    #     if gbk_file:
+    #         SeqIO.write(record_generator, gbk_file, "genbank")
+    #     if gff_file:
+    #         with open(gff_file, "w") as gff_handle:
+    #             GFF.write(record_generator, gff_handle)
 
     def compute_properties(self):
         self.properties['size'] = len(self)
@@ -286,9 +288,3 @@ class MetaergGenome:
         dominant_taxon, highest_count = taxon_counts.most_common(1)[0]
         self.properties['dominant taxon'] = f'{dominant_taxon} ({highest_count/sum(taxon_counts.values()) * 100:.1f}%)'
         return self.properties
-
-
-def pad_seq(sequence):
-    """ Pad sequence to multiple of 3 with N """
-    remainder = len(sequence) % 3
-    return sequence if remainder == 0 else sequence + Seq('N' * (3 - remainder))

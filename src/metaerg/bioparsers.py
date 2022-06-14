@@ -1,18 +1,19 @@
 import gzip
 import re
-import collections
+from collections.abc import Iterable, Sequence
 from pathlib import Path
 from metaerg.data_model import FeatureType, MetaergSeqFeature, MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, Masker
 from metaerg import context
 from urllib.parse import unquote
 
-NON_IUPAC_RE = re.compile(r'[^ACTGN]')
+NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
+NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
 
 
 def _parse_fasta_header(line:str) -> tuple:
     si = line.find(' ')
     if si > 0:
-        return line[1:si], line[si+1:]
+        return line[1:si], line[si+1:].strip()
     else:
         return line[1], ''
 
@@ -23,6 +24,8 @@ class FastaParser:
         self.header = None
         self.handle = None
         self.cleanup_seq = cleanup_seq
+        self.alphabet = None
+        self.unknown_char = ''
 
     def __enter__(self):
         if str(self.path).endswith('.gz'):
@@ -39,8 +42,10 @@ class FastaParser:
 
     def _cleanup(self, seq):
         if self.cleanup_seq:
-            seq = NON_IUPAC_RE.sub('N', seq)
-            seq = ''.join(seq.split()).upper()
+            seq = seq.upper()
+            seq = ''.join(seq.split())
+            if self.alphabet:
+                seq = self.alphabet.sub(self.unknown_char, seq)
         return seq
 
     def __next__(self):
@@ -55,7 +60,16 @@ class FastaParser:
                 if seq_record:
                     return seq_record
             else:
-                seq += line
+                seq += line.strip()
+                if len(seq) > 10 and not self.alphabet and self.cleanup_seq:
+                    seq_nt = NON_IUPAC_RE_NT.findall(seq)
+                    seq_aa = NON_IUPAC_RE_AA.findall(seq)
+                    if len(seq_nt) <= len(seq_aa):
+                        self.alphabet = NON_IUPAC_RE_NT
+                        self.unknown_char = 'N'
+                    else:
+                        self.alphabet = NON_IUPAC_RE_AA
+                        self.unknown_char = 'X'
         if seq:
             return MetaergSeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
         raise StopIteration
@@ -71,12 +85,13 @@ def load_genome_from_file(genome_id, filename, min_contig_length=0, delimiter='.
 
 def write_fasta(handle, fasta, line_length=80):
     def _wf(f):
+        assert len(f.seq), 'Attempt to write zero-lentgh sequence to fasta.'
         handle.write(f'>{f.id} {f.descr}\n')
-        for i in range(0, f.seq, line_length):
+        for i in range(0, len(f.seq), line_length):
             handle.write(f.seq[i:min(len(f.seq), i + line_length)])
             handle.write('\n')
 
-    if isinstance(fasta, collections.Iterable):
+    if isinstance(fasta, Iterable):
         for f in fasta:
             _wf(f)
     else:
@@ -88,7 +103,7 @@ def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, mask
     optionally masking features with N"""
     if target:
         number_of_records = sum(1 for c in genome.contigs.values() for f in c.features if f.type == target
-                                or (isinstance(target, collections.Sequence) and f.type in target))
+                                or (isinstance(target, Sequence) and f.type in target))
     else:
         number_of_records = len(genome.contigs)
     split = min(split, number_of_records)
@@ -100,7 +115,7 @@ def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, mask
     for contig in genome.contigs.values():
         if target:
             for f in contig.features:
-                if f.type == target or (isinstance(target, collections.Sequence) and f.type in target):
+                if f.type == target or (isinstance(target, Sequence) and f.type in target):
                     write_fasta(filehandles[int(number_of_records / records_per_file)], f)
                     number_of_records += 1
         else:
@@ -243,5 +258,12 @@ def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:
 
 COMPLEMENT = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',}
 
+
 def reverse_complement(seq:str) -> str:
     return ''.join(COMPLEMENT.get(b, 'N') for b in reversed(seq))
+
+
+def pad_seq(sequence):
+    """ Pad sequence to multiple of 3 with N """
+    remainder = len(sequence) % 3
+    return sequence if remainder == 0 else sequence + 'N' * (3 - remainder)

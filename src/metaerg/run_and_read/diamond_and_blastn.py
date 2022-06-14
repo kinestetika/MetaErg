@@ -38,6 +38,12 @@ def _run_programs(genome:MetaergGenome, result_files):
     context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 -outfmt 6')
 
 
+def dbentry_from_string(db_id: str, descriptions: dict, taxonomy: dict) -> DBentry:
+    w = db_id.split('~')
+    return DBentry(domain=w[0], taxon=taxonomy[w[0]][w[1]], descr=descriptions[w[0]][w[2]], ncbi=w[3], gene=w[4],
+                   length=int(w[5]), pos=int(w[6]))
+
+
 def _read_results(genome:MetaergGenome, result_files) -> int:
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
@@ -58,10 +64,6 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     context.log(f'Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
     # (3) parse diamond blast results
-    def get_db_entry(db_id):
-        words = db_id.split('~')  # org_acc gene_acc [pev] gene# decr# taxon#
-        return DBentry(db_id, '', descriptions[words[2]][int(words[4])], taxonomy[words[2]][int(words[5])],
-                       int(words[6]), int(words[3]))
 
     def process_blast_result(blast_result: BlastResult):
         feature: MetaergSeqFeature = genome.get_feature(blast_result.query())
@@ -70,11 +72,11 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
         genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits if h.aligned_length / h.hit.length >= 0.8))
 
     blast_result_count = 0
-    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', get_db_entry) as handle:
+    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with bioparsers.TabularBlastParser(result_files[1], 'BLAST', get_db_entry) as handle:
+    with bioparsers.TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
@@ -109,7 +111,6 @@ def init_pristine_db_dir(dir) -> tuple[Path, Path, Path, Path]:
 
 def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingdom):
     try:
-
         descr_id = dictionary[description]
     except KeyError:
         descr_id = len(dictionary)
@@ -163,8 +164,9 @@ def install_viral_database():
                         taxon_handle.write(f'v\t{taxon_id}\t{taxon_str}\n')
                     descr_id = update_db_descriptions_get_db_id(gb_record.descr, descr_dict, descr_handle, 'v')
                     seq_record = SeqRecord(gb_record.seq)
-                    seq_record.id = '{}~{}~v~{}~{}~{}~{}'.format(taxon_id, gb_record.id, gene_count, descr_id,
-                                                                 taxon_id, len(seq_record.seq))
+                    seq_record.id = '{}~{}~{}~{}~{}~{}~{}'.format('v', taxon_id, descr_id,
+                                                                  gb_record.id.replace('~', '-'), '',
+                                                                  len(seq_record.seq), gene_count)
                     seq_record.description = gb_record.descr
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")
                     gene_count += 1
@@ -254,7 +256,7 @@ def install_eukaryote_database():
     descr_dict = dict()
     taxon_dict = dict()
     with open(fasta_protein_db, 'w') as prot_fasta_out_handle,open(fasta_nt_db, 'w')  as rna_fasta_out_handle, \
-            open(descr_db, 'w') as desrc_handle, open(taxon_db, 'w') as taxon_handle:
+            open(descr_db, 'w') as descr_handle, open(taxon_db, 'w') as taxon_handle:
         genome_count = 0
         for file in EUK_DB_DIR.glob('*.gbk.gz'):
             genome_count += 1
@@ -302,10 +304,11 @@ def install_eukaryote_database():
                             else:
                                 context.log(f"WARNING: No description for feature {feature}")
                                 seq_record.description = f'Unknown {feature.type}'
-                            descr_id = update_db_descriptions_get_db_id(seq_record.description, descr_dict, desrc_handle,
-                                                                      'e')
-                            seq_record.id = '{}~0~e~{}~{}~{}~{}'.format(gb_record.id, feature_success_counter,
-                                                                        descr_id, taxon_id, len(seq_record.seq))
+                            descr_id = update_db_descriptions_get_db_id(seq_record.description, descr_dict,
+                                                                        descr_handle, 'e')
+                            seq_record.id = '{}~{}~{}~{}~{}~{}~{}'.format('e', taxon_id, descr_id,
+                                                                          gb_record.id.replace('~', '-'), '',
+                                                                          len(seq_record.seq), feature_success_counter)
                             SeqIO.write(seq_record, file_handle, "fasta")
                             feature_success_counter += 1
                         elif feature.type in IGNORED_FEATURE_TYPES:
@@ -330,18 +333,21 @@ def install_prokaryote_database():
     if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
         context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
         return
+    RNA_DESCR_RE = re.compile(r'\[product=(.+?)]')
+    AA_DESCR_RE = re.compile(r'\s\[(.+?)]$')
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(PROK_DB_DIR)
     descr_dict = {}
+    kingdom = 'p'
     # (2) Load and prep list of target taxa from GTDB
     taxa_count = 0
     gtdbtk_taxonomy_file = Path(context.GTDBTK_DIR, 'taxonomy', 'gtdb_taxonomy.tsv')
-    # determine line count for tqdm
+    # determine line count
     with open(gtdbtk_taxonomy_file) as taxonomy_handle:
         for line in taxonomy_handle:
             taxa_count += 1
     taxon_list = []
     context.log(f'GTDBTK comprises {taxa_count} taxa...')
-    with open(gtdbtk_taxonomy_file) as taxonomy_handle:
+    with open(gtdbtk_taxonomy_file) as taxonomy_handle, open(descr_db, 'w') as descr_handle:
         # determine line count for tqdm
         ftp = FTP('ftp.ncbi.nlm.nih.gov')
         ftp.login()
@@ -399,13 +405,16 @@ def install_prokaryote_database():
                     continue
             context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
             # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
-            with bioparsers.FastaParser(future_faa_file) as reader, open(fasta_protein_db, 'w') as writer:
-                gene_counter = 0
-                for f in reader:
-                    f.id = '{}~{}~p~{}~{}~{}~{}'.format(taxon["accession"], f.id, gene_counter,
-                                                        f.id.replace('~', '-'), taxon["id"], len(f))
-                    gene_counter += 1
-                    bioparsers.write_fasta(writer, f)
+            for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):
+                with bioparsers.FastaParser(input, cleanup_seq=False) as reader, open(output, 'w') as writer:
+                    gene_counter = 0
+                    for f in reader:
+
+                        descr_id = update_db_descriptions_get_db_id(f.descr, descr_dict, descr_handle, kingdom)
+                        f.id = '{}~{}~{}~{}~{}~{}~{}'.format(kingdom, taxon['id'], descr_id, f.id.replace('~', '-'),
+                                                             '', len(f), gene_counter)
+                        gene_counter += 1
+                        bioparsers.write_fasta(writer, f)
 
     context.log(f'downloaded {int(success_count)} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)

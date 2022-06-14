@@ -38,7 +38,8 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     with open(cdd_index) as db_handle:
         for line in db_handle:
             words = line.split("\t")
-            cdd[int(words[0])] = DBentry(words[0], words[1], words[2], '', int(words[4]), 0)
+            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[0], gene=words[1], descr=words[2],
+                                         taxon='', length=int(words[4]), pos=0)
     context.log(f'Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
