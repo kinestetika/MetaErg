@@ -39,7 +39,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
         for line in db_handle:
             words = line.split("\t")
             cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[0], gene=words[1], descr=words[2],
-                                         taxon='', length=int(words[4]), pos=0)
+                                         length=int(words[4]))
     context.log(f'Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
@@ -62,7 +62,7 @@ def run_and_read_cdd():
     return ({'pipeline_position': 71,
              'purpose': 'function prediction using RPSBlast and the conserved domain database',
              'programs': ('rpsblast',),
-             'databases': (Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl'), Path(context.DATABASE_DIR, 'cdd', 'Cdd')),
+             'databases': (Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl'), Path(context.DATABASE_DIR, 'cdd', 'Cdd.pal')),
              'result_files': ('cdd',),
              'run': _run_programs,
              'read': _read_results})
@@ -73,22 +73,23 @@ def install_cdd_database():
     if 'C' not in context.CREATE_DB_TASKS:
        return
     cdd_dir = Path(context.DATABASE_DIR, 'cdd')
-    if context.FORCE or not cdd_dir.exists():
-        context.log(f'Installing the conserved domain database to {cdd_dir}...')
-        cdd_dir.mkdir(exist_ok=True, parents=True)
+    context.log(f'Installing the conserved domain database to {cdd_dir}...')
+    cdd_dir.mkdir(exist_ok=True, parents=True)
+    cdd_index = Path(cdd_dir, 'cddid.tbl')
+    if context.FORCE or (not cdd_index.exists() and not Path(cdd_dir, 'cddid.tbl.gz').exists()):
         context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
-        cdd_index = Path(cdd_dir, 'cddid.tbl')
+    if context.FORCE or not cdd_index.exists():
         context.run_external(f'gunzip {cdd_index}.gz')
 
-        temp_cdd_dir = Path(context.DATABASE_DIR, 'cdd-temp')
-        temp_cdd_dir.mkdir(exist_ok=True, parents=True)
+    temp_cdd_dir = Path(context.DATABASE_DIR, 'cdd-temp')
+    temp_cdd_dir.mkdir(exist_ok=True, parents=True)
+    if context.FORCE or (not Path(temp_cdd_dir, 'cdd.tar').exists() and not Path(temp_cdd_dir, 'cdd.tar.gz').exists()):
         context.run_external(f'wget -P {temp_cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-        context.run_external(f'tar -xf {Path(cdd_dir, "cdd.tar.gz")} -C {temp_cdd_dir}')
-        current_dir = os.getcwd()
-        os.chdir(temp_cdd_dir)
-        context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(temp_cdd_dir, "Cdd.pn")} -out '
-                             f'{Path(cdd_dir, "Cdd")} -threshold 9.82 -scale 100.0 -dbtype rps '
-                             f'-index true')
-        os.chdir(current_dir)
-    else:
-       context.log(f'Keeping existing conserved domain database in {cdd_dir}, use --force to overwrite.')
+    if context.FORCE or not Path(temp_cdd_dir, 'cdd.tar').exists():
+        context.run_external(f'tar -xf {Path(temp_cdd_dir, "cdd.tar.gz")} -C {temp_cdd_dir}')
+    current_dir = os.getcwd()
+    os.chdir(temp_cdd_dir)
+    context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(temp_cdd_dir, "Cdd.pn")} -out '
+                         f'{Path(cdd_dir, "Cdd")} -threshold 9.82 -scale 100.0 -dbtype rps '
+                         f'-index true')
+    os.chdir(current_dir)

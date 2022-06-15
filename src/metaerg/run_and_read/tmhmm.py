@@ -1,5 +1,4 @@
 import shutil
-
 from metaerg import context
 from metaerg.data_model import MetaergGenome
 

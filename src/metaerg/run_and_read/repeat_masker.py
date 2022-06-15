@@ -1,13 +1,14 @@
 import shutil
 from pathlib import Path
 
-from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
+from metaerg.data_model import MetaergGenome, MetaergSeqRecord, MetaergSeqFeature, FeatureType
 from metaerg import context
 from metaerg import bioparsers
 
 
 def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = bioparsers.write_genome_fasta_files(context.spawn_file(genome, 'masked', genome.id), mask=True)
+    fasta_file, = bioparsers.write_genome_fasta_files(genome, context.spawn_file(genome, 'masked', genome.id),
+                                                      mask=True)
     lmer_table_file = context.spawn_file('lmer-table', genome.id)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)
@@ -27,6 +28,16 @@ def _run_programs(genome:MetaergGenome, result_files):
             file.unlink()
 
 
+def words2feature(words: list[str], contig: MetaergSeqRecord) -> MetaergSeqFeature:
+    start = int(words[5]) - 1
+    end = int(words[6])
+    strand = -1 if 'C' == words[8] else 1
+    seq = contig.seq[start:end]
+    if strand < 0:
+        seq = bioparsers.reverse_complement(seq)
+    return MetaergSeqFeature(start, end, strand, FeatureType.repeat, seq=seq, inference='repeatmasker')
+
+
 def _read_results(genome:MetaergGenome, result_files) -> int:
     """(1) simple repeats, these are consecutive
        (2) unspecified repeats, these occur scattered and are identified by an id in words[9]. We only
@@ -41,22 +52,18 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
             contig: MetaergSeqRecord = genome.contigs[words[4]]
             if 'Simple_repeat' == words[10]:
                 repeat_count += 1
-                feature = contig.spawn_feature(int(words[5]) - 1, int(words[6]), -1 if 'C' == words[8] else 1,
-                                        FeatureType.repeat, inference='repeatmasker')
+                feature = words2feature(words, contig)
+                contig.features.append(feature)
                 feature.notes.add(f'repeat {words[9]}')
             else:
                 repeat_list = repeat_hash.setdefault(words[9], list())
-                repeat_list.append({'start': int(words[5]) - 1,
-                                    'end': int(words[6]),
-                                    'strand': -1 if 'C' == words[8] else 1,
-                                    'type': FeatureType.repeat,
-                                    'inference': 'repeatmasker'})
+                repeat_list.append((contig, words2feature(words, contig)))
     for repeat_list in repeat_hash.values():
         if len(repeat_list) >= 10:
-            for f in repeat_list:
+            for c, f in repeat_list:
                 repeat_count += 1
-                feature = contig.spawn_feature(**f)
-                feature.notes.add(f' (occurs {len(repeat_list)}x)')
+                c.features.append(f)
+                f.notes.add(f' (occurs {len(repeat_list)}x)')
     return repeat_count
 
 

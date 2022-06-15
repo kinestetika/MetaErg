@@ -1,20 +1,31 @@
 import re
+import textwrap
 from pathlib import Path
 from enum import Enum, auto
-from dataclasses import dataclass, field
 from collections import Counter
-from typing import NamedTuple
 from metaerg.run_and_read import subsystems_data
 
 
-class DBentry(NamedTuple):
-    domain: str
-    taxon: str
-    descr: str
-    ncbi: str
-    gene: str
-    length: int
-    pos: int
+class DBentry:
+    def __init__(self, *, domain: str, descr: str, taxon: str = '', ncbi: str='', gene: str='', length: int=0,
+                 pos: int=0):
+        self.domain = domain
+        self.descr = descr
+        self.taxon = taxon
+        self.ncbi = ncbi
+        self.gene = gene
+        self.length = length
+        self.pos = pos
+
+    def __iter__(self):
+        return (k,v for k,v in zip(('domain', 'descr', 'taxon', 'ncbi', 'gene', 'length', 'pos'),
+                (self.domain, self.descr, self.taxon, self.ncbi, self.gene, self.length, self.pos)))
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v:!r}' for k, v in self if v))
+
+    def __len__(self):
+        return self.length
 
     def taxon_at_genus(self) -> str:
         for t in reversed(self.taxon.split("; ")):
@@ -23,40 +34,71 @@ class DBentry(NamedTuple):
         return ''
 
 
-class BlastHit(NamedTuple):
-    query: str
-    hit: DBentry
-    percent_id: float
-    aligned_length: int
-    mismatches: int
-    gaps: int
-    query_start: int
-    query_end: int
-    hit_start: int
-    hit_end: int
-    evalue: float
-    score: float
+class BlastHit:
+    def __init__(self, query: str, hit: DBentry, percent_id: float, aligned_length: int, mismatches: int, gaps: int,
+                 query_start: int, query_end: int, hit_start: int, hit_end: int, evalue: float, score: float):
+        self.query = query
+        self.hit = hit
+        self.percent_id = percent_id
+        self.aligned_length = aligned_length
+        self.mismatches = mismatches
+        self.gaps = gaps
+        self.query_start = query_start
+        self.query_end = query_end
+        self.hit_start = hit_start
+        self.hit_end = hit_end
+        self.evalue = evalue
+        self.score = score
+
+    def __repr__(self):
+        return '{}({!r}, {!r}, {.1f}, {}, {}, {}, {}, {}, {}, {}, {.1e}, {.1f})'.format(type(self).__name__,
+                                                                                        self.query,
+                                                                                        self.hit,
+                                                                                        self.percent_id,
+                                                                                        self.aligned_length,
+                                                                                        self.mismatches,
+                                                                                        self.gaps,
+                                                                                        self.query_start,
+                                                                                        self.query_end,
+                                                                                        self.hit_start,
+                                                                                        self.hit_end,
+                                                                                        self.evalue,
+                                                                                        self.score)
+
+    def __len__(self):
+        return self.aligned_length
 
 
-class BlastResult(NamedTuple):
-    hits: tuple[BlastHit]
+class BlastResult:
+    def __init__(self, hits: tuple[BlastHit]):
+        self.hits = hits
+        assert len(hits), 'Attempt to create empty blast result.'
+
+    def __iter__(self):
+        return self.hits.__iter__()
+
+    def __len__(self):
+        return len(self.hits)
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, ',\n'.join(f'{h!r}' for h in self))
 
     def query(self):
         return self.hits[0].query
 
     def percent_aligned(self) -> float:
-        return 100 * self.hits[0].aligned_length / self.hits[0].hit.length
+        return 100 * len(self.hits[0]) / len(self.hits[0].hit)
 
     def percent_recall(self) -> float:
-        return 100 * sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr)) / len(self.hits)
+        return 100 * sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr)) / len(self)
 
     def summary(self) -> str:
         identical_function_count = sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr))
-        return '[{}/{}] aa@{}% [{}/{}] {}'.format(self.hits[0].aligned_length,
-                                                  self.hits[0].hit.length,
+        return '[{}/{}] aa@{}% [{}/{}] {}'.format(len(self.hits[0]),
+                                                  len(self.hits[0].hit),
                                                   self.hits[0].percent_id,
                                                   identical_function_count,
-                                                  len(self.hits),
+                                                  len(self),
                                                   self.hits[0].hit.descr)
 
 
@@ -74,33 +116,62 @@ class FeatureType(Enum):
 RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureType.ncRNA, FeatureType.retrotransposon)
 
 
-@dataclass(order=True)
 class MetaergSeqFeature:
     """Describes a sequence feature, such as a gene."""
-    start: int  # as start is the first field, it will cause features to be ordered by their position
-    end: int
-    strand: int
-    type: FeatureType
-    inference: str
-    seq: str
-    id: str = ''
-    descr: str = ''
-    taxon: str = ''
-    antismash: str = ''
-    transmembrane_helixes: str = ''
-    signal_peptide: str = ''
-    cdd: BlastResult = None
-    blast: BlastResult = None
-    subsystem: set[str] = field(default_factory=set)
-    notes: set[str] = field(default_factory=set)
-    # because it does not have a type, exported_keys becomes a class attribute
-    exported_keys = 'id sequence inference product taxon antismash transmembrane_helixes signal_peptide subsystem ' \
-                    'notes'.split()
     displayed_keys = 'start end strand type inference product taxon antismash transmembrane_helixes signal_peptide' \
                      'subsystem notes'.split()
 
+    def __init__(self, start: int, end: int, strand: int, type, inference: str, seq: str, id: str = '', descr: str = '',
+                 taxon: str = '', antismash: str = '', transmembrane_helixes: str = '', signal_peptide: str = '',
+                 cdd: BlastResult = None, blast: BlastResult = None, subsystem = None, notes = None):
+        self.start = start
+        self.end = end
+        self.strand = strand
+        self.type = type if isinstance(type, FeatureType) else FeatureType[type]
+        self.inference = inference
+        self.seq = seq
+        self.id = id
+        self.descr = descr
+        self.taxon = taxon
+        self.antismash = antismash
+        self.transmembrane_helixes = transmembrane_helixes
+        self.signal_peptide = signal_peptide
+        self.cdd = cdd
+        self.blast = blast
+        self.subsystem = subsystem if subsystem else set()
+        self.notes = notes if notes else set()
+
     def __len__(self):
         return self.end - self.start
+
+    def __iter__(self):
+        return (k,v for k,v in zip(('id', 'type', 'start', 'end', 'strand', 'descr', 'notes', 'taxon', 'inference',
+                                    'antismash', 'transmembrane_helixes', 'signal_peptide', 'subsystem', 'seq',
+                                    'cdd', 'blast'),
+                (self.id, self.type, self.start, self.end, self.strand, self.descr, self.notes, self.taxon,
+                 self.inference, self.antismash, self.transmembrane_helixes, self.signal_peptide, self.subsystem,
+                 self.seq, self.cdd, self.blast)))
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, ',\n'.join(f'{k}={v!r}\n' for k, v in self if v))
+
+    def __lt__(self, other):
+        return self.start < other.start
+
+    def __gt__(self, other):
+        return self.start > other.start
+
+    def __eq__(self, other):
+        return self.start == other.start
+
+    def __le__(self, other):
+        return self.start <= other.start
+
+    def __ge__(self, other):
+        return self.start >= other.start
+
+    def __ne__(self, other):
+        return self.start != other.start
 
     def tmh_count(self):
         try:
@@ -115,11 +186,14 @@ class MetaergSeqFeature:
         return ''
 
 
-@dataclass()
 class SubSystem:
-    id: str
-    targets: list[str] = field(default_factory=list, init=False)
-    hits: dict[str] = field(default_factory=dict, init=False)
+    def __init__(self, id: str, targets: [str] = list, hits = None):
+        self.id = id
+        self.targets = targets if targets else list()
+        self.hits = hits if hits else dict()
+
+    def __repr__(self):
+        return '{}({!r},\n{!r},\n{!r})'.format(type(self).__name__, self.id, self.targets, self.hits)
 
     def add_hit(self, feature_id: str, target: str = 'none'):
         self.hits.setdefault(feature_id, set()).add(target)
@@ -136,7 +210,7 @@ class SubSystem:
 
 
 class SubSystems:
-    def __init__(self):
+    def __init__(self, subsystems: dict[str, SubSystem] = None):
         self.subsystems = {}
         self.cues = {}
         current_subsystem = None
@@ -150,6 +224,11 @@ class SubSystems:
                 continue
             current_subsystem.targets.append(line)
             self.cues[line] = current_subsystem
+        if subsystems:
+            self.subsystems = subsystems
+
+    def __repr__(self):
+        return '{}({!r})'.format(type(self).__name__, self.subsystems)
 
     def match(self, feature: MetaergSeqFeature, descriptions):
         for d in descriptions:
@@ -164,12 +243,18 @@ class SubSystems:
         return False
 
 
-@dataclass()
 class MetaergSeqRecord:
-    id: str
-    seq: str
-    descr: str = ''
-    features: list[MetaergSeqFeature] = field(init=False, default_factory=list)
+    def __init__(self, id: str, seq: str, descr: str = '', features: list[MetaergSeqFeature] = None):
+        self.id = id
+        self.seq = ''.join(seq.split())
+        self.descr = descr
+        self.features = features if features else list()
+
+    def __repr__(self):
+        wrapper = textwrap.TextWrapper(break_on_hyphens=False)
+        seq_lines = wrapper.wrap(text=self.seq)
+        return '{}(id={!r},\ndescr={!r},\nfeatures={!r},\nseq="{}")\n'.format(type(self).__name__, self.id, self.descr,
+                                                                              self.features, '" \\\n"'.join(seq_lines))
 
     def __len__(self):
         return len(self.seq)
@@ -200,25 +285,33 @@ class Masker:
         return f'Masked {self.nt_masked / self.nt_total * 100:.1f}% of sequence data.'
 
 
-@dataclass()
 class MetaergGenome:
-    id: str
-    contigs: dict[str, MetaergSeqRecord] = field(default_factory=dict)
-    delimiter: str = '.'
-    translation_table: int = 11
-    properties: dict = field(init=False, default_factory=dict)
-    subsystems: SubSystems = field(init=False)
+    def __init__(self, id: str, contigs: dict[str, MetaergSeqRecord]=None, delimiter: str = '.',
+                 translation_table: int = 11, properties: dict = None, subsystems: SubSystems = None):
+        self.id = id
+        self.contigs = contigs if contigs else dict()
+        self.delimiter = delimiter
+        self.translation_table = translation_table
+        self.properties = properties if properties else dict()
+        self.subsystems = subsystems if subsystems else SubSystems()
 
-    def __post_init__(self):
-        self.subsystems = SubSystems()
+    def __len__(self):
+        return sum(len(c) for c in self.contigs.values())
+
+    def __repr__(self):
+        return '{}(id={!r},\ndelimiter={!r},\ntranslation_table={!r},\n' \
+               'properties={!r},\nsubsystems={!r},\ncontigs={!r})'.format(type(self).__name__,
+                                                                         self.id,
+                                                                         self.delimiter,
+                                                                         self.translation_table,
+                                                                         self.properties,
+                                                                         self.subsystems,
+                                                                         self.contigs)
 
     def validate_ids(self):
         assert self.delimiter not in self.id, f'Genome id {self.id} may not contain delimiter {self.delimiter}!'
         for c_id in self.contigs.keys():
             assert self.delimiter not in c_id, f'Contig id {c_id} may not contain delimiter {self.delimiter}!'
-
-    def __len__(self):
-        return sum(len(c) for c in self.contigs.values())
 
     def rename_contigs(self, mappings_file:Path):
         i = 0
@@ -240,14 +333,6 @@ class MetaergGenome:
     def get_feature(self, feature_id):
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
-
-    # def write_gbk_gff(self, gbk_file=None, gff_file=None):
-    #     record_generator = (c.make_biopython_record() for c in self.contigs.values())
-    #     if gbk_file:
-    #         SeqIO.write(record_generator, gbk_file, "genbank")
-    #     if gff_file:
-    #         with open(gff_file, "w") as gff_handle:
-    #             GFF.write(record_generator, gff_handle)
 
     def compute_properties(self):
         self.properties['size'] = len(self)

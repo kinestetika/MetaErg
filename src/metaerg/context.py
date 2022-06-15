@@ -196,9 +196,9 @@ def register_annotator(define_annotator):
             positive_count = 0
         log('({}) {} complete. Found {}.', (genome.id, param['purpose'], positive_count))
         # (5) Save (intermediate) results:
-        gbk_file = spawn_file("gbk", genome.id)
-        gff_file = spawn_file("gff", genome.id)
-        genome.write_gbk_gff(gbk_file=gbk_file, gff_file=gff_file)
+        annotations_file = spawn_file("annotations", genome.id)
+        with open(annotations_file, 'w') as handle:
+            handle.write(str(genome))
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
     return annotator

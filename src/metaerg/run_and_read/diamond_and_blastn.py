@@ -141,7 +141,7 @@ def install_viral_database():
         for i in range(1,5):
             f = Path(VIR_DB_DIR, f'viral.{i}.protein.gpff.gz')
             if not f.exists() or not f.stat().st_size:
-                url = 'ftp.ncbi.nlm.nih.gov/refseq/release/viral/'
+                url = 'ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
                 context.run_external(f'wget -P {VIR_DB_DIR} {url}.{i}.protein.gpff.gz')
             gene_count = 0
             with gzip.open(f, 'rt') as file_handle:
@@ -149,12 +149,12 @@ def install_viral_database():
                     if gb_record.annotations['molecule_type'] != 'protein':
                         context.log("warning: skipping non-coding gene in viral refseq")
                         continue
-                    match = pattern.search(gb_record.descr)
+                    match = pattern.search(gb_record.description)
                     if match:
                         gb_record.annotations['taxonomy'].append(match.group(1))
-                        gb_record.descr = gb_record.descr[0:match.start()]
+                        gb_record.description = gb_record.description[0:match.start()]
                     else:
-                        context.log(f'Warning, Failed to parse viral species from {gb_record.descr}')
+                        context.log(f'Warning, Failed to parse viral species from {gb_record.description}')
                     taxon_str = "~".join(gb_record.annotations['taxonomy'])
                     try:
                         taxon_id = taxon_dict[taxon_str]
@@ -162,12 +162,12 @@ def install_viral_database():
                         taxon_id = len(taxon_dict)
                         taxon_dict[taxon_str] = taxon_id
                         taxon_handle.write(f'v\t{taxon_id}\t{taxon_str}\n')
-                    descr_id = update_db_descriptions_get_db_id(gb_record.descr, descr_dict, descr_handle, 'v')
+                    descr_id = update_db_descriptions_get_db_id(gb_record.description, descr_dict, descr_handle, 'v')
                     seq_record = SeqRecord(gb_record.seq)
                     seq_record.id = '{}~{}~{}~{}~{}~{}~{}'.format('v', taxon_id, descr_id,
                                                                   gb_record.id.replace('~', '-'), '',
                                                                   len(seq_record.seq), gene_count)
-                    seq_record.description = gb_record.descr
+                    seq_record.description = gb_record.description
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")
                     gene_count += 1
 

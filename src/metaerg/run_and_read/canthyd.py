@@ -59,8 +59,8 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     context.log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
 
     def get_db_entry(db_id) -> DBentry:
-        return DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''), length=0, taxon='',
-                       pos=canthyd_trusted_cutoffs[db_id], ncbi='')
+        return DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
+                       pos=canthyd_trusted_cutoffs[db_id])
 
     with bioparsers.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         canthyd_hit_count = 0

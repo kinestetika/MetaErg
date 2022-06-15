@@ -37,10 +37,9 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def annotate_genome(genome_name, input_fasta_file:Path):
+def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Now starting to annotate {genome_name}...')
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
-
     genome = bioparsers.load_genome_from_file(genome_name, input_fasta_file,
                                               min_contig_length=context.MIN_CONTIG_LENGTH)
     if context.RENAME_CONTIGS:
@@ -48,15 +47,13 @@ def annotate_genome(genome_name, input_fasta_file:Path):
     genome.validate_ids()
     # (2) now annotate
     for annotator in context.sorted_annotators():
-        annotator()
+        annotator(genome)
     # (3) save results
     context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
     faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome.id, context.BASE_DIR)
     bioparsers.write_genome_fasta_files(genome, faa_file, target=FeatureType.CDS)
     bioparsers.write_genome_fasta_files(genome, rna_file, target=RNA_FEATURES)
-    genome.write_gbk_gff(gbk_file=context.spawn_file("gbk", genome.id, context.BASE_DIR),
-                         gff_file=context.spawn_file("gff", genome.id))
     # (4) visualize
     genome.compute_properties()
     context.log(f'({genome.id}) Now writing final result as .html for visualization...')

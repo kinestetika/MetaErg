@@ -4,12 +4,14 @@ from concurrent.futures import ProcessPoolExecutor
 
 from metaerg.data_model import MetaergSeqFeature, FeatureType, MetaergGenome
 from metaerg import context
+from metaerg import bioparsers
 
 
 def _run_programs(genome:MetaergGenome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = genome.write_fasta_files(cds_aa_file, context.CPUS_PER_GENOME, target=FeatureType.CDS)
+        split_fasta_files = bioparsers.write_genome_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
+                                                                target=FeatureType.CDS)
         split_signalp_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                                for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:

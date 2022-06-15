@@ -1,8 +1,9 @@
 import gzip
 import re
+import textwrap
 from collections.abc import Iterable, Sequence
 from pathlib import Path
-from metaerg.data_model import FeatureType, MetaergSeqFeature, MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, Masker
+from metaerg.data_model import MetaergSeqFeature, MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, Masker
 from metaerg import context
 from urllib.parse import unquote
 
@@ -87,8 +88,10 @@ def write_fasta(handle, fasta, line_length=80):
     def _wf(f):
         assert len(f.seq), 'Attempt to write zero-lentgh sequence to fasta.'
         handle.write(f'>{f.id} {f.descr}\n')
-        for i in range(0, len(f.seq), line_length):
-            handle.write(f.seq[i:min(len(f.seq), i + line_length)])
+        wrapper = textwrap.TextWrapper(break_on_hyphens=False, width=line_length)
+        seq_lines = wrapper.wrap(text=f.seq)
+        for l in seq_lines:
+            handle.write(l)
             handle.write('\n')
 
     if isinstance(fasta, Iterable):
