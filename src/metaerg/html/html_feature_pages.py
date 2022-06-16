@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from data_model import FeatureType, MetaergSeqFeature, BlastResult, MetaergGenome
+from data_model import FeatureType, SeqFeature, BlastResult, Genome
 from context import register_html_writer
 
 
 @register_html_writer
-def write_html(genome: MetaergGenome, dir):
+def write_html(genome: Genome, dir):
     """Writes a html file for each feature to dir <file>"""
     dir = Path(dir, genome.id, 'features')
     dir.mkdir(exist_ok=True, parents=True)
@@ -47,7 +47,7 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -
         return ''
 
 
-def make_feature_html(f: MetaergSeqFeature, dominant_taxon) -> str:
+def make_feature_html(f: SeqFeature, dominant_taxon) -> str:
     html = _make_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
@@ -59,7 +59,7 @@ def make_feature_html(f: MetaergSeqFeature, dominant_taxon) -> str:
     html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, len(f), dominant_taxon))
     attribute_html = '<table>\n'
     attribute_html += ''.join(f'<tr><td>{k}</td><td>{f.__dict__[k]}</td></tr>\n' for k in
-                              MetaergSeqFeature.displayed_keys)
+                              SeqFeature.displayed_keys)
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html

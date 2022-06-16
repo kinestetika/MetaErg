@@ -1,9 +1,8 @@
 import gzip
 import re
 import textwrap
-from collections.abc import Iterable, Sequence
 from pathlib import Path
-from metaerg.data_model import MetaergSeqFeature, MetaergSeqRecord, MetaergGenome, BlastHit, BlastResult, Masker
+from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, Masker
 from metaerg import context
 from urllib.parse import unquote
 
@@ -11,18 +10,17 @@ NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
 NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
 
 
-def _parse_fasta_header(line:str) -> tuple:
+def _parse_fasta_header(line:str) -> SeqRecord:
     si = line.find(' ')
     if si > 0:
-        return line[1:si], line[si+1:].strip()
+        return SeqRecord(id=line[1:si], seq='', descr=line[si+1:].strip())
     else:
-        return line[1], ''
+        return SeqRecord(id=line[1], seq='')
 
 
 class FastaParser:
     def __init__(self, path, cleanup_seq=True):
         self.path = path
-        self.header = None
         self.handle = None
         self.cleanup_seq = cleanup_seq
         self.alphabet = None
@@ -39,9 +37,29 @@ class FastaParser:
         self.handle.close()
 
     def __iter__(self):
-        return self
+        seq_rec = None
+        while line := self.handle.readline():
+            if line.startswith('>'):
+                if seq_rec:
+                    seq_rec.seq =  self._cleanup(seq_rec.seq)
+                    yield seq_rec
+                seq_rec = _parse_fasta_header(line)
+            elif seq_rec:
+                seq_rec.seq += line.strip()
+                if len(seq_rec.seq) > 10 and not self.alphabet and self.cleanup_seq:
+                    seq_nt_errors = sum(1 for match in NON_IUPAC_RE_NT.finditer(seq_rec.seq))
+                    seq_aa_errors = sum(1 for match in NON_IUPAC_RE_AA.finditer(seq_rec.seq))
+                    if seq_nt_errors <= seq_aa_errors:
+                        self.alphabet = NON_IUPAC_RE_NT
+                        self.unknown_char = 'N'
+                    else:
+                        self.alphabet = NON_IUPAC_RE_AA
+                        self.unknown_char = 'X'
+        if seq_rec:
+            seq_rec.seq = self._cleanup(seq_rec.seq)
+            yield seq_rec
 
-    def _cleanup(self, seq):
+    def _cleanup(self, seq) -> str:
         if self.cleanup_seq:
             seq = seq.upper()
             seq = ''.join(seq.split())
@@ -49,39 +67,39 @@ class FastaParser:
                 seq = self.alphabet.sub(self.unknown_char, seq)
         return seq
 
-    def __next__(self):
-        seq_record = None
-        seq = ''
-        while line := self.handle.readline():
-            if line.startswith('>'):
-                next_header = _parse_fasta_header(line)
-                if seq:
-                    seq_record = MetaergSeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
-                self.header = next_header
-                if seq_record:
-                    return seq_record
-            else:
-                seq += line.strip()
-                if len(seq) > 10 and not self.alphabet and self.cleanup_seq:
-                    seq_nt = NON_IUPAC_RE_NT.findall(seq)
-                    seq_aa = NON_IUPAC_RE_AA.findall(seq)
-                    if len(seq_nt) <= len(seq_aa):
-                        self.alphabet = NON_IUPAC_RE_NT
-                        self.unknown_char = 'N'
-                    else:
-                        self.alphabet = NON_IUPAC_RE_AA
-                        self.unknown_char = 'X'
-        if seq:
-            return MetaergSeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
-        raise StopIteration
+    # def __next__(self):
+    #     seq_record = None
+    #     seq = ''
+    #     while line := self.handle.readline():
+    #         if line.startswith('>'):
+    #             next_header = _parse_fasta_header(line)
+    #             if seq:
+    #                 seq_record = SeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
+    #             self.header = next_header
+    #             if seq_record:
+    #                 return seq_record
+    #         else:
+    #             seq += line.strip()
+    #             if len(seq) > 10 and not self.alphabet and self.cleanup_seq:
+    #                 seq_nt_errors = sum(1 for match in NON_IUPAC_RE_NT.finditer(seq))
+    #                 seq_aa_errors = sum(1 for match in NON_IUPAC_RE_AA.finditer(seq))
+    #                 if seq_nt_errors <= seq_aa_errors:
+    #                     self.alphabet = NON_IUPAC_RE_NT
+    #                     self.unknown_char = 'N'
+    #                 else:
+    #                     self.alphabet = NON_IUPAC_RE_AA
+    #                     self.unknown_char = 'X'
+    #     if seq:
+    #         return SeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
+    #     raise StopIteration
 
 
-def load_genome_from_file(genome_id, filename, min_contig_length=0, delimiter='.') -> MetaergGenome:
+def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimiter='.') -> Genome:
     with FastaParser(filename) as fasta_reader:
         contigs = [c for c in fasta_reader if len(c) > min_contig_length]
     contigs.sort(key=len, reverse=True)
     contigs = {c.id: c for c in contigs}
-    return MetaergGenome(genome_id, contigs=contigs, delimiter=delimiter)
+    return Genome(genome_id, contigs=contigs, delimiter=delimiter)
 
 
 def write_fasta(handle, fasta, line_length=80):
@@ -94,19 +112,18 @@ def write_fasta(handle, fasta, line_length=80):
             handle.write(l)
             handle.write('\n')
 
-    if isinstance(fasta, Iterable):
+    try:
         for f in fasta:
             _wf(f)
-    else:
+    except TypeError:
         _wf(fasta)
 
 
-def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, mask=True, exceptions=None, min_length=50):
+def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=True, exceptions=None, min_length=50):
     """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
     optionally masking features with N"""
-    if target:
-        number_of_records = sum(1 for c in genome.contigs.values() for f in c.features if f.type == target
-                                or (isinstance(target, Sequence) and f.type in target))
+    if targets:
+        number_of_records = sum(1 for c in genome.contigs.values() for f in c.features if f.type in targets)
     else:
         number_of_records = len(genome.contigs)
     split = min(split, number_of_records)
@@ -116,9 +133,9 @@ def write_genome_fasta_files(genome, base_file: Path, split=1, target=None, mask
     number_of_records = 0
     masker = Masker(mask=mask, exceptions=exceptions, min_length=min_length)
     for contig in genome.contigs.values():
-        if target:
+        if targets:
             for f in contig.features:
-                if f.type == target or (isinstance(target, Sequence) and f.type in target):
+                if f.type in targets:
                     write_fasta(filehandles[int(number_of_records / records_per_file)], f)
                     number_of_records += 1
         else:
@@ -139,8 +156,6 @@ class TabularBlastParser:
         self.filename = filename
         self.mode = mode
         self.handle = None
-        self.next_hit = None
-        self.current_query = None
         self.retrieve_db_entry = retrieve_db_entry
 
     def __enter__(self):
@@ -148,20 +163,23 @@ class TabularBlastParser:
             self.handle = gzip.open(self.filename, 'rt')
         else:
             self.handle = open(self.filename)
-        if self.load_next_hit_from_file():
-            self.current_query = self.next_hit.query
-            return self
-        else:
-            raise StopIteration
+        return self
 
     def __exit__(self, exception_type, exception_value, exception_traceback):
         self.handle.close()
 
     def __iter__(self):
-        return self
+        all_hits: list[BlastHit] = []
+        while next_hit := self.load_next_hit_from_file():
+            if not len(all_hits) or all_hits[-1].query == next_hit.query:
+                all_hits.append(next_hit)
+            else:
+                yield BlastResult(tuple(all_hits))
+                all_hits = [next_hit]
+        if len(all_hits):
+            yield BlastResult(tuple(all_hits))
 
-    def load_next_hit_from_file(self):
-        self.next_hit = None
+    def load_next_hit_from_file(self) -> BlastHit | None:
         while line := self.handle.readline():
             words = line.strip().split('\t')
             match words:
@@ -170,39 +188,38 @@ class TabularBlastParser:
                 case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
                       hit_end, evalue, score] if 'BLAST' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
-                                             int(mismatches), int(gaps), int(query_start), int(query_end),
-                                             int(hit_start), int(hit_end), float(evalue), float(score))
+                    return BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
+                                    int(mismatches), int(gaps), int(query_start), int(query_end),
+                                    int(hit_start), int(hit_end), float(evalue), float(score))
                 case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
                 case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    self.next_hit = BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
                 case [*_]:
                     continue
-            return True
-        return False
+        return None
 
-    def __next__(self):
-        all_hits: list[BlastHit] = []
-        if self.next_hit:
-            all_hits.append(self.next_hit)
-        while self.load_next_hit_from_file():
-            if self.current_query != self.next_hit.query:
-                self.current_query = self.next_hit.query
-                return BlastResult(tuple(all_hits))
-            all_hits.append(self.next_hit)
-        if len(all_hits):
-            return BlastResult(tuple(all_hits))
-        raise StopIteration
+    # def __next__(self):
+    #     all_hits: list[BlastHit] = []
+    #     if self.next_hit:
+    #         all_hits.append(self.next_hit)
+    #     while self.load_next_hit_from_file():
+    #         if self.current_query != self.next_hit.query:
+    #             self.current_query = self.next_hit.query
+    #             return BlastResult(tuple(all_hits))
+    #         all_hits.append(self.next_hit)
+    #     if len(all_hits):
+    #         return BlastResult(tuple(all_hits))
+    #     raise StopIteration
 
 
 class GffParser:
-    def __init__(self, path, contig_dict, target:dict=None, inference:str=None):
+    def __init__(self, path, contig_dict, target_feature_type_dict:dict=None, inference:str=None):
         self.path = path
         self.contig_dict = contig_dict
-        self.target = target  # should be a dictionary
+        self.target_feature_type_dict = target_feature_type_dict  # should be a dictionary to convert feature types
         self.inference = inference
 
     def __enter__(self):
@@ -216,19 +233,16 @@ class GffParser:
         self.handle.close()
 
     def __iter__(self):
-        return self
-
-    def __next__(self) -> MetaergSeqFeature:
         while line := self.handle.readline():
             words = line.strip().split('\t')
             match(words):
                 case[word, *_] if word.startswith('#'):
                     continue
                 case [contig_name, inference, feature_type, start, end, score, strand, frame, qualifiers]:
-                    if self.target and feature_type not in self.target.keys():
+                    if self.target_feature_type_dict and feature_type not in self.target_feature_type_dict.keys():
                         continue
                     try:
-                        contig: MetaergSeqRecord = self.contig_dict[contig_name]
+                        contig: SeqRecord = self.contig_dict[contig_name]
                     except KeyError:
                         continue
                     start = int(start) - 1
@@ -243,11 +257,10 @@ class GffParser:
                     if len(qualifiers) % 2 != 0:
                         qualifiers = qualifiers[:-1]  # this happens for example with prodigal, ending with ";"
                     qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
-                    feature = MetaergSeqFeature(start, end, strand, self.target[feature_type],
-                                                inference=inference, seq=seq)
+                    feature = SeqFeature(start, end, strand, self.target_feature_type_dict[feature_type],
+                                         inference=inference, seq=seq)
                     contig.features.append(feature)
-                    return feature
-        raise StopIteration
+                    yield feature
 
 
 def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:

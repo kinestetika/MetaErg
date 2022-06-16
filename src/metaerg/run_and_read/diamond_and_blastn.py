@@ -10,7 +10,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.data_model import MetaergGenome, MetaergSeqFeature, BlastResult, DBentry
+from metaerg.data_model import Genome, SeqFeature, BlastResult, DBentry
 from metaerg import context
 from metaerg import bioparsers
 
@@ -28,7 +28,7 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
                         'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     rna_nt_file = context.spawn_file('rna.nt', genome.id)
     blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
@@ -44,7 +44,7 @@ def dbentry_from_string(db_id: str, descriptions: dict, taxonomy: dict) -> DBent
                    length=int(w[5]), pos=int(w[6]))
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
@@ -66,7 +66,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     # (3) parse diamond blast results
 
     def process_blast_result(blast_result: BlastResult):
-        feature: MetaergSeqFeature = genome.get_feature(blast_result.query())
+        feature: SeqFeature = genome.get_feature(blast_result.query())
         feature.blast = blast_result
         feature.descr = blast_result.summary()
         genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits if h.aligned_length / h.hit.length >= 0.8))

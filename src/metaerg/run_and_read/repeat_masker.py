@@ -1,14 +1,14 @@
 import shutil
 from pathlib import Path
 
-from metaerg.data_model import MetaergGenome, MetaergSeqRecord, MetaergSeqFeature, FeatureType
+from metaerg.data_model import Genome, SeqRecord, SeqFeature, FeatureType
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = bioparsers.write_genome_fasta_files(genome, context.spawn_file(genome, 'masked', genome.id),
-                                                      mask=True)
+def _run_programs(genome:Genome, result_files):
+    fasta_file, = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file(genome, 'masked', genome.id),
+                                                         mask=True)
     lmer_table_file = context.spawn_file('lmer-table', genome.id)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)
@@ -28,17 +28,17 @@ def _run_programs(genome:MetaergGenome, result_files):
             file.unlink()
 
 
-def words2feature(words: list[str], contig: MetaergSeqRecord) -> MetaergSeqFeature:
+def words2feature(words: list[str], contig: SeqRecord) -> SeqFeature:
     start = int(words[5]) - 1
     end = int(words[6])
     strand = -1 if 'C' == words[8] else 1
     seq = contig.seq[start:end]
     if strand < 0:
         seq = bioparsers.reverse_complement(seq)
-    return MetaergSeqFeature(start, end, strand, FeatureType.repeat, seq=seq, inference='repeatmasker')
+    return SeqFeature(start, end, strand, FeatureType.repeat, seq=seq, inference='repeatmasker')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     """(1) simple repeats, these are consecutive
        (2) unspecified repeats, these occur scattered and are identified by an id in words[9]. We only
            add those when they occur 10 or more times."""
@@ -49,7 +49,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
             words = line.split()
             if len(words) < 11:
                 continue
-            contig: MetaergSeqRecord = genome.contigs[words[4]]
+            contig: SeqRecord = genome.contigs[words[4]]
             if 'Simple_repeat' == words[10]:
                 repeat_count += 1
                 feature = words2feature(words, contig)

@@ -1,9 +1,9 @@
 import shutil
 from metaerg import context
-from metaerg.data_model import MetaergGenome
+from metaerg.data_model import Genome
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     with open(result_files[0], 'w') as output, open(cds_aa_file) as input:
         context.run_external('tmhmm', stdin=input, stdout=output)
@@ -13,7 +13,7 @@ def _run_programs(genome:MetaergGenome, result_files):
             shutil.rmtree(file)
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     count = 0
     current_feature = None
     current_txt = ""

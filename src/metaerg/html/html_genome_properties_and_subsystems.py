@@ -1,17 +1,17 @@
 from pathlib import Path
-from data_model import MetaergGenome
+from data_model import Genome
 from context import register_html_writer
 
 
 @register_html_writer
-def write_html(genome: MetaergGenome, dir):
+def write_html(genome: Genome, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, genome.id, 'index.html')
     with open(file, 'w') as handle:
         handle.write(make_html(genome))
 
 
-def make_html(genome: MetaergGenome) -> str:
+def make_html(genome: Genome) -> str:
     """injects the content into the html base, returns the html"""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome.id)

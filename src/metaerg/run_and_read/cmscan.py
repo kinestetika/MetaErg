@@ -5,14 +5,14 @@ from collections import namedtuple
 
 from metaerg import context
 from metaerg import bioparsers
-from metaerg.data_model import FeatureType, MetaergSeqFeature, MetaergGenome
+from metaerg.data_model import FeatureType, SeqFeature, Genome
 
 
-def _run_programs(genome: MetaergGenome, result_files):
+def _run_programs(genome: Genome, result_files):
     fasta_file = context.spawn_file('masked', genome.id)
     rfam_database = Path(context.DATABASE_DIR, "Rfam.cm")
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_fasta_files(genome, fasta_file, context.CPUS_PER_GENOME, mask=True)
+        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, fasta_file, context.CPUS_PER_GENOME, mask=True)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                               for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -26,11 +26,11 @@ def _run_programs(genome: MetaergGenome, result_files):
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        bioparsers.write_genome_fasta_files(genome, fasta_file, mask=True)
+        bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': FeatureType.rRNA,
                             'LSU_rRNA_archaea': FeatureType.rRNA,
                             'LSU_rRNA_eukarya': FeatureType.rRNA,
@@ -81,8 +81,8 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
         seq = contig.seq[hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
             seq = bioparsers.reverse_complement(seq)
-        feature = MetaergSeqFeature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type, seq=seq,
-                                    inference='cmscan', descr = "{} {}".format(hit.hit_id, hit.descr))
+        feature = SeqFeature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type, seq=seq,
+                             inference='cmscan', descr = "{} {}".format(hit.hit_id, hit.descr))
         contig.features.append(feature)
     return len(hits)
 

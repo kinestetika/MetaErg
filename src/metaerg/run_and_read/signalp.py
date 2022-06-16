@@ -2,16 +2,16 @@ import shutil
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
-from metaerg.data_model import MetaergSeqFeature, FeatureType, MetaergGenome
+from metaerg.data_model import SeqFeature, FeatureType, Genome
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
-                                                                target=FeatureType.CDS)
+        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
+                                                                   targets=(FeatureType.CDS,))
         split_signalp_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                                for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -34,7 +34,7 @@ def _run_programs(genome:MetaergGenome, result_files):
         context.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {result_files[0]} --format none --organism other')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     count = 0
     with open(Path(result_files[0], 'prediction_results.txt')) as signalp_handle:
         for line in signalp_handle:
@@ -43,7 +43,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
             words = line.split("\t")
             if "OTHER" == words[1]:
                 continue
-            feature: MetaergSeqFeature = genome.get_feature(words[0].split()[0])
+            feature: SeqFeature = genome.get_feature(words[0].split()[0])
             feature.signal_peptide = words[1]
             count += 1
     return count

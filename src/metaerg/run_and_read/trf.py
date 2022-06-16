@@ -1,20 +1,20 @@
-from metaerg.data_model import MetaergGenome, MetaergSeqRecord, MetaergSeqFeature, FeatureType
+from metaerg.data_model import Genome, SeqRecord, SeqFeature, FeatureType
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = bioparsers.write_genome_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+def _run_programs(genome:Genome, result_files):
+    fasta_file, = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
     with open(result_files[0], 'w') as output:
         context.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     tr_count = 0
     with open(result_files[0]) as trf_handle:
         for line in trf_handle:
             if line.startswith("@"):
-                contig: MetaergSeqRecord = genome.contigs[line[1:].strip()]
+                contig: SeqRecord = genome.contigs[line[1:].strip()]
                 continue
             if not contig:
                 continue
@@ -22,7 +22,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
             start = int(words[0]) - 1
             end = int(words[1])
             seq = contig.seq[start:end]
-            f = MetaergSeqFeature(start, end, 1, FeatureType.repeat, seq=seq, inference='tandem-repeat-finder')
+            f = SeqFeature(start, end, 1, FeatureType.repeat, seq=seq, inference='tandem-repeat-finder')
             f.notes.add(f'period size {words[2]}; copies {words[3]}')
             contig.features.append(f)
             tr_count += 1

@@ -1,14 +1,14 @@
-from metaerg.data_model import MetaergGenome, MetaergSeqRecord, FeatureType
+from metaerg.data_model import Genome, SeqRecord, FeatureType
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file, = bioparsers.write_genome_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+def _run_programs(genome:Genome, result_files):
+    fasta_file, = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
     context.run_external(f'prodigal -g {genome.translation_table} -m -f gff -q -i {fasta_file} -o {result_files[0]}')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     cds_found = 0
     with open(result_files[0]) as prodigal_handle:
         for line in prodigal_handle:
@@ -18,7 +18,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                     continue
                 case [contig_name, _, _, start, end, _, strand, _, attributes]:
                     cds_found += 1
-                    contig: MetaergSeqRecord = genome.contigs[contig_name]
+                    contig: SeqRecord = genome.contigs[contig_name]
                     feature = contig.spawn_feature(int(start) - 1, int(end), 1 if '+' == strand else -1,
                                                    FeatureType.CDS, inference='prodigal')
                     if 'partial=01' in attributes or 'partial=01' in attributes or 'partial=11' in attributes:

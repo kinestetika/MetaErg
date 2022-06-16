@@ -116,7 +116,7 @@ class FeatureType(Enum):
 RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureType.ncRNA, FeatureType.retrotransposon)
 
 
-class MetaergSeqFeature:
+class SeqFeature:
     """Describes a sequence feature, such as a gene."""
     displayed_keys = 'start end strand type inference product taxon antismash transmembrane_helixes signal_peptide' \
                      'subsystem notes'.split()
@@ -230,7 +230,7 @@ class SubSystems:
     def __repr__(self):
         return '{}({!r})'.format(type(self).__name__, self.subsystems)
 
-    def match(self, feature: MetaergSeqFeature, descriptions):
+    def match(self, feature: SeqFeature, descriptions):
         for d in descriptions:
             for cue, subsystem in self.cues.items():
                 if len(d.descr) > len(cue) + 20:
@@ -243,8 +243,8 @@ class SubSystems:
         return False
 
 
-class MetaergSeqRecord:
-    def __init__(self, id: str, seq: str, descr: str = '', features: list[MetaergSeqFeature] = None):
+class SeqRecord:
+    def __init__(self, id: str, seq: str, descr: str = '', features: list[SeqFeature] = None):
         self.id = id
         self.seq = ''.join(seq.split())
         self.descr = descr
@@ -268,7 +268,7 @@ class Masker:
         self.nt_total = 0
         self.nt_masked = 0
 
-    def mask(self, seq_record) -> MetaergSeqRecord:
+    def mask(self, seq_record) -> SeqRecord:
         seq = seq_record.seq
         seq_record.nt_masked = 0
         if self.mask:
@@ -278,15 +278,15 @@ class Masker:
                     seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
                     self.nt_masked += len(f)
         self.nt_total += len(seq_record)
-        return MetaergSeqRecord(seq_record.id, seq_record.descr, seq)
+        return SeqRecord(seq_record.id, seq_record.descr, seq)
         # record.annotations['molecule_type'] = 'DNA'
 
     def stats(self):
         return f'Masked {self.nt_masked / self.nt_total * 100:.1f}% of sequence data.'
 
 
-class MetaergGenome:
-    def __init__(self, id: str, contigs: dict[str, MetaergSeqRecord]=None, delimiter: str = '.',
+class Genome:
+    def __init__(self, id: str, contigs: dict[str, SeqRecord]=None, delimiter: str = '.',
                  translation_table: int = 11, properties: dict = None, subsystems: SubSystems = None):
         self.id = id
         self.contigs = contigs if contigs else dict()

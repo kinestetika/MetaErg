@@ -1,16 +1,16 @@
 import re
 
 import bioparsers
-from metaerg.data_model import FeatureType, MetaergGenome, MetaergSeqFeature
+from metaerg.data_model import FeatureType, Genome, SeqFeature
 from metaerg import context
-from metaerg.bioparsers import write_genome_fasta_files
+from metaerg.bioparsers import write_genome_to_fasta_files
 
 
-def _run_programs(genome:MetaergGenome, result_files):
-    fasta_file = write_genome_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+def _run_programs(genome:Genome, result_files):
+    fasta_file = write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
     context.run_external(f'aragorn -l -t -gc{genome.translation_table} {fasta_file} -w -o {result_files[0]}')
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     trna_count = 0
     current_contig = None
     coord_regexp = re.compile(r'(c*)\[(\d+),(\d+)]')
@@ -31,8 +31,8 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                     seq = current_contig.seq[start:end]
                     if strand < 0:
                         seq = bioparsers.reverse_complement(seq)
-                    feature = MetaergSeqFeature(start, end, strand, FeatureType.tRNA, 'aragorn', seq=seq,
-                              descr=f'{trna}-{codon}')
+                    feature = SeqFeature(start, end, strand, FeatureType.tRNA, 'aragorn', seq=seq,
+                                         descr=f'{trna}-{codon}')
                     current_contig.features.append(feature)
     return trna_count
 

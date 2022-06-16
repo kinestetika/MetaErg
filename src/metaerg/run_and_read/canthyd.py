@@ -1,17 +1,17 @@
 from pathlib import Path
 
-from metaerg.data_model import MetaergSeqFeature, DBentry, MetaergGenome
+from metaerg.data_model import SeqFeature, DBentry, Genome
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     canthyd_db = Path(context.DATABASE_DIR, 'CANT-HYD.hmm')
     context.run_external(f'hmmscan --cut_nc --tblout {result_files[0]} {canthyd_db} {cds_aa_file}')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     canthyd_trusted_cutoffs = {}
     canthyd_descr = {'AlkB': 'alkane hydrolase',
                      'AlmA_GroupI': 'flavin-binding alkane monooxygenase',
@@ -65,7 +65,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     with bioparsers.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         canthyd_hit_count = 0
         for blast_result in handle:
-            feature: MetaergSeqFeature = genome.get_feature(blast_result.query)
+            feature: SeqFeature = genome.get_feature(blast_result.query)
             for h in blast_result.hits:
                 if descr := h.hit.descr:
                     canthyd_hit_count += 1

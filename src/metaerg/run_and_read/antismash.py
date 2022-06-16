@@ -4,10 +4,10 @@ from pathlib import Path
 from Bio import SeqIO
 
 from metaerg import context
-from metaerg.data_model import MetaergSeqFeature, MetaergGenome
+from metaerg.data_model import SeqFeature, Genome
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     """Should execute the helper programs to complete the analysis"""
     gbk_file = context.spawn_file('gbk', genome.id)
     if result_files[0].exists():
@@ -15,7 +15,7 @@ def _run_programs(genome:MetaergGenome, result_files):
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     """Should parse the result files and return the # of positives."""
     antismash_hit_count = 0
     for f in sorted(result_files[0].glob('*region*.gbk')):
@@ -29,7 +29,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
                         antismash_region_name = antismash_feature.qualifiers['rules'][0]
                         antismash_region_number = int(antismash_feature.qualifiers['region_number'][0])
                     elif 'CDS' in antismash_feature.type:
-                        feature: MetaergSeqFeature = genome.get_feature(antismash_feature.qualifiers['locus_tag'][0])
+                        feature: SeqFeature = genome.get_feature(antismash_feature.qualifiers['locus_tag'][0])
                         antismash_gene_function = antismash_feature.qualifiers['gene_functions'][0]
                         antismash_gene_category = antismash_feature.qualifiers['gene_kind']
                         if antismash_region_name:

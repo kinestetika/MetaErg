@@ -3,16 +3,16 @@ import shutil
 import os
 from concurrent.futures import ProcessPoolExecutor
 
-from metaerg.data_model import MetaergSeqFeature, MetaergGenome, FeatureType, DBentry
+from metaerg.data_model import SeqFeature, Genome, FeatureType, DBentry
 from metaerg import context
 from metaerg import bioparsers
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
-                                                                target=FeatureType.CDS)
+        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
+                                                                   targets=(FeatureType.CDS,))
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -31,7 +31,7 @@ def _run_programs(genome:MetaergGenome, result_files):
 
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     # load cdd index
     cdd = {}
     cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
@@ -45,7 +45,7 @@ def _read_results(genome:MetaergGenome, result_files) -> int:
     cdd_result_count = 0
     with bioparsers.TabularBlastParser(result_files, 'BLAST', lambda i: cdd[int(i[4:])]) as handle:
         for blast_result in handle:
-            feature: MetaergSeqFeature = genome.get_feature(blast_result.query)
+            feature: SeqFeature = genome.get_feature(blast_result.query)
             cdd_result_count += 1
             feature.cdd = blast_result
             genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits

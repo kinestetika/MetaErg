@@ -1,15 +1,15 @@
 from metaerg import context
 from metaerg import bioparsers
-from metaerg.data_model import FeatureType, MetaergGenome, RNA_FEATURES
+from metaerg.data_model import FeatureType, Genome, RNA_FEATURES
 
 
-def _run_programs(genome:MetaergGenome, result_files):
+def _run_programs(genome:Genome, result_files):
     genome.generate_feature_ids()
-    bioparsers.write_genome_fasta_files(genome, result_files[0], target=FeatureType.CDS)
-    bioparsers.write_genome_fasta_files(genome, result_files[1], target=RNA_FEATURES)
+    bioparsers.write_genome_to_fasta_files(genome, result_files[0], targets=(FeatureType.CDS,))
+    bioparsers.write_genome_to_fasta_files(genome, result_files[1], targets=RNA_FEATURES)
 
 
-def _read_results(genome:MetaergGenome, result_files) -> int:
+def _read_results(genome:Genome, result_files) -> int:
     return 0
 
 

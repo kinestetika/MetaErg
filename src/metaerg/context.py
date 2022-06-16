@@ -6,7 +6,7 @@ from multiprocessing import cpu_count
 from pathlib import Path
 
 from metaerg import registry
-from metaerg.data_model import MetaergGenome
+from metaerg.data_model import Genome
 
 
 BASE_DIR = ''
@@ -156,7 +156,7 @@ def sorted_annotators():
 def register_annotator(define_annotator):
     param = define_annotator()
 
-    def annotator(genome: MetaergGenome):
+    def annotator(genome: Genome):
         """Runs programs and reads results."""
         log('({}) {} started...', (genome.id, param['purpose']))
         # (1) First make sure that the helper programs are available:
