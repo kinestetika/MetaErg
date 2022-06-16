@@ -38,16 +38,20 @@ def parse_arguments():
 
 
 def annotate_genome(genome_name, input_fasta_file: Path):
-    context.log(f'Now starting to annotate {genome_name}...')
+    context.log(f'Started annotation of {genome_name}...')
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
     genome = bioparsers.init_genome_from_fasta_file(genome_name, input_fasta_file,
                                                     min_contig_length=context.MIN_CONTIG_LENGTH)
+    context.log(f'({genome.id}) Loaded {len(genome.contigs)} contigs with total length {len(genome)} from file.')
     if context.RENAME_CONTIGS:
-        genome.rename_contigs(context.spawn_file('contig.name.mappings', genome.id))
+        contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome.id)
+        context.log(f'({genome.id}) Renaming contigs (see {contig_name_mapping_file})...')
+        genome.rename_contigs(contig_name_mapping_file)
     genome.validate_ids()
     # (2) now annotate
     for annotator in context.sorted_annotators():
         annotator(genome)
+        exit()
     # (3) save results
     context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
     faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)
@@ -73,11 +77,11 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        with ProcessPoolExecutor(max_workers=context.PARAlLEL_ANNOTATIONS) as executor:
+        with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                executor.submit(annotate_genome, contig_file, genome_name)
-        context.log('Now writing all-genomes overview html...')
-        write_html(context.HTML_DIR)
+                executor.submit(annotate_genome, genome_name, contig_file)
+        # context.log('Now writing all-genomes overview html...')
+        # write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

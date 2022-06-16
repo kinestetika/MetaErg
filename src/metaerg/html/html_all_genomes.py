@@ -9,7 +9,7 @@ def write_html(dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, 'index.html')
     with open(file, 'w') as handle:
-        handle.write(make_html(genome))
+        handle.write(make_html())
 
 
 def make_html() -> str:

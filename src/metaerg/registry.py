@@ -1,4 +1,3 @@
 ANNOTATOR_REGISTRY = {}
 HTML_WRITER_REGISTRY = []
 DATABASE_INSTALLER_REGISTRY = []
-print('registry initialized')

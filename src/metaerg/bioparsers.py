@@ -1,6 +1,5 @@
 import gzip
 import re
-import textwrap
 from pathlib import Path
 from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, Masker
 from metaerg import context
@@ -15,7 +14,7 @@ def _parse_fasta_header(line:str) -> SeqRecord:
     if si > 0:
         return SeqRecord(id=line[1:si], seq='', descr=line[si+1:].strip())
     else:
-        return SeqRecord(id=line[1], seq='')
+        return SeqRecord(id=line[1:].strip(), seq='')
 
 
 class FastaParser:
@@ -38,25 +37,28 @@ class FastaParser:
 
     def __iter__(self):
         seq_rec = None
+        seq = []
         while line := self.handle.readline():
+            line = line.strip()
             if line.startswith('>'):
-                if seq_rec:
-                    seq_rec.seq =  self._cleanup(seq_rec.seq)
+                if len(seq):
+                    seq_rec.seq = self._cleanup(''.join(seq))
+                    seq = []
                     yield seq_rec
                 seq_rec = _parse_fasta_header(line)
-            elif seq_rec:
-                seq_rec.seq += line.strip()
-                if len(seq_rec.seq) > 10 and not self.alphabet and self.cleanup_seq:
-                    seq_nt_errors = sum(1 for match in NON_IUPAC_RE_NT.finditer(seq_rec.seq))
-                    seq_aa_errors = sum(1 for match in NON_IUPAC_RE_AA.finditer(seq_rec.seq))
+            elif seq_rec is not None:
+                seq.append(line)
+                if len(line) > 10 and not self.alphabet and self.cleanup_seq:
+                    seq_nt_errors = sum(1 for match in NON_IUPAC_RE_NT.finditer(line))
+                    seq_aa_errors = sum(1 for match in NON_IUPAC_RE_AA.finditer(line))
                     if seq_nt_errors <= seq_aa_errors:
                         self.alphabet = NON_IUPAC_RE_NT
                         self.unknown_char = 'N'
                     else:
                         self.alphabet = NON_IUPAC_RE_AA
                         self.unknown_char = 'X'
-        if seq_rec:
-            seq_rec.seq = self._cleanup(seq_rec.seq)
+        if seq_rec is not None:
+            seq_rec.seq = self._cleanup(''.join(seq))
             yield seq_rec
 
     def _cleanup(self, seq) -> str:
@@ -103,20 +105,21 @@ def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimi
 
 
 def write_fasta(handle, fasta, line_length=80):
-    def _wf(f):
-        assert len(f.seq), 'Attempt to write zero-lentgh sequence to fasta.'
-        handle.write(f'>{f.id} {f.descr}\n')
-        wrapper = textwrap.TextWrapper(break_on_hyphens=False, width=line_length)
-        seq_lines = wrapper.wrap(text=f.seq)
-        for l in seq_lines:
-            handle.write(l)
-            handle.write('\n')
+    print('asdasd')
 
+    def _wf(f):
+        if not f:
+            raise Exception('Attempt to write zero-length sequence to fasta.')
+        handle.write(f'>{f.id} {f.descr}\n')
+        for i in range(0, len(f.seq), line_length):
+            handle.write(f.seq[i:i+line_length])
+            handle.write('\n')
     try:
         for f in fasta:
             _wf(f)
     except TypeError:
         _wf(fasta)
+    print('asdasd1')
 
 
 def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=True, exceptions=None, min_length=50):
@@ -130,17 +133,17 @@ def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple
     records_per_file = number_of_records / split
     paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
     filehandles = [open(p, 'w') for p in paths]
-    number_of_records = 0
+    records_written = 0
     masker = Masker(mask=mask, exceptions=exceptions, min_length=min_length)
     for contig in genome.contigs.values():
         if targets:
             for f in contig.features:
                 if f.type in targets:
-                    write_fasta(filehandles[int(number_of_records / records_per_file)], f)
-                    number_of_records += 1
+                    write_fasta(filehandles[int(records_written / records_per_file)], f)
+                    records_written += 1
         else:
-            write_fasta(filehandles[int(number_of_records / records_per_file)], masker.mask(contig))
-            number_of_records += 1
+            write_fasta(filehandles[int(records_written / records_per_file)], masker.mask(contig))
+            records_written += 1
     for f in filehandles:
         f.close()
     if mask:

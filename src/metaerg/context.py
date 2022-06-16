@@ -27,7 +27,7 @@ MIN_CONTIG_LENGTH = 0
 TRANSLATION_TABLE = 0
 CPUS_PER_GENOME = 0
 CPUS_AVAILABLE = 0
-PARAlLEL_ANNOTATIONS = 0
+PARALLEL_ANNOTATIONS = 0
 START_TIME = 0
 LOG_TOPICS = set()
 FILE_EXTENSION = ''
@@ -37,8 +37,9 @@ CREATE_DB_TASKS = ''
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, checkm_dir, gtdbtk_dir, log_topics='', create_db=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
-           RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
-           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARAlLEL_ANNOTATIONS, CREATE_DB_TASKS
+           RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
+           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB_TASKS, \
+           GENOME_NAMES, CONTIG_FILES
     contig_file = Path(contig_file).absolute()
     BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
     TEMP_DIR = Path(BASE_DIR, "temp")
@@ -49,7 +50,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     HTML_DIR = Path(BASE_DIR, "html")
 
     MULTI_MODE = contig_file.is_dir()
-    RENAME_CONTIGS = rename_contigs,
+    RENAME_CONTIGS = rename_contigs
     RENAME_GENOMES = rename_genomes
     MIN_CONTIG_LENGTH = min_contig_length
     FORCE = force
@@ -86,18 +87,18 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
                       f'in dir "{contig_file}"')
             exit(1)
-        PARAlLEL_ANNOTATIONS = CPUS_PER_GENOME
+        PARALLEL_ANNOTATIONS = CPUS_PER_GENOME
         CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
-        PARAlLEL_ANNOTATIONS = int(PARAlLEL_ANNOTATIONS / CPUS_PER_GENOME)
+        PARALLEL_ANNOTATIONS = int(PARALLEL_ANNOTATIONS / CPUS_PER_GENOME)
     else:
         CONTIG_FILES = [contig_file]
-        PARAlLEL_ANNOTATIONS = 1
+        PARALLEL_ANNOTATIONS = 1
     log(f'Detected {CPUS_AVAILABLE} available threads/cpus, will use {CPUS_PER_GENOME} per genome with '
-        f'{PARAlLEL_ANNOTATIONS} genomes annotated in parallel.')
+        f'{PARALLEL_ANNOTATIONS} genomes annotated in parallel.')
     if RENAME_GENOMES:
         GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
     else:
-        GENOME_NAMES = [f.name for f in CONTIG_FILES]
+        GENOME_NAMES = [f.stem for f in CONTIG_FILES]
     log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
     with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
         for n, o in zip(GENOME_NAMES, CONTIG_FILES):
@@ -150,7 +151,7 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
 
 
 def sorted_annotators():
-    return (registry.ANNOTATOR_REGISTRY[a] for a in sorted([registry.ANNOTATOR_REGISTRY.keys()]))
+    return (registry.ANNOTATOR_REGISTRY[a] for a in sorted(list(registry.ANNOTATOR_REGISTRY.keys())))
 
 
 def register_annotator(define_annotator):
@@ -158,7 +159,7 @@ def register_annotator(define_annotator):
 
     def annotator(genome: Genome):
         """Runs programs and reads results."""
-        log('({}) {} started...', (genome.id, param['purpose']))
+        log('({}) Starting {} ...', (genome.id, param['purpose']))
         # (1) First make sure that the helper programs are available:
         all_programs_in_path = True
         for p in param.get('programs', []):

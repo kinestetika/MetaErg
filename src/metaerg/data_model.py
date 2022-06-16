@@ -18,7 +18,7 @@ class DBentry:
         self.pos = pos
 
     def __iter__(self):
-        return (k,v for k,v in zip(('domain', 'descr', 'taxon', 'ncbi', 'gene', 'length', 'pos'),
+        return ((k, v) for k, v in zip(('domain', 'descr', 'taxon', 'ncbi', 'gene', 'length', 'pos'),
                 (self.domain, self.descr, self.taxon, self.ncbi, self.gene, self.length, self.pos)))
 
     def __repr__(self):
@@ -72,7 +72,8 @@ class BlastHit:
 class BlastResult:
     def __init__(self, hits: tuple[BlastHit]):
         self.hits = hits
-        assert len(hits), 'Attempt to create empty blast result.'
+        if not len(hits):
+            raise Exception('Attempt to create empty blast result.')
 
     def __iter__(self):
         return self.hits.__iter__()
@@ -145,7 +146,7 @@ class SeqFeature:
         return self.end - self.start
 
     def __iter__(self):
-        return (k,v for k,v in zip(('id', 'type', 'start', 'end', 'strand', 'descr', 'notes', 'taxon', 'inference',
+        return ((k, v) for k, v in zip(('id', 'type', 'start', 'end', 'strand', 'descr', 'notes', 'taxon', 'inference',
                                     'antismash', 'transmembrane_helixes', 'signal_peptide', 'subsystem', 'seq',
                                     'cdd', 'blast'),
                 (self.id, self.type, self.start, self.end, self.strand, self.descr, self.notes, self.taxon,
@@ -187,7 +188,7 @@ class SeqFeature:
 
 
 class SubSystem:
-    def __init__(self, id: str, targets: [str] = list, hits = None):
+    def __init__(self, id: str, targets: [str] = None, hits = None):
         self.id = id
         self.targets = targets if targets else list()
         self.hits = hits if hits else dict()
@@ -218,12 +219,12 @@ class SubSystems:
             line = line.strip()
             if line.startswith("#") or not len(line):
                 continue
-            if line.startswith(">"):
+            elif line.startswith(">"):
                 current_subsystem = SubSystem(line[1:])
                 self.subsystems[current_subsystem.id] = current_subsystem
-                continue
-            current_subsystem.targets.append(line)
-            self.cues[line] = current_subsystem
+            elif current_subsystem is not None:
+                current_subsystem.targets.append(line)
+                self.cues[line] = current_subsystem
         if subsystems:
             self.subsystems = subsystems
 
@@ -262,23 +263,22 @@ class SeqRecord:
 
 class Masker:
     def __init__(self, mask=True, exceptions=None, min_length=50):
-        self.mask = mask
+        self.apply_mask = mask
         self.exceptions = exceptions
         self.min_length = min_length
         self.nt_total = 0
         self.nt_masked = 0
 
-    def mask(self, seq_record) -> SeqRecord:
+    def mask(self, seq_record: SeqRecord) -> SeqRecord:
         seq = seq_record.seq
         seq_record.nt_masked = 0
-        if self.mask:
+        if self.apply_mask:
             for f in seq_record.features:
                 if f.inference not in self.exceptions and len(f) >= self.min_length:
-                    seq_record.nt_masked += len(f)
                     seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
                     self.nt_masked += len(f)
         self.nt_total += len(seq_record)
-        return SeqRecord(seq_record.id, seq_record.descr, seq)
+        return SeqRecord(id=seq_record.id, descr=seq_record.descr, seq=seq)
         # record.annotations['molecule_type'] = 'DNA'
 
     def stats(self):
@@ -309,9 +309,11 @@ class Genome:
                                                                          self.contigs)
 
     def validate_ids(self):
-        assert self.delimiter not in self.id, f'Genome id {self.id} may not contain delimiter {self.delimiter}!'
+        if self.delimiter in self.id:
+            raise Exception(f'Genome id {self.id} contains {self.delimiter}; change using --delimiter')
         for c_id in self.contigs.keys():
-            assert self.delimiter not in c_id, f'Contig id {c_id} may not contain delimiter {self.delimiter}!'
+            if self.delimiter in c_id:
+                raise Exception(f'Contig id {c_id} contains {self.delimiter}; change using --delimiter')
 
     def rename_contigs(self, mappings_file:Path):
         i = 0
