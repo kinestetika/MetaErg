@@ -3,11 +3,12 @@ import re
 import bioparsers
 from metaerg.data_model import FeatureType, Genome, SeqFeature
 from metaerg import context
-from metaerg.bioparsers import write_genome_to_fasta_files
+from metaerg import bioparsers
 
 
 def _run_programs(genome:Genome, result_files):
-    fasta_file = write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+    fasta_file = genome, context.spawn_file('masked', genome.id)
+    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     context.run_external(f'aragorn -l -t -gc{genome.translation_table} {fasta_file} -w -o {result_files[0]}')
 
 def _read_results(genome:Genome, result_files) -> int:

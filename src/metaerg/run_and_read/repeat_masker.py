@@ -7,8 +7,8 @@ from metaerg import bioparsers
 
 
 def _run_programs(genome:Genome, result_files):
-    fasta_file, = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file(genome, 'masked', genome.id),
-                                                         mask=True)
+    fasta_file = context.spawn_file('masked', genome.id)
+    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     lmer_table_file = context.spawn_file('lmer-table', genome.id)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)
@@ -47,9 +47,13 @@ def _read_results(genome:Genome, result_files) -> int:
     with open(result_files[0]) as repeatmasker_handle:
         for line in repeatmasker_handle:
             words = line.split()
-            if len(words) < 11:
+            if len(words) < 11 or words[0] in ('SW', 'score'):
                 continue
-            contig: SeqRecord = genome.contigs[words[4]]
+            try:
+                contig: SeqRecord = genome.contigs[words[4]]
+            except KeyError:
+                context.log(f'({genome.id}) Warning: Unknown contig id "{words[4]}"')
+                continue
             if 'Simple_repeat' == words[10]:
                 repeat_count += 1
                 feature = words2feature(words, contig)

@@ -42,6 +42,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
     genome = bioparsers.init_genome_from_fasta_file(genome_name, input_fasta_file,
                                                     min_contig_length=context.MIN_CONTIG_LENGTH)
+    genome.translation_table = context.TRANSLATION_TABLE
     context.log(f'({genome.id}) Loaded {len(genome.contigs)} contigs with total length {len(genome)} from file.')
     if context.RENAME_CONTIGS:
         contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome.id)
@@ -51,8 +52,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (2) now annotate
     for annotator in context.sorted_annotators():
         annotator(genome)
-        print('asad')
-        exit()
     # (3) save results
     context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
     faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)

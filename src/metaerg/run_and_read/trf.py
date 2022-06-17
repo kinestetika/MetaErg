@@ -4,7 +4,8 @@ from metaerg import bioparsers
 
 
 def _run_programs(genome:Genome, result_files):
-    fasta_file, = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+    fasta_file = context.spawn_file('masked', genome.id)
+    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     with open(result_files[0], 'w') as output:
         context.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
@@ -33,7 +34,7 @@ def _read_results(genome:Genome, result_files) -> int:
 def run_and_read_trf():
     return ({'pipeline_position': 41,
              'purpose': 'tandem repeat prediction with trf',
-             'programs': ('trf'),
+             'programs': ('trf',),
              'result_files': ('tandem-repeat-finder',),
              'run': _run_programs,
              'read': _read_results})

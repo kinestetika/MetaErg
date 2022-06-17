@@ -105,7 +105,6 @@ def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimi
 
 
 def write_fasta(handle, fasta, line_length=80):
-
     def _wf(f):
         if not f:
             raise Exception('Attempt to write zero-length sequence to fasta.')
@@ -113,14 +112,15 @@ def write_fasta(handle, fasta, line_length=80):
         for i in range(0, len(f.seq), line_length):
             handle.write(f.seq[i:i+line_length])
             handle.write('\n')
-    try:
+    if isinstance(fasta, SeqRecord) or isinstance(fasta, SeqFeature):
+        _wf(fasta)
+    else:
         for f in fasta:
             _wf(f)
-    except TypeError:
-        _wf(fasta)
 
 
-def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=True, exceptions=None, min_length=50):
+def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=False, mask_exceptions=None,
+                                mask_min_length=50):
     """writes features (of target FeatureType), or contigs (target = None), to one or more (split) fasta files,
     optionally masking features with N"""
     if targets:
@@ -132,7 +132,7 @@ def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple
     paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
-    masker = Masker(mask=mask, exceptions=exceptions, min_length=min_length)
+    masker = Masker(mask=mask, exceptions=mask_exceptions, min_length=mask_min_length)
     for contig in genome.contigs.values():
         if targets:
             for f in contig.features:
@@ -145,11 +145,8 @@ def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple
     for f in filehandles:
         f.close()
     if mask:
-        context.log(masker.stats())
-    if split > 1:
-        return paths
-    else:
-        return base_file
+        context.log(f'({genome.id}) {masker.stats()}')
+    return paths
 
 
 class TabularBlastParser:

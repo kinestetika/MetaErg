@@ -10,9 +10,10 @@ from metaerg.data_model import FeatureType, SeqFeature, Genome
 
 def _run_programs(genome: Genome, result_files):
     fasta_file = context.spawn_file('masked', genome.id)
-    rfam_database = Path(context.DATABASE_DIR, "Rfam.cm")
+    rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, fasta_file, context.CPUS_PER_GENOME, mask=True)
+        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, fasta_file, context.CPUS_PER_GENOME,
+                                                                   mask=True)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                               for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -48,13 +49,13 @@ def _read_results(genome:Genome, result_files) -> int:
     with open(result_files[0]) as hmm_handle:
         for line in hmm_handle:
             words = line.strip().split()
+            if line.startswith('#') or len(words) < 17:
+                continue
             words[17] = ' '.join(words[17:])
-            match  words:
-                case [*_] if line.startswith('#'):
-                    continue
-                case [hit, _, query, _, _, _, _, start, end, '-', _, _, _, _, score, _, '!', descr]:
+            match words:
+                case [hit, _, query, _, _, _, _, start, end, '-', _, _, _, _, score, _, '!', descr, *_]:
                     hit = Hit(query, hit, int(end), int(start), -1, float(score), descr)
-                case [hit, _, query, _, _, _, _, start, end, '+', _, _, _, _, score, _, '!', descr]:
+                case [hit, _, query, _, _, _, _, start, end, '+', _, _, _, _, score, _, '!', descr, *_]:
                     hit = Hit(query, hit, int(start), int(end), 1, float(score), descr)
                 case [*_]:
                     continue
@@ -93,7 +94,7 @@ def run_and_read_cmscan():
              'purpose': 'noncoding (RNA) gene prediction with cmscan',
              'programs': ('cmscan',),
              'result_files': ("cmscan",),
-             'databases': (Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm'),),
+             'databases': (Path('rfam', 'Rfam.cm'),),
              'run': _run_programs,
              'read': _read_results})
 

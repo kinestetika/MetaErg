@@ -169,6 +169,7 @@ def register_annotator(define_annotator):
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome.id, param['purpose'], p))
         # (2) Then, make sure required databases are available
         for d in param.get('databases', []):
+            d = Path(DATABASE_DIR, d)
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome.id,
                                                                                        param['purpose'], d))
@@ -184,7 +185,8 @@ def register_annotator(define_annotator):
             if FORCE or previous_results_missing:
                 param['run'](genome, result_files)
             else:
-                log('({}) Reusing existing results in {}.'.format(genome.id, result_files))
+                log('({}) Reusing existing results in {}.'.format(genome.id,
+                                                                  ', '.join(str(file) for file in result_files)))
         # (4) If all results files are there, read the results:
         all_results_created = True
         for f in result_files:

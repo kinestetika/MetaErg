@@ -3,7 +3,8 @@ from metaerg import context
 from metaerg import bioparsers
 
 def _run_programs(genome:Genome, result_files):
-    fasta_file = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+    fasta_file = context.spawn_file('masked', genome.id)
+    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     ltr_index_file = context.spawn_file('ltr_index', genome.id)
 
     context.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
@@ -26,7 +27,7 @@ def _read_results(genome:Genome, result_files) -> int:
 def run_and_read_ltr_harvest():
     return ({'pipeline_position': 31,
              'purpose': 'retrotransposon prediction with ltrharvest',
-             'programs': ('ltr_index', 'ltr_harvest'),
+             'programs': ('gt',),
              'result_files': ('ltr_harvest',),
              'run': _run_programs,
              'read': _read_results})

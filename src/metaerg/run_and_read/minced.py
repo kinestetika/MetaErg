@@ -4,19 +4,18 @@ from metaerg import bioparsers
 
 def _run_programs(genome:Genome, result_files):
     """Executes the helper programs to complete the analysis"""
-    fasta_file = bioparsers.write_genome_to_fasta_files(genome, context.spawn_file('masked', genome.id), mask=True)
+    fasta_file = genome, context.spawn_file('masked', genome.id)
+    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     context.run_external(f'minced -gffFull {fasta_file} {result_files[0]}')
 
 
 def _read_results(genome:Genome, result_files) -> int:
     """Should parse the result files and return the # of positives"""
     crispr_count = 0
-    print('...')
     with bioparsers.GffParser(result_files[0], genome.contigs, inference='minced',
                               target_feature_type_dict={'repeat_unit': FeatureType.crispr_repeat}) as gff_parser:
         for contig, feature in gff_parser:
             contig.features.append(feature)
-            print(feature)
             crispr_count += 1
     return crispr_count
 

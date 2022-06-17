@@ -132,7 +132,7 @@ class SeqFeature:
         self.strand = strand
         self.type = type if isinstance(type, FeatureType) else FeatureType[type]
         self.inference = inference
-        self.seq = seq
+        self.seq = ''.join(seq.split())
         self.id = id
         self.descr = descr
         self.taxon = taxon
@@ -265,7 +265,7 @@ class SeqRecord:
 class Masker:
     def __init__(self, mask=True, exceptions=None, min_length=50):
         self.apply_mask = mask
-        self.exceptions = exceptions
+        self.exceptions = exceptions if exceptions else list()
         self.min_length = min_length
         self.nt_total = 0
         self.nt_masked = 0
@@ -283,7 +283,7 @@ class Masker:
         # record.annotations['molecule_type'] = 'DNA'
 
     def stats(self):
-        return f'Masked {self.nt_masked / self.nt_total * 100:.1f}% of sequence data.'
+        return f'Masked {self.nt_masked / max(self.nt_total, 1) * 100:.1f}% of sequence data.'
 
 
 class Genome:
@@ -330,7 +330,7 @@ class Genome:
         for c in self.contigs.values():
             c.features.sort()
             for f in c.features:
-                f.id = self.delimiter.join((self.id, c.id, f'{f_id::05d}'))
+                f.id = self.delimiter.join((self.id, c.id, f'{f_id:05d}'))
                 f_id += 1
 
     def get_feature(self, feature_id):
