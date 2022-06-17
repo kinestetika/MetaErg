@@ -10,11 +10,15 @@ def _run_programs(genome:Genome, result_files):
 
 def _read_results(genome:Genome, result_files) -> int:
     """Should parse the result files and return the # of positives"""
-    crispr_region_count = 0
+    crispr_count = 0
+    print('...')
     with bioparsers.GffParser(result_files[0], genome.contigs, inference='minced',
-                              target_feature_type_dict={'repeat_region': FeatureType.crispr_repeat}) as parser:
-        crispr_region_count += 1
-    return crispr_region_count
+                              target_feature_type_dict={'repeat_unit': FeatureType.crispr_repeat}) as gff_parser:
+        for contig, feature in gff_parser:
+            contig.features.append(feature)
+            print(feature)
+            crispr_count += 1
+    return crispr_count
 
 
 @context.register_annotator

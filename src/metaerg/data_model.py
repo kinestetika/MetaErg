@@ -1,5 +1,4 @@
 import re
-import textwrap
 from pathlib import Path
 from enum import Enum, auto
 from collections import Counter
@@ -113,6 +112,9 @@ class FeatureType(Enum):
     crispr_repeat = auto()
     retrotransposon = auto()
 
+    def __repr__(self):
+        return '{}[{!r}]'.format(type(self).__name__, self.name)
+
 
 RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureType.ncRNA, FeatureType.retrotransposon)
 
@@ -154,7 +156,7 @@ class SeqFeature:
                  self.seq, self.cdd, self.blast)))
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, ',\n'.join(f'{k}={v!r}\n' for k, v in self if v))
+        return '\n{}({})'.format(type(self).__name__, ',\n  '.join(f'{k}={v!r}' for k, v in self if v))
 
     def __lt__(self, other):
         return self.start < other.start
@@ -194,7 +196,7 @@ class SubSystem:
         self.hits = hits if hits else dict()
 
     def __repr__(self):
-        return '{}({!r},\n{!r},\n{!r})'.format(type(self).__name__, self.id, self.targets, self.hits)
+        return '{}({!r},{!r},{!r})'.format(type(self).__name__, self.id, self.targets, self.hits)
 
     def add_hit(self, feature_id: str, target: str = 'none'):
         self.hits.setdefault(feature_id, set()).add(target)
@@ -252,10 +254,9 @@ class SeqRecord:
         self.features = features if features else list()
 
     def __repr__(self):
-        wrapper = textwrap.TextWrapper(break_on_hyphens=False)
-        seq_lines = wrapper.wrap(text=self.seq)
-        return '{}(id={!r},\ndescr={!r},\nfeatures={!r},\nseq="{}")\n'.format(type(self).__name__, self.id, self.descr,
-                                                                              self.features, '" \\\n"'.join(seq_lines))
+        seq_lines = (self.seq[i:i+80] for i in range(0, len(self.seq), 80))
+        return "{}(id={!r},descr={!r},features={!r},\nseq='''{}''')\n".format(type(self).__name__, self.id, self.descr,
+                                                                              self.features, '\n'.join(seq_lines))
 
     def __len__(self):
         return len(self.seq)
@@ -300,7 +301,7 @@ class Genome:
 
     def __repr__(self):
         return '{}(id={!r},\ndelimiter={!r},\ntranslation_table={!r},\n' \
-               'properties={!r},\nsubsystems={!r},\ncontigs={!r})'.format(type(self).__name__,
+               'properties={!r},\nsubsystems={!r},\ncontigs={!r})\n'.format(type(self).__name__,
                                                                          self.id,
                                                                          self.delimiter,
                                                                          self.translation_table,

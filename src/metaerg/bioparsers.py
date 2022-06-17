@@ -41,7 +41,7 @@ class FastaParser:
         while line := self.handle.readline():
             line = line.strip()
             if line.startswith('>'):
-                if len(seq):
+                if len(seq) and seq_rec is  not None:
                     seq_rec.seq = self._cleanup(''.join(seq))
                     seq = []
                     yield seq_rec
@@ -105,7 +105,6 @@ def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimi
 
 
 def write_fasta(handle, fasta, line_length=80):
-    print('asdasd')
 
     def _wf(f):
         if not f:
@@ -119,7 +118,6 @@ def write_fasta(handle, fasta, line_length=80):
             _wf(f)
     except TypeError:
         _wf(fasta)
-    print('asdasd1')
 
 
 def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=True, exceptions=None, min_length=50):
@@ -262,8 +260,7 @@ class GffParser:
                     qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
                     feature = SeqFeature(start, end, strand, self.target_feature_type_dict[feature_type],
                                          inference=inference, seq=seq)
-                    contig.features.append(feature)
-                    yield feature
+                    yield contig, feature
 
 
 def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:

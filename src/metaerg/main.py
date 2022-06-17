@@ -51,6 +51,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (2) now annotate
     for annotator in context.sorted_annotators():
         annotator(genome)
+        print('asad')
         exit()
     # (3) save results
     context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
