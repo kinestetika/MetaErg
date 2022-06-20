@@ -9,7 +9,7 @@ from metaerg import registry
 from metaerg import bioparsers
 from metaerg.run_and_read import *
 
-VERSION = "2.1.0"
+VERSION = "2.2.0"
 
 
 def parse_arguments():
@@ -77,9 +77,11 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
-            for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                executor.submit(annotate_genome, genome_name, contig_file)
+        for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+            annotate_genome(genome_name, contig_file)
+        #with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
+        #    for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+        #        executor.submit(annotate_genome, genome_name, contig_file)
         # context.log('Now writing all-genomes overview html...')
         # write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')

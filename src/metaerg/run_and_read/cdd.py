@@ -13,6 +13,8 @@ def _run_programs(genome:Genome, result_files):
     if context.CPUS_PER_GENOME > 1:
         split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
                                                                    targets=(FeatureType.CDS,))
+        for i in split_fasta_files:
+            print(i)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -37,21 +39,26 @@ def _read_results(genome:Genome, result_files) -> int:
     cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
     with open(cdd_index) as db_handle:
         for line in db_handle:
-            words = line.split("\t")
-            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[0], gene=words[1], descr=words[2],
+            words = line.strip().split("\t")
+            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
                                          length=int(words[4]))
     context.log(f'Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
-    with bioparsers.TabularBlastParser(result_files, 'BLAST', lambda i: cdd[int(i[4:])]) as handle:
+
+    # lambda i: cdd[int(i[4:])]
+    def get_cdd_db_entry(id: str):
+        return cdd[int(id[4:])]
+
+    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for blast_result in handle:
-            feature: SeqFeature = genome.get_feature(blast_result.query)
+            feature: SeqFeature = genome.get_feature(blast_result.query())
             cdd_result_count += 1
             feature.cdd = blast_result
             genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
                                               if h.aligned_length / h.hit.length >= 0.8))
-            top_entry = blast_result.hits[0].hit
-            feature.descr = f'{top_entry.id}|{top_entry.gene} {top_entry.descr}'
+            top_entry: DBentry = blast_result.hits[0].hit
+            feature.descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                     feature.descr = feature.descr[:35] + '...'
     return cdd_result_count
@@ -62,7 +69,7 @@ def run_and_read_cdd():
     return ({'pipeline_position': 71,
              'purpose': 'function prediction using RPSBlast and the conserved domain database',
              'programs': ('rpsblast',),
-             'databases': (Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl'), Path(context.DATABASE_DIR, 'cdd', 'Cdd.pal')),
+             'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd.pal')),
              'result_files': ('cdd',),
              'run': _run_programs,
              'read': _read_results})

@@ -21,7 +21,7 @@ class DBentry:
                 (self.domain, self.descr, self.taxon, self.ncbi, self.gene, self.length, self.pos)))
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v:!r}' for k, v in self if v))
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self if v))
 
     def __len__(self):
         return self.length
@@ -49,20 +49,29 @@ class BlastHit:
         self.evalue = evalue
         self.score = score
 
+    def __iter__(self):
+        return ((k, v) for k, v in zip(('query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
+                                        'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score'),
+                (self.query, self.hit, self.percent_id, self.aligned_length, self.mismatches, self.gaps,
+                 self.query_start, self.query_end, self.hit_start, self.hit_end, self.evalue, self.score)))
+
     def __repr__(self):
-        return '{}({!r}, {!r}, {.1f}, {}, {}, {}, {}, {}, {}, {}, {.1e}, {.1f})'.format(type(self).__name__,
-                                                                                        self.query,
-                                                                                        self.hit,
-                                                                                        self.percent_id,
-                                                                                        self.aligned_length,
-                                                                                        self.mismatches,
-                                                                                        self.gaps,
-                                                                                        self.query_start,
-                                                                                        self.query_end,
-                                                                                        self.hit_start,
-                                                                                        self.hit_end,
-                                                                                        self.evalue,
-                                                                                        self.score)
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self if v))
+
+    # def __repr__(self):
+    #     return '{}({!r}, {!r}, {.1f}, {}, {}, {}, {}, {}, {}, {}, {.1e}, {.1f})'.format(type(self).__name__,
+    #                                                                                     self.query,
+    #                                                                                     self.hit,
+    #                                                                                     self.percent_id,
+    #                                                                                     self.aligned_length,
+    #                                                                                     self.mismatches,
+    #                                                                                     self.gaps,
+    #                                                                                     self.query_start,
+    #                                                                                     self.query_end,
+    #                                                                                     self.hit_start,
+    #                                                                                     self.hit_end,
+    #                                                                                     self.evalue,
+    #                                                                                     self.score)
 
     def __len__(self):
         return self.aligned_length
@@ -236,7 +245,7 @@ class SubSystems:
     def match(self, feature: SeqFeature, descriptions):
         for d in descriptions:
             for cue, subsystem in self.cues.items():
-                if len(d.descr) > len(cue) + 20:
+                if len(d) > len(cue) + 20:
                     continue
                 match = re.search(r'\b' + cue + r'\b', d)
                 if match and match.start() < 10:

@@ -3,6 +3,7 @@ from pathlib import Path
 
 from Bio import SeqIO
 
+import bioparsers
 from metaerg import context
 from metaerg.data_model import SeqFeature, Genome
 
@@ -10,8 +11,8 @@ from metaerg.data_model import SeqFeature, Genome
 def _run_programs(genome:Genome, result_files):
     """Should execute the helper programs to complete the analysis"""
     gbk_file = context.spawn_file('gbk', genome.id)
-    if result_files[0].exists():
-        shutil.rmtree(result_files[0])
+    with open(gbk_file, 'w') as handle:
+        bioparsers.gbk_write_genome(handle, genome)
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 
@@ -19,26 +20,25 @@ def _read_results(genome:Genome, result_files) -> int:
     """Should parse the result files and return the # of positives."""
     antismash_hit_count = 0
     for f in sorted(result_files[0].glob('*region*.gbk')):
-        with open(f) as handle:
+        with bioparsers.GbkFeatureParser(f) as reader:
             antismash_region_name = ''
             antismash_region_number = 0
-            for antismash_record in SeqIO.parse(handle, 'genbank'):
-                for antismash_feature in antismash_record.features:
-                    antismash_hit_count += 1
-                    if 'region' == antismash_feature.type:
-                        antismash_region_name = antismash_feature.qualifiers['rules'][0]
-                        antismash_region_number = int(antismash_feature.qualifiers['region_number'][0])
-                    elif 'CDS' in antismash_feature.type:
-                        feature: SeqFeature = genome.get_feature(antismash_feature.qualifiers['locus_tag'][0])
-                        antismash_gene_function = antismash_feature.qualifiers['gene_functions'][0]
-                        antismash_gene_category = antismash_feature.qualifiers['gene_kind']
-                        if antismash_region_name:
-                            feature.antismash = ' '.join((f'(region {antismash_region_number})',
-                                                         antismash_region_name,
-                                                         antismash_gene_function,
-                                                         antismash_gene_category))
-                            feature.subsystem.add('[secondary-metabolites]')
-                            genome.subsystems.subsystems['[secondary-metabolites]'].add_hit(feature.id)
+            for f_as_dict in reader:
+                antismash_hit_count += 1
+                if 'region' == f_as_dict['type']:
+                    antismash_region_name = '{} {}'.format(f_as_dict['product'], f_as_dict['rules'])
+                    antismash_region_number = int(f_as_dict['region_number'])
+                elif 'CDS' == f_as_dict['type']:
+                    feature: SeqFeature = genome.get_feature(f_as_dict['locus_tag'])
+                    antismash_gene_function = f_as_dict.get('gene_functions', '')
+                    antismash_gene_category = f_as_dict.get('gene_kind', '')
+                    if antismash_region_name:
+                        feature.antismash = ' '.join((f'(region {antismash_region_number})',
+                                                     antismash_region_name,
+                                                     antismash_gene_function,
+                                                     antismash_gene_category))
+                        feature.subsystem.add('[secondary-metabolites]')
+                        genome.subsystems.subsystems['[secondary-metabolites]'].add_hit(feature.id)
     if not antismash_hit_count:
         result_files[0].mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
     return antismash_hit_count

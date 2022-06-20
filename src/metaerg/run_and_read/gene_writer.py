@@ -4,17 +4,14 @@ from metaerg.data_model import FeatureType, Genome, RNA_FEATURES
 
 
 def _run_programs(genome:Genome, result_files):
+    pass
+
+def _read_results(genome:Genome, result_files) -> int:
     genome.generate_feature_ids()
-    for c in genome.contigs.values():
-        for f in c.features:
-            print(f.id, f.start, f.end, str(f.type))
     context.log(f'({genome.id}) Now writing CDS to fasta file...')
     bioparsers.write_genome_to_fasta_files(genome, result_files[0], targets=(FeatureType.CDS,))
     context.log(f'({genome.id}) Now writing RNA genes and features to fasta file...')
     bioparsers.write_genome_to_fasta_files(genome, result_files[1], targets=RNA_FEATURES)
-
-
-def _read_results(genome:Genome, result_files) -> int:
     return sum(len(c.features) for c in genome.contigs.values())
 
 

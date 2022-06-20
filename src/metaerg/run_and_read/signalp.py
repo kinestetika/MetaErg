@@ -53,7 +53,7 @@ def _read_results(genome:Genome, result_files) -> int:
 def run_and_read_signalp():
     return ({'pipeline_position': 121,
              'purpose': 'signal peptide prediction with signalp',
-             'programs': ('signalp6'),
+             'programs': ('signalp6',),
              'result_files': ('signalp',),
              'run': _run_programs,
              'read': _read_results})

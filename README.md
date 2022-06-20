@@ -1,4 +1,4 @@
-## metaerg.py, version 2.0.17
+## metaerg.py, version 2.2.0
 
 Metaerg.py is a program that annotates genomes or sets of mags from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of a nucleotide fasta file with one or more contigs. Output files of annotated contigs are created in common formats
@@ -11,7 +11,7 @@ By using gtdbtk for taxonomic classification of genes and transferring functiona
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
 more straightforward to interpret than the original version of metaerg and many other annotation tools.
 
-The Metaerg 2.0 pipeline consists of:
+The Metaerg 2.2 pipeline consists of:
 * (optional) CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
 * (optional) tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/).
 * (required) RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM.

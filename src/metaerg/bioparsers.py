@@ -1,7 +1,8 @@
 import gzip
 import re
+import textwrap
 from pathlib import Path
-from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, Masker
+from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, Masker, FeatureType
 from metaerg import context
 from urllib.parse import unquote
 
@@ -69,32 +70,6 @@ class FastaParser:
                 seq = self.alphabet.sub(self.unknown_char, seq)
         return seq
 
-    # def __next__(self):
-    #     seq_record = None
-    #     seq = ''
-    #     while line := self.handle.readline():
-    #         if line.startswith('>'):
-    #             next_header = _parse_fasta_header(line)
-    #             if seq:
-    #                 seq_record = SeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
-    #             self.header = next_header
-    #             if seq_record:
-    #                 return seq_record
-    #         else:
-    #             seq += line.strip()
-    #             if len(seq) > 10 and not self.alphabet and self.cleanup_seq:
-    #                 seq_nt_errors = sum(1 for match in NON_IUPAC_RE_NT.finditer(seq))
-    #                 seq_aa_errors = sum(1 for match in NON_IUPAC_RE_AA.finditer(seq))
-    #                 if seq_nt_errors <= seq_aa_errors:
-    #                     self.alphabet = NON_IUPAC_RE_NT
-    #                     self.unknown_char = 'N'
-    #                 else:
-    #                     self.alphabet = NON_IUPAC_RE_AA
-    #                     self.unknown_char = 'X'
-    #     if seq:
-    #         return SeqRecord(id=self.header[0], descr=self.header[1], seq=self._cleanup(seq))
-    #     raise StopIteration
-
 
 def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimiter='.') -> Genome:
     with FastaParser(filename) as fasta_reader:
@@ -129,7 +104,10 @@ def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple
         number_of_records = len(genome.contigs)
     split = min(split, number_of_records)
     records_per_file = number_of_records / split
-    paths = (Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)) if split > 1 else base_file,
+    if split > 1:
+        paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]
+    else:
+        paths = base_file,
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
     masker = Masker(mask=mask, exceptions=mask_exceptions, min_length=mask_min_length)
@@ -181,14 +159,16 @@ class TabularBlastParser:
         while line := self.handle.readline():
             words = line.strip().split('\t')
             match words:
-                case [str(word), *_] if word.startswith('#'):
+                case [word, *_] if word.startswith('#'):
                     continue
                 case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
                       hit_end, evalue, score] if 'BLAST' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    return BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
+                    # print(hit_db_entry)
+                    b = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
                                     int(mismatches), int(gaps), int(query_start), int(query_end),
                                     int(hit_start), int(hit_end), float(evalue), float(score))
+                    return(b)
                 case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
                     return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
@@ -280,3 +260,115 @@ def pad_seq(sequence):
     """ Pad sequence to multiple of 3 with N """
     remainder = len(sequence) % 3
     return sequence if remainder == 0 else sequence + 'N' * (3 - remainder)
+
+
+def gbk_write_feature(writer, f:SeqFeature, i=21, lw=80):
+    indent = ' '*i
+    location = f'{f.start+1}..{f.end}' if f.strand >= 0 else f'complement({f.start+1}..{f.end})'
+    writer.write('     {:<16}{}\n'.format(f.type.name, textwrap.fill(location, width = lw, initial_indent = '',
+                                                                     subsequent_indent = indent)))
+    gbk_keys = {'locus_tag': f.id,
+                'inference': f.inference,
+                'product': f.descr,
+                'taxonomy': f.taxon,
+                'subsystem': ', '.join(f.subsystem),
+                'notes': ', '.join(f.notes),
+                'antismash': f.antismash,
+                'signal_peptide': f.signal_peptide,
+                'transmembrane_helixes': f.transmembrane_helixes,
+                'translation': f.seq if f.type == FeatureType.CDS else ''}
+    for k, v in gbk_keys.items():
+        if v:
+            writer.write(textwrap.fill(f'/{k}="{v}"', width = lw, initial_indent = indent, subsequent_indent = indent))
+            writer.write('\n')
+
+def gbk_write_record(writer, sr: SeqRecord, i=21, lw=80):
+    writer.write('''LOCUS       {:<15} {:>12} bp    DNA              UNK 01-JAN-1980
+DEFINITION  {}.
+ACCESSION   {}
+VERSION     {}
+KEYWORDS    .
+SOURCE      .
+  ORGANISM  .
+            .
+FEATURES             Location/Qualifiers
+'''.format(sr.id, len(sr), sr.id, sr.id, sr.id))
+    for feature in sr.features:
+        gbk_write_feature(writer, feature, i=i, lw=lw)
+    writer.write('ORIGIN\n')
+    lw = ((lw - 20) // 10) * 10
+    print(lw)
+    for i in range(0, len(sr.seq), lw):
+        line_seq = sr.seq[i:i + lw].lower()
+        writer.write(f'{i+1:>9}')
+        for j in range(lw // 10):
+            writer.write(' ')
+            writer.write(line_seq[j*10:j*10+10])
+        writer.write('\n')
+    writer.write('//\n')
+
+
+def gbk_write_genome(writer, genome: Genome, i=21, lw=80):
+    for seq_rec in genome.contigs.values():
+        gbk_write_record(writer, seq_rec, i=i, lw=lw)
+
+
+class GbkFeatureParser:
+    def __init__(self, path):
+        self.path = path
+        self.handle = None
+        self.feature_re = re.compile(r'\s{,6}(\w+)\s+(complement\()*(\d+)\.\.(\d+)\)*')
+        self.qualifier_re = re.compile(r'/(\w+?)=(.+)')
+
+    def __enter__(self):
+        if str(self.path).endswith('.gz'):
+            self.handle = gzip.open(self.path, 'rt')
+        else:
+            self.handle = open(self.path)
+        return self
+
+    def __exit__(self, exception_type, exception_value, exception_traceback):
+        self.handle.close()
+
+    def __iter__(self):
+        current_contig_name = ''
+        current_feature = {}
+        current_k = ''
+        current_v = ''
+        parsing_features = False
+        while line := self.handle.readline():
+            if line.startswith('ACCESSION'):
+                current_contig_name = line.split()[1]
+                continue
+            elif line.startswith('FEATURES'):
+                parsing_features = True
+                continue
+            elif line.startswith('ORIGIN'):
+                if current_feature:
+                    if current_v:
+                        current_feature[current_k] = current_v.strip('"')
+                    yield current_feature
+                parsing_features = False
+                continue
+            elif not parsing_features:
+                continue
+            line = line.strip('\n')
+            if m := self.feature_re.match(line):
+                if current_feature:
+                    yield current_feature
+                current_feature = {'contig': current_contig_name,
+                                   'start': int(m.group(3))-1,
+                                   'end': int(m.group(4)),
+                                   'strand': -1 if m.group(2) else 1,
+                                   'type': m.group(1)
+                                   }
+            elif current_feature:
+                line =line.strip()
+                if m := self.qualifier_re.fullmatch(line):
+                    if current_v:
+                        current_feature[current_k] = current_v.strip('"')
+                    current_k = m.group(1)
+                    current_v = m.group(2)
+                else:
+                    current_v += f' {line}'
+

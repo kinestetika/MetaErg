@@ -34,14 +34,9 @@ def _run_programs(genome:Genome, result_files):
     blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
     context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
-                         f'--threads {context.CPUS_PER_GENOME} --max-target-seqs 10')
-    context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 -outfmt 6')
-
-
-def dbentry_from_string(db_id: str, descriptions: dict, taxonomy: dict) -> DBentry:
-    w = db_id.split('~')
-    return DBentry(domain=w[0], taxon=taxonomy[w[0]][w[1]], descr=descriptions[w[0]][w[2]], ncbi=w[3], gene=w[4],
-                   length=int(w[5]), pos=int(w[6]))
+                         f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
+    context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 '
+                         f'-outfmt 6')
 
 
 def _read_results(genome:Genome, result_files) -> int:
@@ -69,7 +64,14 @@ def _read_results(genome:Genome, result_files) -> int:
         feature: SeqFeature = genome.get_feature(blast_result.query())
         feature.blast = blast_result
         feature.descr = blast_result.summary()
-        genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits if h.aligned_length / h.hit.length >= 0.8))
+        feature.taxon = blast_result.hits[0].hit.taxon
+        genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
+                                          if h.aligned_length / h.hit.length >= 0.8))
+
+    def dbentry_from_string(db_id: str) -> DBentry:
+        w = db_id.split('~')
+        return DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
+                       ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
     with bioparsers.TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
@@ -88,10 +90,10 @@ def run_and_read_diamond_blastn():
     return ({'pipeline_position': 81,
              'purpose': 'function prediction and taxonomic classification of genes with diamond and blastn',
              'programs': ('diamond', 'blastn'),
-             'databases': (Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME),
-                           Path(context.DATABASE_DIR, DB_RNA_FILENAME),
-                           Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME),
-                           Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)),
+             'databases': (Path(DB_PROTEINS_FILENAME),
+                           Path(DB_RNA_FILENAME),
+                           Path(DB_DESCRIPTIONS_FILENAME),
+                           Path(DB_TAXONOMY_FILENAME)),
              'result_files': ('diamond', 'blastn'),
              'run': _run_programs,
              'read': _read_results})

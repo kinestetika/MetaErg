@@ -7,7 +7,7 @@ from metaerg import bioparsers
 
 def _run_programs(genome:Genome, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.id)
-    canthyd_db = Path(context.DATABASE_DIR, 'CANT-HYD.hmm')
+    canthyd_db = Path(context.DATABASE_DIR, 'canthyd', 'CANT-HYD.hmm')
     context.run_external(f'hmmscan --cut_nc --tblout {result_files[0]} {canthyd_db} {cds_aa_file}')
 
 
@@ -49,7 +49,7 @@ def _read_results(genome:Genome, result_files) -> int:
                      'K27540': 'naphtalene carboxylase',
                      'NmsA': 'naphtylmethyl succinate synthase'}
     current_name = None
-    canthyd_db = Path(context.DATABASE_DIR, 'CANT-HYD.hmm')
+    canthyd_db = Path(context.DATABASE_DIR, 'canthyd', 'CANT-HYD.hmm')
     with open(canthyd_db) as handle:
         for line in handle:
             if line.startswith('NAME'):
@@ -83,8 +83,8 @@ def run_and_read_canthyd():
     return ({'pipeline_position': 101,
              'purpose': 'prediction of hydrocarbon degradation genes with canthyd',
              'programs': ('hmmscan',),
-             'databases': (Path(context.DATABASE_DIR, 'canthyd', 'CANT-HYD.hmm'),),
-             'result_files': ('canthyd'),
+             'databases': (Path('canthyd', 'CANT-HYD.hmm'),),
+             'result_files': ('canthyd',),
              'run': _run_programs,
              'read': _read_results})
 
