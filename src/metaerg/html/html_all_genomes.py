@@ -83,9 +83,15 @@ def make_html() -> str:
         link_target = Path(new_name, 'index.html')
         new_name = f'<a href="{link_target}">{new_name}</a>'
         genomes_html += '<tr>\n<td>{}</td><td>{}</td><td>{:.1f}</td><td>{}</td><td>{}</td><td {}>{:0.1f}</td>' \
-                        '<td {}>{:0.1f}</td><td>{}</td>\n</tr>'.format(old_name, new_name, genome_size, N50, code,
-                                                                       colors[int((completeness-80)/5)], completeness,
-                                                                       colors[int((20-contamination)/5)], contamination,
+                        '<td {}>{:0.1f}</td><td>{}</td>\n</tr>'.format(old_name,
+                                                                       new_name,
+                                                                       genome_size,
+                                                                       N50,
+                                                                       code,
+                                                                       colors[int(max((completeness-76)/5,0))],
+                                                                       completeness,
+                                                                       colors[int(max((24-contamination)/5, 0))],
+                                                                       contamination,
                                                                        gtdbtk_classification)
     html = html.replace('GENOMES', genomes_html)
     return html

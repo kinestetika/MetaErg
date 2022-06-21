@@ -92,11 +92,12 @@ def install_cdd_database():
     temp_cdd_dir.mkdir(exist_ok=True, parents=True)
     if context.FORCE or (not Path(temp_cdd_dir, 'cdd.tar').exists() and not Path(temp_cdd_dir, 'cdd.tar.gz').exists()):
         context.run_external(f'wget -P {temp_cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-    if context.FORCE or not Path(temp_cdd_dir, 'cdd.tar').exists():
+    if context.FORCE or not Path(temp_cdd_dir, 'Tigr.pn').exists():
         context.run_external(f'tar -xf {Path(temp_cdd_dir, "cdd.tar.gz")} -C {temp_cdd_dir}')
     current_dir = os.getcwd()
     os.chdir(temp_cdd_dir)
-    context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(temp_cdd_dir, "Cdd.pn")} -out '
-                         f'{Path(cdd_dir, "Cdd")} -threshold 9.82 -scale 100.0 -dbtype rps '
-                         f'-index true')
+    if context.FORCE or not Path(cdd_dir, 'Cdd.pal').exists():
+        context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(temp_cdd_dir, "Cdd.pn")} -out '
+                             f'{Path(cdd_dir, "Cdd")} -threshold 9.82 -scale 100.0 -dbtype rps '
+                             f'-index true')
     os.chdir(current_dir)

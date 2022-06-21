@@ -257,7 +257,7 @@ def install_eukaryote_database():
     # (4) build blast databases
     descr_dict = dict()
     taxon_dict = dict()
-    with open(fasta_protein_db, 'w') as prot_fasta_out_handle,open(fasta_nt_db, 'w')  as rna_fasta_out_handle, \
+    with open(fasta_protein_db, 'w') as prot_fasta_out_handle,open(fasta_nt_db, 'w') as rna_fasta_out_handle, \
             open(descr_db, 'w') as descr_handle, open(taxon_db, 'w') as taxon_handle:
         genome_count = 0
         for file in EUK_DB_DIR.glob('*.gbk.gz'):
@@ -408,6 +408,8 @@ def install_prokaryote_database():
             context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
             # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
             for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):
+                if not input.exists():
+                    continue
                 with bioparsers.FastaParser(input, cleanup_seq=False) as reader, open(output, 'a') as writer:
                     gene_counter = 0
                     for f in reader:

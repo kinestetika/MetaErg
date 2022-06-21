@@ -2,6 +2,7 @@ from pathlib import Path
 from data_model import FeatureType, Genome
 from metaerg import context
 
+
 @context.register_html_writer
 def write_html(genome: Genome, dir):
     dir.mkdir(exist_ok=True, parents=True)
@@ -40,7 +41,7 @@ def make_html(genome: Genome) -> str:
             else:
                 format_hash['strand'] = ''
             format_hash['length'] = len(f) / 3 if f.type == FeatureType.CDS else len(f)
-            match [f.tmh_count(), f.signal_peptide, f.type]:
+            match f.tmh_count(), f.signal_peptide, f.type:
                 case [_, 'LIPO', _]:
                     format_hash['destination'] = 'lipoprotein'
                 case [1, _, _]:
@@ -57,11 +58,11 @@ def make_html(genome: Genome) -> str:
             format_hash['has_cdd'] = 'Y' if len(f.cdd) else ''
             if len(f.blast):
                 format_hash['ident'] = f'{f.blast.hits[0].percent_id:.0f}'
-                format_hash['ci'] = colors[int(f.blast.hits[0].percent_id/5)]
+                format_hash['ci'] = colors[min(int(f.blast.hits[0].percent_id/20), len(colors)-1)]
                 format_hash['align'] = f'{f.blast.percent_aligned():0f}'
-                format_hash['ca'] = colors[int(f.blast.percent_aligned()/5)]
+                format_hash['ca'] = colors[min(int(f.blast.percent_aligned()/20), len(colors)-1)]
                 format_hash['recall'] = f'{f.blast.percent_recall():0f}'
-                format_hash['cr'] = colors[int(f.blast.percent_recall()/5)]
+                format_hash['cr'] = colors[min(int(f.blast.percent_recall()/20), len(colors)-1)]
             else:
                 format_hash['ident'] = ''
                 format_hash['align'] = ''
@@ -69,8 +70,9 @@ def make_html(genome: Genome) -> str:
                 format_hash['ci'] = ''
                 format_hash['ca'] = ''
                 format_hash['cr'] = ''
-            format_hash['ct'] = colors[int(20 * len(set(f.taxon.split())
-                                                    & set(genome.properties['dominant taxon'].split())) / 5)]
+            dominant_taxon = genome.properties['dominant taxon'].split()
+            taxon = f.taxon.split()
+            format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(dominant_taxon)) / (len (taxon) + 1))]
             table_body += ''''<tr>
             <td id=al>{f_id}</td> <td>{strand}</td> <td>{length}</td> <td>{destination}</td> <td>{subsystem}</td>
             <td>{has_cdd}</td> <td {ci}>{ident}</td> <td {ca}>{align}</td> <td {cr}>{recall}</td> 

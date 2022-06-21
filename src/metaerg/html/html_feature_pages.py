@@ -3,6 +3,7 @@ from pathlib import Path
 from metaerg.data_model import FeatureType, SeqFeature, BlastResult, Genome
 from metaerg import context
 
+
 @context.register_html_writer
 def write_html(genome: Genome, dir):
     """Writes a html file for each feature to dir <file>"""
