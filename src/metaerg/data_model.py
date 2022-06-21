@@ -130,7 +130,7 @@ RNA_FEATURES = (FeatureType.rRNA, FeatureType.tRNA, FeatureType.tmRNA, FeatureTy
 
 class SeqFeature:
     """Describes a sequence feature, such as a gene."""
-    displayed_keys = 'start end strand type inference product taxon antismash transmembrane_helixes signal_peptide' \
+    displayed_keys = 'start end strand type inference descr taxon antismash transmembrane_helixes signal_peptide ' \
                      'subsystem notes'.split()
 
     def __init__(self, start: int, end: int, strand: int, type, inference: str, seq: str, id: str = '', descr: str = '',
@@ -188,7 +188,7 @@ class SeqFeature:
     def tmh_count(self):
         try:
             return int(self.transmembrane_helixes.split()[0])
-        except ValueError:
+        except IndexError:
             return 0
 
     def taxon_at_genus(self) -> str:

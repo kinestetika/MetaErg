@@ -8,6 +8,7 @@ from metaerg.html.html_all_genomes import write_html
 from metaerg import registry
 from metaerg import bioparsers
 from metaerg.run_and_read import *
+from metaerg.html import *
 
 VERSION = "2.2.0"
 
@@ -62,7 +63,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     genome.compute_properties()
     context.log(f'({genome.id}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
-        html_writer()
+        html_writer(genome, context.spawn_file('contig.name.mappings', genome.id, context.BASE_DIR))
     context.log(f'({genome.id}) Completed html visualization.')
 
 

@@ -1,8 +1,8 @@
 from pathlib import Path
 from data_model import FeatureType, Genome
-from context import register_html_writer
+from metaerg import context
 
-@register_html_writer
+@context.register_html_writer
 def write_html(genome: Genome, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, genome.id, "index_of_features.html")
@@ -40,7 +40,7 @@ def make_html(genome: Genome) -> str:
             else:
                 format_hash['strand'] = ''
             format_hash['length'] = len(f) / 3 if f.type == FeatureType.CDS else len(f)
-            match f.tmh_count(), f.signal_peptide, f.type:
+            match [f.tmh_count(), f.signal_peptide, f.type]:
                 case [_, 'LIPO', _]:
                     format_hash['destination'] = 'lipoprotein'
                 case [1, _, _]:

@@ -1,9 +1,7 @@
 import shutil
 from pathlib import Path
 
-from Bio import SeqIO
-
-import bioparsers
+from metaerg import bioparsers
 from metaerg import context
 from metaerg.data_model import SeqFeature, Genome
 

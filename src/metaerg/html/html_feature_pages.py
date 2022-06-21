@@ -1,10 +1,9 @@
 from pathlib import Path
 
-from data_model import FeatureType, SeqFeature, BlastResult, Genome
-from context import register_html_writer
+from metaerg.data_model import FeatureType, SeqFeature, BlastResult, Genome
+from metaerg import context
 
-
-@register_html_writer
+@context.register_html_writer
 def write_html(genome: Genome, dir):
     """Writes a html file for each feature to dir <file>"""
     dir = Path(dir, genome.id, 'features')
@@ -14,7 +13,7 @@ def write_html(genome: Genome, dir):
             if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
                 f_filename = Path(dir, f'{f.id}.html')
                 with open(f_filename, 'w') as handle:
-                    handle.write(make_feature_html(f, genome.properties['dominant_taxon']))
+                    handle.write(make_feature_html(f, genome.properties['dominant taxon']))
 
 
 def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -> str:
@@ -30,14 +29,15 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -
         html += '</tr><thead>\n<tbody>\n'
         for h in blast_result.hits:
             html += '<tr><td {}>{}</td {}><td {}>{}</td><td>{}</td><td>{}</td><td {}>{}</td></tr>'.format(
-                colors[int(h.percent_id/5)],
-                h.percent_id,
-                colors[int(100 * h.aligned_length/f_length / 5)],
-                100 * h.aligned_length/f_length,
-                colors[int(100 * h.aligned_length/h.hit.length / 5)],
-                100 * h.aligned_length/h.hit.length,
+                colors[min(int(h.percent_id/20), len(colors)-1)],
+                int(h.percent_id),
+                colors[min(int(100 * h.aligned_length/f_length / 20), len(colors)-1)],
+                int(100 * h.aligned_length/f_length),
+                colors[min(int(100 * h.aligned_length/h.hit.length / 20), len(colors)-1)],
+                int(100 * h.aligned_length/h.hit.length),
                 h.hit.descr,
-                colors[int(20 * len(set(h.hit.taxon.split()) & set(dominant_taxon.split())) / 5)],
+                colors[int(len(colors) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
+                           / (len (h.hit.taxon.split()) + 1))],
                 h.hit.taxon_at_genus()
             )
         html += '</tbody>\n'

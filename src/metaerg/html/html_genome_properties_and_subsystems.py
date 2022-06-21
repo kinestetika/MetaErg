@@ -1,9 +1,9 @@
 from pathlib import Path
-from data_model import Genome
-from context import register_html_writer
+from metaerg.data_model import Genome
+from metaerg import context
 
 
-@register_html_writer
+@context.register_html_writer
 def write_html(genome: Genome, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, genome.id, 'index.html')
