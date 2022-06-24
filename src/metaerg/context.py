@@ -74,8 +74,6 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             exit(1)
     else:
         TEMP_DIR.mkdir(exist_ok=True)
-    shutil.rmtree(HTML_DIR, ignore_errors=True)
-    HTML_DIR.mkdir(exist_ok=True)
     if CPUS_PER_GENOME > 0:
         CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
     else:

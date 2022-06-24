@@ -63,7 +63,7 @@ def _read_results(genome:Genome, result_files) -> int:
     def process_blast_result(blast_result: BlastResult):
         feature: SeqFeature = genome.get_feature(blast_result.query())
         feature.blast = blast_result
-        feature.descr = blast_result.summary()
+        feature.descr = blast_result.hits[0].hit.descr
         feature.taxon = blast_result.hits[0].hit.taxon
         genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
                                           if h.aligned_length / h.hit.length >= 0.8))

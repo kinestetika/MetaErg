@@ -4,7 +4,7 @@ from metaerg import bioparsers
 
 def _run_programs(genome:Genome, result_files):
     """Executes the helper programs to complete the analysis"""
-    fasta_file = genome, context.spawn_file('masked', genome.id)
+    fasta_file = context.spawn_file('masked', genome.id)
     bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
     context.run_external(f'minced -gffFull {fasta_file} {result_files[0]}')
 

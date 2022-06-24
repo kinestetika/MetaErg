@@ -1,13 +1,13 @@
 import re
 from pathlib import Path
-from enum import Enum, auto
+from enum import Enum
 from collections import Counter
 from metaerg.run_and_read import subsystems_data
 
 
 class DBentry:
-    def __init__(self, *, domain: str, descr: str, taxon: str = '', ncbi: str='', gene: str='', length: int=0,
-                 pos: int=0):
+    def __init__(self, *, domain: str, descr: str, taxon: str = '', ncbi: str = '', gene: str = '', length: int = 0,
+                 pos: int = 0):
         self.domain = domain
         self.descr = descr
         self.taxon = taxon
@@ -96,7 +96,7 @@ class BlastResult:
         return self.hits[0].query
 
     def percent_aligned(self) -> float:
-        return 100 * len(self.hits[0]) / len(self.hits[0].hit)
+        return 100 * min(1.0, len(self.hits[0]) / len(self.hits[0].hit))
 
     def percent_recall(self) -> float:
         return 100 * sum((1 for h in self.hits[1:] if h.hit.descr == self.hits[0].hit.descr)) / len(self)
@@ -110,16 +110,15 @@ class BlastResult:
                                                   len(self),
                                                   self.hits[0].hit.descr)
 
-
 class FeatureType(Enum):
-    CDS = auto()
-    rRNA = auto()
-    tRNA = auto()
-    tmRNA = auto()
-    ncRNA = auto()
-    repeat = auto()
-    crispr_repeat = auto()
-    retrotransposon = auto()
+    CDS = 1
+    rRNA = 2
+    tRNA = 3
+    tmRNA = 4
+    ncRNA = 5
+    repeat = 6
+    crispr_repeat = 7
+    retrotransposon = 8
 
     def __repr__(self):
         return '{}[{!r}]'.format(type(self).__name__, self.name)
@@ -133,13 +132,13 @@ class SeqFeature:
     displayed_keys = 'start end strand type inference descr taxon antismash transmembrane_helixes signal_peptide ' \
                      'subsystem notes'.split()
 
-    def __init__(self, start: int, end: int, strand: int, type, inference: str, seq: str, id: str = '', descr: str = '',
+    def __init__(self, start: int, end: int, strand: int, type: FeatureType, inference: str, seq: str, id: str = '', descr: str = '',
                  taxon: str = '', antismash: str = '', transmembrane_helixes: str = '', signal_peptide: str = '',
-                 cdd: BlastResult = None, blast: BlastResult = None, subsystem = None, notes = None):
+                 cdd: BlastResult = None, blast: BlastResult = None, subsystem=None, notes=None):
         self.start = start
         self.end = end
         self.strand = strand
-        self.type = type if isinstance(type, FeatureType) else FeatureType[type]
+        self.type = type  #if isinstance(type, FeatureType) else FeatureType[type]
         self.inference = inference
         self.seq = ''.join(seq.split())
         self.id = id
@@ -158,8 +157,8 @@ class SeqFeature:
 
     def __iter__(self):
         return ((k, v) for k, v in zip(('id', 'type', 'start', 'end', 'strand', 'descr', 'notes', 'taxon', 'inference',
-                                    'antismash', 'transmembrane_helixes', 'signal_peptide', 'subsystem', 'seq',
-                                    'cdd', 'blast'),
+                                        'antismash', 'transmembrane_helixes', 'signal_peptide', 'subsystem', 'seq',
+                                        'cdd', 'blast'),
                 (self.id, self.type, self.start, self.end, self.strand, self.descr, self.notes, self.taxon,
                  self.inference, self.antismash, self.transmembrane_helixes, self.signal_peptide, self.subsystem,
                  self.seq, self.cdd, self.blast)))
@@ -349,7 +348,7 @@ class Genome:
     def compute_properties(self):
         self.properties['size'] = len(self)
         self.properties['percent GC'] = int(sum((c.seq.count('G') + c.seq.count('G') for c in
-                                                 self.contigs.values())) / self.properties['size'] + 0.5)
+                                                 self.contigs.values())) / self.properties['size'] * 100 + 0.5)
         cum_size = 0
         for contig in sorted(self.contigs.values(), key=len, reverse=True):
             cum_size += len(contig)
@@ -360,7 +359,7 @@ class Genome:
                                            if f.type == FeatureType.CDS)
         self.properties['percent coding'] = int(sum(len(f) for contig in self.contigs.values() for f in contig.features
                                                 if f.type == FeatureType.CDS) / self.properties['size'] * 100 + 0.5)
-        self.properties['mean protein length (aa)'] = int(self.properties['percent coding'] * self.properties['size']
+        self.properties['mean protein length (aa)'] = int(self.properties['percent coding'] / 100 * self.properties['size']
                                                           / 3 / self.properties['#proteins'])
         self.properties['#ribosomal RNA'] = sum(1 for contig in self.contigs.values() for f in contig.features
                                                 if f.type == FeatureType.rRNA)

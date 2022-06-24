@@ -18,7 +18,8 @@ def _read_results(genome:Genome, result_files) -> int:
     retrotransposon_count = 0
     with bioparsers.GffParser(result_files[0], genome.contigs, inference='ltr_harvest',
                               target_feature_type_dict={'repeat_region': FeatureType.retrotransposon}) as parser:
-        for seqFeature in parser:
+        for c, f in parser:
+            c.features.append(f)
             retrotransposon_count += 1
     return retrotransposon_count
 

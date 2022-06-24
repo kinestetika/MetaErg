@@ -20,8 +20,8 @@ def make_html(genome: Genome) -> str:
                                                        for key, value in genome.properties.items())))
     subsystem_html = ''
     for subsystem in genome.subsystems.subsystems.values():
-        subsystem_html += f'<button class="accordion">{str(subsystem)}</button>\n<div class="panel">\n'
-        if '[secondary-metabolites]' == subsystem.name:
+        subsystem_html += f'<button class="accordion">{subsystem.id}</button>\n<div class="panel">\n'
+        if '[secondary-metabolites]' == subsystem.id:
             if len(subsystem.hits):
                 subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
         elif not len(subsystem.targets):
@@ -32,7 +32,7 @@ def make_html(genome: Genome) -> str:
             subsystem_html += '</p>\n'
         else:
             subsystem_html += '<table>\n'
-            for gene in subsystem.targets():
+            for gene in subsystem.targets:
                 subsystem_html += f'<tr><td>{gene}</td><td>\n'
                 for feature_id in subsystem.get_hits(gene):
                     subsystem_html += '<a target="gene details" href="features/{}.html">{}</a>'.format(feature_id,
@@ -50,7 +50,7 @@ def _make_html_template() -> str:
 <html>
 <head>
     <meta charset="utf-8">
-        <title>GENOME_NAME - properties and subsystems</title>\n')
+        <title>GENOME_NAME - properties and subsystems</title>
 </head>
 <body>
 
@@ -92,14 +92,14 @@ def _make_html_template() -> str:
 <table id=f>
     <thead>
         <tr>
-          <th>key</th>
+          <th>property</th>
           <th>value</th>
         </tr>
     </thead>
     <tbody>
 CONTENT_PROPERTIES
     </tbody></table>
-    <p><a href="index_of_features.html">View table with all genes</a></p>
+    <p if=f><a href="index_of_features.html">View table with all genes</a></p>
     <h4 id=f>Subsystems overview</h4>
 CONTENT_SUBSYSTEMS
 <script>

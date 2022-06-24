@@ -2,7 +2,7 @@ import ast
 import re
 from pathlib import Path
 from Bio import SeqIO
-from context import GENOME_NAME_MAPPING_FILE, GTDBTK_DIR, CHECKM_DIR
+from metaerg import context
 
 
 def write_html(dir):
@@ -15,12 +15,12 @@ def write_html(dir):
 def make_html() -> str:
     """Injects the content into the html base, returns the html."""
     genome_list = []
-    with open(GENOME_NAME_MAPPING_FILE) as handle:
+    with open(context.GENOME_NAME_MAPPING_FILE) as handle:
         for line in handle:
             genome_list.append(line.split())
 
     checkm_results = {}
-    checkm_result_file = Path(CHECKM_DIR, 'storage', 'bin_stats_ext.tsv')
+    checkm_result_file = Path(context.CHECKM_DIR, 'storage', 'bin_stats_ext.tsv')
     if checkm_result_file.exists():
         with open(checkm_result_file) as handle:
             for line in handle:
@@ -28,8 +28,8 @@ def make_html() -> str:
                 checkm_results[words[0]] = ast.literal_eval(words[1])
 
     gtdbtk_results = {}
-    for file in (Path(GTDBTK_DIR, 'gtdbtk.ar53.summary.tsv'),
-                 Path(GTDBTK_DIR, 'gtdbtk.bac120.summary.tsv')):
+    for file in (Path(context.GTDBTK_DIR, 'gtdbtk.ar53.summary.tsv'),
+                 Path(context.GTDBTK_DIR, 'gtdbtk.bac120.summary.tsv')):
         if file.exists():
             with open(file) as handle:
                 for line in handle:
