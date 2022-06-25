@@ -1,17 +1,18 @@
 import shutil
+import pandas as pd
 from pathlib import Path
 
-from metaerg.data_model import Genome, SeqRecord, SeqFeature, FeatureType
 from metaerg import context
 from metaerg import bioparsers
 
 
-def _run_programs(genome:Genome, result_files):
-    fasta_file = context.spawn_file('masked', genome.id)
-    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
-    lmer_table_file = context.spawn_file('lmer-table', genome.id)
-    repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome.id)
-    repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome.id)
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    fasta_file = context.spawn_file('masked', genome_name)
+    bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                      mask_targets=bioparsers.ALL_MASK_TARGETS)
+    lmer_table_file = context.spawn_file('lmer-table', genome_name)
+    repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome_name)
+    repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome_name)
 
     context.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
     context.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
@@ -28,21 +29,26 @@ def _run_programs(genome:Genome, result_files):
             file.unlink()
 
 
-def words2feature(words: list[str], contig: SeqRecord) -> SeqFeature:
+def words2feature(words: list[str], contig):
     start = int(words[5]) - 1
     end = int(words[6])
     strand = -1 if 'C' == words[8] else 1
-    seq = contig.seq[start:end]
+    seq = contig['seq'][start:end]
     if strand < 0:
         seq = bioparsers.reverse_complement(seq)
-    return SeqFeature(start, end, strand, FeatureType.repeat, seq=seq, inference='repeatmasker')
+    return {'start': start,
+               'end': end,
+               'strand': strand,
+               'type': 'repeat',
+               'inference': 'repeatmaske',
+               'seq': seq}
 
 
-def _read_results(genome:Genome, result_files) -> int:
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     """(1) simple repeats, these are consecutive
        (2) unspecified repeats, these occur scattered and are identified by an id in words[9]. We only
            add those when they occur 10 or more times."""
-    repeat_count = 0
+    new_features = []
     repeat_hash = dict()
     with open(result_files[0]) as repeatmasker_handle:
         for line in repeatmasker_handle:
@@ -50,25 +56,24 @@ def _read_results(genome:Genome, result_files) -> int:
             if len(words) < 11 or words[0] in ('SW', 'score'):
                 continue
             try:
-                contig: SeqRecord = genome.contigs[words[4]]
+                contig = contig_dict[words[4]]
             except KeyError:
-                context.log(f'({genome.id}) Warning: Unknown contig id "{words[4]}"')
+                context.log(f'({genome_name}) Warning: Unknown contig id "{words[4]}"')
                 continue
             if 'Simple_repeat' == words[10]:
-                repeat_count += 1
                 feature = words2feature(words, contig)
-                contig.features.append(feature)
-                feature.notes.add(f'repeat {words[9]}')
+                new_features.append(feature)
+                feature['notes'] = f'repeat {words[9]}'
             else:
                 repeat_list = repeat_hash.setdefault(words[9], list())
-                repeat_list.append((contig, words2feature(words, contig)))
+                repeat_list.append(words2feature(words, contig))
     for repeat_list in repeat_hash.values():
         if len(repeat_list) >= 10:
-            for c, f in repeat_list:
-                repeat_count += 1
-                c.features.append(f)
-                f.notes.add(f' (occurs {len(repeat_list)}x)')
-    return repeat_count
+            for feature in repeat_list:
+                new_features.append(feature)
+                feature['notes'] = f' (occurs {len(repeat_list)}x)'
+    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
+    return feature_data, len(new_features)
 
 
 @context.register_annotator

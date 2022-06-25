@@ -25,6 +25,7 @@ RENAME_CONTIGS = False
 RENAME_GENOMES = False
 MIN_CONTIG_LENGTH = 0
 TRANSLATION_TABLE = 0
+DELIMITER = ''
 CPUS_PER_GENOME = 0
 CPUS_AVAILABLE = 0
 PARALLEL_ANNOTATIONS = 0
@@ -35,11 +36,11 @@ CREATE_DB_TASKS = ''
 
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
-         translation_table, checkm_dir, gtdbtk_dir, log_topics='', create_db=''):
+         translation_table, delimiter, checkm_dir, gtdbtk_dir, log_topics='', create_db=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
            CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB_TASKS, \
-           GENOME_NAMES, CONTIG_FILES
+           GENOME_NAMES, CONTIG_FILES, DELIMITER
     contig_file = Path(contig_file).absolute()
     BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
     TEMP_DIR = Path(BASE_DIR, "temp")
@@ -56,6 +57,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     FORCE = force
     FILE_EXTENSION = file_extension
     TRANSLATION_TABLE = translation_table
+    DELIMITER = delimiter
     CREATE_DB_TASKS = create_db.upper()
 
     CPUS_PER_GENOME = int(cpus)
@@ -155,25 +157,25 @@ def sorted_annotators():
 def register_annotator(define_annotator):
     param = define_annotator()
 
-    def annotator(genome: Genome):
+    def annotator(genome_name, contig_dict, feature_data):
         """Runs programs and reads results."""
-        log('({}) Starting {} ...', (genome.id, param['purpose']))
+        log('({}) Starting {} ...', (genome_name, param['purpose']))
         # (1) First make sure that the helper programs are available:
         all_programs_in_path = True
         for p in param.get('programs', []):
             program_path = shutil.which(p, mode=os.X_OK)
             if not program_path:
                 all_programs_in_path = False
-                log('({}) Unable to run {}, helper program "{}" not in path', (genome.id, param['purpose'], p))
+                log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
         # (2) Then, make sure required databases are available
         for d in param.get('databases', []):
             d = Path(DATABASE_DIR, d)
             if not d.exists() or not d.stat().st_size:
-                log('({}) Unable to run {}, or parse results, database "{}" missing', (genome.id,
+                log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
                                                                                        param['purpose'], d))
                 return
         # (3) Then, if force or the results files are not yet there, run the programs:
-        result_files = [spawn_file(f, genome.id) for f in param.get('result_files', [])]
+        result_files = [spawn_file(f, genome_name) for f in param.get('result_files', [])]
         if all_programs_in_path:
             previous_results_missing = False
             for f in result_files:
@@ -181,25 +183,22 @@ def register_annotator(define_annotator):
                     previous_results_missing = True
                     break
             if FORCE or previous_results_missing:
-                param['run'](genome, result_files)
+                param['run'](genome_name, contig_dict, feature_data, result_files)
             else:
-                log('({}) Reusing existing results in {}.'.format(genome.id,
+                log('({}) Reusing existing results in {}.'.format(genome_name,
                                                                   ', '.join(str(file) for file in result_files)))
         # (4) If all results files are there, read the results:
         all_results_created = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
                 all_results_created = False
-                log('({}) Missing expected result file {}.', (genome.id, f))
+                log('({}) Missing expected result file {}.', (genome_name, f))
         if all_results_created:
-            positive_count = param['read'](genome, result_files)
+            feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
         else:
             positive_count = 0
-        log('({}) {} complete. Found {}.', (genome.id, param['purpose'], positive_count))
-        # (5) Save (intermediate) results:
-        annotations_file = spawn_file("annotations", genome.id)
-        with open(annotations_file, 'w') as handle:
-            handle.write(str(genome))
+        log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
+        return feature_data
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
     return annotator

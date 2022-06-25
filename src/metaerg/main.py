@@ -1,4 +1,5 @@
 import argparse
+import pandas as pd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
@@ -30,6 +31,7 @@ def parse_arguments():
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
     parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
+    parser.add_argument('--delimiter', default='.', help='Separater character used in feature ids.')
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
     parser.add_argument('--create_db', default='', help='Create/download metaerg database. '
@@ -38,8 +40,46 @@ def parse_arguments():
     return parser.parse_args()
 
 
+def load_contigs(genome_name, input_fasta_file):
+    with bioparsers.FastaParser(input_fasta_file) as fasta_reader:
+        contigs = [c for c in fasta_reader if len(c) > context.MIN_CONTIG_LENGTH]
+    contigs.sort(key=len, reverse=True)
+    contigs = {c.id: c for c in contigs}
+    total_length = sum(len(c['seq']) for c in contigs.values())
+    context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length} from file.')
+    if context.RENAME_CONTIGS:
+        contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
+        context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
+        i = 0
+        with open(contig_name_mapping_file, 'w') as mapping_writer:
+            for c in contigs.values():
+                new_id = f'{genome_name}.c{i:0>4}'
+                mapping_writer.write(f'{c.id}\t{new_id}\n')
+                c.id = new_id
+                i += 1
+    return contigs
+
+
+def validate_ids(genome_name, contig_hash):
+    if context.DELIMITER in genome_name:
+        raise Exception(f'Genome id {genome_name} contains "{context.DELIMITER}"; change using --delimiter')
+    for c_id in contig_hash.keys():
+        if context.DELIMITER in c_id:
+            raise Exception(f'Contig id {c_id} contains "{context.DELIMITER}"; change using --delimiter')
+
+
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
+    # (1) prepare dataframe
+    feature_data = pd.DataFrame(columns=bioparsers.DATAFRAME_COLUMNS)
+    feature_data = feature_data.astype(bioparsers.DATAFRAME_DATATYPES)
+    # (2) load sequence data
+    contig_dict = load_contigs(genome_name, input_fasta_file)
+    validate_ids(genome_name, contig_dict)
+    # (3) now annotate
+    for annotator in context.sorted_annotators():
+        feature_data = annotator(genome_name, contig_dict, feature_data)
+
     # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
     genome = bioparsers.init_genome_from_fasta_file(genome_name, input_fasta_file,
                                                     min_contig_length=context.MIN_CONTIG_LENGTH)

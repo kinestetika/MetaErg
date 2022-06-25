@@ -1,14 +1,21 @@
 import gzip
 import re
 import textwrap
+import pandas as pd
 from pathlib import Path
-from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, Masker, FeatureType
+from metaerg.data_model import SeqFeature, SeqRecord, Genome, BlastHit, BlastResult, FeatureType
 from metaerg import context
 from urllib.parse import unquote
 
 NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
 NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
+ALL_MASK_TARGETS = 'CDS rRNA tRNA tmRNA ncRNA repeat crispr_repeat retrotransposon'.split()
 
+DATAFRAME_COLUMNS = 'genome contig id start end strand type inference subsystem descr taxon notes seq antismash ' \
+                    'signal_peptide tmh tmh_topology blast cdd antismash'.split()
+DATAFRAME_DATATYPES = str, str, str, int, int, int, "category", str, str, str, str, str, str, str, \
+                      str, int, str, str, str, str
+DATAFRAME_DATATYPES = {k: v for k, v in zip(DATAFRAME_COLUMNS, DATAFRAME_DATATYPES)}
 
 def _parse_fasta_header(line:str) -> SeqRecord:
     si = line.find(' ')
@@ -71,6 +78,36 @@ class FastaParser:
         return seq
 
 
+class Masker:
+    def __init__(self, feature_data, targets=None, min_length=50):
+        if targets:
+            self.feature_data = feature_data.loc[lambda df: df['type'] in targets, :]
+            self.apply_mask = True
+        else:
+            self.feature_data = feature_data
+            self.apply_mask = False
+        self.min_length = min_length
+        self.nt_total = 0
+        self.nt_masked = 0
+
+    def mask(self, seq_record: dict) -> dict:
+        seq = seq_record['seq']
+        seq_record.nt_masked = 0
+        feature_data = self.feature_data.loc[lambda df: df['contig'] == seq_record['id'], :]
+        if self.apply_mask:
+            for index, feature in feature_data.iterrows():
+                feature_length = feature['start']-feature['end']
+                seq = seq[:feature['start']] + 'N' * feature_length + seq[feature['end']:]
+                self.nt_masked += feature_length
+        self.nt_total += len(seq)
+        return {'id':    seq_record['id'],
+                'descr': seq_record['descr'],
+                'seq':   seq}
+
+    def stats(self):
+        return f'Masked {self.nt_masked / max(self.nt_total, 1) * 100:.1f}% of sequence data.'
+
+
 def init_genome_from_fasta_file(genome_id, filename, min_contig_length=0, delimiter='.') -> Genome:
     with FastaParser(filename) as fasta_reader:
         contigs = [c for c in fasta_reader if len(c) > min_contig_length]
@@ -92,6 +129,46 @@ def write_fasta(handle, fasta, line_length=80):
     else:
         for f in fasta:
             _wf(f)
+
+
+def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1, targets: tuple = ()):
+    if targets:
+        feature_data = feature_data.loc[lambda df: df['type'] in targets, :]
+    number_of_records = len(feature_data.index)
+    split = min(split, number_of_records)
+    records_per_file = number_of_records / split
+    if split > 1:
+        paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]
+    else:
+        paths = base_file,
+    filehandles = [open(p, 'w') for p in paths]
+    records_written = 0
+    for index, feature in feature_data.iterrows():
+        write_fasta(filehandles[int(records_written / records_per_file)], feature)
+        records_written += 1
+
+
+def write_contigs_to_fasta(genome_name, contig_hash: dict, feature_data: pd.DataFrame, base_file: Path, split=1,
+                           mask_targets=None, mask_min_length=50):
+    """writes contigs to fasta file(s), optionally masking features with N"""
+    number_of_records = len(contig_hash)
+    split = min(split, number_of_records)
+    records_per_file = number_of_records / split
+    if split > 1:
+        paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]
+    else:
+        paths = base_file,
+    filehandles = [open(p, 'w') for p in paths]
+    records_written = 0
+    masker = Masker(feature_data, targets=mask_targets, min_length=mask_min_length)
+    for contig in contig_hash.values():
+        write_fasta(filehandles[int(records_written / records_per_file)], masker.mask(contig))
+        records_written += 1
+    for f in filehandles:
+        f.close()
+    if mask_targets:
+        context.log(f'({genome_name}) {masker.stats()}')
+    return paths
 
 
 def write_genome_to_fasta_files(genome, base_file: Path, split=1, targets: tuple = (), mask=False, mask_exceptions=None,
@@ -226,7 +303,7 @@ class GffParser:
                     start = int(start) - 1
                     end = int(end)
                     strand = -1 if '-' == strand else 1
-                    seq = contig.seq[start:end]
+                    seq = contig['seq'][start:end]
                     if strand < 0:
                         seq = reverse_complement(seq)
                     inference = self.inference if self.inference else inference
@@ -235,9 +312,13 @@ class GffParser:
                     if len(qualifiers) % 2 != 0:
                         qualifiers = qualifiers[:-1]  # this happens for example with prodigal, ending with ";"
                     qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
-                    feature = SeqFeature(start, end, strand, self.target_feature_type_dict[feature_type],
-                                         inference=inference, seq=seq)
-                    yield contig, feature
+                    feature = {'start': start,
+                               'end': end,
+                               'strand': strand,
+                               'type': self.target_feature_type_dict[feature_type],
+                               'inference': inference,
+                               'seq': seq}
+                    yield feature
 
 
 def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:

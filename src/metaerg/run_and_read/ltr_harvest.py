@@ -1,27 +1,29 @@
-from metaerg.data_model import Genome, FeatureType
+import pandas as pd
 from metaerg import context
 from metaerg import bioparsers
 
-def _run_programs(genome:Genome, result_files):
-    fasta_file = context.spawn_file('masked', genome.id)
-    bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
-    ltr_index_file = context.spawn_file('ltr_index', genome.id)
+
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    fasta_file = context.spawn_file('masked', genome_name)
+    bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                      mask_targets=bioparsers.ALL_MASK_TARGETS)
+    ltr_index_file = context.spawn_file('ltr_index', genome_name)
 
     context.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
     context.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {result_files[0]} -seqids')
     # remove index files
-    for file in ltr_index_file.parent.glob(f'{genome.id}.ltr_index*'):
+    for file in ltr_index_file.parent.glob(f'{genome_name}.ltr_index*'):
         file.unlink()
 
 
-def _read_results(genome:Genome, result_files) -> int:
-    retrotransposon_count = 0
-    with bioparsers.GffParser(result_files[0], genome.contigs, inference='ltr_harvest',
-                              target_feature_type_dict={'repeat_region': FeatureType.retrotransposon}) as parser:
-        for c, f in parser:
-            c.features.append(f)
-            retrotransposon_count += 1
-    return retrotransposon_count
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+    new_features = []
+    with bioparsers.GffParser(result_files[0], contig_dict, inference='ltr_harvest',
+                              target_feature_type_dict={'repeat_region': 'retrotransposon'}) as parser:
+        for feature in parser:
+            new_features.append(feature)
+    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
+    return feature_data, len(new_features)
 
 
 @context.register_annotator

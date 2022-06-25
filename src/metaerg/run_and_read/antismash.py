@@ -42,11 +42,6 @@ def _read_results(genome:Genome, result_files) -> int:
     return antismash_hit_count
 
 
-def write_html(self, filename=None):
-    """need to copy the antismash result dir to the metaerg html dir."""
-    shutil.copytree(self.antismash_file, Path(self.exec.html_dir, self.genome.id, 'antismash'))
-
-
 @context.register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 91,
@@ -55,3 +50,15 @@ def run_and_read_antismash():
              'result_files': ('antismash',),
              'run': _run_programs,
              'read': _read_results})
+
+
+@context.register_html_writer
+def write_html(genome: Genome, dir):
+    """need to copy the antismash result dir to the metaerg html dir."""
+    dir.mkdir(exist_ok=True, parents=True)
+    antismash_result_dir = context.spawn_file('antismash', genome.id)
+    antismash_html_parent = Path(dir, genome.id, 'antismash')
+    if antismash_html_parent.exists():
+        shutil.rmtree(antismash_html_parent)
+    shutil.copytree(antismash_result_dir, antismash_html_parent)
+

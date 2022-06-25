@@ -17,7 +17,7 @@ def make_html(genome: Genome) -> str:
     html = html.replace('GENOME_NAME', genome.id)
     # genome properties
     html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{key}</td><td>{value}</td></tr>\n'
-                                                       for key, value in genome.properties.items())))
+                                                       for key, value in genome.formatted_properties())))
     subsystem_html = ''
     for subsystem in genome.subsystems.subsystems.values():
         subsystem_html += f'<button class="accordion">{subsystem.id}</button>\n<div class="panel">\n'

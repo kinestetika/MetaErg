@@ -1,19 +1,20 @@
 import shutil
+import pandas as pd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
 from metaerg import context
 from metaerg import bioparsers
-from metaerg.data_model import FeatureType, SeqFeature, Genome
 
 
-def _run_programs(genome: Genome, result_files):
-    fasta_file = context.spawn_file('masked', genome.id)
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    fasta_file = context.spawn_file('masked', genome_name)
     rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, fasta_file, context.CPUS_PER_GENOME,
-                                                                   mask=True)
+        split_fasta_files = bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                                              mask_targets=bioparsers.ALL_MASK_TARGETS,
+                                                              split=context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                               for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -27,22 +28,23 @@ def _run_programs(genome: Genome, result_files):
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        bioparsers.write_genome_to_fasta_files(genome, fasta_file, mask=True)
+        bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                          mask_targets=bioparsers.ALL_MASK_TARGETS)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
-def _read_results(genome:Genome, result_files) -> int:
-    NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': FeatureType.rRNA,
-                            'LSU_rRNA_archaea': FeatureType.rRNA,
-                            'LSU_rRNA_eukarya': FeatureType.rRNA,
-                            'SSU_rRNA_bacteria': FeatureType.rRNA,
-                            'SSU_rRNA_archaea': FeatureType.rRNA,
-                            'SSU_rRNA_eukarya': FeatureType.rRNA,
-                            'SSU_rRNA_microsporidia': FeatureType.rRNA,
-                            '5S_rRNA': FeatureType.rRNA,
-                            '5_8S_rRNA': FeatureType.rRNA,
-                            'tmRNA': FeatureType.tmRNA,
-                            'tRNA': FeatureType.tRNA}
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+    NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': 'rRNA',
+                            'LSU_rRNA_archaea': 'rRNA',
+                            'LSU_rRNA_eukarya': 'rRNA',
+                            'SSU_rRNA_bacteria': 'rRNA',
+                            'SSU_rRNA_archaea': 'rRNA',
+                            'SSU_rRNA_eukarya': 'rRNA',
+                            'SSU_rRNA_microsporidia': 'rRNA',
+                            '5S_rRNA': 'rRNA',
+                            '5_8S_rRNA': 'rRNA',
+                            'tmRNA': 'tmRNA',
+                            'tRNA': 'tRNA'}
     hits = []
     Hit = namedtuple('Hit', ('query_id', 'hit_id', 'query_start', 'query_end',
                              'query_strand', 'score', 'descr'))
@@ -71,21 +73,28 @@ def _read_results(genome:Genome, result_files) -> int:
                     hits.append(hit)
             else:
                 hits.append(hit)
+    new_features = []
     for hit in hits:
         if hit.hit_id in NON_CODING_RNA_TYPES.keys():
             f_type = NON_CODING_RNA_TYPES[hit.hit_id]
         elif hit.hit_id.startswith('CRISPR'):
-            f_type = FeatureType.crispr_repeat
+            f_type = 'crispr_repeat'
         else:
-            f_type = FeatureType.ncRNA
-        contig = genome.contigs[hit.query_id]
-        seq = contig.seq[hit.query_start - 1:hit.query_end]
+            f_type = 'ncRNA'
+        contig = contig_dict[hit.query_id]
+        seq = contig['seq'][hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
             seq = bioparsers.reverse_complement(seq)
-        feature = SeqFeature(hit.query_start - 1, hit.query_end, hit.query_strand, f_type, seq=seq,
-                             inference='cmscan', descr = "{} {}".format(hit.hit_id, hit.descr))
-        contig.features.append(feature)
-    return len(hits)
+        feature = {'start': hit.query_start - 1,
+                   'end': hit.query_end,
+                   'strand': hit.query_strand,
+                   'type': f_type,
+                   'inference': 'cmscan',
+                   'seq': seq,
+                   'descr': "{} {}".format(hit.hit_id, hit.descr)}
+        new_features.append(feature)
+    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
+    return feature_data, len(new_features)
 
 
 @context.register_annotator

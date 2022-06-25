@@ -270,28 +270,6 @@ class SeqRecord:
         return len(self.seq)
 
 
-class Masker:
-    def __init__(self, mask=True, exceptions=None, min_length=50):
-        self.apply_mask = mask
-        self.exceptions = exceptions if exceptions else list()
-        self.min_length = min_length
-        self.nt_total = 0
-        self.nt_masked = 0
-
-    def mask(self, seq_record: SeqRecord) -> SeqRecord:
-        seq = seq_record.seq
-        seq_record.nt_masked = 0
-        if self.apply_mask:
-            for f in seq_record.features:
-                if f.inference not in self.exceptions and len(f) >= self.min_length:
-                    seq = seq[:f.start] + 'N' * len(f) + seq[f.end:]
-                    self.nt_masked += len(f)
-        self.nt_total += len(seq_record)
-        return SeqRecord(id=seq_record.id, descr=seq_record.descr, seq=seq)
-        # record.annotations['molecule_type'] = 'DNA'
-
-    def stats(self):
-        return f'Masked {self.nt_masked / max(self.nt_total, 1) * 100:.1f}% of sequence data.'
 
 
 class Genome:
@@ -344,6 +322,13 @@ class Genome:
     def get_feature(self, feature_id):
         id = feature_id.split(self.delimiter)
         return self.contigs[id[1]].features[int(id[2])]
+
+    def formatted_properties(self):
+        keys = 'size', 'N50', 'percent GC', '#proteins', 'percent coding', 'mean protein length (aa)', '#ribosomal RNA', \
+               '#transfer RNA', '#non coding RNA', '#retrotransposons', '#CRISPR repeats', '#other repeats', \
+               'percent repeats', 'total # features', 'dominant taxon'
+        format_strings = (', , .1f , .1f .1f , , , , , , .1f , <').split()
+        return ((k, f'{self.properties[k]:{f}}') for k, f in zip(keys, format_strings))
 
     def compute_properties(self):
         self.properties['size'] = len(self)
