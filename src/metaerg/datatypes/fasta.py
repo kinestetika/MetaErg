@@ -1,8 +1,8 @@
 import gzip
 import re
+import numpy as np
 import pandas as pd
 from pathlib import Path
-from metaerg.data_model import SeqFeature, SeqRecord, Genome
 from metaerg import context
 
 NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
@@ -11,16 +11,17 @@ ALL_MASK_TARGETS = set('CDS rRNA tRNA tmRNA ncRNA repeat crispr_repeat retrotran
 COMPLEMENT = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',}
 
 
+
 def reverse_complement(seq:str) -> str:
     return ''.join(COMPLEMENT.get(b, 'N') for b in reversed(seq))
 
 
-def _parse_fasta_header(line:str) -> SeqRecord:
+def _parse_fasta_header(line:str) -> dict:
     si = line.find(' ')
     if si > 0:
-        return SeqRecord(id=line[1:si], seq='', descr=line[si+1:].strip())
+        return {'id': line[1:si], 'seq': '', 'descr': line[si + 1:].strip()}
     else:
-        return SeqRecord(id=line[1:].strip(), seq='')
+        return {'id': line[1:].strip(), 'seq': '', 'descr': ''}
 
 
 class FastaParser:
@@ -47,8 +48,8 @@ class FastaParser:
         while line := self.handle.readline():
             line = line.strip()
             if line.startswith('>'):
-                if len(seq) and seq_rec is  not None:
-                    seq_rec.seq = self._cleanup(''.join(seq))
+                if len(seq) and seq_rec is not None:
+                    seq_rec['seq'] = self._cleanup(''.join(seq))
                     seq = []
                     yield seq_rec
                 seq_rec = _parse_fasta_header(line)
@@ -64,7 +65,7 @@ class FastaParser:
                         self.alphabet = NON_IUPAC_RE_AA
                         self.unknown_char = 'X'
         if seq_rec is not None:
-            seq_rec.seq = self._cleanup(''.join(seq))
+            seq_rec['seq'] = self._cleanup(''.join(seq))
             yield seq_rec
 
     def _cleanup(self, seq) -> str:
@@ -79,7 +80,7 @@ class FastaParser:
 class Masker:
     def __init__(self, feature_data, targets=None, min_length=50):
         if targets:
-            self.feature_data = feature_data.loc[lambda df: df['type'] in targets, :]
+            self.feature_data = feature_data[feature_data['type'].isin(targets)]
             self.apply_mask = True
         else:
             self.feature_data = feature_data
@@ -88,42 +89,55 @@ class Masker:
         self.nt_total = 0
         self.nt_masked = 0
 
-    def mask(self, seq_record: dict) -> dict:
+    def mask(self, seq_record):
         seq = seq_record['seq']
-        seq_record.nt_masked = 0
+        self.nt_masked = 0
         feature_data = self.feature_data.loc[lambda df: df['contig'] == seq_record['id'], :]
         if self.apply_mask:
-            for index, feature in feature_data.iterrows():
-                feature_length = feature['start']-feature['end']
-                seq = seq[:feature['start']] + 'N' * feature_length + seq[feature['end']:]
+            for feature in feature_data.itertuples():
+                feature_length = feature.end - feature.start
+                seq = seq[:feature.start] + 'N' * feature_length + seq[feature.end:]
                 self.nt_masked += feature_length
         self.nt_total += len(seq)
-        return {'id':    seq_record['id'],
-                'descr': seq_record['descr'],
-                'seq':   seq}
+
+        masked_record = seq_record.copy()
+        masked_record['seq'] = seq
+        return masked_record
 
     def stats(self):
         return f'Masked {self.nt_masked / max(self.nt_total, 1) * 100:.1f}% of sequence data.'
 
 
 def write_fasta(handle, fasta, line_length=80):
-    def _wf(f):
-        if not f:
-            raise Exception('Attempt to write zero-length sequence to fasta.')
-        handle.write(f'>{f.id} {f.descr}\n')
-        for i in range(0, len(f.seq), line_length):
-            handle.write(f.seq[i:i+line_length])
-            handle.write('\n')
-    if isinstance(fasta, SeqRecord) or isinstance(fasta, SeqFeature):
-        _wf(fasta)
-    else:
-        for f in fasta:
-            _wf(f)
+    if not fasta:
+        raise Exception('Attempt to write zero-length sequence to fasta.')
+    handle.write(f'>{fasta["id"]}')
+    try:
+        if fasta["descr"] and fasta["descr"] is not np.nan:
+            handle.write(f' {fasta["descr"]}')
+    except KeyError:
+        pass
+    try:
+        if fasta["subsystems"]:
+            handle.write(f' ({fasta["subsystems"]})')
+    except KeyError:
+        pass
+    try:
+        if fasta["taxon"]:
+            handle.write(f' ({fasta["taxon"]})')
+    except KeyError:
+        pass
+    handle.write('\n')
+    for i in range(0, len(fasta['seq']), line_length):
+        handle.write(fasta['seq'][i:i+line_length])
+        handle.write('\n')
 
 
 def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1, targets = None):
     if targets:
-        feature_data = feature_data.loc[lambda df: df['type'] in targets, :]
+        feature_data = feature_data[feature_data['type'].isin(targets)]
+    if not len(feature_data):
+        raise Exception(f'No features with targets {targets} while writing to fasta!')
     number_of_records = len(feature_data.index)
     split = min(split, number_of_records)
     records_per_file = number_of_records / split
@@ -134,8 +148,9 @@ def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
     for feature in feature_data.itertuples():
-        write_fasta(filehandles[int(records_written / records_per_file)], feature)
+        write_fasta(filehandles[int(records_written / records_per_file)], feature._asdict())
         records_written += 1
+    return paths
 
 
 def write_contigs_to_fasta(genome_name, contig_hash: dict, feature_data: pd.DataFrame, base_file: Path, split=1,

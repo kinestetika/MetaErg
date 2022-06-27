@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from pathlib import Path
 
 from metaerg.datatypes import blast
@@ -69,9 +70,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 if descr := h.hit.descr:
                     canthyd_hit_count += 1
                     confidence = 'high' if h.score > h.hit.pos else 'low'  # cutoff is stored in 'pos'
-                    feature_data.at[blast_result.query]['descr'] = \
+                    feature_data.at[blast_result.query, 'descr'] = \
                         f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
-                    feature_data.at[blast_result.query]['subsystems'] += ' [hydrocarbon degradation]'
+                    if len(feature_data.at[blast_result.query(), 'subsystems']):
+                        feature_data.at[blast_result.query(), 'subsystems'] += f' [hydrocarbon degradation]'
+                    else:
+                        feature_data.at[blast_result.query(), 'subsystems'] = f'[hydrocarbon degradation]'
                 else:
                     context.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
         return feature_data, canthyd_hit_count

@@ -1,9 +1,5 @@
 def subsystem_data() -> str:
-    return '''>[secondary-metabolites]
-        # (populated by antismash)
-        >[hydrocarbon degradation]
-        # (populated by cant-hyd)
-        >[ribosome]
+    return '''>ribosome
         ribosomal protein L1
         ribosomal protein L2
         ribosomal protein L3

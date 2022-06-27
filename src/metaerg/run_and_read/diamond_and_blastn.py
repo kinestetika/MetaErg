@@ -1,6 +1,7 @@
 import re
 import gzip
 import shutil
+import numpy as np
 import pandas as pd
 from os import chdir
 from ftplib import FTP
@@ -13,8 +14,8 @@ import ncbi.datasets
 
 from metaerg import context
 from metaerg.datatypes import fasta
-from metaerg.run_and_read import subsystems
-from metaerg.datatypes.blast import DBentry, TabularBlastParser, BlastResult
+from metaerg import subsystems
+from metaerg.datatypes import blast
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
@@ -32,7 +33,7 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
-    rna_nt_file = context.spawn_file('rna.nt', genome_name)
+    rna_nt_file = context.spawn_file('rna.fna', genome_name)
     blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
     context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
@@ -49,8 +50,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for line in descr_handle:
             words = line.split('\t')
             descriptions[words[0]][int(words[1])] = words[2].strip()
-    context.log(f'Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])}) '
-                f'gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. ')
+    context.log(f'({genome_name}) Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])})'
+                f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. ')
     # (2) load database taxonomy
     db_taxonomy = Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)
     taxonomy = {'p': {}, 'e': {}, 'v': {}}
@@ -58,30 +59,33 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for line in taxon_handle:
             words = line.split('\t')
             taxonomy[words[0]][int(words[1])] = words[2].strip().replace('~', '; ')
-    context.log(f'Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
+    context.log(f'({genome_name}) Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
     # (3) parse diamond blast results
 
-    def process_blast_result(blast_result: BlastResult):
-        feature_data.at[blast_result.query()]['blast'] = str(blast_result)
-        feature_data.at[blast_result.query()]['descr'] = blast_result.hits[0].hit.descr
-        feature_data.at[blast_result.query()]['taxon'] =  blast_result.hits[0].hit.taxon
+    def process_blast_result(blast_result: blast.BlastResult):
+        feature_data.at[blast_result.query(), 'blast'] = str(blast_result)
+        feature_data.at[blast_result.query(), 'descr'] = blast_result.hits[0].hit.descr
+        feature_data.at[blast_result.query(), 'taxon'] =  blast_result.hits[0].hit.taxon
 
         if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
                                           if h.aligned_length / h.hit.length >= 0.8)):
-            feature_data.at[blast_result.query()]['subsystems'] += f' {subsystem}'
+            if len(feature_data.at[blast_result.query(), 'subsystems']):
+                feature_data.at[blast_result.query(), 'subsystems'] += f' {subsystem}'
+            else:
+                feature_data.at[blast_result.query(), 'subsystems'] = f'{subsystem}'
 
-    def dbentry_from_string(db_id: str) -> DBentry:
+    def dbentry_from_string(db_id: str) -> blast.DBentry:
         w = db_id.split('~')
-        return DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
-                       ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
+        return blast.DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
+                             ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
-    with TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
+    with blast.TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
+    with blast.TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)

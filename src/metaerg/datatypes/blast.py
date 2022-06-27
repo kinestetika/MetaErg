@@ -1,3 +1,5 @@
+import gzip
+
 class DBentry:
     def __init__(self, *, domain: str, descr: str, taxon: str = '', ncbi: str = '', gene: str = '', length: int = 0,
                  pos: int = 0):

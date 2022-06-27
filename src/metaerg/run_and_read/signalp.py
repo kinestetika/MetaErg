@@ -43,12 +43,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             words = line.split("\t")
             if "OTHER" == words[1]:
                 continue
-            feature_data[words[0].split()[0]]['signal_peptide'] = words[1]
+            feature_data[words[0].split()[0], 'signal_peptide'] = words[1]
             count += 1
     return feature_data, count
 
 
-@context.register_annotator
+#@context.register_annotator
 def run_and_read_signalp():
     return ({'pipeline_position': 121,
              'purpose': 'signal peptide prediction with signalp',

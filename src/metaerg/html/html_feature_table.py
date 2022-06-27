@@ -4,12 +4,12 @@ from metaerg import context
 
 
 @context.register_html_writer
-def write_html(genome_name, feature_data: pd.DataFrame, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, genome_name, "index_of_features.html")
     file.parent.mkdir(exist_ok=True, parents=True)
     with open(Path(file), 'w') as handle:
-        handle.write(make_html(genome_name, feature_data))
+        handle.write(make_html(genome_name, feature_data, genome_properties))
 
 
 def get_empty_format_dict():
@@ -26,6 +26,7 @@ def get_empty_format_dict():
             'description': '',
             'taxon': '',
             'ci': '', 'ca': '', 'cr': '', 'ct': ''}
+
 
 def format_feature(f, dominant_taxon, format_hash, colors):
     format_hash['f_id'] = f.id
@@ -76,7 +77,7 @@ def format_hash_to_html(format_hash):
     </tr>'''.format(**format_hash)
 
 
-def make_html(genome_name, feature_data: pd.DataFrame) -> str:
+def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -> str:
     """Injects the content into the html base, returns the html."""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome_name)
@@ -108,11 +109,11 @@ def make_html(genome_name, feature_data: pd.DataFrame) -> str:
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, dominant_taxon, colors)
+                format_feature(f, format_hash, genome_properties['dominant_taxon'], colors)
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            format_feature(f, format_hash, dominant_taxon, colors)
+            format_feature(f, format_hash, genome_properties['dominant_taxon'], colors)
             table_body += format_hash_to_html(format_hash)
         prev_f = f
     html = html.replace('TABLE_BODY', table_body)

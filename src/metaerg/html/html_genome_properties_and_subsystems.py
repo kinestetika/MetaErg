@@ -1,23 +1,23 @@
 from pathlib import Path
-from metaerg.data_model import Genome
+import pandas as pd
 from metaerg import context
 
 
 @context.register_html_writer
-def write_html(genome: Genome, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     dir.mkdir(exist_ok=True, parents=True)
-    file = Path(dir, genome.id, 'index.html')
+    file = Path(dir, genome_name, 'index.html')
     with open(file, 'w') as handle:
-        handle.write(make_html(genome))
+        handle.write(make_html(genome_name, feature_data, genome_properties))
 
 
-def make_html(genome: Genome) -> str:
+def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -> str:
     """injects the content into the html base, returns the html"""
     html = _make_html_template()
-    html = html.replace('GENOME_NAME', genome.id)
+    html = html.replace('GENOME_NAME', genome_name)
     # genome properties
     html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{key}</td><td>{value}</td></tr>\n'
-                                                       for key, value in genome.formatted_properties())))
+                                                       for key, value in genome_properties)))
     subsystem_html = ''
     for subsystem in genome.subsystems.subsystems.values():
         subsystem_html += f'<button class="accordion">{subsystem.id}</button>\n<div class="panel">\n'

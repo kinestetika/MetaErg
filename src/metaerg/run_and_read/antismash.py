@@ -30,10 +30,13 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     antismash_gene_function = f_as_dict.get('gene_functions', '')
                     antismash_gene_category = f_as_dict.get('gene_kind', '')
                     if antismash_region_name:
-                        feature_data.at[f_as_dict['locus_tag']]['antismash'] = \
+                        feature_data.at[f_as_dict['locus_tag'], 'antismash'] = \
                             ' '.join((f'(region {antismash_region_number})', antismash_region_name,
                                       antismash_gene_function, antismash_gene_category))
-                        feature_data.at[f_as_dict['locus_tag']]['subsystems'] += ' [secondary-metabolites]'
+                        if len(feature_data.at[f_as_dict['locus_tag'], 'subsystems']):
+                            feature_data.at[f_as_dict['locus_tag'], 'subsystems'] += f' [secondary-metabolites]'
+                        else:
+                            feature_data.at[f_as_dict['locus_tag'], 'subsystems'] = f'[secondary-metabolites]'
     if not antismash_hit_count:
         result_files[0].mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
     return feature_data, antismash_hit_count
@@ -50,7 +53,7 @@ def run_and_read_antismash():
 
 
 @context.register_html_writer
-def write_html(genome_name, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     """need to copy the antismash result dir to the metaerg html dir."""
     dir.mkdir(exist_ok=True, parents=True)
     antismash_result_dir = context.spawn_file('antismash', genome_name)

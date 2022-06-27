@@ -4,15 +4,13 @@ from pathlib import Path
 
 from metaerg import context
 from metaerg import registry
-from metaerg.datatypes import fasta
+from metaerg.datatypes import fasta, gbk
+from metaerg.run_and_read import *
+from metaerg.html import *
+from metaerg import subsystems
+
 
 VERSION = "2.2.0"
-DATAFRAME_COLUMNS = 'genome contig id start end strand type inference subsystems descr taxon notes seq antismash ' \
-                    'signal_peptide tmh tmh_topology blast cdd'.split()
-DATAFRAME_DATATYPES = str, str, str, int, int, int, "category", str, str, str, str, str, str, str, \
-                      str, int, str, str, str, str
-DATAFRAME_DATATYPES = {k: v for k, v in zip(DATAFRAME_COLUMNS, DATAFRAME_DATATYPES)}
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
@@ -43,8 +41,8 @@ def parse_arguments():
 def load_contigs(genome_name, input_fasta_file):
     with fasta.FastaParser(input_fasta_file) as fasta_reader:
         contigs = [c for c in fasta_reader if len(c) > context.MIN_CONTIG_LENGTH]
-    contigs.sort(key=len, reverse=True)
-    contigs = {c.id: c for c in contigs}
+    contigs.sort(key=lambda c:len(c['seq']), reverse=True)
+    contigs = {c['id']: c for c in contigs}
     total_length = sum(len(c['seq']) for c in contigs.values())
     context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length} from file.')
     if context.RENAME_CONTIGS:
@@ -68,33 +66,99 @@ def validate_ids(genome_name, contig_hash):
             raise Exception(f'Contig id {c_id} contains "{context.DELIMITER}"; change using --delimiter')
 
 
+def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.DataFrame) -> dict:
+    properties = {}
+    contigs:list[dict] = list(contig_dict.values())
+    contigs.sort(key=lambda c:len(c['seq']), reverse=True)
+    properties['size'] = sum(len(c['seq']) for c in contigs)
+    properties['% GC'] = sum((c['seq'].count('G') + c['seq'].count('G') for c in contigs)) / \
+                               (properties['size'] - sum((c['seq'].count('N') for c in contigs)))
+    cum_size = 0
+    for c in contigs:
+        cum_size += len(c['seq'])
+        if cum_size >+ properties['size'] / 2:
+            properties["N50"] = len(c['seq'])
+            break
+
+    feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
+    feature_data = feature_data.assign(has_taxon=len(feature_data['taxon']))
+    feature_data_cds = feature_data[feature_data['type'] == 'CDS']
+    feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
+    feature_data_with_taxon = feature_data[feature_data['has_taxon'] > 0]
+
+
+    properties['# proteins'] = len(feature_data_cds.index)
+    properties['% coding'] = feature_data_cds['length'].sum() / properties['size']
+    properties['mean protein length (aa)'] = feature_data_cds['length'].mean() / 3
+    properties['# ribosomal RNA'] = len(feature_data[feature_data['type'] == 'rRNA'].index)
+    properties['# transfer RNA'] = len(feature_data[feature_data['type'] == 'tRNA'].index)
+    properties['# non-coding RNA'] = len(feature_data[feature_data['type'] == 'ncRNA'].index)
+    properties['# retrotransposons'] = len(feature_data[feature_data['type'] == 'retrotransposon'].index)
+    properties['# CRISPR repeats'] = len(feature_data[feature_data['type'] == 'crispr_repeat'].index)
+    properties['# other repeats'] = len(feature_data[feature_data['type'] == 'repeat'].index)
+    properties['% repeats'] = feature_data_repeats['length'].sum() / properties['size']
+    properties['# total features'] = len(feature_data.index)
+    properties['# genes classified to taxon'] = len(feature_data_with_taxon.index)
+
+    for k, v in dict(feature_data_with_taxon.taxon.value_counts(normalize=True)).items():
+        properties['dominant taxon'] = k
+        properties['dominant taxon frequency'] = v
+        break
+    #feature_data = feature_data[feature_data['type'] == 'CDS'].assign(d=feature_data['end'] - feature_data['start'])
+    #properties['subsystems'] = subsystems.aggregate(feature_data)
+    print(properties)
+    #
+    # taxon_counts = Counter()
+    # taxon_counts.update(f.taxon for contig in self.contigs.values() for f in contig.features)
+    # dominant_taxon, highest_count = taxon_counts.most_common(1)[0]
+    # self.properties['dominant taxon'] = f'{dominant_taxon} ({highest_count/sum(taxon_counts.values()) * 100:.1f}%)'
+    return properties
+
+
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     # (1) prepare dataframe
-    feature_data = pd.DataFrame(columns=DATAFRAME_COLUMNS)
-    feature_data = feature_data.astype(DATAFRAME_DATATYPES)
+    feature_data = pd.DataFrame(columns=context.DATAFRAME_COLUMNS)
     # (2) load sequence data
     contig_dict = load_contigs(genome_name, input_fasta_file)
     validate_ids(genome_name, contig_dict)
     # (3) now annotate
-    for annotator in context.sorted_annotators():
-        feature_data = annotator(genome_name, contig_dict, feature_data)
+    #for annotator in context.sorted_annotators():
+    #    feature_data = annotator(genome_name, contig_dict, feature_data)
+    feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
+    feature_data = pd.read_feather(feather_file)
+    feature_data = feature_data.set_index('id', drop=False)
+    print (feature_data)
+
     # (4) save results
-    context.log(f'({genome_name}) Now writing to .gbk, .gff, and fasta...')
-    faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)
-    rna_file = context.spawn_file("rna.fna", genome.id, context.BASE_DIR)
-    bioparsers.write_genome_to_fasta_files(genome, faa_file, targets=(FeatureType.CDS,))
-    bioparsers.write_genome_to_fasta_files(genome, rna_file, targets=RNA_FEATURES)
-    # (4) visualize
-    genome.compute_properties()
-    context.log(f'({genome.id}) Now writing final result as .html for visualization...')
-    for html_writer in registry.HTML_WRITER_REGISTRY:
-        html_writer(genome, Path(context.BASE_DIR, 'html'))
-    context.log(f'({genome.id}) Completed html visualization.')
+    context.log(f'({genome_name}) Now writing annotations to .gbk and .fasta...')
+    faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
+    rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
+    gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
+    fasta.write_features_to_fasta(feature_data, faa_file, targets=('CDS',))
+    fasta.write_features_to_fasta(feature_data, rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
+    with open(gbk_file, 'w') as gbk_writer:
+        gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)
+    # (5) visualize
+    genome_properties = compute_genome_properties(contig_dict, feature_data)
+    exit()
+    # context.log(f'({genome_name}) Now writing final result as .html for visualization...')
+    # for html_writer in registry.HTML_WRITER_REGISTRY:
+    #     html_writer(genome_name, feature_data, genome_properties, Path(context.BASE_DIR, 'html'))
+    # context.log(f'({genome_name}) Completed html visualization.')
+    # context.log(f'({genome_name}) Now writing annotations to .feather for curation in R or Jupyter...')
+    feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
+
+    feature_data = feature_data.reset_index(drop=True)
+
+        #.astype({'start': 'int32', 'end': 'int32', 'strand': 'int32',
+        #                                                       'tmh': 'int32'})
+    feature_data.to_feather(feather_file)
 
 
 def main():
     print(f'This is metaerg.py {VERSION}')
+
     context.init(**parse_arguments().__dict__)
     # print(',\n'.join(f'{k}={eval("context." + k)}' for k in dir(context) if not k.startswith('_')))
 

@@ -5,14 +5,14 @@ from metaerg import context
 
 
 @context.register_html_writer
-def write_html(genome_name, feature_data: pd.DataFrame, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     """Writes a html file for each feature to dir <file>"""
     dir = Path(dir, genome_name, 'features')
     for f in feature_data.itertuples():
         if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
             f_filename = Path(dir, f'{f.id}.html')
             with open(f_filename, 'w') as handle:
-                handle.write(make_feature_html(f, dominant_taxon))
+                handle.write(make_feature_html(f, genome_properties['dominant_taxon']))
 
 
 def make_blast_table_html(blast_result: blast.BlastResult, f_length, dominant_taxon) -> str:

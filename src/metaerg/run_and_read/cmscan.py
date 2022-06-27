@@ -85,7 +85,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         seq = contig['seq'][hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
             seq = fasta.reverse_complement(seq)
-        feature = {'start': hit.query_start - 1,
+        feature = {'genome': genome_name,
+                   'contig': hit.query_id,
+                   'start': hit.query_start - 1,
                    'end': hit.query_end,
                    'strand': hit.query_strand,
                    'type': f_type,

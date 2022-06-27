@@ -29,18 +29,20 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             file.unlink()
 
 
-def words2feature(words: list[str], contig):
+def words2feature(words: list[str], contig, genome_name:str):
     start = int(words[5]) - 1
     end = int(words[6])
     strand = -1 if 'C' == words[8] else 1
     seq = contig['seq'][start:end]
     if strand < 0:
         seq = fasta.reverse_complement(seq)
-    return {'start': start,
+    return {'genome': genome_name,
+            'contig': contig['id'],
+            'start': start,
             'end': end,
             'strand': strand,
             'type': 'repeat',
-            'inference': 'repeatmaske',
+            'inference': 'repeatmasker',
             'seq': seq}
 
 
@@ -61,12 +63,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 context.log(f'({genome_name}) Warning: Unknown contig id "{words[4]}"')
                 continue
             if 'Simple_repeat' == words[10]:
-                feature = words2feature(words, contig)
+                feature = words2feature(words, contig, genome_name)
                 new_features.append(feature)
                 feature['notes'] = f'repeat {words[9]}'
             else:
                 repeat_list = repeat_hash.setdefault(words[9], list())
-                repeat_list.append(words2feature(words, contig))
+                repeat_list.append(words2feature(words, contig, genome_name))
     for repeat_list in repeat_hash.values():
         if len(repeat_list) >= 10:
             for feature in repeat_list:

@@ -30,15 +30,15 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 case [next_feature_name, _, orientation, _, _] if orientation in ('inside', 'outside'):
                     if next_feature_name != current_feature_name:
                         if feature_tmh_count:
-                            feature_data.at[current_feature_name]['transmembrane_helixes'] = \
-                                " ".join((str(feature_tmh_count), current_txt[:-1]))
+                            feature_data.at[current_feature_name, 'tmh'] = feature_tmh_count
+                            feature_data.at[current_feature_name, 'tmh_topology'] = current_txt[:-1]
                             count += 1
                         current_feature_name = next_feature_name
                         feature_tmh_count = 0
                         current_txt = 'i,' if 'inside' == orientation else 'o,'
         if feature_tmh_count:
-            feature_data.at[current_feature_name]['transmembrane_helixes'] = \
-                " ".join((str(feature_tmh_count), current_txt[:-1]))
+            feature_data.at[current_feature_name, 'tmh'] = feature_tmh_count
+            feature_data.at[current_feature_name, 'tmh_topology'] = current_txt[:-1]
             count += 1
     return feature_data, count
 

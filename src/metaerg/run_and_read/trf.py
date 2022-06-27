@@ -24,7 +24,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             start = int(words[0]) - 1
             end = int(words[1])
             seq = contig['seq'][start:end]
-            feature = {'start': start,
+            feature = {'genome': genome_name,
+                       'contig': contig['id'],
+                       'start': start,
                        'end': end,
                        'strand': 1,
                        'type': 'repeat',

@@ -1,12 +1,14 @@
 from pathlib import Path
 import shutil
 import os
+
+import numpy as np
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 from metaerg import context
 from metaerg.datatypes import fasta
-from metaerg.datatypes.blast import DBentry, TabularBlastParser
-from metaerg.run_and_read import subsystems
+from metaerg.datatypes import blast
+from metaerg import subsystems
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
@@ -15,8 +17,6 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     if context.CPUS_PER_GENOME > 1:
         split_fasta_files = fasta.write_features_to_fasta(feature_data, cds_aa_file, targets=('CDS',),
                                                                split=context.CPUS_PER_GENOME)
-        for i in split_fasta_files:
-            print(i)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -41,27 +41,30 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     with open(cdd_index) as db_handle:
         for line in db_handle:
             words = line.strip().split("\t")
-            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
-                                         length=int(words[4]))
-    context.log(f'Parsed {len(cdd)} entries from conserved domain database.')
+            cdd[int(words[0])] = blast.DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
+                                               length=int(words[4]))
+    context.log(f'({genome_name}) Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
-
-    def get_cdd_db_entry(id: str) -> DBentry:
+    def get_cdd_db_entry(id: str) -> blast.DBentry:
         return cdd[int(id[4:])]
 
-    with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
-        for blast_result in handle:
-            feature_data.at[blast_result.query()]['cdd'] = str(blast_result)
+    with blast.TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
+        for cdd_result in handle:
+            # print(cdd_result)
+            feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
-            if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
+            if subsystem := subsystems.match((h.hit.descr for h in cdd_result.hits
                                               if h.aligned_length / h.hit.length >= 0.8)):
-                feature_data.at[blast_result.query()]['subsystems'] += f' {subsystem}'
-            top_entry: DBentry = blast_result.hits[0].hit
+                if len(feature_data.at[cdd_result.query(), 'subsystems']):
+                    feature_data.at[cdd_result.query(), 'subsystems'] += f' {subsystem}'
+                else:
+                    feature_data.at[cdd_result.query(), 'subsystems'] = f'{subsystem}'
+            top_entry: blast.DBentry = cdd_result.hits[0].hit
             descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
             if len(descr) > 35:
                 descr = descr[:35] + '...'
-            feature_data.at[blast_result.query()]['descr'] = descr
+            feature_data.at[cdd_result.query(), 'descr'] = descr
     return feature_data, cdd_result_count
 
 

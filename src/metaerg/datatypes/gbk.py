@@ -2,6 +2,7 @@ import re
 import gzip
 import textwrap
 import pandas as pd
+import numpy as np
 
 GBK_LINEWIDTH = 80
 GBK_INDENT = 21
@@ -20,9 +21,9 @@ FEATURES             Location/Qualifiers
 def gbk_write_feature(writer, feature):
     indent = ' '*GBK_INDENT
     if feature.strand >= 0:
-        location = f'{feature.start + 1}..{feature.end}'
+        location = f'{int(feature.start) + 1}..{int(feature.end)}'
     else:
-        location = f'complement({feature.start + 1}..{feature.end})'
+        location = f'complement({int(feature.start) + 1}..{int(feature.end)})'
 
     writer.write('     {:<16}{}\n'.format(feature.type, textwrap.fill(location, width = GBK_LINEWIDTH,
                                                                       initial_indent = '',
@@ -31,11 +32,12 @@ def gbk_write_feature(writer, feature):
                 'inference':  feature.inference,
                 'product':    feature.descr,
                 'taxonomy':   feature.taxon,
-                'subsystems': feature.subsystem,
+                'subsystems': feature.subsystems,
                 'notes':      feature.notes,
                 'antismash':  feature.antismash,
                 'signal_peptide': feature.signal_peptide,
-                'transmembrane_helixes': feature.transmembrane_helixes,
+                'tmh':         feature.tmh,
+                'tmh-topology':feature.tmh_topology,
                 'translation': feature.seq if feature.type == 'CDS' else ''}
     for k, v in gbk_keys.items():
         if v:
@@ -51,7 +53,6 @@ def gbk_write_genome(writer, contig_dict: dict, feature_data: pd.DataFrame):
             gbk_write_feature(writer, feature)
         writer.write('ORIGIN\n')
         lw = ((GBK_LINEWIDTH - 20) // 10) * 10
-        print(lw)
         for i in range(0, len(contig['seq']), lw):
             line_seq = contig['seq'][i:i + lw].lower()
             writer.write(f'{i+1:>9}')

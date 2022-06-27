@@ -17,7 +17,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         for seq_rec in fasta_reader:
-            words = seq_rec.descr.split('#')
+            words = seq_rec['descr'].split('#')
             try:
                 m = ORF_ID_PATTERN.search(seq_rec['id'])
                 contig_id = seq_rec['id'][0:m.start()]
@@ -26,11 +26,13 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 context.log(f'({genome_name}) Warning: Failed to find contig with "{seq_rec["id"]}"')
                 continue
             start = int(words[1].strip()) - 1
-            end =  int(words[2].strip())
+            end = int(words[2].strip())
             strand = int(words[3].strip())
             if seq_rec['seq'].endswith('*'):
-                seq_rec['seq'] = seq_rec.seq[:-1]
-            feature = {'start': start,
+                seq_rec['seq'] = seq_rec['seq'][:-1]
+            feature = {'genome': genome_name,
+                       'contig': contig_id,
+                       'start': start,
                        'end': end,
                        'strand': strand,
                        'type': 'CDS',

@@ -16,7 +16,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     new_features = []
     with gff.GffParser(result_files[0], contig_dict, inference='minced',
                        target_feature_type_dict={'repeat_unit': 'crispr_repeat'}) as gff_parser:
-        for contig, feature in gff_parser:
+        for feature in gff_parser:
+            feature['genome'] = genome_name
             new_features.append(feature)
     feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
     return feature_data, len(new_features)

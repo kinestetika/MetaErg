@@ -5,9 +5,12 @@ import time
 from multiprocessing import cpu_count
 from pathlib import Path
 
-from metaerg import registry
-from metaerg.data_model import Genome
+import numpy as np
 
+from metaerg import registry
+
+DATAFRAME_COLUMNS = 'id genome contig start end strand type inference subsystems descr taxon notes seq antismash ' \
+                    'signal_peptide tmh tmh_topology blast cdd'.split()
 
 BASE_DIR = ''
 TEMP_DIR = ''
