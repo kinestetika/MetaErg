@@ -3,13 +3,13 @@ import pandas as pd
 from pathlib import Path
 
 from metaerg import context
-from metaerg import bioparsers
+from metaerg.datatypes import fasta
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
-                                      mask_targets=bioparsers.ALL_MASK_TARGETS)
+    fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                 mask_targets=fasta.ALL_MASK_TARGETS)
     lmer_table_file = context.spawn_file('lmer-table', genome_name)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome_name)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome_name)
@@ -35,13 +35,13 @@ def words2feature(words: list[str], contig):
     strand = -1 if 'C' == words[8] else 1
     seq = contig['seq'][start:end]
     if strand < 0:
-        seq = bioparsers.reverse_complement(seq)
+        seq = fasta.reverse_complement(seq)
     return {'start': start,
-               'end': end,
-               'strand': strand,
-               'type': 'repeat',
-               'inference': 'repeatmaske',
-               'seq': seq}
+            'end': end,
+            'strand': strand,
+            'type': 'repeat',
+            'inference': 'repeatmaske',
+            'seq': seq}
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:

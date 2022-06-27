@@ -1,18 +1,20 @@
 from pathlib import Path
 import shutil
 import os
+import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
-
-from metaerg.data_model import SeqFeature, Genome, FeatureType, DBentry
 from metaerg import context
-from metaerg import bioparsers
+from metaerg.datatypes import fasta
+from metaerg.datatypes.blast import DBentry, TabularBlastParser
+from metaerg.run_and_read import subsystems
 
-def _run_programs(genome:Genome, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome.id)
+
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome_name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_genome_to_fasta_files(genome, cds_aa_file, context.CPUS_PER_GENOME,
-                                                                   targets=(FeatureType.CDS,))
+        split_fasta_files = fasta.write_features_to_fasta(feature_data, cds_aa_file, targets=('CDS',),
+                                                               split=context.CPUS_PER_GENOME)
         for i in split_fasta_files:
             print(i)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
@@ -32,8 +34,7 @@ def _run_programs(genome:Genome, result_files):
         context.run_external(f'rpsblast -db {cdd_database} -query {cds_aa_file} -out {result_files[0]} -outfmt 6 -evalue 1e-7')
 
 
-
-def _read_results(genome:Genome, result_files) -> int:
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     # load cdd index
     cdd = {}
     cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
@@ -46,22 +47,22 @@ def _read_results(genome:Genome, result_files) -> int:
     # parse cdd results
     cdd_result_count = 0
 
-    # lambda i: cdd[int(i[4:])]
-    def get_cdd_db_entry(id: str):
+    def get_cdd_db_entry(id: str) -> DBentry:
         return cdd[int(id[4:])]
 
-    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
+    with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for blast_result in handle:
-            feature: SeqFeature = genome.get_feature(blast_result.query())
+            feature_data.at[blast_result.query()]['cdd'] = str(blast_result)
             cdd_result_count += 1
-            feature.cdd = blast_result
-            genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
-                                              if h.aligned_length / h.hit.length >= 0.8))
+            if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
+                                              if h.aligned_length / h.hit.length >= 0.8)):
+                feature_data.at[blast_result.query()]['subsystems'] += f' {subsystem}'
             top_entry: DBentry = blast_result.hits[0].hit
-            feature.descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
-            if len(feature.descr) > 35:
-                    feature.descr = feature.descr[:35] + '...'
-    return cdd_result_count
+            descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
+            if len(descr) > 35:
+                descr = descr[:35] + '...'
+            feature_data.at[blast_result.query()]['descr'] = descr
+    return feature_data, cdd_result_count
 
 
 @context.register_annotator

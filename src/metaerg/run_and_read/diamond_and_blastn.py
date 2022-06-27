@@ -1,6 +1,7 @@
 import re
 import gzip
 import shutil
+import pandas as pd
 from os import chdir
 from ftplib import FTP
 from pathlib import Path
@@ -10,9 +11,10 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 import ncbi.datasets
 
-from metaerg.data_model import Genome, SeqFeature, BlastResult, DBentry
 from metaerg import context
-from metaerg import bioparsers
+from metaerg.datatypes import fasta
+from metaerg.run_and_read import subsystems
+from metaerg.datatypes.blast import DBentry, TabularBlastParser, BlastResult
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
@@ -28,9 +30,9 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
                         'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 
 
-def _run_programs(genome:Genome, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome.id)
-    rna_nt_file = context.spawn_file('rna.nt', genome.id)
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome_name)
+    rna_nt_file = context.spawn_file('rna.nt', genome_name)
     blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
     context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
@@ -39,7 +41,7 @@ def _run_programs(genome:Genome, result_files):
                          f'-outfmt 6')
 
 
-def _read_results(genome:Genome, result_files) -> int:
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
@@ -61,12 +63,13 @@ def _read_results(genome:Genome, result_files) -> int:
     # (3) parse diamond blast results
 
     def process_blast_result(blast_result: BlastResult):
-        feature: SeqFeature = genome.get_feature(blast_result.query())
-        feature.blast = blast_result
-        feature.descr = blast_result.hits[0].hit.descr
-        feature.taxon = blast_result.hits[0].hit.taxon
-        genome.subsystems.match(feature, (h.hit.descr for h in blast_result.hits
-                                          if h.aligned_length / h.hit.length >= 0.8))
+        feature_data.at[blast_result.query()]['blast'] = str(blast_result)
+        feature_data.at[blast_result.query()]['descr'] = blast_result.hits[0].hit.descr
+        feature_data.at[blast_result.query()]['taxon'] =  blast_result.hits[0].hit.taxon
+
+        if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
+                                          if h.aligned_length / h.hit.length >= 0.8)):
+            feature_data.at[blast_result.query()]['subsystems'] += f' {subsystem}'
 
     def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
@@ -74,15 +77,15 @@ def _read_results(genome:Genome, result_files) -> int:
                        ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
-    with bioparsers.TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
+    with TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with bioparsers.TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
+    with TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    return blast_result_count
+    return feature_data, blast_result_count
 
 
 @context.register_annotator
@@ -410,7 +413,7 @@ def install_prokaryote_database():
             for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):
                 if not input.exists():
                     continue
-                with bioparsers.FastaParser(input, cleanup_seq=False) as reader, open(output, 'a') as writer:
+                with fasta.FastaParser(input, cleanup_seq=False) as reader, open(output, 'a') as writer:
                     gene_counter = 0
                     for f in reader:
                         if m:= RNA_DESCR_RE.search(f.descr):
@@ -423,7 +426,7 @@ def install_prokaryote_database():
                                                              '', len(f), gene_counter)
                         f.descr = descr
                         gene_counter += 1
-                        bioparsers.write_fasta(writer, f)
+                        fasta.write_fasta(writer, f)
 
     context.log(f'downloaded {int(success_count)} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)

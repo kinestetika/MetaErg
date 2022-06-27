@@ -1,23 +1,21 @@
 from pathlib import Path
-
-from metaerg.data_model import FeatureType, SeqFeature, BlastResult, Genome
+import pandas as pd
+from metaerg.datatypes import blast
 from metaerg import context
 
 
 @context.register_html_writer
-def write_html(genome: Genome, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, dir):
     """Writes a html file for each feature to dir <file>"""
-    dir = Path(dir, genome.id, 'features')
-    dir.mkdir(exist_ok=True, parents=True)
-    for c in genome.contigs.values():
-        for f in c.features:
-            if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
-                f_filename = Path(dir, f'{f.id}.html')
-                with open(f_filename, 'w') as handle:
-                    handle.write(make_feature_html(f, genome.properties['dominant taxon']))
+    dir = Path(dir, genome_name, 'features')
+    for f in feature_data.itertuples():
+        if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
+            f_filename = Path(dir, f'{f.id}.html')
+            with open(f_filename, 'w') as handle:
+                handle.write(make_feature_html(f, dominant_taxon))
 
 
-def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -> str:
+def make_blast_table_html(blast_result: blast.BlastResult, f_length, dominant_taxon) -> str:
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     if blast_result:
         html = '<table>'
@@ -58,7 +56,7 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon) -
         return ''
 
 
-def make_feature_html(f: SeqFeature, dominant_taxon) -> str:
+def make_feature_html(f, dominant_taxon) -> str:
     html = _make_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
@@ -66,7 +64,7 @@ def make_feature_html(f: SeqFeature, dominant_taxon) -> str:
     else:
         html = html.replace('HEADER', f'>{f.id} {f.descr}')
     html = html.replace('SEQUENCE', f.seq)
-    if f.type is FeatureType.CDS:
+    if f.type is 'CDS':
         length = len(f) / 3
     else:
         length = len(f)
@@ -74,7 +72,8 @@ def make_feature_html(f: SeqFeature, dominant_taxon) -> str:
     html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon))
     attribute_html = '<table>\n'
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f.__dict__[k]}</td></tr>\n' for k in
-                              SeqFeature.displayed_keys)
+                              ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
+                               'antismash ', 'signal_peptide', 'tmh', 'tmh_topology'))
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html

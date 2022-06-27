@@ -1,13 +1,13 @@
 import re
 import pandas as pd
 from metaerg import context
-from metaerg import bioparsers
+from metaerg.datatypes import fasta
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
-                                      mask_targets=bioparsers.ALL_MASK_TARGETS)
+    fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                      mask_targets=fasta.ALL_MASK_TARGETS)
     context.run_external(f'aragorn -l -t -gc{context.TRANSLATION_TABLE} {fasta_file} -w -o {result_files[0]}')
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
@@ -29,7 +29,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     end = min(len(current_contig.seq), int(coord_match.group(3)))
                     seq = current_contig['seq'][start:end]
                     if strand < 0:
-                        seq = bioparsers.reverse_complement(seq)
+                        seq = fasta.reverse_complement(seq)
                     feature = {'start': start,
                                'end': end,
                                'strand': strand,

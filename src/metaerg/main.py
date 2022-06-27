@@ -1,17 +1,17 @@
 import argparse
 import pandas as pd
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
-from metaerg.data_model import FeatureType, RNA_FEATURES
-from metaerg.html.html_all_genomes import write_html
 from metaerg import registry
-from metaerg import bioparsers
-from metaerg.run_and_read import *
-from metaerg.html import *
+from metaerg.datatypes import fasta
 
 VERSION = "2.2.0"
+DATAFRAME_COLUMNS = 'genome contig id start end strand type inference subsystems descr taxon notes seq antismash ' \
+                    'signal_peptide tmh tmh_topology blast cdd'.split()
+DATAFRAME_DATATYPES = str, str, str, int, int, int, "category", str, str, str, str, str, str, str, \
+                      str, int, str, str, str, str
+DATAFRAME_DATATYPES = {k: v for k, v in zip(DATAFRAME_COLUMNS, DATAFRAME_DATATYPES)}
 
 
 def parse_arguments():
@@ -41,7 +41,7 @@ def parse_arguments():
 
 
 def load_contigs(genome_name, input_fasta_file):
-    with bioparsers.FastaParser(input_fasta_file) as fasta_reader:
+    with fasta.FastaParser(input_fasta_file) as fasta_reader:
         contigs = [c for c in fasta_reader if len(c) > context.MIN_CONTIG_LENGTH]
     contigs.sort(key=len, reverse=True)
     contigs = {c.id: c for c in contigs}
@@ -71,30 +71,16 @@ def validate_ids(genome_name, contig_hash):
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     # (1) prepare dataframe
-    feature_data = pd.DataFrame(columns=bioparsers.DATAFRAME_COLUMNS)
-    feature_data = feature_data.astype(bioparsers.DATAFRAME_DATATYPES)
+    feature_data = pd.DataFrame(columns=DATAFRAME_COLUMNS)
+    feature_data = feature_data.astype(DATAFRAME_DATATYPES)
     # (2) load sequence data
     contig_dict = load_contigs(genome_name, input_fasta_file)
     validate_ids(genome_name, contig_dict)
     # (3) now annotate
     for annotator in context.sorted_annotators():
         feature_data = annotator(genome_name, contig_dict, feature_data)
-
-    # (1) create genome, this will load the contigs into memory, they will be filtered and perhaps renamed
-    genome = bioparsers.init_genome_from_fasta_file(genome_name, input_fasta_file,
-                                                    min_contig_length=context.MIN_CONTIG_LENGTH)
-    genome.translation_table = context.TRANSLATION_TABLE
-    context.log(f'({genome.id}) Loaded {len(genome.contigs)} contigs with total length {len(genome)} from file.')
-    if context.RENAME_CONTIGS:
-        contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome.id)
-        context.log(f'({genome.id}) Renaming contigs (see {contig_name_mapping_file})...')
-        genome.rename_contigs(contig_name_mapping_file)
-    genome.validate_ids()
-    # (2) now annotate
-    for annotator in context.sorted_annotators():
-        annotator(genome)
-    # (3) save results
-    context.log(f'({genome.id}) Now writing to .gbk, .gff, and fasta...')
+    # (4) save results
+    context.log(f'({genome_name}) Now writing to .gbk, .gff, and fasta...')
     faa_file = context.spawn_file("faa", genome.id, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome.id, context.BASE_DIR)
     bioparsers.write_genome_to_fasta_files(genome, faa_file, targets=(FeatureType.CDS,))

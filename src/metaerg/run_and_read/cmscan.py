@@ -5,16 +5,16 @@ from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
 from metaerg import context
-from metaerg import bioparsers
+from metaerg.datatypes import fasta
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
     rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
-                                                              mask_targets=bioparsers.ALL_MASK_TARGETS,
-                                                              split=context.CPUS_PER_GENOME)
+        split_fasta_files = fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                                         mask_targets=fasta.ALL_MASK_TARGETS,
+                                                         split=context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                               for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
@@ -28,8 +28,8 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        bioparsers.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
-                                          mask_targets=bioparsers.ALL_MASK_TARGETS)
+        fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+                                     mask_targets=fasta.ALL_MASK_TARGETS)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
@@ -84,7 +84,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         contig = contig_dict[hit.query_id]
         seq = contig['seq'][hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
-            seq = bioparsers.reverse_complement(seq)
+            seq = fasta.reverse_complement(seq)
         feature = {'start': hit.query_start - 1,
                    'end': hit.query_end,
                    'strand': hit.query_strand,

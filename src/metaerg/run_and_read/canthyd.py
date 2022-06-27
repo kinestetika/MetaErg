@@ -1,17 +1,17 @@
+import pandas as pd
 from pathlib import Path
 
-from metaerg.data_model import SeqFeature, DBentry, Genome
+from metaerg.datatypes import blast
 from metaerg import context
-from metaerg import bioparsers
 
 
-def _run_programs(genome:Genome, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome.id)
+def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome_name)
     canthyd_db = Path(context.DATABASE_DIR, 'canthyd', 'CANT-HYD.hmm')
     context.run_external(f'hmmscan --cut_nc --tblout {result_files[0]} {canthyd_db} {cds_aa_file}')
 
 
-def _read_results(genome:Genome, result_files) -> int:
+def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     canthyd_trusted_cutoffs = {}
     canthyd_descr = {'AlkB': 'alkane hydrolase',
                      'AlmA_GroupI': 'flavin-binding alkane monooxygenase',
@@ -58,24 +58,23 @@ def _read_results(genome:Genome, result_files) -> int:
                 canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
     context.log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
 
-    def get_db_entry(db_id) -> DBentry:
-        return DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
-                       pos=canthyd_trusted_cutoffs[db_id])
+    def get_db_entry(db_id) -> blast.DBentry:
+        return blast.DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
+                             pos=canthyd_trusted_cutoffs[db_id])
 
-    with bioparsers.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
+    with blast.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         canthyd_hit_count = 0
         for blast_result in handle:
-            feature: SeqFeature = genome.get_feature(blast_result.query)
             for h in blast_result.hits:
                 if descr := h.hit.descr:
                     canthyd_hit_count += 1
                     confidence = 'high' if h.score > h.hit.pos else 'low'  # cutoff is stored in 'pos'
-                    feature.descr = f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
-                    feature.subsystem.add('[hydrocarbon degradation]')
-                    genome.subsystems.subsystems['[hydrocarbon degradation]'].add_hit(feature.id)
+                    feature_data.at[blast_result.query]['descr'] = \
+                        f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
+                    feature_data.at[blast_result.query]['subsystems'] += ' [hydrocarbon degradation]'
                 else:
                     context.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
-        return canthyd_hit_count
+        return feature_data, canthyd_hit_count
 
 
 @context.register_annotator

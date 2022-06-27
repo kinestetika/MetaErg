@@ -1,15 +1,15 @@
 from pathlib import Path
-from metaerg.data_model import FeatureType, Genome
+import pandas as pd
 from metaerg import context
 
 
 @context.register_html_writer
-def write_html(genome: Genome, dir):
+def write_html(genome_name, feature_data: pd.DataFrame, dir):
     dir.mkdir(exist_ok=True, parents=True)
-    file = Path(dir, genome.id, "index_of_features.html")
+    file = Path(dir, genome_name, "index_of_features.html")
     file.parent.mkdir(exist_ok=True, parents=True)
     with open(Path(file), 'w') as handle:
-        handle.write(make_html(genome))
+        handle.write(make_html(genome_name, feature_data))
 
 
 def get_empty_format_dict():
@@ -27,20 +27,19 @@ def get_empty_format_dict():
             'taxon': '',
             'ci': '', 'ca': '', 'cr': '', 'ct': ''}
 
-def format_feature(f, format_hash, genome, colors):
+def format_feature(f, dominant_taxon, format_hash, colors):
     format_hash['f_id'] = f.id
     format_hash['taxon'] = f.taxon_at_genus()
     format_hash['type'] = f.type.name
-    if f.type in (FeatureType.CDS, FeatureType.rRNA, FeatureType.ncRNA, FeatureType.retrotransposon):
+    if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
         format_hash['description'] = '<a target="gene details" href="features/{}.html">{}</a>'.format(f.id, f.descr)
     else:
         format_hash['description'] = f.descr
-    if f.type in (FeatureType.CDS, FeatureType.tRNA, FeatureType.rRNA, FeatureType.ncRNA,
-                  FeatureType.tmRNA, FeatureType.retrotransposon):
+    if f.type in ('CDS', 'tRNA', 'rRNA', 'ncRNA', 'tmRNA', 'retrotransposon'):
         format_hash['strand'] = "+" if f.strand > 0 else "-"
     else:
         format_hash['strand'] = ''
-    format_hash['length'] = len(f) // 3 if f.type == FeatureType.CDS else len(f)
+    format_hash['length'] = len(f) // 3 if f.type == 'CDS' else len(f)
     match f.tmh_count(), f.signal_peptide, f.type:
         case [_, 'LIPO', _]:
             format_hash['destination'] = 'lipoprotein'
@@ -50,7 +49,7 @@ def format_feature(f, format_hash, genome, colors):
             format_hash['destination'] = 'membrane'
         case [_, sp, _] if len(sp):
             format_hash['destination'] = 'envelope'
-        case [_, _, FeatureType.CDS]:
+        case [_, _, 'CDS']:
             format_hash['destination'] = 'cytoplasm'
         case [*_]:
             format_hash['destination'] = ''
@@ -63,7 +62,7 @@ def format_feature(f, format_hash, genome, colors):
         format_hash['ca'] = colors[min(int(f.blast.percent_aligned() / 20), len(colors) - 1)]
         format_hash['recall'] = f'{f.blast.percent_recall():.1f}'
         format_hash['cr'] = colors[min(int(f.blast.percent_recall() / 20), len(colors) - 1)]
-    dominant_taxon = genome.properties['dominant taxon'].split()
+    dominant_taxon = dominant_taxon.split()
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(dominant_taxon)) / (len(taxon) + 1))]
 
@@ -77,10 +76,10 @@ def format_hash_to_html(format_hash):
     </tr>'''.format(**format_hash)
 
 
-def make_html(genome: Genome) -> str:
+def make_html(genome_name, feature_data: pd.DataFrame) -> str:
     """Injects the content into the html base, returns the html."""
     html = _make_html_template()
-    html = html.replace('GENOME_NAME', genome.id)
+    html = html.replace('GENOME_NAME', genome_name)
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
 
     # table header
@@ -95,29 +94,27 @@ def make_html(genome: Genome) -> str:
     table_body = ''
     previous_repeats = []
     prev_f = None
-    for c in genome.contigs.values():
-        for f in c.features:
-            if f.type in (FeatureType.crispr_repeat, FeatureType.repeat) and \
-                    (f.type is prev_f.type or not len(previous_repeats)):
+    for f in feature_data.itertuples():
+        if f.type in ('crispr_repeat', 'repeat') and (f.type is prev_f.type or not len(previous_repeats)):
+            previous_repeats.append(f)
+        elif len(previous_repeats):
+            format_hash = get_empty_format_dict()
+            format_hash['type'] = f'[{len(previous_repeats)} {prev_f.type}s]' if len(previous_repeats) > 1 \
+                                  else prev_f.type
+            format_hash['length'] = previous_repeats[-1].end - previous_repeats[0].start
+            previous_repeats.clear()
+            table_body += format_hash_to_html(format_hash)
+            if f.type in ('crispr_repeat', 'repeat'):
                 previous_repeats.append(f)
-            elif len(previous_repeats):
-                format_hash = get_empty_format_dict()
-                format_hash['type'] = f'[{len(previous_repeats)} {prev_f.type.name}s]' if len(previous_repeats) > 1 \
-                                      else prev_f.type.name
-                format_hash['length'] = previous_repeats[-1].end - previous_repeats[0].start
-                previous_repeats.clear()
-                table_body += format_hash_to_html(format_hash)
-                if f.type in (FeatureType.crispr_repeat, FeatureType.repeat):
-                    previous_repeats.append(f)
-                else:
-                    format_hash = get_empty_format_dict()
-                    format_feature(f, format_hash, genome, colors)
-                    table_body += format_hash_to_html(format_hash)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome, colors)
+                format_feature(f, format_hash, dominant_taxon, colors)
                 table_body += format_hash_to_html(format_hash)
-            prev_f = f
+        else:
+            format_hash = get_empty_format_dict()
+            format_feature(f, format_hash, dominant_taxon, colors)
+            table_body += format_hash_to_html(format_hash)
+        prev_f = f
     html = html.replace('TABLE_BODY', table_body)
     return html
 
