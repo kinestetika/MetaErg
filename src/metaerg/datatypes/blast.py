@@ -29,8 +29,9 @@ class DBentry:
 
 
 class BlastHit:
-    def __init__(self, query: str, hit: DBentry, percent_id: float, aligned_length: int, mismatches: int, gaps: int,
-                 query_start: int, query_end: int, hit_start: int, hit_end: int, evalue: float, score: float):
+    def __init__(self, query: str, hit: DBentry, percent_id: float, aligned_length: int,
+                 query_start: int, query_end: int, hit_start: int, hit_end: int, evalue: float, score: float,
+                 mismatches: int = 0, gaps: int = 0):
         self.query = query
         self.hit = hit
         self.percent_id = percent_id
@@ -51,7 +52,7 @@ class BlastHit:
                  self.query_start, self.query_end, self.hit_start, self.hit_end, self.evalue, self.score)))
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self if v))
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))
 
     def __len__(self):
         return self.aligned_length
@@ -70,7 +71,7 @@ class BlastResult:
         return len(self.hits)
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, ',\n'.join(f'{h!r}' for h in self))
+        return '{}(({}))'.format(type(self).__name__, ',\n'.join(f'{h!r}' for h in self))
 
     def query(self):
         return self.hits[0].query
@@ -129,16 +130,16 @@ class TabularBlastParser:
                       hit_end, evalue, score] if 'BLAST' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
                     # print(hit_db_entry)
-                    b = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length),
-                                    int(mismatches), int(gaps), int(query_start), int(query_end),
-                                    int(hit_start), int(hit_end), float(evalue), float(score))
+                    b = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length), int(query_start),
+                                 int(query_end), int(hit_start), int(hit_end), float(evalue), float(score),
+                                 int(mismatches), int(gaps))
                     return(b)
                 case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
                 case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, 0, 0, float(evalue), float(score))
+                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
                 case [*_]:
                     continue
         return None

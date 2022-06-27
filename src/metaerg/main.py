@@ -77,15 +77,12 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
     for c in contigs:
         cum_size += len(c['seq'])
         if cum_size >+ properties['size'] / 2:
-            properties["N50"] = len(c['seq'])
+            properties['N50'] = len(c['seq'])
             break
 
     feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
-    feature_data = feature_data.assign(has_taxon=len(feature_data['taxon']))
     feature_data_cds = feature_data[feature_data['type'] == 'CDS']
     feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
-    feature_data_with_taxon = feature_data[feature_data['has_taxon'] > 0]
-
 
     properties['# proteins'] = len(feature_data_cds.index)
     properties['% coding'] = feature_data_cds['length'].sum() / properties['size']
@@ -98,20 +95,15 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
     properties['# other repeats'] = len(feature_data[feature_data['type'] == 'repeat'].index)
     properties['% repeats'] = feature_data_repeats['length'].sum() / properties['size']
     properties['# total features'] = len(feature_data.index)
-    properties['# genes classified to taxon'] = len(feature_data_with_taxon.index)
-
-    for k, v in dict(feature_data_with_taxon.taxon.value_counts(normalize=True)).items():
+    taxon_counts = dict(feature_data_cds.taxon.value_counts(normalize=True))
+    properties['% CDS classified to taxon'] = 1 - taxon_counts['']
+    del taxon_counts['']
+    for k, v in taxon_counts.items():
         properties['dominant taxon'] = k
-        properties['dominant taxon frequency'] = v
+        properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
         break
-    #feature_data = feature_data[feature_data['type'] == 'CDS'].assign(d=feature_data['end'] - feature_data['start'])
-    #properties['subsystems'] = subsystems.aggregate(feature_data)
+    properties['subsystems'] = subsystems.aggregate(feature_data)
     print(properties)
-    #
-    # taxon_counts = Counter()
-    # taxon_counts.update(f.taxon for contig in self.contigs.values() for f in contig.features)
-    # dominant_taxon, highest_count = taxon_counts.most_common(1)[0]
-    # self.properties['dominant taxon'] = f'{dominant_taxon} ({highest_count/sum(taxon_counts.values()) * 100:.1f}%)'
     return properties
 
 
@@ -141,13 +133,13 @@ def annotate_genome(genome_name, input_fasta_file: Path):
         gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)
     # (5) visualize
     genome_properties = compute_genome_properties(contig_dict, feature_data)
-    exit()
-    # context.log(f'({genome_name}) Now writing final result as .html for visualization...')
-    # for html_writer in registry.HTML_WRITER_REGISTRY:
-    #     html_writer(genome_name, feature_data, genome_properties, Path(context.BASE_DIR, 'html'))
-    # context.log(f'({genome_name}) Completed html visualization.')
-    # context.log(f'({genome_name}) Now writing annotations to .feather for curation in R or Jupyter...')
+    context.log(f'({genome_name}) Now writing final result as .html for visualization...')
+    for html_writer in registry.HTML_WRITER_REGISTRY:
+         html_writer(genome_name, feature_data, genome_properties, Path(context.BASE_DIR, 'html'))
+    context.log(f'({genome_name}) Completed html visualization.')
+    context.log(f'({genome_name}) Now writing annotations to .feather for curation in R or Jupyter...')
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
+
 
     feature_data = feature_data.reset_index(drop=True)
 

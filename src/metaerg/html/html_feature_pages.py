@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from metaerg.datatypes import blast
+from metaerg.datatypes.blast import BlastResult, BlastHit, DBentry
 from metaerg import context
 
 
@@ -8,16 +8,18 @@ from metaerg import context
 def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     """Writes a html file for each feature to dir <file>"""
     dir = Path(dir, genome_name, 'features')
+    dir.mkdir(exist_ok=True, parents=True)
     for f in feature_data.itertuples():
         if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
             f_filename = Path(dir, f'{f.id}.html')
             with open(f_filename, 'w') as handle:
-                handle.write(make_feature_html(f, genome_properties['dominant_taxon']))
+                handle.write(make_feature_html(f, genome_properties['dominant taxon']))
 
 
-def make_blast_table_html(blast_result: blast.BlastResult, f_length, dominant_taxon) -> str:
+def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     if blast_result:
+        blast_result = eval(blast_result)
         html = '<table>'
         html += '<thead><tr> '
         for column in ('percent id', 'query align', 'hit align', 'description', 'taxon'):
@@ -56,15 +58,21 @@ def make_blast_table_html(blast_result: blast.BlastResult, f_length, dominant_ta
         return ''
 
 
+def taxon_at_genus(taxon: str) -> str:
+    for t in reversed(taxon.split('; ')):
+        if not ' ' in t:
+            return t
+    return f'error - corrupted taxonmy string -  {taxon}'
+
 def make_feature_html(f, dominant_taxon) -> str:
     html = _make_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
-        html = html.replace('HEADER', f'>{f.id} {f.descr} [{f.taxon_at_genus()}]')
+        html = html.replace('HEADER', f'>{f.id} {f.descr} [{taxon_at_genus(f.taxon)}]')
     else:
         html = html.replace('HEADER', f'>{f.id} {f.descr}')
     html = html.replace('SEQUENCE', f.seq)
-    if f.type is 'CDS':
+    if f.type == 'CDS':
         length = len(f) / 3
     else:
         length = len(f)

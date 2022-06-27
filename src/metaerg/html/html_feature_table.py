@@ -109,11 +109,11 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome_properties['dominant_taxon'], colors)
+                format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            format_feature(f, format_hash, genome_properties['dominant_taxon'], colors)
+            format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
             table_body += format_hash_to_html(format_hash)
         prev_f = f
     html = html.replace('TABLE_BODY', table_body)
