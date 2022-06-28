@@ -1,6 +1,6 @@
 from pathlib import Path
 import pandas as pd
-from metaerg.datatypes.blast import BlastResult, BlastHit, DBentry
+from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult, taxon_at_genus
 from metaerg import context
 
 
@@ -29,8 +29,6 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
                 html += f'<th>{column}</th>\n'
         html += '</tr><thead>\n<tbody>\n'
         for h in blast_result.hits:
-            print(h)
-            print(h.percent_id)
             html += '''<tr>
             <td {}>{}</td>
             <td {}>{}</td>
@@ -51,7 +49,7 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
 
                 colors[int(len(colors) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
                            / (len (h.hit.taxon.split()) + 1))],
-                h.hit.taxon_at_genus()
+                taxon_at_genus(h.hit.taxon)
             )
         html += '</tbody>\n'
         html += '</table>\n'
@@ -59,12 +57,6 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
     else:
         return ''
 
-
-def taxon_at_genus(taxon: str) -> str:
-    for t in reversed(taxon.split('; ')):
-        if not ' ' in t:
-            return t
-    return f'error - corrupted taxonmy string -  {taxon}'
 
 def make_feature_html(f, dominant_taxon) -> str:
     html = _make_html_template()

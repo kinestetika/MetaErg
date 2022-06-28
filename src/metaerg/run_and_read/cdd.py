@@ -2,12 +2,11 @@ from pathlib import Path
 import shutil
 import os
 
-import numpy as np
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
 from metaerg import context
 from metaerg.datatypes import fasta
-from metaerg.datatypes import blast
+from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser, BlastHit
 from metaerg import subsystems
 
 
@@ -41,17 +40,16 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     with open(cdd_index) as db_handle:
         for line in db_handle:
             words = line.strip().split("\t")
-            cdd[int(words[0])] = blast.DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
-                                               length=int(words[4]))
+            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
+                                         length=int(words[4]))
     context.log(f'({genome_name}) Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
-    def get_cdd_db_entry(id: str) -> blast.DBentry:
+    def get_cdd_db_entry(id: str) -> DBentry:
         return cdd[int(id[4:])]
 
-    with blast.TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
+    with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
-            # print(cdd_result)
             feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
             if subsystem := subsystems.match((h.hit.descr for h in cdd_result.hits
@@ -61,7 +59,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                         feature_data.at[cdd_result.query(), 'subsystems'] += f' {subsystem}'
                 else:
                     feature_data.at[cdd_result.query(), 'subsystems'] = f'{subsystem}'
-            top_entry: blast.DBentry = cdd_result.hits[0].hit
+            top_entry: DBentry = cdd_result.hits[0].hit
             descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
             if len(descr) > 35:
                 descr = descr[:35] + '...'

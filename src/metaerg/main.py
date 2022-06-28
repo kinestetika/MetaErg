@@ -1,6 +1,7 @@
 import argparse
 import pandas as pd
 from pathlib import Path
+from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
 from metaerg import registry
@@ -8,7 +9,7 @@ from metaerg.datatypes import fasta, gbk
 from metaerg.run_and_read import *
 from metaerg.html import *
 from metaerg import subsystems
-
+from metaerg.html import html_all_genomes
 
 VERSION = "2.2.0"
 
@@ -99,8 +100,8 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
     properties['% CDS classified to taxon'] = 1 - taxon_counts['']
     del taxon_counts['']
     for k, v in taxon_counts.items():
-        properties['dominant taxon'] = k
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
+        properties['dominant taxon'] = k
         break
     properties['subsystems'] = subsystems.aggregate(feature_data)
     return properties
@@ -114,17 +115,18 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     contig_dict = load_contigs(genome_name, input_fasta_file)
     validate_ids(genome_name, contig_dict)
     # (3) now annotate
-    #for annotator in context.sorted_annotators():
-    #    feature_data = annotator(genome_name, contig_dict, feature_data)
-    feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
-    feature_data = pd.read_feather(feather_file)
-    feature_data = feature_data.set_index('id', drop=False)
+    for annotator in context.sorted_annotators():
+        feature_data = annotator(genome_name, contig_dict, feature_data)
+    # feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
+    # feature_data = pd.read_feather(feather_file)
+    # feature_data = feature_data.set_index('id', drop=False)
 
     # (4) save results
-    context.log(f'({genome_name}) Now writing annotations to .gbk and .fasta...')
+    context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk and .feather (for curation in R or Jupyter)...')
     faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
+    feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
     fasta.write_features_to_fasta(feature_data, faa_file, targets=('CDS',))
     fasta.write_features_to_fasta(feature_data, rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
     with open(gbk_file, 'w') as gbk_writer:
@@ -137,11 +139,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     for html_writer in registry.HTML_WRITER_REGISTRY:
          html_writer(genome_name, feature_data, genome_properties, Path(context.BASE_DIR, 'html'))
     context.log(f'({genome_name}) Completed html visualization.')
-    context.log(f'({genome_name}) Now writing annotations to .feather for curation in R or Jupyter...')
-    feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
-
-    feature_data = feature_data.reset_index(drop=True)
-    feature_data.to_feather(feather_file)
 
 
 def main():
@@ -156,13 +153,13 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-            annotate_genome(genome_name, contig_file)
-        #with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
-        #    for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-        #        executor.submit(annotate_genome, genome_name, contig_file)
-        # context.log('Now writing all-genomes overview html...')
-        # write_html(context.HTML_DIR)
+        # for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+        #    annotate_genome(genome_name, contig_file)
+        with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
+           for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+               executor.submit(annotate_genome, genome_name, contig_file)
+        context.log('Now writing all-genomes overview html...')
+        html_all_genomes.write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

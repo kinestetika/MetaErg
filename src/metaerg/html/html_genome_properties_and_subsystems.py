@@ -18,8 +18,8 @@ GENOME_PROPERTY_FORMATS = {'size': ',',
                            '# total features': ',',
                            '% repeats': '.1%',
                            '% CDS classified to taxon': '.1%',
+                           '% of CDS classified to dominant taxon': '.1%',
                            'dominant taxon': '<',
-                           '% of CDS classified to dominant taxon': '.1%'
                            }
 
 @context.register_html_writer
@@ -39,29 +39,23 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
                                                        for k in GENOME_PROPERTY_FORMATS.keys())))
     subsystem_html = ''
     subsystem_data = genome_properties['subsystems']
-    print(subsystem_data)
-    # for subsystem in genome.subsystems.subsystems.values():
-    #     subsystem_html += f'<button class="accordion">{subsystem.id}</button>\n<div class="panel">\n'
-    #     if '[secondary-metabolites]' == subsystem.id:
-    #         if len(subsystem.hits):
-    #             subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
-    #     elif not len(subsystem.targets):
-    #         subsystem_html += '<p>\n'
-    #         for feature_id in subsystem.hits.keys():
-    #             subsystem_html += '<a target="gene details" href="features/{}.html">{}</a>\n'.format(feature_id,
-    #                                                                                                  feature_id)
-    #         subsystem_html += '</p>\n'
-    #     else:
-    #         subsystem_html += '<table>\n'
-    #         for gene in subsystem.targets:
-    #             subsystem_html += f'<tr><td>{gene}</td><td>\n'
-    #             for feature_id in subsystem.get_hits(gene):
-    #                 subsystem_html += '<a target="gene details" href="features/{}.html">{}</a>'.format(feature_id,
-    #                                                                                                    feature_id)
-    #             subsystem_html += f'</td></tr>\n'
-    #         subsystem_html += '</table>\n'
-    #     subsystem_html += '</div>\n'
-    # html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)
+    #print(subsystem_data)
+    for subsystem in subsystem_data['subsystem'].unique():
+        sub_data = subsystem_data[subsystem_data['subsystem'] == subsystem]
+        subsystem_html += f'<button class="accordion">{subsystem}</button>\n<div class="panel">\n'
+        if 'secondary-metabolites' == subsystem:
+            if len(sub_data.index):
+                subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
+        else:
+            subsystem_html += '<table>\n'
+            for function in subsystem_data[subsystem_data['subsystem'] == subsystem].itertuples():
+                subsystem_html += f'<tr><td>{function.function}</td><td>\n'
+                subsystem_html += ', '.join('<a target="gene details" href="features/{}.html">{}</a>'
+                                            .format(f_id, f_id) for f_id in function.genes.split())
+                subsystem_html += f'</td></tr>\n'
+            subsystem_html += '</table>\n'
+        subsystem_html += '</div>\n'
+    html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)
     return html
 
 

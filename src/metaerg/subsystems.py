@@ -53,5 +53,6 @@ def aggregate(feature_data: pd.DataFrame):
     new_dataframe_rows = [{'function': k, 'subsystem': k, 'genes': v} for k, v in unstructured_subsystems.items()]
     aggregated_subsystem_data = pd.concat([aggregated_subsystem_data, pd.DataFrame(new_dataframe_rows)])
     aggregated_subsystem_data.set_index('function', drop=False, inplace=True)
+    aggregated_subsystem_data = aggregated_subsystem_data.fillna('')
     return aggregated_subsystem_data
 

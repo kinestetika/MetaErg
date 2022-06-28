@@ -16,16 +16,17 @@ class DBentry:
                 (self.domain, self.descr, self.taxon, self.ncbi, self.gene, self.length, self.pos)))
 
     def __repr__(self):
-        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self if v))
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))
 
     def __len__(self):
         return self.length
 
-    def taxon_at_genus(self) -> str:
-        for t in reversed(self.taxon.split("; ")):
-            if " " not in t:
-                return t
-        return ''
+
+def taxon_at_genus(taxon) -> str:
+    for t in reversed(taxon.split("; ")):
+        if " " not in t:
+            return t
+    return ''
 
 
 class BlastHit:
@@ -71,7 +72,7 @@ class BlastResult:
         return len(self.hits)
 
     def __repr__(self):
-        return '{}(({}))'.format(type(self).__name__, ',\n'.join(f'{h!r}' for h in self))
+        return '{}(({},))'.format(type(self).__name__, ',\n'.join(f'{h!r}' for h in self))
 
     def query(self):
         return self.hits[0].query

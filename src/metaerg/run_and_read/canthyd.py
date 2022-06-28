@@ -1,8 +1,7 @@
 import pandas as pd
-import numpy as np
 from pathlib import Path
 
-from metaerg.datatypes import blast
+from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 from metaerg import context
 
 
@@ -59,11 +58,11 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
     context.log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
 
-    def get_db_entry(db_id) -> blast.DBentry:
-        return blast.DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
-                             pos=canthyd_trusted_cutoffs[db_id])
+    def get_db_entry(db_id) -> DBentry:
+        return DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
+                       pos=canthyd_trusted_cutoffs[db_id])
 
-    with blast.TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
+    with TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         canthyd_hit_count = 0
         for blast_result in handle:
             for h in blast_result.hits:

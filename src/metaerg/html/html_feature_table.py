@@ -1,6 +1,7 @@
 from pathlib import Path
 import pandas as pd
 from metaerg import context
+from metaerg.datatypes.blast import taxon_at_genus, DBentry, BlastHit, BlastResult
 
 
 @context.register_html_writer
@@ -28,10 +29,10 @@ def get_empty_format_dict():
             'ci': '', 'ca': '', 'cr': '', 'ct': ''}
 
 
-def format_feature(f, dominant_taxon, format_hash, colors):
+def format_feature(f, format_hash, dominant_taxon, colors):
     format_hash['f_id'] = f.id
-    format_hash['taxon'] = f.taxon_at_genus()
-    format_hash['type'] = f.type.name
+    format_hash['taxon'] = taxon_at_genus(f.taxon)
+    format_hash['type'] = f.type
     if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
         format_hash['description'] = '<a target="gene details" href="features/{}.html">{}</a>'.format(f.id, f.descr)
     else:
@@ -40,8 +41,8 @@ def format_feature(f, dominant_taxon, format_hash, colors):
         format_hash['strand'] = "+" if f.strand > 0 else "-"
     else:
         format_hash['strand'] = ''
-    format_hash['length'] = len(f) // 3 if f.type == 'CDS' else len(f)
-    match f.tmh_count(), f.signal_peptide, f.type:
+    format_hash['length'] = len(f.seq)
+    match f.tmh, f.signal_peptide, f.type:
         case [_, 'LIPO', _]:
             format_hash['destination'] = 'lipoprotein'
         case [1, _, _]:
@@ -54,15 +55,19 @@ def format_feature(f, dominant_taxon, format_hash, colors):
             format_hash['destination'] = 'cytoplasm'
         case [*_]:
             format_hash['destination'] = ''
-    format_hash['subsystem'] = ', '.join(f.subsystem)
+    format_hash['subsystem'] = f.subsystems
     format_hash['has_cdd'] = 'Y' if f.cdd is not None else ''
-    if f.blast is not None:
-        format_hash['ident'] = f'{f.blast.hits[0].percent_id:.1f}'
-        format_hash['ci'] = colors[min(int(f.blast.hits[0].percent_id / 20), len(colors) - 1)]
-        format_hash['align'] = f'{f.blast.percent_aligned():.1f}'
-        format_hash['ca'] = colors[min(int(f.blast.percent_aligned() / 20), len(colors) - 1)]
-        format_hash['recall'] = f'{f.blast.percent_recall():.1f}'
-        format_hash['cr'] = colors[min(int(f.blast.percent_recall() / 20), len(colors) - 1)]
+    try:
+        if len(f.blast):
+            blast_result = eval(f.blast)
+            format_hash['ident'] = f'{blast_result.hits[0].percent_id:.1f}'
+            format_hash['ci'] = colors[min(int(blast_result.hits[0].percent_id / 20), len(colors) - 1)]
+            format_hash['align'] = f'{blast_result.percent_aligned():.1f}'
+            format_hash['ca'] = colors[min(int(blast_result.percent_aligned() / 20), len(colors) - 1)]
+            format_hash['recall'] = f'{blast_result.percent_recall():.1f}'
+            format_hash['cr'] = colors[min(int(blast_result.percent_recall() / 20), len(colors) - 1)]
+    except SyntaxError:
+        print(f.blast)
     dominant_taxon = dominant_taxon.split()
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(dominant_taxon)) / (len(taxon) + 1))]

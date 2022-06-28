@@ -1,7 +1,6 @@
 import re
 import gzip
 import shutil
-import numpy as np
 import pandas as pd
 from os import chdir
 from ftplib import FTP
@@ -15,7 +14,7 @@ import ncbi.datasets
 from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg import subsystems
-from metaerg.datatypes import blast
+from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
@@ -46,12 +45,16 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
+    entries_without_descr = 0
     with open(db_descr) as descr_handle:
         for line in descr_handle:
             words = line.split('\t')
             descriptions[words[0]][int(words[1])] = words[2].strip()
+            if not descriptions[words[0]][int(words[1])]:
+                entries_without_descr += 1
     context.log(f'({genome_name}) Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])})'
-                f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. ')
+                f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. Empty'
+                f' descriptions: {entries_without_descr}.')
     # (2) load database taxonomy
     db_taxonomy = Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)
     taxonomy = {'p': {}, 'e': {}, 'v': {}}
@@ -63,7 +66,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
     # (3) parse diamond blast results
 
-    def process_blast_result(blast_result: blast.BlastResult):
+    def process_blast_result(blast_result: BlastResult):
         feature_data.at[blast_result.query(), 'blast'] = str(blast_result)
         feature_data.at[blast_result.query(), 'descr'] = blast_result.hits[0].hit.descr
         feature_data.at[blast_result.query(), 'taxon'] =  blast_result.hits[0].hit.taxon
@@ -76,17 +79,17 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             else:
                 feature_data.at[blast_result.query(), 'subsystems'] = f'{subsystem}'
 
-    def dbentry_from_string(db_id: str) -> blast.DBentry:
+    def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
-        return blast.DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
-                             ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
+        return DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
+                       ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
-    with blast.TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
+    with TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with blast.TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
+    with TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
