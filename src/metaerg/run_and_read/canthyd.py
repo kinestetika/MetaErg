@@ -73,9 +73,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     feature_data.at[blast_result.query, 'descr'] = \
                         f'{descr}, {h.hit.id} (CantHyd DB, {confidence} confidence)'
                     if len(feature_data.at[blast_result.query(), 'subsystems']):
-                        feature_data.at[blast_result.query(), 'subsystems'] += f' [hydrocarbon degradation]'
+                        if '[hydrocarbon degradation]' not in feature_data.at[blast_result.query(), 'subsystems']:
+                            feature_data.at[blast_result.query(), 'subsystems'] += ' [hydrocarbon degradation]'
                     else:
-                        feature_data.at[blast_result.query(), 'subsystems'] = f'[hydrocarbon degradation]'
+                        feature_data.at[blast_result.query(), 'subsystems'] = '[hydrocarbon degradation]'
                 else:
                     context.log(f'Warning, missing description for cant-hyd hmm {h.hit}...')
         return feature_data, canthyd_hit_count

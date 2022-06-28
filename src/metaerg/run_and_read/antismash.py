@@ -34,9 +34,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                             ' '.join((f'(region {antismash_region_number})', antismash_region_name,
                                       antismash_gene_function, antismash_gene_category))
                         if len(feature_data.at[f_as_dict['locus_tag'], 'subsystems']):
-                            feature_data.at[f_as_dict['locus_tag'], 'subsystems'] += f' [secondary-metabolites]'
+                            if '[secondary-metabolites]' not in feature_data.at[f_as_dict['locus_tag'], 'subsystems']:
+                                feature_data.at[f_as_dict['locus_tag'], 'subsystems'] += ' [secondary-metabolites]'
                         else:
-                            feature_data.at[f_as_dict['locus_tag'], 'subsystems'] = f'[secondary-metabolites]'
+                            feature_data.at[f_as_dict['locus_tag'], 'subsystems'] = '[secondary-metabolites]'
     if not antismash_hit_count:
         result_files[0].mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
     return feature_data, antismash_hit_count
@@ -60,5 +61,6 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
     antismash_html_parent = Path(dir, genome_name, 'antismash')
     if antismash_html_parent.exists():
         shutil.rmtree(antismash_html_parent)
-    shutil.copytree(antismash_result_dir, antismash_html_parent)
+    if antismash_result_dir.exists():
+        shutil.copytree(antismash_result_dir, antismash_html_parent)
 

@@ -29,6 +29,8 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
                 html += f'<th>{column}</th>\n'
         html += '</tr><thead>\n<tbody>\n'
         for h in blast_result.hits:
+            print(h)
+            print(h.percent_id)
             html += '''<tr>
             <td {}>{}</td>
             <td {}>{}</td>
@@ -79,9 +81,9 @@ def make_feature_html(f, dominant_taxon) -> str:
     html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon))
     html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon))
     attribute_html = '<table>\n'
-    attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f.__dict__[k]}</td></tr>\n' for k in
+    attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f._asdict()[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
-                               'antismash ', 'signal_peptide', 'tmh', 'tmh_topology'))
+                               'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html

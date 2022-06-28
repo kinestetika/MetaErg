@@ -71,7 +71,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
                                           if h.aligned_length / h.hit.length >= 0.8)):
             if len(feature_data.at[blast_result.query(), 'subsystems']):
-                feature_data.at[blast_result.query(), 'subsystems'] += f' {subsystem}'
+                if subsystem not in feature_data.at[blast_result.query(), 'subsystems']:
+                    feature_data.at[blast_result.query(), 'subsystems'] += f' {subsystem}'
             else:
                 feature_data.at[blast_result.query(), 'subsystems'] = f'{subsystem}'
 

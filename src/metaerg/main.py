@@ -103,7 +103,6 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
         break
     properties['subsystems'] = subsystems.aggregate(feature_data)
-    print(properties)
     return properties
 
 
@@ -120,7 +119,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
     feature_data = pd.read_feather(feather_file)
     feature_data = feature_data.set_index('id', drop=False)
-    print (feature_data)
 
     # (4) save results
     context.log(f'({genome_name}) Now writing annotations to .gbk and .fasta...')
@@ -131,6 +129,8 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     fasta.write_features_to_fasta(feature_data, rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
     with open(gbk_file, 'w') as gbk_writer:
         gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)
+    feature_data = feature_data.reset_index(drop=True)
+    feature_data.to_feather(feather_file)
     # (5) visualize
     genome_properties = compute_genome_properties(contig_dict, feature_data)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
@@ -140,11 +140,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'({genome_name}) Now writing annotations to .feather for curation in R or Jupyter...')
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
 
-
     feature_data = feature_data.reset_index(drop=True)
-
-        #.astype({'start': 'int32', 'end': 'int32', 'strand': 'int32',
-        #                                                       'tmh': 'int32'})
     feature_data.to_feather(feather_file)
 
 
