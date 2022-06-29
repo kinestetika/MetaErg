@@ -1,9 +1,9 @@
 import ast
 import re
 from pathlib import Path
-from Bio import SeqIO
-from metaerg import context
 
+from metaerg import context
+from metaerg.datatypes import fasta
 
 def write_html(dir):
     dir.mkdir(exist_ok=True, parents=True)
@@ -52,16 +52,20 @@ def make_html() -> str:
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     genomes_html = ''
     for new_name, old_name, contig_file in genome_list:
-        contigs = sorted([SeqIO.parse(contig_file, "fasta")], key=len, reverse=True)
-        genome_size = sum(map(len, contigs)) / 1E6
+        with fasta.FastaParser(contig_file) as fasta_reader:
+            contigs = [c for c in fasta_reader]
+        contigs.sort(key=lambda c: len(c['seq']), reverse=True)
+        genome_size = sum(len(c['seq']) for c in contigs) / 1e6
         N50 = 0
         for c in contigs:
             N50 += len(c)
             if N50 >= genome_size / 2:
                 N50 = len(c)
                 break
-        completeness = ''
-        contamination = ''
+        completeness = 0
+        contamination = 0
+        completeness_as_str = ''
+        contamination_as_str = ''
         code = ''
         gtdbtk_classification = ''
         try:
@@ -71,6 +75,8 @@ def make_html() -> str:
             if checkm_result:
                 completeness = float(checkm_result["Completeness"])
                 contamination = float(checkm_result["Contamination"])
+                completeness_as_str = f'{completeness:.1f}'
+                contamination_as_str = f'{contamination:.1f}'
                 code = int(checkm_result["Translation table"])
         except KeyError:
             pass
@@ -82,16 +88,16 @@ def make_html() -> str:
             pass
         link_target = Path(new_name, 'index.html')
         new_name = f'<a href="{link_target}">{new_name}</a>'
-        genomes_html += '<tr>\n<td>{}</td><td>{}</td><td>{:.1f}</td><td>{}</td><td>{}</td><td {}>{:0.1f}</td>' \
-                        '<td {}>{:0.1f}</td><td>{}</td>\n</tr>'.format(old_name,
+        genomes_html += '<tr>\n<td>{}</td><td>{}</td><td>{:.1f}</td><td>{}</td><td>{}</td><td {}>{}</td>' \
+                        '<td {}>{}</td><td>{}</td>\n</tr>'.format(old_name,
                                                                        new_name,
                                                                        genome_size,
                                                                        N50,
                                                                        code,
                                                                        colors[int(max((completeness-76)/5,0))],
-                                                                       completeness,
+                                                                       completeness_as_str,
                                                                        colors[int(max((24-contamination)/5, 0))],
-                                                                       contamination,
+                                                                       contamination_as_str,
                                                                        gtdbtk_classification)
     html = html.replace('GENOMES', genomes_html)
     return html

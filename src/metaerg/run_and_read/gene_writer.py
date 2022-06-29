@@ -1,7 +1,6 @@
 import pandas as pd
-import numpy as np
 from metaerg import context
-from datatypes import fasta
+from metaerg.datatypes import fasta
 
 RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
 

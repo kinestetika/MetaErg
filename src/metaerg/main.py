@@ -11,7 +11,7 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.0"
+VERSION = "2.2.7"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
@@ -40,12 +40,23 @@ def parse_arguments():
 
 
 def load_contigs(genome_name, input_fasta_file):
+    if context.DELIMITER in genome_name:
+        raise Exception(f'Genome id {genome_name} contains "{context.DELIMITER}"; change delimiter with '
+                                f'--delimiter [new delimiter] or use --rename_genomes')
+    names_done = set()
+    contigs = list()
     with fasta.FastaParser(input_fasta_file) as fasta_reader:
-        contigs = [c for c in fasta_reader if len(c) > context.MIN_CONTIG_LENGTH]
+        for c in fasta_reader:
+            if len(c) >= context.MIN_CONTIG_LENGTH:
+                contigs.append(c)
+            if not context.RENAME_CONTIGS:
+                if c['id'] in names_done:
+                    raise Exception(f'Contig id {c["id"]} not unique. Use --rename_contigs to avoid this problem.')
+                names_done.add(c["id"])
     contigs.sort(key=lambda c:len(c['seq']), reverse=True)
     contigs = {c['id']: c for c in contigs}
     total_length = sum(len(c['seq']) for c in contigs.values())
-    context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length} from file.')
+    context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length:,} from file.')
     if context.RENAME_CONTIGS:
         contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
         context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
@@ -53,18 +64,16 @@ def load_contigs(genome_name, input_fasta_file):
         with open(contig_name_mapping_file, 'w') as mapping_writer:
             for c in contigs.values():
                 new_id = f'{genome_name}.c{i:0>4}'
-                mapping_writer.write(f'{c.id}\t{new_id}\n')
-                c.id = new_id
+                mapping_writer.write(f'{c["id"]}\t{new_id}\n')
+                c['id'] = new_id
                 i += 1
+        contigs = {c['id']: c for c in contigs.values()}
+    else:
+        for c_id in contigs.keys():
+            if context.DELIMITER in c_id:
+                raise Exception(f'Contig id {c_id} contains "{context.DELIMITER}"; change delimiter with '
+                                f'--delimiter [new delimiter] or use --rename_contigs')
     return contigs
-
-
-def validate_ids(genome_name, contig_hash):
-    if context.DELIMITER in genome_name:
-        raise Exception(f'Genome id {genome_name} contains "{context.DELIMITER}"; change using --delimiter')
-    for c_id in contig_hash.keys():
-        if context.DELIMITER in c_id:
-            raise Exception(f'Contig id {c_id} contains "{context.DELIMITER}"; change using --delimiter')
 
 
 def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.DataFrame) -> dict:
@@ -113,7 +122,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     feature_data = pd.DataFrame(columns=context.DATAFRAME_COLUMNS)
     # (2) load sequence data
     contig_dict = load_contigs(genome_name, input_fasta_file)
-    validate_ids(genome_name, contig_dict)
     # (3) now annotate
     for annotator in context.sorted_annotators():
         feature_data = annotator(genome_name, contig_dict, feature_data)
@@ -153,11 +161,13 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        # for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-        #    annotate_genome(genome_name, contig_file)
+        futures = []
         with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
-           for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-               executor.submit(annotate_genome, genome_name, contig_file)
+            for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+                futures.append(executor.submit(annotate_genome, genome_name, contig_file))
+        for future in futures:
+            if future.exception():
+                raise(future.exception())
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')

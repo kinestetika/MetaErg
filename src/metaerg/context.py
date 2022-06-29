@@ -100,6 +100,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         f'{PARALLEL_ANNOTATIONS} genomes annotated in parallel.')
     if RENAME_GENOMES:
         GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
+        RENAME_CONTIGS = True
     else:
         GENOME_NAMES = [f.stem for f in CONTIG_FILES]
     log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')

@@ -1,7 +1,7 @@
 import re
 import pandas as pd
 
-import subsystems_data
+from metaerg import subsystems_data
 
 DATAFRAME_COLUMNS = 'function subsystem genes'.split()
 SUBSYSTEM_DATA = pd.DataFrame(columns=DATAFRAME_COLUMNS, dtype=str)
