@@ -101,7 +101,7 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
     previous_repeats = []
     prev_f = None
     for f in feature_data.itertuples():
-        if f.type in ('crispr_repeat', 'repeat') and (f.type is prev_f.type or not len(previous_repeats)):
+        if f.type in ('crispr_repeat', 'repeat') and (not len(previous_repeats) or (f and f.type is prev_f.type)):
             previous_repeats.append(f)
         elif len(previous_repeats):
             format_hash = get_empty_format_dict()

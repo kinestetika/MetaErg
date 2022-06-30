@@ -56,7 +56,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 current_name = line.split()[1]
             elif line.startswith('TC'):
                 canthyd_trusted_cutoffs[current_name] = int(line.split()[1])
-    context.log(f'Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
+    context.log(f'({genome_name}) Parsed {len(canthyd_trusted_cutoffs)} entries from CantHyd database.')
 
     def get_db_entry(db_id) -> DBentry:
         return DBentry(domain='canthyd', gene=db_id, descr=canthyd_descr.get(db_id, ''),
