@@ -1,19 +1,19 @@
 import gzip
 
 class DBentry:
-    def __init__(self, *, domain: str, descr: str, taxon: str = '', ncbi: str = '', gene: str = '', length: int = 0,
+    def __init__(self, *, domain: str, descr: str, taxon: str = '', accession: str = '', gene: str = '', length: int = 0,
                  pos: int = 0):
         self.domain = domain
         self.descr = descr
         self.taxon = taxon
-        self.ncbi = ncbi
+        self.accession = accession
         self.gene = gene
         self.length = length
         self.pos = pos
 
     def __iter__(self):
-        return ((k, v) for k, v in zip(('domain', 'descr', 'taxon', 'ncbi', 'gene', 'length', 'pos'),
-                (self.domain, self.descr, self.taxon, self.ncbi, self.gene, self.length, self.pos)))
+        return ((k, v) for k, v in zip(('domain', 'descr', 'taxon', 'accession', 'gene', 'length', 'pos'),
+                (self.domain, self.descr, self.taxon, self.accession, self.gene, self.length, self.pos)))
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))

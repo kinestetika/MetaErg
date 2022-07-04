@@ -40,7 +40,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     with open(cdd_index) as db_handle:
         for line in db_handle:
             words = line.strip().split("\t")
-            cdd[int(words[0])] = DBentry(domain='cdd', ncbi=words[1], gene=words[2], descr=words[3],
+            cdd[int(words[0])] = DBentry(domain='cdd', accession=words[1], gene=words[2], descr=words[3],
                                          length=int(words[4]))
     context.log(f'({genome_name}) Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
@@ -52,15 +52,14 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for cdd_result in handle:
             feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
-            if subsystem := subsystems.match((h.hit.descr for h in cdd_result.hits
-                                              if h.aligned_length / h.hit.length >= 0.8)):
+            if subsystem := subsystems.match(cdd_result):
                 if len(feature_data.at[cdd_result.query(), 'subsystems']):
                     if subsystem not in feature_data.at[cdd_result.query(), 'subsystems']:
                         feature_data.at[cdd_result.query(), 'subsystems'] += f' {subsystem}'
                 else:
                     feature_data.at[cdd_result.query(), 'subsystems'] = f'{subsystem}'
             top_entry: DBentry = cdd_result.hits[0].hit
-            descr = f'{top_entry.ncbi}|{top_entry.gene} {top_entry.descr}'
+            descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(descr) > 35:
                 descr = descr[:35] + '...'
             feature_data.at[cdd_result.query(), 'descr'] = descr

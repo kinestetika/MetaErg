@@ -71,18 +71,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         feature_data.at[blast_result.query(), 'descr'] = blast_result.hits[0].hit.descr
         feature_data.at[blast_result.query(), 'taxon'] =  blast_result.hits[0].hit.taxon
 
-        if subsystem := subsystems.match((h.hit.descr for h in blast_result.hits
-                                          if h.aligned_length / h.hit.length >= 0.8)):
-            if len(feature_data.at[blast_result.query(), 'subsystems']):
-                if subsystem not in feature_data.at[blast_result.query(), 'subsystems']:
-                    feature_data.at[blast_result.query(), 'subsystems'] += f' {subsystem}'
-            else:
-                feature_data.at[blast_result.query(), 'subsystems'] = f'{subsystem}'
-
     def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
         return DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
-                       ncbi=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
+                       accession=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
     with TabularBlastParser(result_files[0], 'BLAST', dbentry_from_string) as handle:

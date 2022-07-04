@@ -2,33 +2,36 @@ import re
 import pandas as pd
 
 from metaerg import subsystems_data
-
-DATAFRAME_COLUMNS = 'function subsystem genes'.split()
-SUBSYSTEM_DATA = pd.DataFrame(columns=DATAFRAME_COLUMNS, dtype=str)
+from metaerg.datatypes.blast import BlastResult
 
 current_subsystem = None
+subsystems = []
+index_data = []
 for line in subsystems_data.subsystem_data().split('\n'):
-    subsystems = []
     line = line.strip()
     if line.startswith("#") or not len(line):
         continue
     elif line.startswith(">"):
         current_subsystem = line[1:]
     elif current_subsystem is not None:
-        subsystems.append({'subsystem': current_subsystem, 'function': line})
-    SUBSYSTEM_DATA = pd.concat([SUBSYSTEM_DATA, pd.DataFrame(subsystems)], ignore_index=True)
-    SUBSYSTEM_DATA.set_index('function', drop=False, inplace=True)
+        si = line.find(' ')
+        subsystems.append({'profiles': line[:si], 'genes': ''})
+        index_data.append((current_subsystem, line[si+1:]))
+DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
+SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
 
-
-def match(descriptions) -> str:
-    for d in descriptions:
+def match(blast_result:BlastResult) -> str:
+    gene_subsystems = []
+    for h in blast_result.hits:
+        if len(gene_subsystems):
+            break
         for sf in SUBSYSTEM_DATA.itertuples():
-            if len(d) > len(sf.function) + 20:
-                continue
-            match = re.search(r'\b' + sf.function + r'\b', d)
-            if match and match.start() < 10:
-                return f'[{sf.subsystem}:{sf.function}]'
-    return ''
+            for profile in sf.profiles.split('|'):
+                if profile == h.hit.accession and h.aligned_length > 0.7 * h.hit.length:
+                    subsystem_txt = f'[{sf.Index[0]}|{sf.Index[1]}]'
+                    if subsystem_txt not in gene_subsystems:
+                        gene_subsystems.append(subsystem_txt)
+    return ' '.join(gene_subsystems)
 
 
 def aggregate(feature_data: pd.DataFrame):
@@ -39,20 +42,22 @@ def aggregate(feature_data: pd.DataFrame):
             continue
         for s in re.split(r'\s(?=\[)', feature.subsystems):  # split at space if followed b y [
             s = s[1:-1]
-            if ':' in s:
-                gene_subsystem, gene_function = s.split(':')
+            if '|' in s:
+                gene_subsystem, gene_function = s.split('|')
                 try:
-                    aggregated_subsystem_data.at[gene_function, 'genes'] += f' {feature.id}'
+                    aggregated_subsystem_data.at[(gene_subsystem, gene_function), 'genes'] += f' {feature.id}'
                 except TypeError:
-                    aggregated_subsystem_data.at[gene_function, 'genes'] = feature.id
+                    aggregated_subsystem_data.at[(gene_subsystem, gene_function), 'genes'] = feature.id
             else:  # this is a subsystem with undefined structure, add a row to the dataframe
                 try:
                     unstructured_subsystems[s] += f' {feature.id}'
                 except KeyError:
                     unstructured_subsystems[s] = feature.id
-    new_dataframe_rows = [{'function': k, 'subsystem': k, 'genes': v} for k, v in unstructured_subsystems.items()]
-    aggregated_subsystem_data = pd.concat([aggregated_subsystem_data, pd.DataFrame(new_dataframe_rows)])
-    aggregated_subsystem_data.set_index('function', drop=False, inplace=True)
-    aggregated_subsystem_data = aggregated_subsystem_data.fillna('')
+    new_dataframe_rows = [{'profiles': '', 'genes': v} for k, v in unstructured_subsystems.items()]
+    new_dataframe_index = [(k, k) for  k, v in unstructured_subsystems.items()]
+    new_dataframe_index = pd.MultiIndex.from_tuples(new_dataframe_index, names=['subsystem', 'function'])
+    new_dataframe_data = pd.DataFrame(new_dataframe_rows, dtype=str, index=new_dataframe_index)
+    aggregated_subsystem_data = pd.concat([aggregated_subsystem_data, new_dataframe_data])
+    # print (aggregated_subsystem_data)
     return aggregated_subsystem_data
 

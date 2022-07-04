@@ -40,16 +40,16 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
     subsystem_html = ''
     subsystem_data = genome_properties['subsystems']
     #print(subsystem_data)
-    for subsystem in subsystem_data['subsystem'].unique():
-        sub_data = subsystem_data[subsystem_data['subsystem'] == subsystem]
+    for subsystem in subsystem_data.index.unique('subsystem'):
+        sub_data = subsystem_data.loc[subsystem, :]
         subsystem_html += f'<button class="accordion">{subsystem}</button>\n<div class="panel">\n'
         if 'secondary-metabolites' == subsystem:
             if len(sub_data.index):
                 subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
         else:
             subsystem_html += '<table>\n'
-            for function in subsystem_data[subsystem_data['subsystem'] == subsystem].itertuples():
-                subsystem_html += f'<tr><td>{function.function}</td><td>\n'
+            for function in sub_data.itertuples():
+                subsystem_html += f'<tr><td>{function.Index}</td><td>\n'
                 subsystem_html += ', '.join('<a target="gene details" href="features/{}.html">{}</a>'
                                             .format(f_id, f_id) for f_id in function.genes.split())
                 subsystem_html += f'</td></tr>\n'
