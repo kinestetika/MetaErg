@@ -39,17 +39,17 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def load_contigs(genome_name, input_fasta_file):
-    if context.DELIMITER in genome_name:
-        raise Exception(f'Genome id {genome_name} contains "{context.DELIMITER}"; change delimiter with '
+def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=False, min_contig_length=500):
+    if delimiter in genome_name:
+        raise Exception(f'Genome id {genome_name} contains "{delimiter}"; change delimiter with '
                                 f'--delimiter [new delimiter] or use --rename_genomes')
     names_done = set()
     contigs = list()
     with fasta.FastaParser(input_fasta_file) as fasta_reader:
         for c in fasta_reader:
-            if len(c) >= context.MIN_CONTIG_LENGTH:
+            if len(c['seq']) >= min_contig_length:
                 contigs.append(c)
-            if not context.RENAME_CONTIGS:
+            if not rename_contigs:
                 if c['id'] in names_done:
                     raise Exception(f'Contig id {c["id"]} not unique. Use --rename_contigs to avoid this problem.')
                 names_done.add(c["id"])
@@ -57,7 +57,7 @@ def load_contigs(genome_name, input_fasta_file):
     contigs = {c['id']: c for c in contigs}
     total_length = sum(len(c['seq']) for c in contigs.values())
     context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length:,} from file.')
-    if context.RENAME_CONTIGS:
+    if rename_contigs:
         contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
         context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
         i = 0
@@ -70,11 +70,10 @@ def load_contigs(genome_name, input_fasta_file):
         contigs = {c['id']: c for c in contigs.values()}
     else:
         for c_id in contigs.keys():
-            if context.DELIMITER in c_id:
-                raise Exception(f'Contig id {c_id} contains "{context.DELIMITER}"; change delimiter with '
+            if delimiter in c_id:
+                raise Exception(f'Contig id {c_id} contains "{delimiter}"; change delimiter with '
                                 f'--delimiter [new delimiter] or use --rename_contigs')
     return contigs
-
 
 def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.DataFrame) -> dict:
     properties = {}
@@ -121,7 +120,8 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (1) prepare dataframe
     feature_data = pd.DataFrame(columns=context.DATAFRAME_COLUMNS)
     # (2) load sequence data
-    contig_dict = load_contigs(genome_name, input_fasta_file)
+    contig_dict = load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
+                               min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
     # (3) now annotate
     for annotator in context.sorted_annotators():
         feature_data = annotator(genome_name, contig_dict, feature_data)
