@@ -46,11 +46,11 @@ For help with installing pipeline programs, have a look at [this script](https:/
 
 You can run that script and install everything and more. Briefly, for required programs, install them as follows:
 
-#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/  
+'#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/  
 wget http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz  
 tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz  
 mv infernal-1.1.4-linux-intel-gcc infernal  
-rm infernal-1.1.4-linux-intel-gcc.tar.gz  
+rm infernal-1.1.4-linux-intel-gcc.tar.gz  '
 
 #(prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal
 wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux
