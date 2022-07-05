@@ -1,11 +1,14 @@
 ## metaerg.py, version 2.2.0
 
-Metaerg.py is a program that annotates genomes or sets of mags from microbial ecosystems (bacteria, archaea, viruses). Input data 
-consists of a nucleotide fasta file with one or more contigs. Output files of annotated contigs are created in common formats
-such as .gff, .gbk and fasta with predicted genes, their functions and taxonomic classifications.
+Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
+consists of a nucleotide fasta file with one or more contigs. Output files with annotations are in common formats
+such as .gff, .gbk, .fasta and .html with predicted genes, their functions and taxonomic classifications.
 
-Metaerg was originally developed in perl. It is relatively challenging to install and comes with complex database 
-dependencies. This python version overcomes some of those issues. Also, the annotation pipeline has further evolved and refined.
+You can interact with a sample visualization [here](https://htmlpreview.github.io/?https://github.com/kinestetika/MetaErg/blob/master/visualization/index.html). This visualization shows the annotation of a cyanobacterial genome, Candidatus Phormidium alkaliphilum. 
+
+Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
+dependencies. This new python version 2.2 overcomes some of those issues. Also, the annotation pipeline has further evolved and has become 
+more refined.
 
 By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
@@ -44,7 +47,7 @@ Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
 
 The metaerg annotation databases can be downloaded [here](https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg-databases-07.tar.gz)) and are created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
-* NCBI (refseq) annotations of genes of gtdbtk baterial and archaeal genomes are obtained using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/)
+* NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
 * For Eukaryotes, for each taxon within Amoebozoa, Ancyromonadida, Apusozoa, Breviatea, CRuMs, Cryptophyceae, Discoba, Glaucocystophyceae, Haptista, Hemimastigophora, Malawimonadida, Metamonada, Rhodelphea, Rhodophyta, Sar, Aphelida, Choanoflagellata, Filasterea, Fungi, Ichthyosporea, Rotosphaeridagenomes, one genome is added to the database using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/). 
 * [RFAM](https://rfam.xfam.org/) and [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml) databases are also used.
