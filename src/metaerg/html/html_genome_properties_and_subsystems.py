@@ -30,7 +30,7 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
         handle.write(make_html(genome_name, feature_data, genome_properties))
 
 
-def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -> str:
+def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, path_to_feature_html='') -> str:
     """injects the content into the html base, returns the html"""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome_name)
@@ -39,7 +39,7 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
                                                        for k in GENOME_PROPERTY_FORMATS.keys())))
     subsystem_html = ''
     subsystem_data = genome_properties['subsystems']
-    #print(subsystem_data)
+    # subsystem_data
     for subsystem in subsystem_data.index.unique('subsystem'):
         sub_data = subsystem_data.loc[subsystem, :]
         subsystem_html += f'<button class="accordion">{subsystem}</button>\n<div class="panel">\n'
@@ -50,8 +50,9 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
             subsystem_html += '<table>\n'
             for function in sub_data.itertuples():
                 subsystem_html += f'<tr><td>{function.Index}</td><td>\n'
-                subsystem_html += ', '.join('<a target="gene details" href="features/{}.html">{}</a>'
-                                            .format(f_id, f_id) for f_id in function.genes.split())
+                subsystem_html += ', '.join('<a target="gene details" href="{}">{}</a>'
+                                            .format(Path(path_to_feature_html, 'features', f'{f_id}.html'),
+                                                    f_id) for f_id in function.genes.split())
                 subsystem_html += f'</td></tr>\n'
             subsystem_html += '</table>\n'
         subsystem_html += '</div>\n'

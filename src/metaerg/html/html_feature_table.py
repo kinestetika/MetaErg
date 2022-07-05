@@ -29,12 +29,13 @@ def get_empty_format_dict():
             'ci': '', 'ca': '', 'cr': '', 'ct': ''}
 
 
-def format_feature(f, format_hash, dominant_taxon, colors):
+def format_feature(f, format_hash, dominant_taxon, colors, path_to_feature_html):
     format_hash['f_id'] = f.id
     format_hash['taxon'] = taxon_at_genus(f.taxon)
     format_hash['type'] = f.type
     if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
-        format_hash['description'] = '<a target="gene details" href="features/{}.html">{}</a>'.format(f.id, f.descr)
+        format_hash['description'] = '<a target="gene details" href="{}">{}</a>'.format(
+            Path(path_to_feature_html, 'features', f'{f.id}.html'), f.descr)
     else:
         format_hash['description'] = f.descr
     if f.type in ('CDS', 'tRNA', 'rRNA', 'ncRNA', 'tmRNA', 'retrotransposon'):
@@ -82,7 +83,7 @@ def format_hash_to_html(format_hash):
     </tr>'''.format(**format_hash)
 
 
-def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -> str:
+def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, path_to_feature_html='') -> str:
     """Injects the content into the html base, returns the html."""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome_name)
@@ -114,11 +115,11 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict) -
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
+                format_feature(f, format_hash, genome_properties['dominant taxon'], colors, path_to_feature_html)
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
+            format_feature(f, format_hash, genome_properties['dominant taxon'], colors, path_to_feature_html)
             table_body += format_hash_to_html(format_hash)
         prev_f = f
     html = html.replace('TABLE_BODY', table_body)

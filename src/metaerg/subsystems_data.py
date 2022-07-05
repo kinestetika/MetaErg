@@ -58,20 +58,20 @@ def subsystem_data() -> str:
         CHL00117 RNA polymerase subunit beta' (rpoC2)
         
         >Respiratory complex I
-        COG0838	NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
-        COG0377	NADH:ubiquinone oxidoreductase 20 kD subunit (NuoB)
-        COG0852	NADH:ubiquinone oxidoreductase 27 kD subunit (NuoC)
-        COG0649	NADH:ubiquinone oxidoreductase 49 kD subunit (NuoD)
-        COG1905	NADH:ubiquinone oxidoreductase 24 kD subunit (NuoE)
-        COG1894	NADH:ubiquinone oxidoreductase, NADH-binding 51 kD subunit (NuoF)
-        COG1034	NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit (NuoG)
-        COG1005	NADH:ubiquinone oxidoreductase subunit 1 (NuoH)
-        COG1143	NADH:ubiquinone oxidoreductase 23 kD subunit (NuoI)/Formate hydrogen lyase subunit 6
-        COG0839	NADH:ubiquinone oxidoreductase subunit 6 (NuoJ)
-        COG0713	NADH:ubiquinone oxidoreductase subunit 11 or 4L (NuoK)
-        COG1009	NADH:ubiquinone oxidoreductase subunit 5 (NuoL)/Multisubunit Na+/H+ antiporter
-        COG1008	NADH:ubiquinone oxidoreductase subunit 4 (NuoM)
-        COG1007	NADH:ubiquinone oxidoreductase subunit 2 (NuoN)
+        COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
+        COG0377|PRK14816|PRK14817|PRK14819|PRK14820|PRK06411 NADH:ubiquinone oxidoreductase 20 kD subunit (NuoB)
+        COG0852|PRK07735|PRK08491 NADH:ubiquinone oxidoreductase 27 kD subunit (NuoC)
+        COG0649|PRK06075|PRK12322 NADH:ubiquinone oxidoreductase 49 kD subunit (NuoD)
+        COG1905|PRK12373|PRK07539 NADH:ubiquinone oxidoreductase 24 kD subunit (NuoE)
+        COG1894|PRK13596|PRK11278 NADH:ubiquinone oxidoreductase, NADH-binding 51 kD subunit (NuoF)
+        COG1034|PRK08166|PRK08493 NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit (NuoG)
+        COG1005|PRK06076 NADH:ubiquinone oxidoreductase subunit 1 (NuoH)
+        COG1143|PRK05888 NADH:ubiquinone oxidoreductase 23 kD subunit (NuoI)/Formate hydrogen lyase subunit 6
+        COG0839|PRK06638 NADH:ubiquinone oxidoreductase subunit 6 (NuoJ)
+        COG0713|PRK05715 NADH:ubiquinone oxidoreductase subunit 11 or 4L (NuoK)
+        COG1009|PRK07376|PRK08168 NADH:ubiquinone oxidoreductase subunit 5 (NuoL)/Multisubunit Na+/H+ antiporter
+        COG1008|PRK07363|PRK06473 NADH:ubiquinone oxidoreductase subunit 4 (NuoM)
+        COG1007|PRK05777 NADH:ubiquinone oxidoreductase subunit 2 (NuoN)
 
         >Respiratory Complex III (Photosynthesis)
         CHL00037 cytochrome b6/f complex, cytochrome f subunit (petA)

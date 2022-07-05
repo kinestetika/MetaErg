@@ -12,7 +12,8 @@ more refined.
 
 By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
-more straightforward to interpret than the original version of metaerg and many other annotation tools.
+more concise than the original version of metaerg and many other annotation tools. In addition, metaerg uses NCBI's
+conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration.
 
 The Metaerg 2.2 pipeline consists of:
 * (optional) CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
@@ -41,11 +42,44 @@ Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
 
 ## Installation
 
-(in progress)
+For help with installing pipeline programs, have a look at [this script](https://github.com/kinestetika/cloud-computing-for-microbial-ecology/blob/main/cloud_bio_installs.py) for step by step installation instructions/commands. 
+
+You can run that script and install everything and more. Briefly, for required programs, install them as follows:
+
+#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/
+wget http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz
+tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz
+mv infernal-1.1.4-linux-intel-gcc infernal
+rm infernal-1.1.4-linux-intel-gcc.tar.gz
+
+#(prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal
+wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux
+chmod a+x prodigal.linux 
+ln -sf prodigal.linux prodigal
+
+#(ncbi-blast) blastn 2.13.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz
+tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz
+mv ncbi-blast-2.13.0+ ncbi-blast
+rm ncbi-blast-2.13.0+-x64-linux.tar.gz
+
+#(diamond) diamond 2.0.14 https://github.com/bbuchfink/diamond
+wget https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz
+tar -xf diamond-linux64.tar.gz
+rm diamond-linux64.tar.gz
+
+Then, make sure they are in your system's $PATH.
+
+To install metaerg, run, usually in a virtual environment:
+
+>python -m virtualenv python-env
+>source python-env/bin/activate
+>pip install metaerg
+>deactivate
 
 ## Databases
 
-The metaerg annotation databases can be downloaded [here](https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg-databases-07.tar.gz)) and are created from the following sources:
+The metaerg annotation databases can be downloaded [here](https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_db_207_v2.tar.gz) and are created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
 * NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
