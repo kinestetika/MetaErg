@@ -31,13 +31,13 @@ The Metaerg 2.2 pipeline consists of:
 * (built-in) presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 
 ## Usage:
-
->metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
-
+```
+metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
+```
 To annotate a set of genomes in a given dir (each file should contain the contigs of a single genome):
-
->metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/
-
+```
+metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/
+```
 Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
 
 ## Installation
@@ -45,37 +45,39 @@ Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
 For help with installing pipeline programs, have a look at [this script](https://github.com/kinestetika/cloud-computing-for-microbial-ecology/blob/main/cloud_bio_installs.py) for step by step installation instructions/commands. 
 
 You can run that script and install everything and more. Briefly, for required programs, install them as follows:
-
-'#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/  
+```
+#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/  
 wget http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz  
 tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz  
 mv infernal-1.1.4-linux-intel-gcc infernal  
-rm infernal-1.1.4-linux-intel-gcc.tar.gz  '
+rm infernal-1.1.4-linux-intel-gcc.tar.gz  
 
-#(prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal
-wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux
-chmod a+x prodigal.linux 
-ln -sf prodigal.linux prodigal
+#(prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal  
+wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux  
+chmod a+x prodigal.linux  
+ln -sf prodigal.linux prodigal  
 
-#(ncbi-blast) blastn 2.13.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
-wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz
-tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz
-mv ncbi-blast-2.13.0+ ncbi-blast
-rm ncbi-blast-2.13.0+-x64-linux.tar.gz
+#(ncbi-blast) blastn 2.13.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/  
+wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz  
+tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz  
+mv ncbi-blast-2.13.0+ ncbi-blast  
+rm ncbi-blast-2.13.0+-x64-linux.tar.gz  
 
-#(diamond) diamond 2.0.14 https://github.com/bbuchfink/diamond
-wget https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz
-tar -xf diamond-linux64.tar.gz
-rm diamond-linux64.tar.gz
+#(diamond) diamond 2.0.14 https://github.com/bbuchfink/diamond  
+wget https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz  
+tar -xf diamond-linux64.tar.gz  
+rm diamond-linux64.tar.gz  
+```
 
 Then, make sure they are in your system's $PATH.
 
 To install metaerg, run, usually in a virtual environment:
-
->python -m virtualenv python-env
->source python-env/bin/activate
->pip install metaerg
->deactivate
+```
+python -m virtualenv python-env  
+source python-env/bin/activate  
+pip install metaerg  
+deactivate  
+```
 
 ## Databases
 
@@ -89,10 +91,11 @@ The metaerg annotation databases can be downloaded [here](https://object-arbutus
 
 If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be downloaded from the link just provided):
 
->metaerg-build-databases --target_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [FPVEBRC]]
+```
+metaerg-build-databases --target_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [PVEBRC]]
+```
 
-tasks (default = build all):
-* F - create database dirs
+with tasks:
 * P - build prokaryotes
 * V - build viruses
 * E - build eukaryotes
