@@ -4,7 +4,7 @@ Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bac
 consists of a nucleotide fasta file with one or more contigs. Output files with annotations are in common formats
 such as .gff, .gbk, .fasta and .html with predicted genes, their functions and taxonomic classifications.
 
-You can interact with a sample visualization [here](https://htmlpreview.github.io/?https://github.com/kinestetika/MetaErg/blob/master/visualization/index.html). This visualization shows the annotation of a cyanobacterial genome, Candidatus Phormidium alkaliphilum. 
+You can interact with a sample visualization [here](https://htmlpreview.github.io/?https://github.com/kinestetika/MetaErg/blob/master/visualization/index.html) and [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kinestetika/MetaErg/master/visualization/index_of_features.html). These visualizations show the annotation of a cyanobacterial genome, Candidatus Phormidium alkaliphilum. 
 
 Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
 dependencies. This new python version 2.2 overcomes some of those issues. Also, the annotation pipeline has further evolved and has become 
