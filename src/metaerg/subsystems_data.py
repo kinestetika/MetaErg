@@ -57,7 +57,7 @@ def subsystem_data() -> str:
         CHL00018 RNA polymerase subunit beta' (rpoC1)
         CHL00117 RNA polymerase subunit beta' (rpoC2)
         
-        >Respiratory complex I
+        >Respiratory Complex I
         COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
         COG0377|PRK14816|PRK14817|PRK14819|PRK14820|PRK06411 NADH:ubiquinone oxidoreductase 20 kD subunit (NuoB)
         COG0852|PRK07735|PRK08491 NADH:ubiquinone oxidoreductase 27 kD subunit (NuoC)
@@ -72,6 +72,12 @@ def subsystem_data() -> str:
         COG1009|PRK07376|PRK08168 NADH:ubiquinone oxidoreductase subunit 5 (NuoL)/Multisubunit Na+/H+ antiporter
         COG1008|PRK07363|PRK06473 NADH:ubiquinone oxidoreductase subunit 4 (NuoM)
         COG1007|PRK05777 NADH:ubiquinone oxidoreductase subunit 2 (NuoN)
+        TIGR01936 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit A (NqrA)
+        TIGR01937 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit B (NqrA)
+        TIGR01938 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit C (NqrA)
+        TIGR01939 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit D (NqrA)
+        TIGR01940 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit E (NqrA)
+        TIGR01941 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit F (NqrA)
 
         >Respiratory Complex III (Photosynthesis)
         CHL00037 cytochrome b6/f complex, cytochrome f subunit (petA)
@@ -100,7 +106,7 @@ def subsystem_data() -> str:
         COG1294	Cytochrome bd-type quinol oxidase, subunit 1 (AppB)
         COG1271	Cytochrome bd-type quinol oxidase, subunit 1 (AppC)
         
-        >ATP synthase (vacuolar)
+        >ATP synthase
         TIGR01042 vacuolar ATPase V1, subunit A
         TIGR01040 vacuolar ATPase V1, subunit B
         TIGR02923 vacuolar or A0/A1 ATPase, subunit C
@@ -109,8 +115,6 @@ def subsystem_data() -> str:
         TIGR01101 vacuolar ATP synthase, subunit F
         TIGR01147 vacuolar ATP synthase, subunit G
         TIGR02926 vacuolar or A0/A1 ATPase, subunit H
-        
-        >ATP synthase (F1F0)
         TIGR01131 ATP synthase, subunit F0 A
         TIGR01144 ATP synthase, subunit F0 B
         TIGR01260 ATP synthase, subunit F0 c
@@ -119,8 +123,6 @@ def subsystem_data() -> str:
         TIGR01146 ATP synthase, F1 subunit gamma
         TIGR01145 ATP synthase, F1 subunit delta
         TIGR01216 ATP synthase, F1 subunit epsilon
-        
-        >ATP synthase (alternate)
         TIGR03306 alternate ATP synthase, subunit F0 A
         TIGR03321 alternate ATP synthase, subunit F0 B
         TIGR03322|cd00313 alternate ATP synthase, subunit F0 C
@@ -128,12 +130,38 @@ def subsystem_data() -> str:
         TIGR03305 alternate ATP synthase, subunit F1 beta
         TIGR03323 alternate ATP synthase, subunit F1 gamma
         TIGR03166 alternate ATP synthase, subunit F1 epsilon
-        
-        >ATP synthase (archaeal)
         TIGR01043 archaeal ATP synthase, subunit A
         TIGR01041 archaeal ATP synthase, subunit B
         cd00313 archaeal ATP synthase, subunit F0 C
 
+        >denitrification/DNRA
+        COG5013|TIGR01580 Respiratory nitrate reductase, catalytic subunit alpha (NarG)
+        COG1140|TIGR01660 Respiratory nitrate reductase, subunit beta (NarH/Y)
+        COG2181|TIGR00351 Respiratory nitrate reductase, subunit gamma (NarI)
+        COG2181|TIGR00684 Respiratory nitrate reductase, chaperone (NarJ)
+        PRK13532|TIGR01706 Periplasmic nitrate reductase, catalytic subunit (NapA)
+        COG3043|PRK11586 Periplasmic nitrate reductase, cytochrome c subunit (NapB)
+        COG3062 Periplasmic nitrate reductase, chaperone (NapD)
+        COG4459 Periplasmic nitrate reductase, component (NapE)
+        TIGR00402 Periplasmic nitrate reductase, ferredoxin subunit (NapF)
+        TIGR02163 Periplasmic nitrate reductase, ferredoxin subunit (NapH)
+        TIGR02376 Copper-containing nitrite reductase (NirK)
+        pfam02239 Cytochrome cd1 nitrite reductase (NirS)
+        TIGR04051 Cytochrome cd1 nitrite reductase, heme d biosynthesis (NirJ)
+        COG1251|TIGR02374 Assimilatory nitrite reductase, catalytic subunit (NirB)
+        COG2146|PRK09511|TIGR02378 Assimilatory nitrite reductase, ferredoxin subunit (NirD)
+        COG3301 Ammonia-forming nitrite reductase, membrane component (NrfD)
+        COG3303|PRK11125 Ammonia-forming nitrite reductase, c552 subunit (NrfA)
+        TIGR03146 Ammonia-forming nitrite reductase, pentaheme subunit (NrfB)
+        TIGR03149 Ammonia-forming nitrite reductase, iron sulfur subunit (nrfC)
+        TIGR03148 Ammonia-forming nitrite reductase, hydrophobic subunit (nrfD)
+        TIGR03145 Ammonia-forming nitrite reductase, chaperone (NrfE)
+        PRK10144|TIGR03147 Ammonia-forming nitrite reductase, accessory protein (NrfF)
+        PRK10370 Ammonia-forming nitrite reductase, NrfG subunit (NrfG)
+        TIGR03153 Ammonia-forming nitrite reductase, tetraheme subunit (NrfH)
+        COG3256|cd00386	Nitric oxide reductase, large subunit, heme-copper oxidase-like (NorB)
+        COG4263 Nitrous oxide reductase (NosZ)
+    
         >photosystem I
         CHL00056|TIGR01335 photosystem I, P700 chlorophyll a A1 (psaA)
         CHL00054|TIGR01336 photosystem I, P700 chlorophyll a A2 (PsaB)
