@@ -12,7 +12,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     fasta_file = context.spawn_file('masked', genome_name)
     rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+        split_fasta_files = fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
                                                          mask_targets=fasta.ALL_MASK_TARGETS,
                                                          split=context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
@@ -28,7 +28,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+        fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
                                      mask_targets=fasta.ALL_MASK_TARGETS)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 

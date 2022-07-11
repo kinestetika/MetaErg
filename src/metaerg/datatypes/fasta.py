@@ -92,8 +92,8 @@ class Masker:
     def mask(self, seq_record):
         seq = seq_record['seq']
         self.nt_masked = 0
-        feature_data = self.feature_data.loc[lambda df: df['contig'] == seq_record['id'], :]
         if self.apply_mask:
+            feature_data = self.feature_data.loc[lambda df: df['contig'] == seq_record['id'], :]
             for feature in feature_data.itertuples():
                 feature_length = feature.end - feature.start
                 seq = seq[:feature.start] + 'N' * feature_length + seq[feature.end:]
@@ -153,8 +153,8 @@ def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1
     return paths
 
 
-def write_contigs_to_fasta(genome_name, contig_hash: dict, feature_data: pd.DataFrame, base_file: Path, split=1,
-                           mask_targets=None, mask_min_length=50):
+def write_contigs_to_fasta(contig_hash: dict, base_file: Path, feature_data: pd.DataFrame = None, genome_name='',
+                           split=1, mask_targets=None, mask_min_length=50):
     """writes contigs to fasta file(s), optionally masking features with N"""
     number_of_records = len(contig_hash)
     split = min(split, number_of_records)

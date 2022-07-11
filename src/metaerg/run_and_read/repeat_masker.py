@@ -8,7 +8,7 @@ from metaerg.datatypes import fasta
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
     lmer_table_file = context.spawn_file('lmer-table', genome_name)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome_name)

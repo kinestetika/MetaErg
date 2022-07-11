@@ -11,9 +11,7 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.13"
-
-#todo: need to save log + fasta nt file of renamed contigs, two genome tags in ids
+VERSION = "2.2.14"
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
@@ -136,9 +134,11 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
+    fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR)
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
     fasta.write_features_to_fasta(feature_data, faa_file, targets=('CDS',))
     fasta.write_features_to_fasta(feature_data, rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
+    fasta.write_contigs_to_fasta(contig_dict, fna_file)
     with open(gbk_file, 'w') as gbk_writer:
         gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)
     feature_data = feature_data.reset_index(drop=True)

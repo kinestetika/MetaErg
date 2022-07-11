@@ -21,6 +21,7 @@ GTDBTK_DIR = ''
 GENOME_NAME_MAPPING_FILE = ''
 CONTIG_FILES = []
 GENOME_NAMES = []
+LOG_FILE = ''
 
 FORCE = False
 MULTI_MODE = False
@@ -43,15 +44,16 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
            CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB_TASKS, \
-           GENOME_NAMES, CONTIG_FILES, DELIMITER
+           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE
     contig_file = Path(contig_file).absolute()
     BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
-    TEMP_DIR = Path(BASE_DIR, "temp")
+    TEMP_DIR = BASE_DIR / 'temp'
+    LOG_FILE = TEMP_DIR / 'log.txt'
     DATABASE_DIR = Path(database_dir).absolute()
     CHECKM_DIR = Path(checkm_dir).absolute()
     GTDBTK_DIR = Path(gtdbtk_dir).absolute()
-    GENOME_NAME_MAPPING_FILE = Path(TEMP_DIR, 'genome.name.mapping.txt')
-    HTML_DIR = Path(BASE_DIR, "html")
+    GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
+    HTML_DIR = BASE_DIR / 'html'
 
     MULTI_MODE = contig_file.is_dir()
     RENAME_CONTIGS = rename_contigs
@@ -113,9 +115,9 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
 def spawn_file(program_name, genome_id, base_dir = None) -> Path:
     """computes a Path genome_id.program_name or, if multimode==True, program_name/genome_id"""
-    target_dir = base_dir if base_dir else TEMP_DIR
+    target_dir = Path(base_dir) if base_dir else TEMP_DIR
     if MULTI_MODE:
-        dir = Path(target_dir, program_name)
+        dir = target_dir / program_name
         if not dir.exists():
             dir.mkdir()
         elif dir.is_file():
@@ -124,9 +126,9 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
                 dir.mkdir()
             else:
                 raise Exception("Use force to overwrite existing results")
-        return Path(dir, genome_id)
+        return dir / genome_id
     else:
-        file = Path(target_dir, f'{genome_id}.{program_name}')
+        file = target_dir / f'{genome_id}.{program_name}'
         if file.exists() and file.is_dir():
             if FORCE:
                 shutil.rmtree(file)
@@ -136,9 +138,13 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
 def log(log_message, values=(), topic=''):
     if not topic or topic in LOG_TOPICS:
         if len(values):
-            print(f'{format_runtime()} {log_message.format(*values)}')
+            final_msg = f'{format_runtime()} {log_message.format(*values)}'
         else:
-            print(f'{format_runtime()} {log_message}')
+            final_msg = f'{format_runtime()} {log_message}'
+        print(final_msg)
+        with open(LOG_FILE, 'a') as log_handle:
+            log_handle.write(final_msg)
+            log_handle.write('\n')
 
 
 def format_runtime():

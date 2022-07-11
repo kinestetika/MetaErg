@@ -13,7 +13,11 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     feature_data = feature_data.sort_values(by='start')
     j=0
     for i in feature_data.index:
-        feature_data.at[i, 'id'] = context.DELIMITER.join((genome_name, feature_data.at[i, 'contig'], f'{j:05d}'))
+        if context.RENAME_CONTIGS:
+            # contigs already contain genome name
+            feature_data.at[i, 'id'] = context.DELIMITER.join((feature_data.at[i, 'contig'], f'{j:05d}'))
+        else:
+            feature_data.at[i, 'id'] = context.DELIMITER.join((genome_name, feature_data.at[i, 'contig'], f'{j:05d}'))
         j += 1
     feature_data = feature_data.set_index('id', drop=False)
     feature_data = feature_data.fillna({'tmh': 0})

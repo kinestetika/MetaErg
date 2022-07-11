@@ -6,7 +6,7 @@ from metaerg.datatypes import fasta, gff
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     """Executes the helper programs to complete the analysis"""
     fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(genome_name, contig_dict, feature_data, fasta_file,
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
     context.run_external(f'minced -gffFull {fasta_file} {result_files[0]}')
 
