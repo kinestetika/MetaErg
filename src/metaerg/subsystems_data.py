@@ -134,7 +134,7 @@ def subsystem_data() -> str:
         TIGR01041 archaeal ATP synthase, subunit B
         cd00313 archaeal ATP synthase, subunit F0 C
 
-        >denitrification/DNRA
+        >nitrogen cycle
         COG5013|TIGR01580 Respiratory nitrate reductase, catalytic subunit alpha (NarG)
         COG1140|TIGR01660 Respiratory nitrate reductase, subunit beta (NarH/Y)
         COG2181|TIGR00351 Respiratory nitrate reductase, subunit gamma (NarI)
@@ -146,7 +146,7 @@ def subsystem_data() -> str:
         TIGR00402 Periplasmic nitrate reductase, ferredoxin subunit (NapF)
         TIGR02163 Periplasmic nitrate reductase, ferredoxin subunit (NapH)
         TIGR02376 Copper-containing nitrite reductase (NirK)
-        pfam02239 Cytochrome cd1 nitrite reductase (NirS)
+        pfam02239 Cytochrome cd1 nitrite reductase (NirS) # this is suboptimal
         TIGR04051 Cytochrome cd1 nitrite reductase, heme d biosynthesis (NirJ)
         COG1251|TIGR02374 Assimilatory nitrite reductase, catalytic subunit (NirB)
         COG2146|PRK09511|TIGR02378 Assimilatory nitrite reductase, ferredoxin subunit (NirD)
@@ -161,6 +161,10 @@ def subsystem_data() -> str:
         TIGR03153 Ammonia-forming nitrite reductase, tetraheme subunit (NrfH)
         COG3256|cd00386	Nitric oxide reductase, large subunit, heme-copper oxidase-like (NorB)
         COG4263 Nitrous oxide reductase (NosZ)
+        TIGR03080 methane/ammonia monooxygenase, subunit A
+        TIGR03079|cl19551|pfam04744 methane/ammonia monooxygenase, subunit B
+        # hydroxylamine oxidoreductase is missing from cdd
+        TIGR03078|cl04829|cd19412|cd22188|cl04829|pfam04896 methane/ammonia monooxygenase, subunit C
     
         >photosystem I
         CHL00056|TIGR01335 photosystem I, P700 chlorophyll a A1 (psaA)

@@ -11,7 +11,9 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.12"
+VERSION = "2.2.13"
+
+#todo: need to save log + fasta nt file of renamed contigs, two genome tags in ids
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
