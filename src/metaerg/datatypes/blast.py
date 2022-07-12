@@ -1,8 +1,10 @@
 import gzip
 
 class DBentry:
-    def __init__(self, *, domain: str, descr: str, taxon: str = '', accession: str = '', gene: str = '', length: int = 0,
-                 pos: int = 0):
+    FIELDS = ('domain', 'descr', 'taxon', 'accession', 'gene', 'length', 'pos', 'min_score', 'min_t_score')
+
+    def __init__(self, *, domain: str, descr: str, taxon: str = '', accession: str = '', gene: str = '',
+                 length: int = 0, pos: int = 0, min_score: int = 0, min_t_score: int = 0):
         self.domain = domain
         self.descr = descr
         self.taxon = taxon
@@ -10,10 +12,13 @@ class DBentry:
         self.gene = gene
         self.length = length
         self.pos = pos
+        self.min_score = min_score
+        self.min_t_score = min_t_score
 
     def __iter__(self):
-        return ((k, v) for k, v in zip(('domain', 'descr', 'taxon', 'accession', 'gene', 'length', 'pos'),
-                (self.domain, self.descr, self.taxon, self.accession, self.gene, self.length, self.pos)))
+        return ((k, v) for k, v in zip(DBentry.FIELDS, (self.domain, self.descr, self.taxon, self.accession,
+                                                        self.gene, self.length, self.pos, self.min_score,
+                                                        self.min_t_score)))
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))
@@ -30,6 +35,9 @@ def taxon_at_genus(taxon) -> str:
 
 
 class BlastHit:
+    FIELDS = ('query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps', 'query_start',
+              'query_end', 'hit_start', 'hit_end', 'evalue', 'score')
+
     def __init__(self, query: str, hit: DBentry, percent_id: float, aligned_length: int,
                  query_start: int, query_end: int, hit_start: int, hit_end: int, evalue: float, score: float,
                  mismatches: int = 0, gaps: int = 0):
@@ -47,10 +55,9 @@ class BlastHit:
         self.score = score
 
     def __iter__(self):
-        return ((k, v) for k, v in zip(('query', 'hit', 'percent_id', 'aligned_length', 'mismatches', 'gaps',
-                                        'query_start', 'query_end', 'hit_start', 'hit_end', 'evalue', 'score'),
-                (self.query, self.hit, self.percent_id, self.aligned_length, self.mismatches, self.gaps,
-                 self.query_start, self.query_end, self.hit_start, self.hit_end, self.evalue, self.score)))
+        return ((k, v) for k, v in zip(BlastHit.FIELDS, (self.query, self.hit, self.percent_id, self.aligned_length,
+                                                         self.mismatches, self.gaps, self.query_start, self.query_end,
+                                                         self.hit_start, self.hit_end, self.evalue, self.score)))
 
     def __repr__(self):
         return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))

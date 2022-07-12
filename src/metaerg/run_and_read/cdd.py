@@ -81,25 +81,25 @@ def run_and_read_cdd():
 def install_cdd_database():
     if 'C' not in context.CREATE_DB_TASKS:
        return
-    cdd_dir = Path(context.DATABASE_DIR, 'cdd')
+    cdd_dir = context.DATABASE_DIR / 'cdd'
     context.log(f'Installing the conserved domain database to {cdd_dir}...')
     cdd_dir.mkdir(exist_ok=True, parents=True)
-    cdd_index = Path(cdd_dir, 'cddid.tbl')
-    if context.FORCE or (not cdd_index.exists() and not Path(cdd_dir, 'cddid.tbl.gz').exists()):
+    cdd_index = cdd_dir / 'cddid.tbl'
+    if context.FORCE or (not cdd_index.exists() and not (cdd_dir / 'cddid.tbl.gz').exists()):
         context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
     if context.FORCE or not cdd_index.exists():
         context.run_external(f'gunzip {cdd_index}.gz')
 
-    temp_cdd_dir = Path(context.DATABASE_DIR, 'cdd-temp')
+    temp_cdd_dir = context.DATABASE_DIR / 'cdd-temp'
     temp_cdd_dir.mkdir(exist_ok=True, parents=True)
-    if context.FORCE or (not Path(temp_cdd_dir, 'cdd.tar').exists() and not Path(temp_cdd_dir, 'cdd.tar.gz').exists()):
+    if context.FORCE or (not (temp_cdd_dir / 'cdd.tar').exists() and not (temp_cdd_dir / 'cdd.tar.gz').exists()):
         context.run_external(f'wget -P {temp_cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-    if context.FORCE or not Path(temp_cdd_dir, 'Tigr.pn').exists():
-        context.run_external(f'tar -xf {Path(temp_cdd_dir, "cdd.tar.gz")} -C {temp_cdd_dir}')
+    if context.FORCE or not (temp_cdd_dir / 'Tigr.pn').exists():
+        context.run_external(f'tar -xf {temp_cdd_dir / "cdd.tar.gz"} -C {temp_cdd_dir}')
     current_dir = os.getcwd()
     os.chdir(temp_cdd_dir)
-    if context.FORCE or not Path(cdd_dir, 'Cdd.pal').exists():
-        context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {Path(temp_cdd_dir, "Cdd.pn")} -out '
-                             f'{Path(cdd_dir, "Cdd")} -threshold 9.82 -scale 100.0 -dbtype rps '
+    if context.FORCE or not (cdd_dir / 'Cdd.pal').exists():
+        context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {temp_cdd_dir / "Cdd.pn"} -out '
+                             f'{cdd_dir / "Cdd"} -threshold 9.82 -scale 100.0 -dbtype rps '
                              f'-index true')
     os.chdir(current_dir)

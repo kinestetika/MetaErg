@@ -2,7 +2,43 @@ import re
 import pandas as pd
 
 from metaerg import subsystems_data
-from metaerg.datatypes.blast import BlastResult
+from metaerg.datatypes.blast import BlastResult, BlastHit
+
+canthyd_descr = {'AlkB': 'alkane hydrolase',
+                 'AlmA_GroupI': 'flavin-binding alkane monooxygenase',
+                 'AlmA_GroupIII': 'flavin-binding alkane monooxygenase',
+                 'CYP153': 'alkane oxidizing cytochrome P450',
+                 'LadA_alpha': 'long-chain alkane hydrolase',
+                 'LadA_beta': 'long-chain alkane hydrolase',
+                 'LadB': 'long-chain alkane hydrolase',
+                 'pBmoA': 'membrane-bound alkane monooxygenase subunit A',
+                 'pBmoB': 'membrane-bound alkane monooxygenase subunit B',
+                 'pBmoC': 'membrane-bound alkane monooxygenase subunit C',
+                 'PrmA': 'propane 2-monooxygenase large subunit',
+                 'PrmC': 'propane 2-monooxygenase small subunit',
+                 'sBmoX': 'soluble alkane monooxygenase subunit A',
+                 'sBmoY': 'soluble alkane monooxygenase subunit B',
+                 'DmpO': 'phenol/toluene 2-monooxygenase (NADH dependent)',
+                 'DszC': 'dibenzothiophene monooxygenase',
+                 'MAH_alpha': 'benzene/toluene/naphtalene dioxygenase subunit alpha',
+                 'MAH_beta': 'benzene/toluene/naphtalene dioxygenase subunit beta',
+                 'NdoB': 'benzene/toluene/naphtalene dioxygenase subunit alpha',
+                 'non_NdoB_type': 'similar to benzene/toluene/naphtalene dioxygenase subunit alpha',
+                 'NdoC': 'benzene/toluene/naphtalene dioxygenase subunit beta',
+                 'TmoA_BmoA': 'toluene monooxygenase subunit A',
+                 'TmoB_BmoB': 'toluene monooxygenase subunit B',
+                 'TmoE': 'toluene monooxygenase system protein E',
+                 'TomA1': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
+                 'TomA3': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
+                 'TomA4': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
+                 'ahyA': 'molybdopterin-family alkane C2 methylene hydroxylase',
+                 'AssA': 'alkylsuccinate synthase',
+                 'AbcA_1': 'benzene carboxylase',
+                 'BssA': 'benzylsuccinate synthase',
+                 'CmdA': 'molybdopterin-family ethylbenzene dehydrogenase subunit alpha',
+                 'EbdA': 'molybdopterin-family ethylbenzene dehydrogenase subunit alpha',
+                 'K27540': 'naphtalene carboxylase',
+                 'NmsA': 'naphtylmethyl succinate synthase'}
 
 current_subsystem = None
 subsystems = []
@@ -20,18 +56,21 @@ for line in subsystems_data.subsystem_data().split('\n'):
 DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
 SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
 
+
 def match(blast_result:BlastResult) -> str:
-    gene_subsystems = []
     for h in blast_result.hits:
-        if len(gene_subsystems):
-            break
-        for sf in SUBSYSTEM_DATA.itertuples():
-            for profile in sf.profiles.split('|'):
-                if profile == h.hit.accession and h.aligned_length > 0.7 * h.hit.length:
-                    subsystem_txt = f'[{sf.Index[0]}|{sf.Index[1]}]'
-                    if subsystem_txt not in gene_subsystems:
-                        gene_subsystems.append(subsystem_txt)
-    return ' '.join(gene_subsystems)
+        if subsystems := match_hit(h):
+            return subsystems
+    return ''
+
+
+def match_hit(blast_hit:BlastHit) -> str:
+    matching_subsystems = set()
+    for sf in SUBSYSTEM_DATA.itertuples():
+        for profile in sf.profiles.split('|'):
+            if profile == blast_hit.hit.accession and blast_hit.aligned_length >= 0.7 * blast_hit.hit.length:
+                matching_subsystems.add(f'[{sf.Index[0]}|{sf.Index[1]}]')
+    return ' '.join(matching_subsystems).strip()
 
 
 def aggregate(feature_data: pd.DataFrame):
