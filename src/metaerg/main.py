@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 from pathlib import Path
-from concurrent.futures import ProcessPoolExecutor
+from concurrent import futures
 
 from metaerg import context
 from metaerg import registry
@@ -163,13 +163,12 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        futures = []
-        with ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
+        with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
+            outcomes = []
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                futures.append(executor.submit(annotate_genome, genome_name, contig_file))
-        for future in futures:
-            if future.exception():
-                raise(future.exception())
+                outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
+            for future in futures.as_completed(outcomes):
+                future.result()
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')

@@ -1,6 +1,9 @@
+import shutil
 import pandas as pd
 from pathlib import Path
+from concurrent import futures
 
+import context
 from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 from metaerg import context
 from metaerg import subsystems
@@ -67,26 +70,73 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_canthyd():
     return ({'pipeline_position': 101,
-             'purpose': 'prediction of hydrocarbon degradation genes with canthyd',
+             'purpose': 'identification of function genes with canthyd and metascan databases',
              'programs': ('hmmscan',),
-             'databases': (Path('canthyd', 'CANT-HYD.hmm'),),
+             'databases': (Path('hmm', 'functional_genes.hmm'),),
              'result_files': ('canthyd',),
              'run': _run_programs,
              'read': _read_results})
 
+FUNCTIONAL_GENE_URLS = ('https://zenodo.org/record/6365663/files/carbon.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/c1.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/methane.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/misc.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/nitro.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/oxygen.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/sulphur.cycle.sub.hmm',
+                        'https://zenodo.org/record/6365663/files/hydrogenase.hmm',
+                        'https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
 
 @context.register_database_installer
-def install_canthyd_database():
+def install_functional_gene_databases():
     if 'S' not in context.CREATE_DB_TASKS:
         return
-    canthyd_dir = context.DATABASE_DIR / 'canthyd'
-    if context.FORCE or not canthyd_dir.exists():
-        context.log(f'Installing the conserved domain database to {canthyd_dir}...')
-        canthyd_dir.mkdir(exist_ok=True, parents=True)
-        context.run_external(f'wget -P {canthyd_dir} https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/'
-                             f'main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
-        context.run_external(f'hmmpress -f {canthyd_dir / "CANT-HYD.hmm"}')
-    else:
-        context.log(f'Keeping existing cangthyd database in {canthyd_dir}, use --force to overwrite.')
+    hmm_dir = context.DATABASE_DIR / 'hmm'
+    if context.FORCE or not hmm_dir.exists():
+        context.log(f'Installing functional gene databases at {hmm_dir}...')
+        hmm_dir.mkdir(exist_ok=True, parents=True)
+        with futures.ThreadPoolExecutor() as executor:
+            outcomes = []
+            for url in FUNCTIONAL_GENE_URLS:
+                file = hmm_dir / Path(url).name
+                if not file.exists():
+                    outcomes.append(executor.submit(context.download, url, hmm_dir / Path(url).name))
+            for future in futures.as_completed(outcomes):
+                future.result()
+        context.log('Checking data sanity...')
 
-https://zenodo.org/record/6365663/files/carbon.cycle.sub.hmm
+        all_hmms_file = hmm_dir / 'functional_genes.hmm'
+        with open(all_hmms_file, 'w') as output:
+            names_done = set()
+            for url in FUNCTIONAL_GENE_URLS:
+                hmm_file = hmm_dir / Path(url).name
+                print(hmm_file)
+                with open(hmm_file) as hmm_reader:
+                    duplicates = []
+                    written = 0
+                    read = 0
+                    hmm_lines = []
+                    for line in hmm_reader:
+                        if line.startswith('HMMER3/f'):
+                            hmm_lines.clear()
+                            read += 1
+                            name = ''
+                        hmm_lines.append(line)
+                        if line.startswith('//'):
+                            if name in names_done:  # avoid duplicates
+                                duplicates.append(name)
+                            else:
+                                written += 1
+                                for l in hmm_lines:
+                                    if l.startswith('ACC'):
+                                        pass
+                                    else:
+                                        output.write(l)
+                                names_done.add(name)
+                        elif line.startswith('NAME'):
+                            name = line[4:].strip()
+                print(hmm_file.name, 'read, written, duplicates', read, written, len(duplicates))
+        context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
+    else:
+        context.log(f'Keeping existing functional gene database in {hmm_dir}, use --force to overwrite.')
+

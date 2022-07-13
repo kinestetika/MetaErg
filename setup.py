@@ -25,7 +25,7 @@ setuptools.setup(
     project_urls={'Source': 'https://github.com/kinestetika/MetaErg'},
     package_dir={'': 'src'},
     python_requires='>=3.10',
-    install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas'],
+    install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx'],
     extras_require={  # Optional
         'dev': ['setuptools', 'build', 'twine'],
         'test': []

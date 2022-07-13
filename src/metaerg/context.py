@@ -2,6 +2,7 @@ import shutil
 import os
 import subprocess
 import time
+import httpx
 from multiprocessing import cpu_count
 from pathlib import Path
 
@@ -12,12 +13,12 @@ from metaerg import registry
 DATAFRAME_COLUMNS = 'id genome contig start end strand type inference subsystems descr taxon notes seq antismash ' \
                     'signal_peptide tmh tmh_topology blast cdd'.split()
 
-BASE_DIR = ''
-TEMP_DIR = ''
-HTML_DIR = ''
-DATABASE_DIR = ''
-CHECKM_DIR = ''
-GTDBTK_DIR = ''
+BASE_DIR = Path()
+TEMP_DIR = Path()
+HTML_DIR = Path()
+DATABASE_DIR = Path()
+CHECKM_DIR = Path()
+GTDBTK_DIR = Path()
 GENOME_NAME_MAPPING_FILE = ''
 CONTIG_FILES = []
 GENOME_NAMES = []
@@ -160,6 +161,13 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         raise Exception(f'Error while trying to run "{exec}"')
 
 
+def download(url: str, file: Path):
+    log(f'Started downloading {url} to {file}...')
+    with httpx.stream('GET', url, timeout=6.1, follow_redirects=True) as data_stream, open(file, 'wb') as handle:
+        for data in data_stream.iter_bytes():
+            handle.write(data)
+
+
 def sorted_annotators():
     return (registry.ANNOTATOR_REGISTRY[a] for a in sorted(list(registry.ANNOTATOR_REGISTRY.keys())))
 
@@ -179,7 +187,7 @@ def register_annotator(define_annotator):
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
         # (2) Then, make sure required databases are available
         for d in param.get('databases', []):
-            d = Path(DATABASE_DIR, d)
+            d = DATABASE_DIR / d
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
                                                                                        param['purpose'], d))
