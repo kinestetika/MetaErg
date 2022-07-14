@@ -19,7 +19,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 executor.submit(context.run_external, f'signalp6 --fastafile {split_input} --output_dir '
                                                     f'{split_output} --format none --organism other')
 
-        result_files[0].mkdir()
+        result_files[0].mkdir(exist_ok=True)
         with open(Path(result_files[0], 'prediction_results.txt'), 'wb') as output:
             for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, split_signalp_files):
                 signalp_result_file = Path(split_signalp_dir, 'prediction_results.txt')
@@ -28,8 +28,9 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                         shutil.copyfileobj(input, output)
                 else:
                     context.log(f'({genome_name}) WARNING - missing part of signalp output!')
-                shutil.rmtree(split_signalp_dir)
-                split_cds_aa_file.unlink()
+                if split_signalp_dir.exists():
+                    shutil.rmtree(split_signalp_dir)
+                split_cds_aa_file.unlink(missing_ok=True)
     else:
         context.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {result_files[0]} --format none --organism other')
 
@@ -43,7 +44,11 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             words = line.split("\t")
             if "OTHER" == words[1]:
                 continue
-            feature_data.at[words[0].split()[0], 'signal_peptide'] = words[1]
+            feature_id = words[0].split()[0]
+            if feature_id not in feature_data.index:
+                raise Exception(f'Found results for unknown feature {feature_id}, '
+                                f'may need to rerun metaerg with --force')
+            feature_data.at[feature_id, 'signal_peptide'] = words[1]
             count += 1
     return feature_data, count
 

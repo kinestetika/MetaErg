@@ -13,6 +13,7 @@ from metaerg.html import html_all_genomes
 
 VERSION = "2.2.14"
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
     parser.add_argument('--contig_file', required=True,  help='Fasta nucleotide file of the contigs, or dir that '

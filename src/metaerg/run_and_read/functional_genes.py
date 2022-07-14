@@ -43,6 +43,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     with TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
         hit_count = 0
         for blast_result in handle:
+            if blast_result.query() not in feature_data.index:
+                raise Exception(f'Found results for unknown feature {blast_result.query()}, '
+                                f'may need to rerun metaerg with --force')
             for h in blast_result.hits:
                 db_entry = h.hit
                 confidence = 'similar to '

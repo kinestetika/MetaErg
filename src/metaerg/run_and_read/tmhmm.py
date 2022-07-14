@@ -28,6 +28,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     feature_tmh_count += 1
                     current_txt += f'{start}-{end},'
                 case [next_feature_name, _, orientation, _, _] if orientation in ('inside', 'outside'):
+                    if next_feature_name not in feature_data.index:
+                        raise Exception(f'Found results for unknown feature {next_feature_name}, '
+                                        f'may need to rerun metaerg with --force')
                     if next_feature_name != current_feature_name:
                         if feature_tmh_count:
                             feature_data.at[current_feature_name, 'tmh'] = feature_tmh_count

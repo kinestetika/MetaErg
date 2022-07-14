@@ -67,6 +67,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     # (3) parse diamond blast results
 
     def process_blast_result(blast_result: BlastResult):
+        if blast_result.query() not in feature_data.index:
+            raise Exception(f'Found results for unknown feature {blast_result.query()}, '
+                            f'may need to rerun metaerg with --force')
         feature_data.at[blast_result.query(), 'blast'] = str(blast_result)
         feature_data.at[blast_result.query(), 'descr'] = blast_result.hits[0].hit.descr
         feature_data.at[blast_result.query(), 'taxon'] =  blast_result.hits[0].hit.taxon

@@ -50,6 +50,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
+            if cdd_result.query() not in feature_data.index:
+                raise Exception(f'Found results for unknown feature {cdd_result.query()}, '
+                                f'may need to rerun metaerg with --force')
             feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
             if subsystem := subsystems.match(cdd_result):

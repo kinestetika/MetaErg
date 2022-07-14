@@ -2,11 +2,11 @@ import shutil
 import os
 import subprocess
 import time
-import httpx
 from multiprocessing import cpu_count
 from pathlib import Path
 
-import numpy as np
+import pandas as pd
+import httpx
 
 from metaerg import registry
 
@@ -175,46 +175,46 @@ def sorted_annotators():
 def register_annotator(define_annotator):
     param = define_annotator()
 
-    def annotator(genome_name, contig_dict, feature_data):
+    def annotator(genome_name, contig_dict, feature_data) -> pd.DataFrame:
         """Runs programs and reads results."""
         log('({}) Starting {} ...', (genome_name, param['purpose']))
-        # (1) First make sure that the helper programs are available:
-        all_programs_in_path = True
-        for p in param.get('programs', []):
-            program_path = shutil.which(p, mode=os.X_OK)
-            if not program_path:
-                all_programs_in_path = False
-                log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
-        # (2) Then, make sure required databases are available
+        # (1) Make sure required databases are available
         for d in param.get('databases', []):
             d = DATABASE_DIR / d
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
                                                                                        param['purpose'], d))
-                return
-        # (3) Then, if force or the results files are not yet there, run the programs:
+                return feature_data
+        # (2) Then, if force or the results files are not yet there, run the programs:
         result_files = [spawn_file(f, genome_name) for f in param.get('result_files', [])]
-        if all_programs_in_path:
-            previous_results_missing = False
-            for f in result_files:
-                if not f.exists() or not f.stat().st_size:
-                    previous_results_missing = True
-                    break
-            if FORCE or previous_results_missing:
+        previous_results_missing = False
+        for f in result_files:
+            if not f.exists() or not f.stat().st_size:
+                previous_results_missing = True
+                break
+        if FORCE or previous_results_missing:
+            # (2) make sure that the helper programs are available:
+            all_programs_in_path = True
+            p = 'X'
+            for p in param.get('programs', []):
+                program_path = shutil.which(p, mode=os.X_OK)
+                if not program_path:
+                    all_programs_in_path = False
+            if all_programs_in_path:
                 param['run'](genome_name, contig_dict, feature_data, result_files)
             else:
-                log('({}) Reusing existing results in {}.'.format(genome_name,
-                                                                  ', '.join(str(file) for file in result_files)))
+                log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
+                return feature_data
+        else:
+            log('({}) Reusing existing results in {}.'.format(genome_name,
+                                                              ', '.join(str(file) for file in result_files)))
         # (4) If all results files are there, read the results:
         all_results_created = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
-                all_results_created = False
                 log('({}) Missing expected result file {}.', (genome_name, f))
-        if all_results_created:
-            feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
-        else:
-            positive_count = 0
+                return feature_data
+        feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
         log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
         return feature_data
 
