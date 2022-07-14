@@ -11,7 +11,6 @@ ALL_MASK_TARGETS = set('CDS rRNA tRNA tmRNA ncRNA repeat crispr_repeat retrotran
 COMPLEMENT = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',}
 
 
-
 def reverse_complement(seq:str) -> str:
     return ''.join(COMPLEMENT.get(b, 'N') for b in reversed(seq))
 
@@ -91,13 +90,13 @@ class Masker:
 
     def mask(self, seq_record):
         seq = seq_record['seq']
-        self.nt_masked = 0
         if self.apply_mask:
             feature_data = self.feature_data.loc[lambda df: df['contig'] == seq_record['id'], :]
             for feature in feature_data.itertuples():
                 feature_length = feature.end - feature.start
                 seq = seq[:feature.start] + 'N' * feature_length + seq[feature.end:]
                 self.nt_masked += feature_length
+
         self.nt_total += len(seq)
 
         masked_record = seq_record.copy()
@@ -105,7 +104,7 @@ class Masker:
         return masked_record
 
     def stats(self):
-        return f'Masked {self.nt_masked / max(self.nt_total, 1) * 100:.1f}% of sequence data.'
+        return f'Masked {self.nt_masked} / {self.nt_total} nt ({self.nt_masked / max(self.nt_total, 1):.1%}).'
 
 
 def write_fasta(handle, fasta, line_length=80):
@@ -153,10 +152,10 @@ def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1
     return paths
 
 
-def write_contigs_to_fasta(contig_hash: dict, base_file: Path, feature_data: pd.DataFrame = None, genome_name='',
+def write_contigs_to_fasta(contig_dict: dict, base_file: Path, feature_data: pd.DataFrame = None, genome_name='',
                            split=1, mask_targets=None, mask_min_length=50):
     """writes contigs to fasta file(s), optionally masking features with N"""
-    number_of_records = len(contig_hash)
+    number_of_records = len(contig_dict)
     split = min(split, number_of_records)
     records_per_file = number_of_records / split
     if split > 1:
@@ -166,7 +165,7 @@ def write_contigs_to_fasta(contig_hash: dict, base_file: Path, feature_data: pd.
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
     masker = Masker(feature_data, targets=mask_targets, min_length=mask_min_length)
-    for contig in contig_hash.values():
+    for contig in contig_dict.values():
         write_fasta(filehandles[int(records_written / records_per_file)], masker.mask(contig))
         records_written += 1
     for f in filehandles:

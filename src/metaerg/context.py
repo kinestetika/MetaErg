@@ -70,18 +70,20 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     CPUS_AVAILABLE = cpu_count()
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
+
+    if TEMP_DIR.exists():
+        print('Warning: may overwrite existing temp files...')
+        if TEMP_DIR.is_file():
+            print(f'Expected folder at {TEMP_DIR}, found regular file, crash! Delete this file first')
+            exit(1)
+    else:
+        TEMP_DIR.mkdir()
     log('Initializing execution environment with command line arguments...')
 
     if not contig_file.exists():
         log(f'Input file "{contig_file}" is missing. Expecting dir or a nt fasta file.')
         exit(1)
-    if TEMP_DIR.exists():
-        log('Warning: may overwrite existing temp files...')
-        if TEMP_DIR.is_file():
-            log(f'Expected folder at {TEMP_DIR}, found regular file, crash! Delete this file first')
-            exit(1)
-    else:
-        TEMP_DIR.mkdir(exist_ok=True)
+
     if CPUS_PER_GENOME > 0:
         CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
     else:
@@ -205,8 +207,8 @@ def register_annotator(define_annotator):
             else:
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
                 return feature_data
-        else:
-            log('({}) Reusing existing results in {}.'.format(genome_name,
+        elif len(param.get('programs', [])):  # check if any previous results were expected
+            log('({}) Reusing existing results in {}.'. format(genome_name,
                                                               ', '.join(str(file) for file in result_files)))
         # (4) If all results files are there, read the results:
         all_results_created = True

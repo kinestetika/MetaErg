@@ -1,9 +1,7 @@
-import shutil
 import pandas as pd
 from pathlib import Path
 from concurrent import futures
 
-import context
 from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 from metaerg import context
 from metaerg import subsystems
@@ -12,7 +10,7 @@ from metaerg import subsystems
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
-    context.run_external(f'hmmscan -E e-6 --tblout {result_files[0]} {hmm_db} {cds_aa_file}')
+    context.run_external(f'hmmscan -E 1e-6 --tblout {result_files[0]} {hmm_db} {cds_aa_file}')
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
@@ -73,7 +71,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_canthyd():
     return ({'pipeline_position': 101,
-             'purpose': 'identification of function genes with canthyd and metascan databases',
+             'purpose': 'identification of functional genes with canthyd and metascan databases',
              'programs': ('hmmscan',),
              'databases': (Path('hmm', 'functional_genes.hmm'),),
              'result_files': ('canthyd',),

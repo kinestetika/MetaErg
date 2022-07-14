@@ -48,33 +48,34 @@ def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=Fa
     contigs = list()
     with fasta.FastaParser(input_fasta_file) as fasta_reader:
         for c in fasta_reader:
-            if len(c['seq']) >= min_contig_length:
-                contigs.append(c)
+            if len(c['seq']) < min_contig_length:
+                continue
+            contigs.append(c)
             if not rename_contigs:
                 if c['id'] in names_done:
                     raise Exception(f'Contig id {c["id"]} not unique. Use --rename_contigs to avoid this problem.')
                 names_done.add(c["id"])
     contigs.sort(key=lambda c:len(c['seq']), reverse=True)
-    contigs = {c['id']: c for c in contigs}
-    total_length = sum(len(c['seq']) for c in contigs.values())
+    total_length = sum(len(c['seq']) for c in contigs)
     context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length:,} from file.')
     if rename_contigs:
         contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
         context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
         i = 0
         with open(contig_name_mapping_file, 'w') as mapping_writer:
-            for c in contigs.values():
+            for c in contigs:
                 new_id = f'{genome_name}.c{i:0>4}'
                 mapping_writer.write(f'{c["id"]}\t{new_id}\n')
                 c['id'] = new_id
                 i += 1
-        contigs = {c['id']: c for c in contigs.values()}
     else:
-        for c_id in contigs.keys():
+        for c_id in contigs:
             if delimiter in c_id:
                 raise Exception(f'Contig id {c_id} contains "{delimiter}"; change delimiter with '
                                 f'--delimiter [new delimiter] or use --rename_contigs')
+    contigs = {c['id']: c for c in contigs}
     return contigs
+
 
 def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.DataFrame) -> dict:
     properties = {}
