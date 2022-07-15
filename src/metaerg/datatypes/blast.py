@@ -1,5 +1,6 @@
 import gzip
 
+
 class DBentry:
     FIELDS = ('domain', 'descr', 'taxon', 'accession', 'gene', 'length', 'pos', 'min_score', 'min_t_score')
 
@@ -130,7 +131,7 @@ class TabularBlastParser:
 
     def load_next_hit_from_file(self) -> BlastHit | None:
         while line := self.handle.readline():
-            words = line.strip().split('\t')
+            words = line.strip().split()  # \t works for blast, but hmmer and cmscan use spaces
             match words:
                 case [word, *_] if word.startswith('#'):
                     continue
@@ -144,10 +145,10 @@ class TabularBlastParser:
                     return(b)
                 case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
+                    return BlastHit(query, hit_db_entry, 0, hit_db_entry.length, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
                 case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    return BlastHit(query, hit_db_entry, 0, 0, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
+                    return BlastHit(query, hit_db_entry, 0, hit_db_entry.length, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
                 case [*_]:
                     continue
         return None

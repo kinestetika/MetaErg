@@ -57,6 +57,23 @@ def subsystem_data() -> str:
         CHL00018 RNA polymerase subunit beta' (rpoC1)
         CHL00117 RNA polymerase subunit beta' (rpoC2)
         
+        >general protein translocation
+        TIGR00963 preprotein translocase, subunit SecA
+        TIGR00809 preprotein translocase, subunit SecB
+        TIGR01129 preprotein translocase, subunit SecD
+        TIGR00964 preprotein translocase, subunit SecE, bacteria
+        TIGR00327 preprotein translocase, subunit SecE, archaea/eukarya
+        TIGR00966 preprotein translocase, subunit SecF
+        TIGR00810 preprotein translocase, subunit SecG
+        TIGR00967 preprotein translocase, subunit SecY
+        TIGR00869 preprotein translocase, subunit sec62
+        
+        >twin arginine translocation of folded proteins
+        TIGR01411 Twin arginine-targeting protein translocase, subunits TatAE
+        TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
+        TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
+        TIGR01912 Twin arginine targeting (Tat) protein translocase, subunit TatC, archaea
+
         >Respiratory Complex I
         COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
         COG0377|PRK14816|PRK14817|PRK14819|PRK14820|PRK06411 NADH:ubiquinone oxidoreductase 20 kD subunit (NuoB)
@@ -179,7 +196,7 @@ def subsystem_data() -> str:
         A0A068NL89|A0A172Y283|A0A173LN68|A0A222SGV1|A0A290HT12|A6TTV2|A8HUB9|A9H0W3|D5H6E0|D8PAC9|E4S6S0|G4RGV6|G4T0E0|H6RQJ1|J9S018|K7Z5X1|L7U7D3|Q24TA2|R4K7A9|V5SE26 cysNC; bifunctional enzyme CysN/CysC [ec:2.7.7.4,2.7.1.25]
         A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 PAPSS; 3'-phosphoadenosine 5'-phosphosulfate synthase [ec:2.7.7.4,2.7.1.25]
 
-        >Sulfide oxidation I, H2S -> persulfide
+        >Sulfide oxidation, H2S -> persulfide
         A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 sqr; sulfide:quinone oxidoreductase [ec:1.8.5.4]
 
         >sulfur oxidation, sulfur -> sulfite
@@ -206,13 +223,11 @@ def subsystem_data() -> str:
         WP_011764874|WP_011803507|Q7P1Q4 sorB; sulfite dehydrogenase (cytochrome C) subunit B
         A0A075AI71|A0A0H3MDW2|A0A0S2EWV4|A0A179H534|A0A1I8MUV9|A0A1W4XXR1|A0A2H3WXQ7|A3KJG7|A7SP42|A8P4J6|B8NU07|C1HA82|D0NKC6|D8TX78|E3RMG9|G0S2S8|I1RGK9|Q54XJ8 SUOX; sulfite oxidase [ec:1.8.3.1]
 
-        >Nitrification, ammonia -> nitrite
-        A0RUM1|WP_011330982|WP_041357108|WP_090742150|PLY22682|A0A0S4KUL9|A0A1Y0CHI7|A9QPD9|WP_084572913|WP_014892304|ANC58167|ANC58118|AEF98753 pmoA; methane monooxygenase subunit A -gamma- [ec:1.14.18.3]
-        A0A1Q2SP28|A0A1W6MQF7|A9QPE0|E7BQU6|Q0ADP8|Q6MZ16 pmoB-amoB; methane/ammonia monooxygenase subunit B
-        A0A1W6MT79|A0A1Y0CHN4|A9A4U4|A9QPE5|F9ZJ63 pmoC-amoC; methane/ammonia monooxygenase subunit C
+        >Nitrification
+        A0RUM1|WP_011330982|WP_041357108|WP_090742150|PLY22682|A0A0S4KUL9|A0A1Y0CHI7|A9QPD9|WP_084572913|WP_014892304|ANC58167|ANC58118|AEF98753 pmoA/amoA; methane/ammonia monooxygenase subunit A
+        A0A1Q2SP28|A0A1W6MQF7|A9QPE0|E7BQU6|Q0ADP8|Q6MZ16 pmoB/amoB; methane/ammonia monooxygenase subunit B
+        A0A1W6MT79|A0A1Y0CHN4|A9A4U4|A9QPE5|F9ZJ63 pmoC/amoC; methane/ammonia monooxygenase subunit C
         A0A1B4V6X4|A0A1Q2SL48 hao; hydroxylamine dehydrogenase [ec:1.7.2.6]
-
-        >Nitrification, comammox
         A0A0B5GVF0|A0A0U3NDF4|A0A0U5N0A2|A0A0X8K2K6|A0A168G368|D5MLH7|F8D6S2|Q2SXG4|Q9YCG9|A0A1W1I2B6|Q1QHW9 nxrA; nitrate reductase / nitrite oxidoreductase, alpha subunit Nitrobacter [ec:1.7.5.1]
         A0A0H3GNX1|A0A1Y0HZR5|A8M8C4|D2PSR0|J7LAS1|L0JX22|Q1QHX1|A0A1W1I5Y1 nxrB; nitrate reductase / nitrite oxidoreductase, beta subunit [ec:1.7.5.1]
 
@@ -515,23 +530,40 @@ def subsystem_data() -> str:
         COG0039|COG1052|NF033901|PLN00105|PLN02602|PRK11197 lactate dehydrogenase
         cd01678|cd01677|COG1882 pyruvate formate lyase
 
-        >general protein translocation
-        TIGR00963 preprotein translocase, subunit SecA
-        TIGR00809 preprotein translocase, subunit SecB
-        TIGR01129 preprotein translocase, subunit SecD
-        TIGR00964 preprotein translocase, subunit SecE, bacteria
-        TIGR00327 preprotein translocase, subunit SecE, archaea/eukarya
-        TIGR00966 preprotein translocase, subunit SecF
-        TIGR00810 preprotein translocase, subunit SecG
-        TIGR00967 preprotein translocase, subunit SecY
-        TIGR00869 preprotein translocase, subunit sec62
-        
-        >twin arginine translocation of folded proteins
-        TIGR01411 Twin arginine-targeting protein translocase, subunits TatAE
-        TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
-        TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
-        TIGR01912 Twin arginine targeting (Tat) protein translocase, subunit TatC, archaea
-
-
-
+        >hydrocarbon metabolism
+        AlkB AlkB alkane hydrolase
+        AlmA_GroupI AlmA_GroupI flavin-binding alkane monooxygenase
+        AlmA_GroupIII AlmA_GroupIII flavin-binding alkane monooxygenase
+        CYP153 CYP153 alkane oxidizing cytochrome P450
+        LadA_alpha LadA_alpha long-chain alkane hydrolase
+        LadA_beta LadA_beta long-chain alkane hydrolase
+        LadB LadB long-chain alkane hydrolase
+        pBmoA pBmoA membrane-bound alkane monooxygenase subunit A
+        pBmoB pBmoB membrane-bound alkane monooxygenase subunit B
+        pBmoC pBmoC membrane-bound alkane monooxygenase subunit C
+        PrmA PrmA propane 2-monooxygenase large subunit
+        PrmC PrmC propane 2-monooxygenase small subunit
+        sBmoX sBmoX soluble alkane monooxygenase subunit A
+        sBmoY sBmoY soluble alkane monooxygenase subunit B
+        DmpO DmpO phenol/toluene 2-monooxygenase (NADH dependent)
+        DszC DszC dibenzothiophene monooxygenase
+        MAH_alpha MAH_alpha benzene/toluene/naphtalene dioxygenase subunit alpha
+        MAH_beta MAH_beta benzene/toluene/naphtalene dioxygenase subunit beta
+        NdoB NdoB benzene/toluene/naphtalene dioxygenase subunit alpha
+        non_NdoB_type non_NdoB_type similar to benzene/toluene/naphtalene dioxygenase subunit alpha
+        NdoC NdoC benzene/toluene/naphtalene dioxygenase subunit beta
+        TmoA_BmoA TmoA_BmoA toluene monooxygenase subunit A
+        TmoB_BmoB TmoB_BmoB toluene monooxygenase subunit B
+        TmoE TmoE toluene monooxygenase system protein E
+        TomA1 TomA1 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
+        TomA3 TomA3 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
+        TomA4 TomA4 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
+        ahyA ahyA molybdopterin-family alkane C2 methylene hydroxylase
+        AssA AssA alkylsuccinate synthase
+        AbcA_1 AbcA_1 benzene carboxylase
+        BssA BssA benzylsuccinate synthase
+        CmdA CmdA molybdopterin-family ethylbenzene dehydrogenase subunit alpha
+        EbdA EbdA molybdopterin-family ethylbenzene dehydrogenase subunit alpha
+        K27540 K27540 naphtalene carboxylase
+        NmsA NmsA naphtylmethyl succinate synthase
         '''

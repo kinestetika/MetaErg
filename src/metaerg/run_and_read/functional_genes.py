@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from concurrent import futures
 
-from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
+from metaerg.datatypes.blast import DBentry, TabularBlastParser
 from metaerg import context
 from metaerg import subsystems
 
@@ -21,16 +21,17 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for line in handle:
             if line.startswith('NAME'):
                 name = line.split()[1]
-                db_entry = DBentry(domain='functional_genes', accession=name, gene=name)
+                db_entry = DBentry(domain='functional_genes', descr='', accession=name, gene=name)
                 functional_gene_db[name] = db_entry
             elif line.startswith('ACC'):
                 db_entry.accession = line[4:].strip()
             elif line.startswith('NC'):
-                db_entry.min_score = int(line[4:].strip())
+                db_entry.min_score = int(line[4:].strip().split()[0])
             elif line.startswith('TC'):
-                db_entry.min_t_score = int(line[4:].strip())
+                db_entry.min_t_score = int(line[4:].strip().split()[0])
             elif line.startswith('DESC'):
                 db_entry.descr = line[4:].strip()
+                print(db_entry.gene, db_entry.descr)
             elif line.startswith('LENG'):
                 db_entry.length = int(line[4:].strip())
     context.log(f'({genome_name}) {len(functional_gene_db)} functional gene profiles in database.')
@@ -59,13 +60,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                         confidence = ''
                 if descr := h.hit.descr:
                     hit_count += 1
-                    feature_data.at[blast_result.query, 'descr'] = \
-                        f'{confidence}{descr}'
+                    feature_data.at[blast_result.query(), 'descr'] = f'{confidence}{descr}'
                     feature_data.at[blast_result.query(), 'subsystems'] = subsystems.match_hit(h)
                 else:
                     context.log(f'Warning, missing description for hmm {h.hit}...')
                 break
-        return feature_data, hit_count
+    return feature_data, hit_count
 
 
 @context.register_annotator
@@ -74,7 +74,7 @@ def run_and_read_canthyd():
              'purpose': 'identification of functional genes with canthyd and metascan databases',
              'programs': ('hmmscan',),
              'databases': (Path('hmm', 'functional_genes.hmm'),),
-             'result_files': ('canthyd',),
+             'result_files': ('hmm',),
              'run': _run_programs,
              'read': _read_results})
 

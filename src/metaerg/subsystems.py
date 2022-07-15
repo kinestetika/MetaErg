@@ -4,42 +4,6 @@ import pandas as pd
 from metaerg import subsystems_data
 from metaerg.datatypes.blast import BlastResult, BlastHit
 
-canthyd_descr = {'AlkB': 'alkane hydrolase',
-                 'AlmA_GroupI': 'flavin-binding alkane monooxygenase',
-                 'AlmA_GroupIII': 'flavin-binding alkane monooxygenase',
-                 'CYP153': 'alkane oxidizing cytochrome P450',
-                 'LadA_alpha': 'long-chain alkane hydrolase',
-                 'LadA_beta': 'long-chain alkane hydrolase',
-                 'LadB': 'long-chain alkane hydrolase',
-                 'pBmoA': 'membrane-bound alkane monooxygenase subunit A',
-                 'pBmoB': 'membrane-bound alkane monooxygenase subunit B',
-                 'pBmoC': 'membrane-bound alkane monooxygenase subunit C',
-                 'PrmA': 'propane 2-monooxygenase large subunit',
-                 'PrmC': 'propane 2-monooxygenase small subunit',
-                 'sBmoX': 'soluble alkane monooxygenase subunit A',
-                 'sBmoY': 'soluble alkane monooxygenase subunit B',
-                 'DmpO': 'phenol/toluene 2-monooxygenase (NADH dependent)',
-                 'DszC': 'dibenzothiophene monooxygenase',
-                 'MAH_alpha': 'benzene/toluene/naphtalene dioxygenase subunit alpha',
-                 'MAH_beta': 'benzene/toluene/naphtalene dioxygenase subunit beta',
-                 'NdoB': 'benzene/toluene/naphtalene dioxygenase subunit alpha',
-                 'non_NdoB_type': 'similar to benzene/toluene/naphtalene dioxygenase subunit alpha',
-                 'NdoC': 'benzene/toluene/naphtalene dioxygenase subunit beta',
-                 'TmoA_BmoA': 'toluene monooxygenase subunit A',
-                 'TmoB_BmoB': 'toluene monooxygenase subunit B',
-                 'TmoE': 'toluene monooxygenase system protein E',
-                 'TomA1': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
-                 'TomA3': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
-                 'TomA4': 'phenol/toluene monooxygenase/hydroxylase (NADH dependent)',
-                 'ahyA': 'molybdopterin-family alkane C2 methylene hydroxylase',
-                 'AssA': 'alkylsuccinate synthase',
-                 'AbcA_1': 'benzene carboxylase',
-                 'BssA': 'benzylsuccinate synthase',
-                 'CmdA': 'molybdopterin-family ethylbenzene dehydrogenase subunit alpha',
-                 'EbdA': 'molybdopterin-family ethylbenzene dehydrogenase subunit alpha',
-                 'K27540': 'naphtalene carboxylase',
-                 'NmsA': 'naphtylmethyl succinate synthase'}
-
 current_subsystem = None
 subsystems = []
 index_data = []

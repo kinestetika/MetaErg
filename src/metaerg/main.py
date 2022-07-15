@@ -168,7 +168,8 @@ def main():
         with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
             outcomes = []
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
+                annotate_genome(genome_name, contig_file)
+                #outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
             for future in futures.as_completed(outcomes):
                 future.result()
         context.log('Now writing all-genomes overview html...')
