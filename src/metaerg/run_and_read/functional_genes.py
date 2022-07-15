@@ -31,7 +31,6 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 db_entry.min_t_score = int(line[4:].strip().split()[0])
             elif line.startswith('DESC'):
                 db_entry.descr = line[4:].strip()
-                print(db_entry.gene, db_entry.descr)
             elif line.startswith('LENG'):
                 db_entry.length = int(line[4:].strip())
     context.log(f'({genome_name}) {len(functional_gene_db)} functional gene profiles in database.')
@@ -54,9 +53,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     if h.score > db_entry.min_t_score:
                         confidence = ''
                 else:
-                    if h.evalue > 1e-80:
+                    if h.evalue > 1e-25:
                         continue
-                    if h.evalue < 1e-100:
+                    if h.evalue < 1e-80:
                         confidence = ''
                 if descr := h.hit.descr:
                     hit_count += 1
@@ -99,9 +98,8 @@ def install_functional_gene_databases():
         with futures.ThreadPoolExecutor() as executor:
             outcomes = []
             for url in FUNCTIONAL_GENE_URLS:
-                file = hmm_dir / Path(url).name
-                if not file.exists():
-                    outcomes.append(executor.submit(context.download, url, hmm_dir / Path(url).name))
+                destination_file = hmm_dir / Path(url).name
+                outcomes.append(executor.submit(context.download, url, destination_file))
             for future in futures.as_completed(outcomes):
                 future.result()
         context.log('Checking data sanity...')
