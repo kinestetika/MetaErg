@@ -11,7 +11,7 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.14"
+VERSION = "2.2.15"
 
 
 def parse_arguments():
@@ -168,8 +168,8 @@ def main():
         with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
             outcomes = []
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                annotate_genome(genome_name, contig_file)
-                #outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
+                # annotate_genome(genome_name, contig_file)
+                outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
             for future in futures.as_completed(outcomes):
                 future.result()
         context.log('Now writing all-genomes overview html...')
