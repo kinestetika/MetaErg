@@ -12,7 +12,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     if context.CPUS_PER_GENOME > 1:
         split_fasta_files = fasta.write_features_to_fasta(feature_data, cds_aa_file, context.CPUS_PER_GENOME,
                                                           targets=('CDS',))
-        split_signalp_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
+        split_signalp_files = [result_files[0].parent / f'{result_files[0].name}.{i}'
                                for i in range(len(split_fasta_files))]
         with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
             for split_input, split_output in zip(split_fasta_files, split_signalp_files):
@@ -20,7 +20,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                                                     f'{split_output} --format none --organism other')
 
         result_files[0].mkdir(exist_ok=True)
-        with open(Path(result_files[0], 'prediction_results.txt'), 'wb') as output:
+        with open(result_files[0] / 'prediction_results.txt', 'wb') as output:
             for split_cds_aa_file, split_signalp_dir in zip(split_fasta_files, split_signalp_files):
                 signalp_result_file = Path(split_signalp_dir, 'prediction_results.txt')
                 if signalp_result_file.exists():
@@ -37,19 +37,21 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     count = 0
-    with open(Path(result_files[0], 'prediction_results.txt')) as signalp_handle:
-        for line in signalp_handle:
-            if line.startswith("#"):
-                continue
-            words = line.split("\t")
-            if "OTHER" == words[1]:
-                continue
-            feature_id = words[0].split()[0]
-            if feature_id not in feature_data.index:
-                raise Exception(f'Found results for unknown feature {feature_id}, '
-                                f'may need to rerun metaerg with --force')
-            feature_data.at[feature_id, 'signal_peptide'] = words[1]
-            count += 1
+    signalp_result_file = result_files[0] / 'prediction_results.txt'
+    if signalp_result_file.exists():
+        with open() as signalp_handle:
+            for line in signalp_handle:
+                if line.startswith("#"):
+                    continue
+                words = line.split("\t")
+                if "OTHER" == words[1]:
+                    continue
+                feature_id = words[0].split()[0]
+                if feature_id not in feature_data.index:
+                    raise Exception(f'Found results for unknown feature {feature_id}, '
+                                    f'may need to rerun metaerg with --force')
+                feature_data.at[feature_id, 'signal_peptide'] = words[1]
+                count += 1
     return feature_data, count
 
 
