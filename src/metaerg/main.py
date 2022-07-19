@@ -132,7 +132,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # feature_data = feature_data.set_index('id', drop=False)
 
     # (4) save results
-    context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk and .feather (for curation in R or Jupyter)...')
+    context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk and .feather...')
     faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
