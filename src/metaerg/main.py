@@ -11,7 +11,7 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.15"
+VERSION = "2.2.16"
 
 
 def parse_arguments():

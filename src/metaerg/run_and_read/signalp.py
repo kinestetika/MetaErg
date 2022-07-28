@@ -39,7 +39,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     count = 0
     signalp_result_file = result_files[0] / 'prediction_results.txt'
     if signalp_result_file.exists():
-        with open() as signalp_handle:
+        with open(signalp_result_file) as signalp_handle:
             for line in signalp_handle:
                 if line.startswith("#"):
                     continue
