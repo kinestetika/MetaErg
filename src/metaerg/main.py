@@ -149,7 +149,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     genome_properties = compute_genome_properties(contig_dict, feature_data)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
-         html_writer(genome_name, feature_data, genome_properties, Path(context.BASE_DIR, 'html'))
+        html_writer(genome_name, feature_data, genome_properties, context.HTML_DIR)
     context.log(f'({genome_name}) Completed html visualization.')
 
 

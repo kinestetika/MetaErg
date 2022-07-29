@@ -71,6 +71,9 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
 
+    if HTML_DIR.exists():
+        print(f'clearing html dir at {HTML_DIR}')
+        shutil.rmtree(HTML_DIR)
     if TEMP_DIR.exists():
         print('Warning: may overwrite existing temp files...')
         if TEMP_DIR.is_file():
@@ -145,9 +148,12 @@ def log(log_message, values=(), topic=''):
         else:
             final_msg = f'{format_runtime()} {log_message}'
         print(final_msg)
-        with open(LOG_FILE, 'a') as log_handle:
-            log_handle.write(final_msg)
-            log_handle.write('\n')
+        try:
+            with open(LOG_FILE, 'a') as log_handle:
+                log_handle.write(final_msg)
+                log_handle.write('\n')
+        except FileNotFoundError:
+            pass
 
 
 def format_runtime():
