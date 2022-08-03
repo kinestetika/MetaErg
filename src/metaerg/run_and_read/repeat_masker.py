@@ -18,9 +18,12 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     context.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
     with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
         context.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-    context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . '
-                         f'{fasta_file}')
     repeatmasker_output_file = Path(f'{fasta_file.name}.out')  # nothing we can do about that
+    if repeatscout_file_filtered.stat().st_size > 0:
+        context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . '
+                             f'{fasta_file}')
+    else:
+        repeatmasker_output_file.touch()
     shutil.move(repeatmasker_output_file, result_files[0])
     for file in Path.cwd().glob(f'{fasta_file.name}.*'):
         if file.is_dir():
