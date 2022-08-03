@@ -11,7 +11,7 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 
-VERSION = "2.2.16"
+VERSION = "2.2.17"
 
 
 def parse_arguments():
@@ -157,7 +157,6 @@ def main():
     print(f'This is metaerg.py {VERSION}')
 
     context.init(**parse_arguments().__dict__)
-    # print(',\n'.join(f'{k}={eval("context." + k)}' for k in dir(context) if not k.startswith('_')))
 
     if context.CREATE_DB_TASKS:
         context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.CREATE_DB_TASKS}; '
@@ -165,13 +164,16 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     else:
-        with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
-            outcomes = []
+        if context.PARALLEL_ANNOTATIONS > 1:
+            with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
+                outcomes = []
+                for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
+                    outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
+                for future in futures.as_completed(outcomes):
+                    future.result()
+        else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                # annotate_genome(genome_name, contig_file)
-                outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
-            for future in futures.as_completed(outcomes):
-                future.result()
+                annotate_genome(genome_name, contig_file)
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')
