@@ -23,23 +23,23 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 case [contig_name] if contig_name.startswith('>'):
                     current_contig = contig_dict[contig_name[1:]]
                 case [_, trna, coordinates, _, codon]:
-                    coord_match = coord_regexp.fullmatch(coordinates)
-                    strand = -1 if 'c' == coord_match.group(1) else 1
-                    start = max(0, int(coord_match.group(2)) - 1)
-                    end = min(len(current_contig['seq']), int(coord_match.group(3)))
-                    seq = current_contig['seq'][start:end]
-                    if strand < 0:
-                        seq = fasta.reverse_complement(seq)
-                    feature = {'genome': genome_name,
-                               'contig': current_contig['id'],
-                               'start': start,
-                               'end': end,
-                               'strand': strand,
-                               'type': 'tRNA',
-                               'inference': 'aragorn',
-                               'seq': seq,
-                               'descr': f'{trna}-{codon}'}
-                    new_features.append(feature)
+                    if coord_match := coord_regexp.fullmatch(coordinates):
+                        strand = -1 if 'c' == coord_match.group(1) else 1
+                        start = max(0, int(coord_match.group(2)) - 1)
+                        end = min(len(current_contig['seq']), int(coord_match.group(3)))
+                        seq = current_contig['seq'][start:end]
+                        if strand < 0:
+                            seq = fasta.reverse_complement(seq)
+                        feature = {'genome': genome_name,
+                                   'contig': current_contig['id'],
+                                   'start': start,
+                                   'end': end,
+                                   'strand': strand,
+                                   'type': 'tRNA',
+                                   'inference': 'aragorn',
+                                   'seq': seq,
+                                   'descr': f'{trna}-{codon}'}
+                        new_features.append(feature)
     feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
     return feature_data, len(new_features)
 

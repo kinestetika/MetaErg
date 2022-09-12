@@ -10,7 +10,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
-    feature_data = feature_data.sort_values(by='start')
+    feature_data = feature_data.sort_values(by=['contig', 'start'])
     j=0
     for i in feature_data.index:
         if context.RENAME_CONTIGS:
