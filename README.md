@@ -28,7 +28,7 @@ The Metaerg 2.2 pipeline consists of:
 * (required) annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
 * (optional) annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
 * (optional) annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* (built-in) assigns genes to functions using [MetaScan](https://github.com/gcremers/metascan) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) hmm databases as well as a built-in database of physiological subsystems.
+* (built-in) assigns genes to functions using [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) hmm databases as well as a built-in database of physiological subsystems.
 * (built-in) presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 * (built-in) saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
 
