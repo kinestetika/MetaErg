@@ -124,12 +124,11 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
     target_dir = Path(base_dir) if base_dir else TEMP_DIR
     if MULTI_MODE:
         dir = target_dir / program_name
-        if not dir.exists():
-            dir.mkdir()
-        elif dir.is_file():
+        dir.mkdir(exist_ok=True)
+        if dir.is_file():
             if FORCE:
                 dir.unlink()
-                dir.mkdir()
+                dir.mkdir(exist_ok=True)
             else:
                 raise Exception("Use force to overwrite existing results")
         return dir / genome_id

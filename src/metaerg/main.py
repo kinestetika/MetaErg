@@ -10,8 +10,9 @@ from metaerg.run_and_read import *
 from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
+from metaerg.run_and_read import tmhmm
 
-VERSION = "2.2.20"
+VERSION = "2.2.21"
 
 
 def parse_arguments():
@@ -165,17 +166,22 @@ def main():
             db_installer()
     else:
         if context.PARALLEL_ANNOTATIONS > 1:
+            outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
-                outcomes = []
                 for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                    outcomes.append(executor.submit(annotate_genome, genome_name, contig_file))
-                for future in futures.as_completed(outcomes):
-                    future.result()
+                    outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
+            for genome_name, future in outcomes.items():
+                try:
+                    r = future.result()
+                except Exception:
+                    context.log(f'({genome_name}) Error while processing:')
+                    raise
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
                 annotate_genome(genome_name, contig_file)
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
+        tmhmm.cleanup(context.BASE_DIR)
     context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

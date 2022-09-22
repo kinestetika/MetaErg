@@ -7,10 +7,6 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     with open(result_files[0], 'w') as output, open(cds_aa_file) as input:
         context.run_external('tmhmm', stdin=input, stdout=output)
-    # this is not thread-safe:
-    for file in result_files[0].parent.glob(f'TMHMM_*'):
-        if file.is_dir():
-            shutil.rmtree(file)
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
@@ -54,3 +50,9 @@ def run_and_read_tmhmm():
              'result_files': ('tmhmm',),
              'run': _run_programs,
              'read': _read_results})
+
+
+def cleanup(dir):
+    for file in dir.glob(f'TMHMM_*'):
+        if file.is_dir():
+            shutil.rmtree(file)
