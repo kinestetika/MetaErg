@@ -9,6 +9,8 @@ from metaerg.datatypes import gbk
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     """Should execute the helper programs to complete the analysis"""
     gbk_file = context.spawn_file('gbk', genome_name)
+    if context.MULTI_MODE:
+        gbk_file = Path(gbk_file.parent, gbk_file.name + '.gbk')
     with open(gbk_file, 'w') as handle:
         gbk.gbk_write_genome(handle, contig_dict, feature_data)
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')

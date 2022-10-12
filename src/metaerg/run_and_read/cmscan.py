@@ -112,7 +112,7 @@ def run_and_read_cmscan():
 
 @context.register_database_installer
 def install_cmscan_database():
-    if 'R' not in context.CREATE_DB_TASKS:
+    if 'R' not in context.TASKS:
         return
     rfam_dir = Path(context.DATABASE_DIR, 'rfam')
     rfam_dir.mkdir(exist_ok=True, parents=True)

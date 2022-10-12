@@ -12,13 +12,13 @@ from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 
-VERSION = "2.2.21"
+VERSION = "2.2.23"
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
-    parser.add_argument('--contig_file', required=True,  help='Fasta nucleotide file of the contigs, or dir that '
-                                                              'contains multiple fasta nucleotide files.')
+    parser.add_argument('--contig_file', help='Fasta nucleotide file of the contigs, or dir that '
+                                              'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', required=True,  help='Dir that contains the annotation databases.')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization. It will be enforced when original '
@@ -33,10 +33,12 @@ def parse_arguments():
                                                                  'of the fasta nucleotide files (default: .fna).')
     parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
     parser.add_argument('--delimiter', default='.', help='Separater character used in feature ids.')
+    parser.add_argument('--prefix', default='g', help='Prefix used when renaming genomes (default: g).')
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
-    parser.add_argument('--create_db', default='', help='Create/download metaerg database. '
-                                                        'Use PVEBRCS to create all...')
+    parser.add_argument('--create_db', default=False, action="store_true", help='Create/download metaerg database.')
+    parser.add_argument('--tasks', default='all', help='Subtasks to be performed while annotating or creating '
+                                                       'database.')
 
     return parser.parse_args()
 
@@ -159,8 +161,8 @@ def main():
 
     context.init(**parse_arguments().__dict__)
 
-    if context.CREATE_DB_TASKS:
-        context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.CREATE_DB_TASKS}; '
+    if context.CREATE_DB:
+        context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.TASKS}; '
                     f'force: {context.FORCE}.')
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()

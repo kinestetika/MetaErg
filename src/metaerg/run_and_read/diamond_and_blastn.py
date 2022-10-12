@@ -13,7 +13,6 @@ import ncbi.datasets
 
 from metaerg import context
 from metaerg.datatypes import fasta
-from metaerg import subsystems
 from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
@@ -129,7 +128,7 @@ def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingd
 
 @context.register_database_installer
 def install_viral_database():
-    if 'V' not in context.CREATE_DB_TASKS:
+    if 'V' not in context.TASKS:
         return
     context.log('Downloading viral refseq from the NCBI...')
     VIR_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'vir')
@@ -182,7 +181,7 @@ def install_viral_database():
 
 @context.register_database_installer
 def install_eukaryote_database():
-    if 'E' not in context.CREATE_DB_TASKS:
+    if 'E' not in context.TASKS:
         return
     context.log('Downloading taxon-unique eukaryotic genomes using NCBI Datasets...')
     EUK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'euk')
@@ -329,7 +328,7 @@ def install_eukaryote_database():
 
 @context.register_database_installer
 def install_prokaryote_database():
-    if 'P' not in context.CREATE_DB_TASKS:
+    if 'P' not in context.TASKS:
         return
     context.log('Downloading a gff file from the NCBI FTP server for each prokaryotic genome in gtdbtk...')
     PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')
@@ -441,7 +440,7 @@ def install_prokaryote_database():
 
 @context.register_database_installer
 def format_blast_databases():
-    if 'B' not in context.CREATE_DB_TASKS:
+    if 'B' not in context.TASKS:
         return
     context.log('Concatenating and formatting blast databases for (prok, euk, vir)...')
     PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')

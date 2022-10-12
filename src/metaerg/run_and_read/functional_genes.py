@@ -89,7 +89,7 @@ FUNCTIONAL_GENE_URLS = ('https://zenodo.org/record/6365663/files/carbon.cycle.su
 
 @context.register_database_installer
 def install_functional_gene_databases():
-    if 'S' not in context.CREATE_DB_TASKS:
+    if 'S' not in context.TASKS:
         return
     hmm_dir = context.DATABASE_DIR / 'hmm'
     if context.FORCE or not hmm_dir.exists():

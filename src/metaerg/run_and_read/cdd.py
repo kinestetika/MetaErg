@@ -82,7 +82,7 @@ def run_and_read_cdd():
 
 @context.register_database_installer
 def install_cdd_database():
-    if 'C' not in context.CREATE_DB_TASKS:
+    if 'C' not in context.TASKS:
        return
     cdd_dir = context.DATABASE_DIR / 'cdd'
     context.log(f'Installing the conserved domain database to {cdd_dir}...')

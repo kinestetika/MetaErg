@@ -37,86 +37,102 @@ PARALLEL_ANNOTATIONS = 0
 START_TIME = 0
 LOG_TOPICS = set()
 FILE_EXTENSION = ''
-CREATE_DB_TASKS = ''
+CREATE_DB = False
+TASKS = 'all'
+PREFIX = 'g'
 
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
-         translation_table, delimiter, checkm_dir, gtdbtk_dir, log_topics='', create_db=''):
+         translation_table, delimiter, checkm_dir, gtdbtk_dir, tasks, prefix, create_db, log_topics=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
-           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB_TASKS, \
-           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE
-    contig_file = Path(contig_file).absolute()
-    BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
-    TEMP_DIR = BASE_DIR / 'temp'
-    LOG_FILE = TEMP_DIR / 'log.txt'
-    DATABASE_DIR = Path(database_dir).absolute()
-    CHECKM_DIR = Path(checkm_dir).absolute()
-    GTDBTK_DIR = Path(gtdbtk_dir).absolute()
-    GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
-    HTML_DIR = BASE_DIR / 'html'
+           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB, \
+           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX
 
-    MULTI_MODE = contig_file.is_dir()
-    RENAME_CONTIGS = rename_contigs
-    RENAME_GENOMES = rename_genomes
-    MIN_CONTIG_LENGTH = min_contig_length
-    FORCE = force
-    FILE_EXTENSION = file_extension
-    TRANSLATION_TABLE = translation_table
-    DELIMITER = delimiter
-    CREATE_DB_TASKS = create_db.upper()
-
-    CPUS_PER_GENOME = int(cpus)
-    CPUS_AVAILABLE = cpu_count()
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
-
-    if HTML_DIR.exists():
-        print(f'clearing html dir at {HTML_DIR}')
-        shutil.rmtree(HTML_DIR)
-    if TEMP_DIR.exists():
-        print('Warning: may overwrite existing temp files...')
-        if TEMP_DIR.is_file():
-            print(f'Expected folder at {TEMP_DIR}, found regular file, crash! Delete this file first')
-            exit(1)
-    else:
-        TEMP_DIR.mkdir()
+    LOG_FILE = Path('log.txt').absolute()
     log('Initializing execution environment with command line arguments...')
 
-    if not contig_file.exists():
-        log(f'Input file "{contig_file}" is missing. Expecting dir or a nt fasta file.')
-        exit(1)
+    DATABASE_DIR = Path(database_dir).absolute()
+    CREATE_DB = create_db
+    TASKS = tasks
 
-    if CPUS_PER_GENOME > 0:
-        CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
+    if tasks == 'all':
+        if CREATE_DB:
+            tasks = 'PVEBRCS'
+        else:
+            tasks = 'XXX'
+    if CREATE_DB:
+        log(f'Ready to create databases with tasks {TASKS}.')
+
     else:
-        CPUS_PER_GENOME = CPUS_AVAILABLE
+        contig_file = Path(contig_file).absolute()
+        BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent
+        TEMP_DIR = BASE_DIR / 'temp'
+        CHECKM_DIR = Path(checkm_dir).absolute()
+        GTDBTK_DIR = Path(gtdbtk_dir).absolute()
+        GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
+        HTML_DIR = BASE_DIR / 'html'
 
-    if contig_file.is_dir():
-        CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}'))]
-        if not len(CONTIG_FILES):
-            log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
-                      f'in dir "{contig_file}"')
+        RENAME_CONTIGS = rename_contigs
+        RENAME_GENOMES = rename_genomes
+        MIN_CONTIG_LENGTH = min_contig_length
+        FORCE = force
+        FILE_EXTENSION = file_extension
+        TRANSLATION_TABLE = translation_table
+        DELIMITER = delimiter
+        PREFIX = prefix
+
+        CPUS_PER_GENOME = int(cpus)
+        CPUS_AVAILABLE = cpu_count()
+
+        if HTML_DIR.exists():
+            print(f'clearing html dir at {HTML_DIR}')
+            shutil.rmtree(HTML_DIR)
+        if TEMP_DIR.exists():
+            print('Warning: may overwrite existing temp files...')
+            if TEMP_DIR.is_file():
+                print(f'Expected folder at {TEMP_DIR}, found regular file, crash! Delete this file first')
+                exit(1)
+        else:
+            TEMP_DIR.mkdir()
+
+        if not contig_file.exists():
+            log(f'Input file "{contig_file}" is missing. Expecting dir or a nt fasta file.')
             exit(1)
-        PARALLEL_ANNOTATIONS = CPUS_PER_GENOME
-        CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
-        PARALLEL_ANNOTATIONS = int(PARALLEL_ANNOTATIONS / CPUS_PER_GENOME)
-    else:
-        CONTIG_FILES = [contig_file]
-        PARALLEL_ANNOTATIONS = 1
-    log(f'Detected {CPUS_AVAILABLE} available threads/cpus, will use {CPUS_PER_GENOME} per genome with '
-        f'{PARALLEL_ANNOTATIONS} genomes annotated in parallel.')
-    if RENAME_GENOMES:
-        GENOME_NAMES = [f'g{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
-        RENAME_CONTIGS = True
-    else:
-        GENOME_NAMES = [f.stem for f in CONTIG_FILES]
-    log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
-    with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
-        for n, o in zip(GENOME_NAMES, CONTIG_FILES):
-            mapping_file.write(f'{n}\t{o.stem}\t{o}\n')
-    log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
-              f'{CPUS_PER_GENOME} threads per genome.')
+
+        if CPUS_PER_GENOME > 0:
+            CPUS_PER_GENOME = min(CPUS_PER_GENOME, CPUS_AVAILABLE)
+        else:
+            CPUS_PER_GENOME = CPUS_AVAILABLE
+
+        if contig_file.is_dir():
+            CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}'))]
+            if not len(CONTIG_FILES):
+                log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
+                          f'in dir "{contig_file}"')
+                exit(1)
+            PARALLEL_ANNOTATIONS = CPUS_PER_GENOME
+            CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
+            PARALLEL_ANNOTATIONS = int(PARALLEL_ANNOTATIONS / CPUS_PER_GENOME)
+        else:
+            CONTIG_FILES = [contig_file]
+            PARALLEL_ANNOTATIONS = 1
+        log(f'Detected {CPUS_AVAILABLE} available threads/cpus, will use {CPUS_PER_GENOME} per genome with '
+            f'{PARALLEL_ANNOTATIONS} genomes annotated in parallel.')
+        if RENAME_GENOMES:
+            GENOME_NAMES = [f'{PREFIX}{CONTIG_FILES.index(f):0>4}' for f in CONTIG_FILES]
+            RENAME_CONTIGS = True
+        else:
+            GENOME_NAMES = [f.stem for f in CONTIG_FILES]
+        log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
+        with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
+            for n, o in zip(GENOME_NAMES, CONTIG_FILES):
+                mapping_file.write(f'{n}\t{o.stem}\t{o}\n')
+        MULTI_MODE = len(CONTIG_FILES) > 1
+        log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
+                  f'{CPUS_PER_GENOME} threads per genome and tasks {TASKS}.')
 
 
 def spawn_file(program_name, genome_id, base_dir = None) -> Path:
