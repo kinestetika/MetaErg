@@ -28,12 +28,12 @@ def match(blast_result:BlastResult) -> str:
     return ''
 
 
-def match_hit(blast_hit:BlastHit, confidence) -> str:
+def match_hit(blast_hit:BlastHit, confidence=1) -> str:
     matching_subsystems = set()
     for sf in SUBSYSTEM_DATA.itertuples():
         for profile in sf.profiles.split('|'):
             if profile == blast_hit.hit.accession and blast_hit.aligned_length >= 0.7 * blast_hit.hit.length:
-                matching_subsystems.add(f'[{sf.Index[0]}|{sf.Index[1]}]')
+                matching_subsystems.add(f'[{sf.Index[0]}|{sf.Index[1]}|{confidence:.1f}]')
     return ' '.join(matching_subsystems).strip()
 
 
@@ -46,9 +46,10 @@ def aggregate(feature_data: pd.DataFrame):
         for s in re.split(r'\s(?=\[)', feature.subsystems):  # split at space if followed b y [
             s = s[1:-1]
             if '|' in s:
-                gene_subsystem, gene_function = s.split('|')
+                gene_subsystem, gene_function, confidence = s.split('|')
                 try:
-                    aggregated_subsystem_data.at[(gene_subsystem, gene_function), 'genes'] += f' {feature.id}'
+                    aggregated_subsystem_data.at[(gene_subsystem, gene_function), 'genes'] += \
+                        f' {feature.id}@{confidence}'
                 except TypeError:
                     aggregated_subsystem_data.at[(gene_subsystem, gene_function), 'genes'] = feature.id
             else:  # this is a subsystem with undefined structure, add a row to the dataframe
@@ -63,4 +64,3 @@ def aggregate(feature_data: pd.DataFrame):
     aggregated_subsystem_data = pd.concat([aggregated_subsystem_data, new_dataframe_data])
     # print (aggregated_subsystem_data)
     return aggregated_subsystem_data
-

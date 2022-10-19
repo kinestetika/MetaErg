@@ -34,10 +34,10 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     rna_nt_file = context.spawn_file('rna.fna', genome_name)
     blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
-    context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
-                         f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
     context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 '
                          f'-outfmt 6')
+    context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
+                         f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:

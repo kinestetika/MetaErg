@@ -1,4 +1,5 @@
 import pandas as pd
+from math import log10
 from pathlib import Path
 from concurrent import futures
 
@@ -10,6 +11,7 @@ from metaerg import subsystems
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
+    # the domtbl format includes alignment starts and ends, so we can use that information...
     context.run_external(f'hmmscan -o /dev/null -E 1e-6 --domtblout {result_files[0]} {hmm_db} {cds_aa_file}')
 
 
@@ -46,23 +48,20 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                                 f'may need to rerun metaerg with --force')
             for h in blast_result.hits:
                 db_entry = h.hit
-                confidence = 'similar to '
-                if h.aligned_length / db_entry.length < 0.8:
+                confidence = 1.0
+                if h.aligned_length / db_entry.length < 0.7:
                     continue
                 if db_entry.min_score:
                     if h.score < db_entry.min_score:
                         continue
-                    if h.score > db_entry.min_t_score:
-                        confidence = ''
+                    confidence = h.score / db_entry.min_t_score
                 else:
-                    if h.evalue > 1e-25:
-                        continue
-                    if h.evalue < 1e-100:
-                        confidence = ''
+                    if h.evalue > 0:
+                        confidence = min(1.0, - log10(h.evalue) / 100)
                 if descr := h.hit.descr:
                     hit_count += 1
                     # feature_data.at[blast_result.query(), 'descr'] = f'{confidence}{descr}'
-                    feature_data.at[blast_result.query(), 'subsystems'] = subsystems.match_hit(h)
+                    feature_data.at[blast_result.query(), 'subsystems'] = subsystems.match_hit(h, confidence)
                 else:
                     context.log(f'Warning, missing description for hmm {h.hit}...')
                 break
@@ -140,4 +139,3 @@ def install_functional_gene_databases():
         context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
     else:
         context.log(f'Keeping existing functional gene database in {hmm_dir}, use --force to overwrite.')
-

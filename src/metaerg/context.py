@@ -126,7 +126,15 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             RENAME_CONTIGS = True
         else:
             GENOME_NAMES = [f.stem for f in CONTIG_FILES]
-        log(f'writing genome names to {GENOME_NAME_MAPPING_FILE} ')
+        if RENAME_GENOMES:
+            log('Will create new names for genomes.')
+        else:
+            log('Using original filenames as genome names.')
+        if RENAME_CONTIGS:
+            log('will rename contigs.')
+        else:
+            log('Keeping original contig identifiers.')
+        log(f'Writing genome names to {GENOME_NAME_MAPPING_FILE} ')
         with open(GENOME_NAME_MAPPING_FILE, 'w') as mapping_file:
             for n, o in zip(GENOME_NAMES, CONTIG_FILES):
                 mapping_file.write(f'{n}\t{o.stem}\t{o}\n')

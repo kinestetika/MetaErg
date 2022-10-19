@@ -12,7 +12,7 @@ from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 
-VERSION = "2.2.23"
+VERSION = "2.2.24"
 
 
 def parse_arguments():
@@ -21,10 +21,9 @@ def parse_arguments():
                                               'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', required=True,  help='Dir that contains the annotation databases.')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
-                        help='Renaming contigs can improve visualization. It will be enforced when original '
-                             'contig names are long')
+                        help='Renaming contigs can improve visualization and presentation of results.')
     parser.add_argument('--rename_genomes', default=False,  action="store_true",
-                        help='Renaming genomes can improve visualization.')
+                        help='Renaming genomes can improve visualization and presentation of results.')
     parser.add_argument('--min_contig_length', default=0,  help='Shorter contigs will be filtered before annotaton.')
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
     parser.add_argument('--force', default=False, action="store_true",
@@ -111,6 +110,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
     properties['# total features'] = len(feature_data.index)
     taxon_counts = dict(feature_data_cds.taxon.value_counts(normalize=True))
     properties['% CDS classified to taxon'] = 1 - taxon_counts['']
+    properties['dominant taxon'] = ''
     del taxon_counts['']
     for k, v in taxon_counts.items():
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
