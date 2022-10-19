@@ -146,6 +146,12 @@ class TabularBlastParser:
                 case [hit, _, query, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSCAN' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
                     return BlastHit(query, hit_db_entry, 0, hit_db_entry.length, 0, 0, 0, 0, float(evalue), float(score), 0, 0)
+                case [hit, _, _, query, _, _, evalue, score, _, _, _, _, _, _, _, hit_start, hit_end,
+                      query_start, query_end, *_] if 'HMMSCAN_DOM_TABLE' == self.mode:
+                    hit_db_entry = self.retrieve_db_entry(hit)
+                    return BlastHit(query, hit_db_entry, 0, hit_end - hit_start, query_start, query_end,
+                                    hit_start, hit_end, float(evalue), float(score))
+
                 case [query, _, hit, _, evalue, score, _, _, _, _, _, _, _, _, _, _, _, _, *_] if 'HMMSEARCH' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
                     return BlastHit(query, hit_db_entry, 0, hit_db_entry.length, 0, 0, 0, 0, float(evalue), float(score), 0, 0)

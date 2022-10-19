@@ -28,7 +28,7 @@ def match(blast_result:BlastResult) -> str:
     return ''
 
 
-def match_hit(blast_hit:BlastHit) -> str:
+def match_hit(blast_hit:BlastHit, confidence) -> str:
     matching_subsystems = set()
     for sf in SUBSYSTEM_DATA.itertuples():
         for profile in sf.profiles.split('|'):

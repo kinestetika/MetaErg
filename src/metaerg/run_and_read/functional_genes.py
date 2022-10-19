@@ -10,7 +10,7 @@ from metaerg import subsystems
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
-    context.run_external(f'hmmscan -E 1e-6 --tblout {result_files[0]} {hmm_db} {cds_aa_file}')
+    context.run_external(f'hmmscan -o /dev/null -E 1e-6 --domtblout {result_files[0]} {hmm_db} {cds_aa_file}')
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
@@ -38,7 +38,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     def get_db_entry(db_id) -> DBentry:
         return functional_gene_db[db_id]
 
-    with TabularBlastParser(result_files[0], 'HMMSCAN', get_db_entry) as handle:
+    with TabularBlastParser(result_files[0], 'HMMSCAN_DOM_TABLE', get_db_entry) as handle:
         hit_count = 0
         for blast_result in handle:
             if blast_result.query() not in feature_data.index:
@@ -47,6 +47,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             for h in blast_result.hits:
                 db_entry = h.hit
                 confidence = 'similar to '
+                if h.aligned_length / db_entry.length < 0.8:
+                    continue
                 if db_entry.min_score:
                     if h.score < db_entry.min_score:
                         continue
