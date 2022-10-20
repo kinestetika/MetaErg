@@ -67,15 +67,16 @@ def make_feature_html(f, dominant_taxon) -> str:
         html = html.replace('HEADER', f'>{f.id} {f.descr}')
     html = html.replace('SEQUENCE', f.seq)
     if f.type == 'CDS':
-        length = len(f) / 3
+        length = (f.end - f.start) // 3
     else:
-        length = len(f)
+        length = f.end - f.start
     html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon))
     html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon))
     attribute_html = '<table>\n'
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f._asdict()[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
                                'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
+    attribute_html += f'<tr><td id=al>length</td><td id=al>{length}</td></tr>\n'
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html

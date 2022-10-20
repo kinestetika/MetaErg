@@ -42,20 +42,19 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
     # subsystem_data
     for subsystem in subsystem_data.index.unique('subsystem'):
         sub_data = subsystem_data.loc[subsystem, :]
-        subsystem_html += f'<button class="accordion">{subsystem}</button>\n<div class="panel">\n'
+        subsystem_html += f'<b id=f>{subsystem}</b>'
         if 'secondary-metabolites' == subsystem:
             if len(sub_data.index):
-                subsystem_html += '<p><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
+                subsystem_html += '<p id=f><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
         else:
-            subsystem_html += '<table>\n'
+            subsystem_html += '<table id=f>\n'
             for function in sub_data.itertuples():
                 subsystem_html += f'<tr><td>{function.Index}</td><td>\n'
-                subsystem_html += ', '.join('<a target="gene details" href="{}">{}</a>'
-                                            .format(Path(path_to_feature_html, 'features', f'{f_id}.html'),
+                subsystem_html += ', '.join('<a target="_blank" href="{}">{}</a>'
+                                            .format(Path(path_to_feature_html, 'features', f'{f_id.split("@")[0]}.html'),
                                                     f_id) for f_id in function.genes.split())
                 subsystem_html += f'</td></tr>\n'
             subsystem_html += '</table>\n'
-        subsystem_html += '</div>\n'
     html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)
     return html
 
@@ -104,7 +103,7 @@ def _make_html_template() -> str:
   }
 </style>
 
-<h4 id=f>Genome properties</h4>
+<h3 id=f>Genome properties</h4>
 <table id=f>
     <thead>
         <tr>
@@ -116,28 +115,6 @@ def _make_html_template() -> str:
 CONTENT_PROPERTIES
     </tbody></table>
     <p if=f><a href="index_of_features.html">View table with all genes</a></p>
-    <h4 id=f>Subsystems overview</h4>
+    <h3 id=f>Subsystems overview</h4>
 CONTENT_SUBSYSTEMS
-<script>
-    var acc = document.getElementsByClassName("accordion");
-    var i;
-    
-    for (i = 0; i < acc.length; i++) {
-      acc[i].addEventListener("click", function() {
-        this.classList.toggle("active");
-        var panel = this.nextElementSibling;
-        if (panel.style.display === "block") {
-          panel.style.display = "none";
-        } else {
-          panel.style.display = "block";
-        }
-      });
-    }
-</script>
-</div>
-<div id=f>
-<iframe src="" title="gene details" name="gene_details" style="border:none;width:100%;height:1000px;"></iframe>
-</div>
-
-
 </body></html>'''
