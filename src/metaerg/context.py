@@ -108,7 +108,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             CPUS_PER_GENOME = CPUS_AVAILABLE
 
         if contig_file.is_dir():
-            CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}'))]
+            CONTIG_FILES = [x.absolute() for x in sorted(contig_file.glob(f'*{FILE_EXTENSION}')) if x.is_file()]
             if not len(CONTIG_FILES):
                 log(f'Did not find any contig files with extension "{FILE_EXTENSION}" '
                           f'in dir "{contig_file}"')
