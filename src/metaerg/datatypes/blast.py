@@ -29,9 +29,10 @@ class DBentry:
 
 
 def taxon_at_genus(taxon) -> str:
-    for t in reversed(taxon.split("; ")):
-        if " " not in t:
-            return t
+    if type(taxon) == str:
+        for t in reversed(taxon.split("; ")):
+            if " " not in t:
+                return t
     return ''
 
 

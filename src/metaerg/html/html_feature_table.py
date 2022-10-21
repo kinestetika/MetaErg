@@ -119,6 +119,8 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
+            if type(f.seq) == float:
+                print(f)
             format_feature(f, format_hash, genome_properties['dominant taxon'], colors, path_to_feature_html)
             table_body += format_hash_to_html(format_hash)
         prev_f = f

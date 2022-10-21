@@ -12,7 +12,7 @@ from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 
-VERSION = "2.2.24"
+VERSION = "2.2.25"
 
 
 def parse_arguments():

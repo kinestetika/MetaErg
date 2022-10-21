@@ -32,13 +32,21 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     antismash_gene_function = f_as_dict.get('gene_functions', '')
                     antismash_gene_category = f_as_dict.get('gene_kind', '')
                     if antismash_region_name:
+                        try:
+                            if not f_as_dict['locus_tag'] in feature_data.index:
+                                # antismash sometimes predicts a new ORF, for example for a lassopeptide
+                                # we do not add this to the feature table
+                                continue
+                        except KeyError:
+                            continue
                         feature_data.at[f_as_dict['locus_tag'], 'antismash'] = \
                             ' '.join((f'(region {antismash_region_number})', antismash_region_name,
                                       antismash_gene_function, antismash_gene_category))
-                        if len(feature_data.at[f_as_dict['locus_tag'], 'subsystems']):
-                            if '[secondary-metabolites]' not in feature_data.at[f_as_dict['locus_tag'], 'subsystems']:
+                        prev_subsystem_text = feature_data.at[f_as_dict['locus_tag'], 'subsystems']
+                        if type(prev_subsystem_text) == str and '[secondary-metabolites]' not in prev_subsystem_text:
                                 feature_data.at[f_as_dict['locus_tag'], 'subsystems'] += ' [secondary-metabolites]'
-                        else:
+                        elif f_as_dict['locus_tag'] in feature_data.index:
+                            print(f"starting: '{f_as_dict['locus_tag']}'")
                             feature_data.at[f_as_dict['locus_tag'], 'subsystems'] = '[secondary-metabolites]'
     if not antismash_hit_count:
         result_files[0].mkdir(exist_ok=True)  # to prevent re-doing fruitless searches
