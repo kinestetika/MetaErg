@@ -1,8 +1,10 @@
 import argparse
+import tarfile
 import pandas as pd
 from pathlib import Path
 from concurrent import futures
 
+import metaerg.run_and_read.diamond_and_blastn
 from metaerg import context
 from metaerg import registry
 from metaerg.datatypes import fasta, gbk
@@ -12,7 +14,7 @@ from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 
-VERSION = "2.2.25"
+VERSION = "2.2.26"
 
 
 def parse_arguments():
@@ -35,7 +37,10 @@ def parse_arguments():
     parser.add_argument('--prefix', default='g', help='Prefix used when renaming genomes (default: g).')
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
-    parser.add_argument('--create_db', default=False, action="store_true", help='Create/download metaerg database.')
+    parser.add_argument('--download_database', default=False, action="store_true",
+                        help='Download ready-made metaerg database.')
+    parser.add_argument('--create_database', default=False, action="store_true",
+                        help='Create metaerg database from scratch.')
     parser.add_argument('--tasks', default='all', help='Subtasks to be performed while annotating or creating '
                                                        'database.')
 
@@ -161,11 +166,21 @@ def main():
 
     context.init(**parse_arguments().__dict__)
 
-    if context.CREATE_DB:
+    if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
         context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.TASKS}; '
                     f'force: {context.FORCE}.')
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
+    elif context.METAERG_MODE == context.METAERG_MODE_DOWNLOAD_DATABASE:
+        context.log('Downloading premade databases from https://object-arbutus.cloud.computecanada.ca...')
+        database_tarbal_file = context.DATABASE_DIR / 'metaerg_db_207_v2.tar.gz'
+        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
+                         database_tarbal_file)
+        context.log('Now extracting databases from tar archive...')
+        database_archive = tarfile.open(database_tarbal_file)
+        database_archive.extractall(context.DATABASE_DIR)
+        database_tarbal_file.unlink()
+        metaerg.run_and_read.diamond_and_blastn.compile_databases()
     else:
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}

@@ -37,16 +37,20 @@ PARALLEL_ANNOTATIONS = 0
 START_TIME = 0
 LOG_TOPICS = set()
 FILE_EXTENSION = ''
-CREATE_DB = False
+METAERG_MODE_RUN = 1
+METAERG_MODE_DOWNLOAD_DATABASE = 2
+METAERG_MODE_CREATE_DATABASE = 3
+METAERG_MODE = METAERG_MODE_RUN
 TASKS = 'all'
 PREFIX = 'g'
 
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
-         translation_table, delimiter, checkm_dir, gtdbtk_dir, tasks, prefix, create_db, log_topics=''):
+         translation_table, delimiter, checkm_dir, gtdbtk_dir, tasks, prefix, create_database, download_database,
+         log_topics=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
-           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, CREATE_DB, \
+           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, \
            GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX
 
     START_TIME = time.monotonic()
@@ -55,16 +59,19 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     log('Initializing execution environment with command line arguments...')
 
     DATABASE_DIR = Path(database_dir).absolute()
-    CREATE_DB = create_db
+    if not DATABASE_DIR.is_dir():
+        raise Exception("No database dir provided or database dir is not a dir.")
     TASKS = tasks
-
-    if tasks == 'all':
-        if CREATE_DB:
-            tasks = 'PVEBRCS'
-        else:
-            tasks = 'XXX'
-    if CREATE_DB:
-        log(f'Ready to create databases with tasks {TASKS}.')
+    if download_database:
+        METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
+        log(f'Ready to download databases.')
+        return
+    elif create_database:
+        METAERG_MODE = METAERG_MODE_CREATE_DATABASE
+        if TASKS == 'all':
+            TASKS = 'PVEBRCS'
+        log(f'Ready to create databases from scratch with tasks {TASKS}.')
+        return
 
     else:
         contig_file = Path(contig_file).absolute()

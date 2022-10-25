@@ -438,6 +438,12 @@ def install_prokaryote_database():
             taxon_handle.write(f'p\t{t["id"]}\t{"~".join(t["taxonomy"])}\t{t["in_local_cache"]}\t{t["accession"]}\n')
 
 
+def compile_databases():
+    fasta_protein_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
+    context.run_external(f'diamond makedb --in {fasta_protein_db} --db {fasta_protein_db}')
+    fasta_nt_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+    context.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
+
 @context.register_database_installer
 def format_blast_databases():
     if 'B' not in context.TASKS:
@@ -454,8 +460,4 @@ def format_blast_databases():
                 if src_file.exists():
                     with open(src_file, mode="rb") as source:
                         shutil.copyfileobj(source, destination)
-    fasta_protein_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
-    context.run_external(f'diamond makedb --in {fasta_protein_db} --db {fasta_protein_db}')
-    fasta_nt_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
-    context.run_external(f'makeblastdb -in {fasta_nt_db} -dbtype nucl')
-
+    compile_databases()
