@@ -56,6 +56,13 @@ def subsystem_data() -> str:
         CHL00001 RNA polymerase subunit beta (rpoB)
         CHL00018 RNA polymerase subunit beta' (rpoC1)
         CHL00117 RNA polymerase subunit beta' (rpoC2)
+        TIGR02387 DNA-directed RNA polymerase, gamma subunit (rpoC1, cyanobacteria)
+        TIGR02388 DNA-directed RNA polymerase, subunit beta'' (rpoC2, cyanobacteria)
+        TIGR02389|cd02582 DNA-directed RNA polymerase subunit A' (archaea)
+        TIGR02390|cd06528 DNA-directed RNA polymerase subunit A' (archaea)
+        TIGR00448 DNA-directed RNA polymerase (rpoE, archaea/eukarya)
+        TIGR03670 DNA-directed RNA polymerase subunit B (rpoB, archaea)
+        cd06927 L subunit of archaeal RNA polymerase
         
         >general protein translocation
         TIGR00963 preprotein translocase, subunit SecA
@@ -96,7 +103,7 @@ def subsystem_data() -> str:
         TIGR01940 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit E (NqrA)
         TIGR01941 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit F (NqrA)
 
-        >Respiratory Complex III (Photosynthesis)
+        >Respiratory Complex III (photosynthesis/respiration)
         CHL00037 cytochrome b6/f complex, cytochrome f subunit (petA)
         CHL00070 cytochrome b6/f complex, cytochrome b6 subunit (petB)
         COG0723|TIGR01416|TIGR03171|cd03471	Rieske Fe-S protein subunit
@@ -564,4 +571,56 @@ def subsystem_data() -> str:
         EbdA EbdA molybdopterin-family ethylbenzene dehydrogenase subunit alpha
         K27540 K27540 naphtalene carboxylase
         NmsA NmsA naphtylmethyl succinate synthase
+        
+        >fatty acid biosynthesis
+        TIGR01749 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabA)
+        TIGR00128 malonyl CoA-acyl carrier protein transacylase (FabD)
+        TIGR03150 beta-ketoacyl-acyl-carrier-protein synthase II (FabF)
+        TIGR00747 3-oxoacyl-[acyl-carrier-protein] synthase III (FabH)
+        TIGR01750 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabZ)
+        TIGR02445 acetyl-CoA C-acyltransferase (FadA)
+        TIGR02437 fatty oxidation complex, alpha subunit (FadB)
+        TIGR03151 enoyl-[acyl-carrier-protein] reductase (FabK)
+        PRK05653 3-oxoacyl-[acyl-carrier protein] reductase   (FabG)
+        PRK08594 enoyl-ACP reductase (FabI)
+        PRK08063 enoyl-[acyl-carrier-protein] reductase (FabL)
+        PRK13656 enoyl-[acyl-carrier-protein] reductase (FabV)
+        
+        >inositol phosphate metabolism
+        pfam16670|PLN02222|PLN02223|PLN02230|PLN02952	phosphoinositide phospholipase C (EC 3.1.4.11)
+        pfam16726 inositol polyphosphate 5-phosphatase clathrin binding domain
+        PRK10757 inositol-1-monophosphatase (SuhB)
+        COG1260 Myo-inositol-1-phosphate synthase
+        PLN02438 inositol-3-phosphate synthase
+        TIGR04380|cl40708 inositol 2-dehydrogenase (IolG EC:1.1.1.181, EC:1.1.369)
+        PRK04302 triosephosphate isomerase
+        TIGR01859 fructose-1,6-bisphosphate aldolase (IolJ, EC:4.1.2.29)
+        TIGR03396 phospholipase C, phosphocholine-specific
+        
+        >tetraether biosynthesis
+        PRK00843 NAD(P)-dependent glycerol-1-phosphate dehydrogenase
+        TIGR04147 putative phosphoglycerol geranylgeranyltransferase
+        PRK12882 geranylgeranylglycerol-phosphate geranylgeranyltransferase
+        PRK04032 CDP-2,3-bis-(O-geranylgeranyl)-sn-glycerol synthase
+        TIGR04217 archaetidylserine synthase
+        
+        >isoprenoid biosynthesis
+        COG0578 Glycerol-3-phosphate dehydrogenase (GlpA, EC:1.1.1.8)
+        COG0240 Glycerol-3-phosphate dehydrogenase (GpsA, EC:1.1.1.8)
+        COG2376 Dihydroxyacetone kinase (DAK1, EC:2.7.1.29)
+        COG0371 Glycerol dehydrogenase or related enzyme, iron-containing ADH family (GldA, EC:1.1.1.6)
+        COG3425 3-hydroxy-3-methylglutaryl CoA synthase	(PksG, EC:2.3.3.10)
+        COG1257 Hydroxymethylglutaryl-CoA reductase (HMG1, EC:1.1.1.34)
+        COG1577 Mevalonate kinase (ERG12, EC:2.7.1.36)
+        COG3890 Phosphomevalonate kinase (ERG8, EC:2.7.4.2)
+        COG3407 Mevalonate pyrophosphate decarboxylase (MVD1, EC:4.1.1.33)
+        COG1443 Isopentenyldiphosphate isomerase (Idi, EC:5.3.3.2)
+        COG1304 FMN-dependent dehydrogenase, includes L-lactate dehydrogenase and type II isopentenyl diphosphate isomerase	(LldD, EC:1.1.2.3)
+        COG0743 1-deoxy-D-xylulose 5-phosphate reductoisomerase (Dxr, EC:1.1.1.267)
+        COG0142 Geranylgeranyl pyrophosphate synthase (IspA, EC:2.5.1.1)
+        COG1211 2-C-methyl-D-erythritol 4-phosphate cytidylyltransferase (IspD, EC:2.7.7.60)
+        COG1947 4-diphosphocytidyl-2C-methyl-D-erythritol kinase (IspE, EC:2.7.1.148)
+        COG0245 2C-methyl-D-erythritol 2,4-cyclodiphosphate synthase (IspF, EC:4.6.1.12)
+        COG0821 4-hydroxy-3-methylbut-2-enyl diphosphate synthase (IspG/GcpE, EC:1.17.4.3)
+        COG0761 4-Hydroxy-3-methylbut-2-enyl diphosphate reductase (IspH, EC:1.17.1.2)
         '''
