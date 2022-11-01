@@ -41,7 +41,7 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 ```
 metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ --file_extension .fa
 ```
-Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer. There's a few more optional arguments, for a
+Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer. There's a few more optional arguments, for a
 complete list, run:
 ```
 metaerg -h
@@ -49,7 +49,7 @@ metaerg -h
 
 ## Installation
 
-To install metaerg, its 16 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
+To install metaerg, its 18 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
 need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
 ```
 python -m virtualenv metaerg-env

@@ -46,6 +46,8 @@ class FastaParser:
         seq = []
         while line := self.handle.readline():
             line = line.strip()
+            if line.startswith('#'):
+                continue
             if line.startswith('>'):
                 if len(seq) and seq_rec is not None:
                     seq_rec['seq'] = self._cleanup(''.join(seq))

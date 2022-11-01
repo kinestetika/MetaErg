@@ -23,7 +23,9 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . '
                              f'{fasta_file}')
     else:
-        repeatmasker_output_file.touch()
+        context.log(f'({genome_name}) No repeats detected by repeatmasker.')
+        with open(repeatmasker_output_file, 'w') as handle:
+            handle.write('#No repeats detected by repeatmasker')
     shutil.move(repeatmasker_output_file, result_files[0])
     for file in Path.cwd().glob(f'{fasta_file.name}.*'):
         if file.is_dir():
