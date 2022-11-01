@@ -3,6 +3,7 @@ import tarfile
 import pandas as pd
 from pathlib import Path
 from concurrent import futures
+from hashlib import md5
 
 import metaerg.run_and_read.diamond_and_blastn
 from metaerg import context
@@ -13,8 +14,9 @@ from metaerg.html import *
 from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
+from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.2.26"
+VERSION = "2.2.27"
 
 
 def parse_arguments():
@@ -41,6 +43,11 @@ def parse_arguments():
                         help='Download ready-made metaerg database.')
     parser.add_argument('--create_database', default=False, action="store_true",
                         help='Create metaerg database from scratch.')
+    parser.add_argument('--install_deps', default='', help='Dir for installation of all dependencies '
+                                                           '(helper programs). Dependencies will be installed here.')
+    parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
+    parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
+
     parser.add_argument('--tasks', default='all', help='Subtasks to be performed while annotating or creating '
                                                        'database.')
 
@@ -163,7 +170,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
 
 def main():
     print(f'This is metaerg.py {VERSION}')
-
     context.init(**parse_arguments().__dict__)
 
     if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
@@ -176,11 +182,20 @@ def main():
         database_tarbal_file = context.DATABASE_DIR / 'metaerg_db_207_v2.tar.gz'
         context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
                          database_tarbal_file)
+        md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
+        #print(md5sum)
+        #if ''== md5sum:
+        #    context.log(f'checksum {md5sum} as expected.')
+        #else:
+        #    raise Exception('Downloaded database has incorrect checksum. Aborting...')
         context.log('Now extracting databases from tar archive...')
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)
-        database_tarbal_file.unlink()
+        # database_tarbal_file.unlink()
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
+    elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
+        install_all_helper_programs(context.BIN_DIR, context.DATABASE_DIR, context.PATH_TO_SIGNALP,
+                                    context.PATH_TO_TMHMM)
     else:
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}

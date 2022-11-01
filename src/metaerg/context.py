@@ -40,18 +40,21 @@ FILE_EXTENSION = ''
 METAERG_MODE_RUN = 1
 METAERG_MODE_DOWNLOAD_DATABASE = 2
 METAERG_MODE_CREATE_DATABASE = 3
+METAERG_MODE_INSTALL_DEPS = 4
 METAERG_MODE = METAERG_MODE_RUN
 TASKS = 'all'
 PREFIX = 'g'
-
+BIN_DIR =''
+PATH_TO_SIGNALP = None
+PATH_TO_TMHMM = None
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, tasks, prefix, create_database, download_database,
-         log_topics=''):
+         install_deps, path_to_signalp, path_to_tmhmm, log_topics=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
            CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, \
-           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX
+           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM
 
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
@@ -72,7 +75,21 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             TASKS = 'PVEBRCS'
         log(f'Ready to create databases from scratch with tasks {TASKS}.')
         return
-
+    elif install_deps:
+        METAERG_MODE = METAERG_MODE_INSTALL_DEPS
+        BIN_DIR = Path(install_deps).absolute()
+        if path_to_signalp and Path(path_to_signalp).is_file():
+            PATH_TO_SIGNALP = Path(path_to_signalp).absolute()
+        else:
+            log('Warning: path to signalp tarbal not provided or wrong; signalp will not be installed.')
+        if path_to_tmhmm and Path(path_to_tmhmm).is_file():
+            PATH_TO_TMHMM = Path(path_to_tmhmm).absolute()
+        else:
+            log('Warning: path to tmhmm tarbal not provided or wrong; tmhmm will not be installed.')
+        if not database_dir or not Path(database_dir).is_dir():
+            raise Exception('Need to provide --database_dir to install helper programs.')
+        log(f'Ready to install helper programs at {BIN_DIR} with {DATABASE_DIR}, {PATH_TO_SIGNALP}, {PATH_TO_TMHMM}.')
+        return
     else:
         contig_file = Path(contig_file).absolute()
         BASE_DIR = contig_file if contig_file.is_dir() else contig_file.parent

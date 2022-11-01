@@ -29,7 +29,7 @@ The Metaerg 2.2 pipeline consists of:
 * (required) annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
 * (optional) annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
 * (optional) annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* (built-in) assigns genes to functions using [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) hmm databases as well as a built-in database of physiological subsystems.
+* (built-in) assigns genes to functions using [HMMER](http://hmmer.org), [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) hmm databases as well as a built-in database of physiological subsystems.
 * (built-in) presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 * (built-in) saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
 
@@ -41,54 +41,27 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 ```
 metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ --file_extension .fa
 ```
-Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer.
+Metaerg needs 20-30 min to annotate a 4 Mb genome on a desktop computer. There's a few more optional arguments, for a
+complete list, run:
+```
+metaerg -h
+```
 
 ## Installation
 
-To install metaerg, run, usually in a virtual environment:
+To install metaerg, its 16 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
+need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
 ```
-python -m virtualenv python-env  
-source python-env/bin/activate  
-pip install metaerg  
-deactivate  
-```
-
-For help with installing the needed programs, have a look at [this script](https://github.com/kinestetika/cloud-computing-for-microbial-ecology/blob/main/cloud_bio_installs.py) for step by step installation instructions/commands. 
-
-You can run that script and install everything and more. Briefly, for required programs, install them as follows:
-```
-#(infernal) cmsearch 1.1.4 http://eddylab.org/infernal/  
-wget http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz  
-tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz  
-mv infernal-1.1.4-linux-intel-gcc infernal  
-rm infernal-1.1.4-linux-intel-gcc.tar.gz  
-
-#(prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal  
-wget https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux  
-chmod a+x prodigal.linux  
-ln -sf prodigal.linux prodigal  
-
-#(ncbi-blast) blastn 2.13.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/  
-wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz  
-tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz  
-mv ncbi-blast-2.13.0+ ncbi-blast  
-rm ncbi-blast-2.13.0+-x64-linux.tar.gz  
-
-#(diamond) diamond 2.0.14 https://github.com/bbuchfink/diamond  
-wget https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz  
-tar -xf diamond-linux64.tar.gz  
-rm diamond-linux64.tar.gz  
-```
-
-Then, make sure these programs are in your system's $PATH.
-
-## Databases
-
-A ready-made metaerg annotation database can be downloaded and compiled with:
-```
+python -m virtualenv metaerg-env
+source metaerg-env/bin/activate
+pip install metaerg
+metaerg --install_deps /path/to/bin_dir --database_dir /path/to/database_dir --path_to_signalp path/to/signalp.tar.gz \
+  --path_to_tmhmm path/to/tmhmm.tar.gz
+source /path/to/bin_dir/profile
 metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```
-It was created from the following sources:
+
+The database was created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
 * NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
@@ -97,7 +70,7 @@ It was created from the following sources:
 * Specialized function databases - [Cant-Hyd](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/blob/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm) and [MetaScan](https://zenodo.org/record/6365663).
 
 If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be 
-downloaded from the link just provided):
+downloaded as shown above):
 
 ```
 metaerg --create_database --database_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [PVEBRC]]
