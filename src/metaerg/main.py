@@ -16,7 +16,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.2.28"
+VERSION = "2.2.29"
 
 
 def parse_arguments():
