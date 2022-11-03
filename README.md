@@ -29,7 +29,7 @@ The Metaerg 2.2 pipeline consists of:
 * (required) annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
 * (optional) annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
 * (optional) annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* (built-in) assigns genes to functions using [HMMER](http://hmmer.org), [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) hmm databases as well as a built-in database of physiological subsystems.
+* (built-in) assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and HMM profiles from [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation).
 * (built-in) presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 * (built-in) saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
 
@@ -54,7 +54,7 @@ need to manually download signalp and tmhmm programs from [here](https://service
 ```
 python -m virtualenv metaerg-env
 source metaerg-env/bin/activate
-pip install metaerg
+pip install --upgrade metaerg
 metaerg --install_deps /path/to/bin_dir --database_dir /path/to/database_dir --path_to_signalp path/to/signalp.tar.gz \
   --path_to_tmhmm path/to/tmhmm.tar.gz
 source /path/to/bin_dir/profile

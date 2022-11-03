@@ -8,7 +8,7 @@ SOURCE
             .
 COMMENT     ##antiSMASH-Data-START##
             Version      :: 6.1.0
-            Run date     :: 2022-06-28 11:30:25
+            Run date     :: 2022-11-03 14:01:50
             NOTE: This is a single cluster extracted from a larger record!
             Orig. start  :: 618266
             Orig. end    :: 637164

@@ -8,7 +8,7 @@ SOURCE
             .
 COMMENT     ##antiSMASH-Data-START##
             Version      :: 6.1.0
-            Run date     :: 2022-06-28 11:30:25
+            Run date     :: 2022-11-03 14:01:50
             NOTE: This is a single cluster extracted from a larger record!
             Orig. start  :: 31353
             Orig. end    :: 51885
@@ -211,6 +211,9 @@ FEATURES             Location/Qualifiers
                      /inference="prodigal"
                      /locus_tag="pha.pha.00058"
                      /product="gfo/Idh/MocA family oxidoreductase"
+                     /subsystems="[Metabolism, Inositol Phosphate
+                     Biosynthesis|inositol 2-dehydrogenase (IolG EC:1.1.1.181,
+                     EC:1.1.369)|1.0]"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
                      Phormidium_A"
@@ -327,6 +330,9 @@ FEATURES             Location/Qualifiers
                      /inference="prodigal"
                      /locus_tag="pha.pha.00067"
                      /product="solanesyl diphosphate synthase"
+                     /subsystems="[Metabolism, Isoprenoid
+                     Biosynthesis|Geranylgeranyl pyrophosphate synthase (IspA,
+                     EC:2.5.1.1)|1.0]"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
                      Phormidium_A"

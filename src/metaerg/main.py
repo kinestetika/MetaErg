@@ -16,7 +16,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.2.29"
+VERSION = "2.2.30"
 
 
 def parse_arguments():
@@ -183,11 +183,11 @@ def main():
         context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
                          database_tarbal_file)
         md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
-        #print(md5sum)
-        #if ''== md5sum:
-        #    context.log(f'checksum {md5sum} as expected.')
-        #else:
-        #    raise Exception('Downloaded database has incorrect checksum. Aborting...')
+        print(md5sum)
+        if '48ffe7150711dd6f982e1f3d759e4ff9' == md5sum:
+            context.log(f'checksum {md5sum} as expected.')
+        else:
+            raise Exception('Downloaded database has incorrect checksum - download failed. Aborting...')
         context.log('Now extracting databases from tar archive...')
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)
