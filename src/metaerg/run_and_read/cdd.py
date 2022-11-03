@@ -55,12 +55,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                                 f'may need to rerun metaerg with --force')
             feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
-            if subsystem := subsystems.match(cdd_result):
-                if len(feature_data.at[cdd_result.query(), 'subsystems']):
-                    if subsystem not in feature_data.at[cdd_result.query(), 'subsystems']:
-                        feature_data.at[cdd_result.query(), 'subsystems'] += f' {subsystem}'
-                else:
-                    feature_data.at[cdd_result.query(), 'subsystems'] = f'{subsystem}'
+            if new_subsystem := subsystems.match(cdd_result):
+                feature_data.at[cdd_result.query(), 'subsystems'] = subsystems.cleanup_subsystem_str(
+                    feature_data.at[cdd_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
             top_entry: DBentry = cdd_result.hits[0].hit
             descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(descr) > 35:

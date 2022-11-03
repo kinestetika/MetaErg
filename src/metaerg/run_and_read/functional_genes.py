@@ -58,12 +58,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 else:
                     if h.evalue > 0:
                         confidence = min(1.0, - log10(h.evalue) / 100)
-                if descr := h.hit.descr:
+                if new_subsystem := subsystems.match_hit(h, confidence):
                     hit_count += 1
-                    # feature_data.at[blast_result.query(), 'descr'] = f'{confidence}{descr}'
-                    feature_data.at[blast_result.query(), 'subsystems'] = subsystems.match_hit(h, confidence)
-                else:
-                    context.log(f'Warning, missing description for hmm {h.hit}...')
+                    feature_data.at[blast_result.query(), 'subsystems'] = subsystems.cleanup_subsystem_str(
+                        feature_data.at[blast_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
                 break
     return feature_data, hit_count
 

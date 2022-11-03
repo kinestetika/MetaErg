@@ -16,7 +16,7 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
                 handle.write(make_feature_html(f, genome_properties['dominant taxon']))
 
 
-def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
+def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_id) -> str:
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     if blast_result:
         blast_result = eval(blast_result)
@@ -29,6 +29,10 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
                 html += f'<th>{column}</th>\n'
         html += '</tr><thead>\n<tbody>\n'
         for h in blast_result.hits:
+            if include_id:
+                descr = h.hit.accession + ' ' + h.hit.descr
+            else:
+                descr = h.hit.descr
             html += '''<tr>
             <td {}>{}</td>
             <td {}>{}</td>
@@ -45,7 +49,7 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon) -> str:
                 colors[min(int(100 * h.aligned_length/h.hit.length / 20), len(colors)-1)],
                 int(100 * min(1.0, h.aligned_length/h.hit.length)),
 
-                h.hit.descr,
+                descr,
 
                 colors[int(len(colors) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
                            / (len (h.hit.taxon.split()) + 1))],
@@ -70,8 +74,8 @@ def make_feature_html(f, dominant_taxon) -> str:
         length = (f.end - f.start) // 3
     else:
         length = f.end - f.start
-    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon))
-    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon))
+    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon, include_id = False))
+    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon, include_id = True))
     attribute_html = '<table>\n'
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f._asdict()[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',

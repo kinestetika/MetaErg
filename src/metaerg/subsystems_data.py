@@ -236,7 +236,7 @@ def subsystem_data() -> str:
         A0A0H3GNX1|A0A1Y0HZR5|A8M8C4|D2PSR0|J7LAS1|L0JX22|Q1QHX1|A0A1W1I5Y1 nxrB; nitrate reductase / nitrite oxidoreductase, beta subunit (ec:1.7.5.1)
 
         >Assimilation, Urea, Cyanate, Nitrile Hydrolysis  
-        PRK13206|PRK13207|PRK13308|PRK13309|TIGR01792 urease subunit alpha (ureC, ec:3.5.1.5)
+        PRK13207|PRK13206|PRK13308|PRK13309|TIGR01792 urease subunit alpha (ureC, ec:3.5.1.5)
         PRK13198|PRK13201|PRK13202|PRK13203|PRK13204|PRK13205|PRK13986|TIGR00192 urease subunit beta (ureB, ec:3.5.1.5)
         PRK13241|PRK13242|PRK13985|TIGR00193 urease subunit gamma (ureA, ec:3.5.1.5)
         PRK13261|PRK13262|PRK13263|PRK14112|PRK14113|PRK14711 urease accessory protein (UreE, ec:3.5.1.5)
@@ -342,7 +342,7 @@ def subsystem_data() -> str:
         >Assimilation, CO2 via Reductive Pentose Phosphate Cycle (Calvin cycle)
         PLN02318|PLN02348|PRK07429|PRK15453|COG3954 phosphoribulokinase (prkB, ec:2.7.1.19)
         CHL00040|COG1850|PRK04208|PRK13475 ribulose-bisphosphate carboxylase (RuBisCO) large subunit (rbcL, ec:4.1.1.39)
-        CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) large subunit (rbcS, ec:4.1.1.39)
+        CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit (rbcS, ec:4.1.1.39)
 
         >Assimilation, CO2 via Reductive Citrate (TCA, Arnon-Buchanan) Cycle
         COG0674|PRK08367|PRK09622 pyruvate ferredoxin oxidoreductase alpha subunit (porA, ec:1.2.7.1)
