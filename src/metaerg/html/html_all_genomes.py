@@ -105,7 +105,7 @@ def make_html() -> str:
 
 def _make_html_template() -> str:
     """Creates and returns the html base for injecting the content in."""
-    return '''<!doctype html>
+    return '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">

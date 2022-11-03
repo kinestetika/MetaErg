@@ -61,7 +61,7 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
 
 def _make_html_template() -> str:
     """should return the html base for injecting the content in. Returns the html"""
-    return '''<!doctype html>
+    return '''<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
