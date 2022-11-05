@@ -149,14 +149,15 @@ def subsystem_data() -> str:
         TIGR01101 vacuolar ATP synthase, subunit F
         TIGR01147 vacuolar ATP synthase, subunit G
         TIGR02926 vacuolar or A0/A1 ATPase, subunit H
-        TIGR01131 ATP synthase, subunit F0 A
-        TIGR01144 ATP synthase, subunit F0 B
-        TIGR01260 ATP synthase, subunit F0 c
-        TIGR00962 ATP synthase, subunit F1 alpha
-        TIGR01039 ATP synthase, subunit F1 beta
-        TIGR01146 ATP synthase, F1 subunit gamma
-        TIGR01145 ATP synthase, F1 subunit delta
-        TIGR01216 ATP synthase, F1 subunit epsilon
+        TIGR01131|CHL00046|PRK05815|COG0356|PRK13421 ATP synthase, subunit F0 A
+        TIGR01144|PRK07352|CHL00019 ATP synthase, subunit F0 B
+        PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B'
+        TIGR01260|PRK07354|CHL00061 ATP synthase, subunit F0 C
+        TIGR00962|PRK09281|CHL00059|COG0056 ATP synthase, subunit F1 alpha
+        TIGR01039|CHL00060|PRK09280|COG0055 ATP synthase, subunit F1 beta
+        TIGR01146|PRK05621|pfam00231|COG0224|cd12151|PRK13423 ATP synthase, F1 subunit gamma
+        TIGR01145|pfam00213|PRK05758|PRK13429|CHL00119|COG0712 ATP synthase, F1 subunit delta
+        TIGR01216|CHL00063|PRK00571|COG0355|PRK13446 ATP synthase, F1 subunit epsilon
         TIGR03306 alternate ATP synthase, subunit F0 A
         TIGR03321 alternate ATP synthase, subunit F0 B
         TIGR03322|cd00313 alternate ATP synthase, subunit F0 C
