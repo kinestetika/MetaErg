@@ -127,18 +127,22 @@ def install_functional_gene_databases():
                 if dir.is_dir():
                     print(f'>{dir.name}')
                     for file in dir.glob('*.hmm'):
-                        with open(file) as hmm_reader:
+                        updated_hmm_file = dir / f'{file.name}.updated'
+                        with open(updated_hmm_file, 'w') as output:
+                            context.run_external(f'hmmconvert {file}', stdout=output)
+                        with open(updated_hmm_file) as hmm_reader:
                             for line in  hmm_reader:
                                 hmm_writer.write(line)
                                 if line.startswith('NAME'):
                                     name = line.split()[1]
-                                    cutoff = noise_cutoffs.get(name, 0)
+                                    cutoff = int(float(noise_cutoffs.get(name, 0)))
+                                    print(cutoff)
                                     if desc := descriptions.get(name, '').strip():
-                                        hmm_writer.write(f'DESC  {desc}\n')
+                                        pass #hmm_writer.write(f'DESC  {desc}\n')
                                         # print(f'{name}: warning missing descr.')
-                                if line.startswith('CKSUM') and cutoff:
-                                    hmm_writer.write(f'TC    {cutoff} {cutoff};\n')
-                                    hmm_writer.write(f'NC    {cutoff} {cutoff};\n')
+                                #if line.startswith('CKSUM') and cutoff:
+                                #    hmm_writer.write(f'TC    {cutoff} {cutoff};\n')
+                                #    hmm_writer.write(f'NC    {cutoff} {cutoff};\n')
 
     with futures.ThreadPoolExecutor() as executor:
         outcomes = []
