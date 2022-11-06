@@ -34,8 +34,9 @@ def init_functional_gene_config():
 def install_data():
     source_config = Path(__file__).parent / 'functional_gene_data'
     destination_config = context.DATABASE_DIR / 'hmm' / CONFIG_DATA_FILE_NAME
-    if destination_config.is_file():
+    if destination_config.is_file() and not context.FORCE:
         context.log(f'{destination_config} already exists, use force to overwrite with default config.')
+        context.log(f'{destination_config} (this would overwrite any customizations/user edits)')
     else:
         context.log(f'Copying functional gene config from {source_config} to {destination_config}')
         shutil.copyfile(source_config, destination_config)
