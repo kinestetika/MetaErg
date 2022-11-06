@@ -1,4 +1,5 @@
 import shutil
+import os
 import pandas as pd
 from pathlib import Path
 
@@ -74,3 +75,12 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
     if antismash_result_dir.exists():
         shutil.copytree(antismash_result_dir, antismash_html_parent)
 
+
+@context.register_database_installer
+def format_blast_databases():
+    if 'A' not in context.TASKS:
+        return
+    antismash_database_path = context.DATABASE_DIR / 'antismash'
+    context.log(f'Installing antismash database at {antismash_database_path}')
+    antismash_database_path.mkdir(parents=True, exist_ok=True)
+    os.system(f'download-antismash-databases --database-dir {antismash_database_path}')

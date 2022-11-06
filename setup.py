@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='metaerg',
-    version='2.2.31',
+    version='2.2.32',
     packages=setuptools.find_packages(where='src'),
     url='https://github.com/kinestetika/MetaErg',
     license='MIT',
@@ -24,6 +24,7 @@ setuptools.setup(
     keywords='repeat-regions genes functions taxonomy',
     project_urls={'Source': 'https://github.com/kinestetika/MetaErg'},
     package_dir={'': 'src'},
+    package_data={'': ['functional_gene_data']},
     python_requires='>=3.10',
     install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx', 'virtualenv', 'h5py', 'pyarrow'],
     extras_require={  # Optional

@@ -86,4 +86,4 @@ with tasks:
 * R - build RFAM
 * C - build CDD
 * S - build specialized functional databases
-
+* A - build antismash database

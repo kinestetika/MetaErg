@@ -1,13 +1,13 @@
-from pathlib import Path
-import shutil
 import os
-
+import shutil
 import pandas as pd
+from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
+
 from metaerg import context
+from metaerg import functional_gene_configuration
 from metaerg.datatypes import fasta
-from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser, BlastHit
-from metaerg import subsystems
+from metaerg.datatypes.blast import DBentry, TabularBlastParser
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
@@ -55,8 +55,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                                 f'may need to rerun metaerg with --force')
             feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
             cdd_result_count += 1
-            if new_subsystem := subsystems.match(cdd_result):
-                feature_data.at[cdd_result.query(), 'subsystems'] = subsystems.cleanup_subsystem_str(
+            if new_subsystem := functional_gene_configuration.match(cdd_result):
+                feature_data.at[cdd_result.query(), 'subsystems'] = functional_gene_configuration.cleanup_subsystem_str(
                     feature_data.at[cdd_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
             top_entry: DBentry = cdd_result.hits[0].hit
             descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'

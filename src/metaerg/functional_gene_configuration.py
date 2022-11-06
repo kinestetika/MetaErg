@@ -1,27 +1,47 @@
 import re
+import shutil
 import pandas as pd
+from pathlib import Path
 
-from metaerg import subsystems_data
+from metaerg import context
 from metaerg.datatypes.blast import BlastResult, BlastHit
 
-current_subsystem = None
-subsystems = []
-index_data = []
-for line in subsystems_data.subsystem_data().split('\n'):
-    line = line.strip()
-    if line.startswith("#") or not len(line):
-        continue
-    elif line.startswith(">"):
-        current_subsystem = line[1:]
-    elif current_subsystem is not None:
-        si = line.find(' ')
-        subsystems.append({'profiles': line[:si], 'genes': ''})
-        index_data.append((current_subsystem, line[si+1:]))
-DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
-SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
+DATAFRAME_INDEX = None
+SUBSYSTEM_DATA = pd.DataFrame()
+CONFIG_DATA_FILE_NAME = 'functional_genes.config.txt'
 
 
-def match(blast_result:BlastResult) -> str:
+def init_functional_gene_config():
+    global DATAFRAME_INDEX, SUBSYSTEM_DATA
+    current_subsystem = None
+    subsystems = []
+    index_data = []
+    with open(context.DATABASE_DIR / 'hmm' / CONFIG_DATA_FILE_NAME) as handle:
+        for line in handle:
+            line = line.strip()
+            if line.startswith("#") or not len(line):
+                continue
+            elif line.startswith(">"):
+                current_subsystem = line[1:]
+            elif current_subsystem is not None:
+                si = line.find(' ')
+                subsystems.append({'profiles': line[:si], 'genes': ''})
+                index_data.append((current_subsystem, line[si+1:]))
+        DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
+        SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
+
+
+def install_data():
+    source_config = Path(__file__).parent / 'functional_gene_data'
+    destination_config = context.DATABASE_DIR / 'hmm' / CONFIG_DATA_FILE_NAME
+    if destination_config.is_file():
+        context.log(f'{destination_config} already exists, use force to overwrite with default config.')
+    else:
+        context.log(f'Copying functional gene config from {source_config} to {destination_config}')
+        shutil.copyfile(source_config, destination_config)
+
+
+def match(blast_result: BlastResult) -> str:
     subsystems = ''
     i = 0
     for h in blast_result.hits:
@@ -33,7 +53,7 @@ def match(blast_result:BlastResult) -> str:
     return subsystems
 
 
-def match_hit(blast_hit:BlastHit, confidence=1) -> str:
+def match_hit(blast_hit: BlastHit, confidence=1) -> str:
     matching_subsystems = set()
     for sf in SUBSYSTEM_DATA.itertuples():
         for profile in sf.profiles.split('|'):
@@ -85,7 +105,7 @@ def aggregate(feature_data: pd.DataFrame):
                 except KeyError:
                     unstructured_subsystems[gene_subsystems[0]] = feature.id
     new_dataframe_rows = [{'profiles': '', 'genes': v} for k, v in unstructured_subsystems.items()]
-    new_dataframe_index = [(k, k) for  k, v in unstructured_subsystems.items()]
+    new_dataframe_index = [(k, k) for k, v in unstructured_subsystems.items()]
     new_dataframe_index = pd.MultiIndex.from_tuples(new_dataframe_index, names=['subsystem', 'function'])
     new_dataframe_data = pd.DataFrame(new_dataframe_rows, dtype=str, index=new_dataframe_index)
     aggregated_subsystem_data = pd.concat([aggregated_subsystem_data, new_dataframe_data])

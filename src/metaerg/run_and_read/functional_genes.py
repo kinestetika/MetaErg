@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 from math import log10
 from pathlib import Path
@@ -5,7 +7,7 @@ from concurrent import futures
 
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
 from metaerg import context
-from metaerg import subsystems
+from metaerg import functional_gene_configuration
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
@@ -58,9 +60,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 else:
                     if h.evalue > 0:
                         confidence = min(1.0, - log10(h.evalue) / 100)
-                if new_subsystem := subsystems.match_hit(h, confidence):
+                if new_subsystem := functional_gene_configuration.match_hit(h, confidence):
                     hit_count += 1
-                    feature_data.at[blast_result.query(), 'subsystems'] = subsystems.cleanup_subsystem_str(
+                    feature_data.at[blast_result.query(), 'subsystems'] = functional_gene_configuration.cleanup_subsystem_str(
                         feature_data.at[blast_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
                 break
     return feature_data, hit_count
@@ -91,49 +93,96 @@ def install_functional_gene_databases():
     if 'S' not in context.TASKS:
         return
     hmm_dir = context.DATABASE_DIR / 'hmm'
-    if context.FORCE or not hmm_dir.exists():
-        context.log(f'Installing functional gene databases at {hmm_dir}...')
-        hmm_dir.mkdir(exist_ok=True, parents=True)
-        with futures.ThreadPoolExecutor() as executor:
-            outcomes = []
-            for url in FUNCTIONAL_GENE_URLS:
-                destination_file = hmm_dir / Path(url).name
-                outcomes.append(executor.submit(context.download, url, destination_file))
-            for future in futures.as_completed(outcomes):
-                future.result()
-        context.log('Checking data sanity...')
+    # FeGenie:
+    pwd = os.getcwd()
+    fegenie_dir = hmm_dir / 'fegenie'
+    # fegenie_dir.mkdir(exist_ok=True, parents=True)
+    # os.chdir(fegenie_dir)
+    # os.system('git init')
+    # os.system('git remote add -f origin https://github.com/Arkadiy-Garber/FeGenie.git')
+    # os.system('git config core.sparseCheckout true')
+    # os.system('echo "hmms" >> .git/info/sparse-checkout')
+    # os.system('git pull origin master')
+    # os.chdir(pwd)
+    bitscore_cutoff_file = fegenie_dir / 'hmms' / 'iron' / 'HMM-bitcutoffs.txt'
+    noise_cutoffs = {}
+    with open(bitscore_cutoff_file) as handle:
+        for line in handle:
+            hmm_name, descr = line.split()
+            noise_cutoffs[hmm_name]= descr
+    description_file = fegenie_dir / 'hmms' / 'iron' / 'FeGenie-map.txt'
+    descriptions = {}
+    with open(description_file) as handle:
+        for line in handle:
+            words = line.split('\t')
+            for w in words[:-1]:
+                descriptions[w]= words[-1]
+    fegenie_hmm_file = hmm_dir / 'fegenie.hmm'
+    with open(fegenie_hmm_file, 'w') as hmm_writer:
+        for dir in (fegenie_dir / 'hmms' / 'iron').glob('*'):
+            if dir.is_dir():
+                print(f'>{dir.name}')
+                for file in dir.glob('*.hmm'):
+                    with open(file) as hmm_reader:
+                        for line in  hmm_reader:
+                            hmm_writer.write(line)
+                            if line.startswith('NAME'):
+                                name = line.split()[1]
+                                try:
+                                    desc = descriptions[name].strip()
+                                    print(f'{name} {desc}')
+                                    cutoff = noise_cutoffs[name]
+                                    hmm_writer.write(f'DESC  {desc}\n')
+                                except:
+                                    print(f'{name}: warning missing descr.')
+                            if line.startswith('CKSUM'):
+                                hmm_writer.write(f'TC    {cutoff} {cutoff};\n')
+                                hmm_writer.write(f'NC    {cutoff} {cutoff};\n')
 
-        all_hmms_file = hmm_dir / 'functional_genes.hmm'
-        with open(all_hmms_file, 'w') as output:
-            names_done = set()
-            for url in FUNCTIONAL_GENE_URLS:
-                hmm_file = hmm_dir / Path(url).name
-                print(hmm_file)
-                with open(hmm_file) as hmm_reader:
-                    duplicates = []
-                    written = 0
-                    read = 0
-                    hmm_lines = []
-                    for line in hmm_reader:
-                        if line.startswith('HMMER3/f'):
-                            hmm_lines.clear()
-                            read += 1
-                            name = ''
-                        hmm_lines.append(line)
-                        if line.startswith('//'):
-                            if name in names_done:  # avoid duplicates
-                                duplicates.append(name)
-                            else:
-                                written += 1
-                                for l in hmm_lines:
-                                    if l.startswith('ACC'):
-                                        pass
-                                    else:
-                                        output.write(l)
-                                names_done.add(name)
-                        elif line.startswith('NAME'):
-                            name = line[4:].strip()
-                print(hmm_file.name, 'read, written, duplicates', read, written, len(duplicates))
-        context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
-    else:
-        context.log(f'Keeping existing functional gene database in {hmm_dir}, use --force to overwrite.')
+
+
+    # functional_gene_configuration.install_data()
+    # context.log(f'Installing functional gene databases at {hmm_dir}...')
+    # hmm_dir.mkdir(exist_ok=True, parents=True)
+    # with futures.ThreadPoolExecutor() as executor:
+    #     outcomes = []
+    #     for url in FUNCTIONAL_GENE_URLS:
+    #         destination_file = hmm_dir / Path(url).name
+    #         outcomes.append(executor.submit(context.download, url, destination_file))
+    #     for future in futures.as_completed(outcomes):
+    #         future.result()
+    # context.log('Checking data sanity...')
+
+    # all_hmms_file = hmm_dir / 'functional_genes.hmm'
+    # with open(all_hmms_file, 'w') as output:
+    #     names_done = set()
+    #     for f in hmm_dir.glob('*.hmm'):
+    #         hmm_file = f.absolute()
+    #         if f == all_hmms_file:
+    #             continue
+    #         with open(hmm_file) as hmm_reader:
+    #             duplicates = []
+    #             written = 0
+    #             read = 0
+    #             hmm_lines = []
+    #             for line in hmm_reader:
+    #                 if line.startswith('HMMER3/f'):
+    #                     hmm_lines.clear()
+    #                     read += 1
+    #                     name = ''
+    #                 hmm_lines.append(line)
+    #                 if line.startswith('//'):
+    #                     if name in names_done:  # avoid duplicates
+    #                         duplicates.append(name)
+    #                     else:
+    #                         written += 1
+    #                         for l in hmm_lines:
+    #                             if l.startswith('ACC'):
+    #                                 pass
+    #                             else:
+    #                                 output.write(l)
+    #                         names_done.add(name)
+    #                 elif line.startswith('NAME'):
+    #                     name = line[4:].strip()
+    #         print(hmm_file.name, 'read, written, duplicates', read, written, len(duplicates))
+    # context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')

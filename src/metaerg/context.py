@@ -72,7 +72,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     elif create_database:
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
         if TASKS == 'all':
-            TASKS = 'PVEBRCS'
+            TASKS = 'PVEBRCSA'
         log(f'Ready to create databases from scratch with tasks {TASKS}.')
         return
     elif install_deps:

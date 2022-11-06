@@ -8,15 +8,15 @@ from hashlib import md5
 import metaerg.run_and_read.diamond_and_blastn
 from metaerg import context
 from metaerg import registry
+from metaerg import functional_gene_configuration
 from metaerg.datatypes import fasta, gbk
-from metaerg.run_and_read import *
-from metaerg.html import *
-from metaerg import subsystems
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
+from metaerg.run_and_read import *
+from metaerg.html import *
 
-VERSION = "2.2.31"
+VERSION = "2.2.32"
 
 
 def parse_arguments():
@@ -128,7 +128,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
         properties['dominant taxon'] = k
         break
-    properties['subsystems'] = subsystems.aggregate(feature_data)
+    properties['subsystems'] = functional_gene_configuration.aggregate(feature_data)
     return properties
 
 
@@ -197,6 +197,7 @@ def main():
         install_all_helper_programs(context.BIN_DIR, context.DATABASE_DIR, context.PATH_TO_SIGNALP,
                                     context.PATH_TO_TMHMM)
     else:
+        functional_gene_configuration.init_functional_gene_config()
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:

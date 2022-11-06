@@ -152,16 +152,23 @@ def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signa
     deactivate
     source $CURRENT_VIRTUAL_ENV/bin/activate
     ''')
-    os.system('chmod a+x antismash')
+    antismash_wrapper = bin_dir / 'download-antismash-databases'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write('''#!/bin/sh
+    CURRENT_VIRTUAL_ENV=$VIRTUAL_ENV
+    echo "leaving $CURRENT_VIRTUAL_ENV"
+    source /bio/bin/antismash-env/bin/activate
+    download-antismash-databases "$@"
+    deactivate
+    source $CURRENT_VIRTUAL_ENV/bin/activate
+    ''')
+    os.system('chmod a+x download-antismash-databases')
     cli_run(["antismash-env"])  # !python -m virtualenv antismash-env
     os.chdir("antismash-env")
     os.system('wget -q https://dl.secondarymetabolites.org/releases/6.1.1/antismash-6.1.1.tar.gz')
     os.system('tar -xf antismash-6.1.1.tar.gz')
     os.system('rm antismash-6.1.1.tar.gz')
     os.system('./bin/pip install --upgrade ./antismash-6.1.1')
-    antismash_database_dir = database_dir / 'antismash'
-    antismash_database_dir.mkdir(parents=True, exist_ok=True)
-    os.system(f'./bin/python ./bin/download-antismash-databases --database-dir {antismash_database_dir}')
     # (tmhmm) tmhmm 2.0c https://services.healthtech.dtu.dk/software.php
     if path_to_tmhmm:
         os.chdir(bin_dir)
