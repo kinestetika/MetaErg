@@ -30,9 +30,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             elif line.startswith('ACC'):
                 db_entry.accession = line[4:].strip()
             elif line.startswith('NC'):
-                db_entry.min_score = int(line[4:].strip().split()[0])
+                db_entry.min_score = float(line[4:].strip().split()[0])
             elif line.startswith('TC'):
-                db_entry.min_t_score = int(line[4:].strip().split()[0])
+                db_entry.min_t_score = float(line[4:].strip().split()[0])
             elif line.startswith('DESC'):
                 db_entry.descr = line[4:].strip()
             elif line.startswith('LENG'):
@@ -93,14 +93,15 @@ def install_functional_gene_databases():
     if 'S' not in context.TASKS:
         return
     hmm_dir = context.DATABASE_DIR / 'hmm'
+    hmm_dir.mkdir(exist_ok=True, parents=True)
+    context.log(f'Installing functional gene configuration at {hmm_dir}...')
     functional_gene_configuration.install_data()
     context.log(f'Installing functional gene databases at {hmm_dir}...')
-    hmm_dir.mkdir(exist_ok=True, parents=True)
     # FeGenie:
     pwd = os.getcwd()
     fegenie_dir = hmm_dir / 'fegenie'
     fegenie_hmm_file = hmm_dir / 'fegenie.hmm'
-    if not fegenie_hmm_file.exists():
+    if context.FORCE or not fegenie_hmm_file.exists() or not fegenie_hmm_file.stat().st_size:
         fegenie_dir.mkdir(exist_ok=True, parents=True)
         os.chdir(fegenie_dir)
         os.system('git init')
@@ -148,7 +149,7 @@ def install_functional_gene_databases():
         outcomes = []
         for url in FUNCTIONAL_GENE_URLS:
             destination_file = hmm_dir / Path(url).name
-            if not destination_file.exists():
+            if context.FORCE or not destination_file.exists() or not destination_file.stat().st_size:
                 outcomes.append(executor.submit(context.download, url, destination_file))
         for future in futures.as_completed(outcomes):
             future.result()

@@ -8,38 +8,41 @@ from metaerg.datatypes.blast import BlastResult, BlastHit
 
 DATAFRAME_INDEX = None
 SUBSYSTEM_DATA = pd.DataFrame()
-CONFIG_DATA_FILE_NAME = 'functional_genes.config.txt'
+CONFIG_DATA_FILE_EXTENSION = '.config.txt'
 
 
 def init_functional_gene_config():
+    context.log('Parsing functional gene config files...')
     global DATAFRAME_INDEX, SUBSYSTEM_DATA
-    current_subsystem = None
     subsystems = []
     index_data = []
-    with open(context.DATABASE_DIR / 'hmm' / CONFIG_DATA_FILE_NAME) as handle:
-        for line in handle:
-            line = line.strip()
-            if line.startswith("#") or not len(line):
-                continue
-            elif line.startswith(">"):
-                current_subsystem = line[1:]
-            elif current_subsystem is not None:
-                si = line.find(' ')
-                subsystems.append({'profiles': line[:si], 'genes': ''})
-                index_data.append((current_subsystem, line[si+1:]))
-        DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
-        SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
+    gene_count = 0
+    subsystem_count = 0
+    for config_file in (context.DATABASE_DIR / 'hmm').glob('*' + CONFIG_DATA_FILE_EXTENSION):
+        current_subsystem = None
+        with open(context.DATABASE_DIR / 'hmm' / config_file.name) as handle:
+            for line in handle:
+                line = line.strip()
+                if line.startswith("#") or not len(line):
+                    continue
+                elif line.startswith(">"):
+                    current_subsystem = line[1:]
+                    subsystem_count += 1
+                elif current_subsystem is not None:
+                    si = line.find(' ')
+                    subsystems.append({'profiles': line[:si], 'genes': ''})
+                    index_data.append((current_subsystem, line[si+1:]))
+                    gene_count += 1
+            DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
+            SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
+        context.log(f'Parsed {subsystem_count} subsystems, {gene_count} genes from {config_file} ...')
 
 
 def install_data():
     source_config = Path(__file__).parent / 'functional_gene_data'
-    destination_config = context.DATABASE_DIR / 'hmm' / CONFIG_DATA_FILE_NAME
-    if destination_config.is_file() and not context.FORCE:
-        context.log(f'{destination_config} already exists, use force to overwrite with default config.')
-        context.log(f'{destination_config} (this would overwrite any customizations/user edits)')
-    else:
-        context.log(f'Copying functional gene config from {source_config} to {destination_config}')
-        shutil.copyfile(source_config, destination_config)
+    destination_config = context.DATABASE_DIR / 'hmm' / ('functional_genes.' + CONFIG_DATA_FILE_EXTENSION)
+    context.log(f'Copying functional gene config from {source_config} to {destination_config}')
+    shutil.copyfile(source_config, destination_config)
 
 
 def match(blast_result: BlastResult) -> str:
