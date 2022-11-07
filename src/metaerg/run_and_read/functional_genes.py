@@ -97,53 +97,6 @@ def install_functional_gene_databases():
     context.log(f'Installing functional gene configuration at {hmm_dir}...')
     functional_gene_configuration.install_data()
     context.log(f'Installing functional gene databases at {hmm_dir}...')
-    # FeGenie:
-    pwd = os.getcwd()
-    fegenie_dir = hmm_dir / 'fegenie'
-    fegenie_hmm_file = hmm_dir / 'fegenie.hmm'
-    if context.FORCE or not fegenie_hmm_file.exists() or not fegenie_hmm_file.stat().st_size:
-        fegenie_dir.mkdir(exist_ok=True, parents=True)
-        os.chdir(fegenie_dir)
-        os.system('git init')
-        os.system('git remote add -f origin https://github.com/Arkadiy-Garber/FeGenie.git')
-        os.system('git config core.sparseCheckout true')
-        os.system('echo "hmms" >> .git/info/sparse-checkout')
-        os.system('git pull origin master')
-        os.chdir(pwd)
-        bitscore_cutoff_file = fegenie_dir / 'hmms' / 'iron' / 'HMM-bitcutoffs.txt'
-        noise_cutoffs = {}
-        with open(bitscore_cutoff_file) as handle:
-            for line in handle:
-                hmm_name, descr = line.split()
-                noise_cutoffs[hmm_name]= descr
-        description_file = fegenie_dir / 'hmms' / 'iron' / 'FeGenie-map.txt'
-        descriptions = {}
-        with open(description_file) as handle:
-            for line in handle:
-                words = line.split('\t')
-                for w in words[:-1]:
-                    descriptions[w]= words[-1]
-        with open(fegenie_hmm_file, 'w') as hmm_writer:
-            for dir in (fegenie_dir / 'hmms' / 'iron').glob('*'):
-                if dir.is_dir():
-                    print(f'>{dir.name}')
-                    for file in dir.glob('*.hmm'):
-                        updated_hmm_file = dir / f'{file.name}.updated'
-                        with open(updated_hmm_file, 'w') as output:
-                            context.run_external(f'hmmconvert {file}', stdout=output)
-                        with open(updated_hmm_file) as hmm_reader:
-                            for line in  hmm_reader:
-                                hmm_writer.write(line)
-                                if line.startswith('NAME'):
-                                    name = line.split()[1]
-                                    cutoff = int(float(noise_cutoffs.get(name, 0)))
-                                    print(cutoff)
-                                    if desc := descriptions.get(name, '').strip():
-                                        pass #hmm_writer.write(f'DESC  {desc}\n')
-                                        # print(f'{name}: warning missing descr.')
-                                #if line.startswith('CKSUM') and cutoff:
-                                #    hmm_writer.write(f'TC    {cutoff} {cutoff};\n')
-                                #    hmm_writer.write(f'NC    {cutoff} {cutoff};\n')
 
     with futures.ThreadPoolExecutor() as executor:
         outcomes = []

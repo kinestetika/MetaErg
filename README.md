@@ -19,21 +19,22 @@ more concise than the original version of metaerg and many other annotation tool
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
 work in progress, and can be expanded and customized as needed. 
 
-The Metaerg 2.2 pipeline consists of:
-* (optional) CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
-* (optional) tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/).
-* (required) RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM.
-* (optional) retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest.
-* (optional) tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html).
-* (optional) other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/) and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/).
-* (required) coding genes with [Prodigal](https://github.com/hyattpd/Prodigal).
-* (required) annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and a database of 62,296 bacterial, 3,406 archaeal 11,569 viral and 139 eukaryotic genomes.
-* (required) annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
-* (optional) annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
-* (optional) annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* (built-in) assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and HMM profiles from [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation).
-* (built-in) presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
-* (built-in) saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
+The Metaerg 2.2 pipeline ...
+* predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
+* predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/).
+* predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM.
+* predicts retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest.
+* predicts tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html).
+* predicts other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/) and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/).
+* predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal).
+* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and a database of 62,296 bacterial, 3,406 archaeal 11,569 viral and 139 eukaryotic genomes.
+* annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
+* annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
+* annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
+* assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and HMM profiles from [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation).
+* presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
+* saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
+* enables the user to add custom HMMs and expand the set of functional genes as needed. 
 
 ## Usage:
 ```
