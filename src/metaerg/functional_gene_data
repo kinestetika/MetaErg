@@ -189,6 +189,7 @@ TIGR03166 alternate ATP synthase, subunit F1 epsilon
 TIGR01043 archaeal ATP synthase, subunit A
 TIGR01041 archaeal ATP synthase, subunit B
 cd00313 archaeal ATP synthase, subunit F0 C
+COG3808|PLN02255|PLN02277|PRK00733 proton/sodium translocating pyrophosphatase
 
 >Respiration, Anaerobic, Dissimilatory Sulfate Reduction, Sulfate -> H2S
 PRK04149|COG2046|TIGR00339 sulfate adenylyltransferase (sat, ec:2.7.7.4)
