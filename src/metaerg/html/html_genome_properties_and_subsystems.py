@@ -115,7 +115,9 @@ def _make_html_template() -> str:
     <tbody>
 CONTENT_PROPERTIES
     </tbody></table>
-    <p if=f><a href="index_of_features.html">View table with all genes</a></p>
-    <h3 id=f>Subsystems overview</h4>
+    <p></p>
+    <h4 id=f><a href="index_of_features.html">View table with all genes</a></h4>
+    <p></p>
+    <h3 id=f>Subsystems overview</h3>
 CONTENT_SUBSYSTEMS
 </body></html>'''

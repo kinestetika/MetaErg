@@ -17,7 +17,7 @@ By using gtdbtk for taxonomic classification of genes and transferring functiona
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
 more concise than the original version of metaerg and many other annotation tools. In addition, metaerg uses NCBI's
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
-work in progress, and can be expanded and customized as needed. 
+work in progress, and can be expanded and customized as needed.
 
 The Metaerg 2.2 pipeline ...
 * predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).

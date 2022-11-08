@@ -1,5 +1,4 @@
 import re
-import shutil
 import pandas as pd
 from pathlib import Path
 
@@ -11,38 +10,39 @@ SUBSYSTEM_DATA = pd.DataFrame()
 CONFIG_DATA_FILE_EXTENSION = '.config.txt'
 
 
+def parse_functional_gene_config_file(file: Path, subsystems: list, index_data: list):
+    gene_count = 0
+    subsystem_count = 0
+    current_subsystem = None
+    with open(file) as handle:
+        for line in handle:
+            line = line.strip()
+            if line.startswith("#") or not len(line):
+                continue
+            elif line.startswith(">"):
+                current_subsystem = line[1:]
+                subsystem_count += 1
+            elif current_subsystem is not None:
+                si = line.find(' ')
+                subsystems.append({'profiles': line[:si], 'genes': ''})
+                index_data.append((current_subsystem, line[si + 1:]))
+                gene_count += 1
+    context.log(f'Parsed {subsystem_count} subsystems, {gene_count} genes from {file} ...')
+
+
 def init_functional_gene_config():
     context.log('Parsing functional gene config files...')
     global DATAFRAME_INDEX, SUBSYSTEM_DATA
     subsystems = []
     index_data = []
-    gene_count = 0
-    subsystem_count = 0
-    for config_file in (context.DATABASE_DIR / 'hmm').glob('*' + CONFIG_DATA_FILE_EXTENSION):
-        current_subsystem = None
-        with open(context.DATABASE_DIR / 'hmm' / config_file.name) as handle:
-            for line in handle:
-                line = line.strip()
-                if line.startswith("#") or not len(line):
-                    continue
-                elif line.startswith(">"):
-                    current_subsystem = line[1:]
-                    subsystem_count += 1
-                elif current_subsystem is not None:
-                    si = line.find(' ')
-                    subsystems.append({'profiles': line[:si], 'genes': ''})
-                    index_data.append((current_subsystem, line[si+1:]))
-                    gene_count += 1
-            DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
-            SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
-        context.log(f'Parsed {subsystem_count} subsystems, {gene_count} genes from {config_file} ...')
-
-
-def install_data():
-    source_config = Path(__file__).parent / 'functional_gene_data'
-    destination_config = context.DATABASE_DIR / 'hmm' / ('functional_genes.' + CONFIG_DATA_FILE_EXTENSION)
-    context.log(f'Copying functional gene config from {source_config} to {destination_config}')
-    shutil.copyfile(source_config, destination_config)
+    base_config_file = Path(__file__).parent / 'functional_gene_data'
+    parse_functional_gene_config_file(base_config_file, subsystems, index_data)
+    for config_file in (context.DATABASE_DIR / 'user_config').glob('*' + CONFIG_DATA_FILE_EXTENSION):
+        parse_functional_gene_config_file(context.DATABASE_DIR / 'user_config' / config_file.name, subsystems,
+                                          index_data)
+    DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
+    SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
+    context.log(f'Complete configuration contains {len(subsystems)} genes.')
 
 
 def match(blast_result: BlastResult) -> str:
@@ -83,7 +83,8 @@ def cleanup_subsystem_str(subsystem_str: str) -> str:
                 collected_subsystems[hash_str] = confidence
         else:
             collected_subsystems[s] = 0
-    subsystem_str = ' '.join((f'[{val[0]}|{val[1]:.1f}]' for val in sorted(collected_subsystems.items(), key=lambda x: (-x[1], x[0]))))
+    subsystem_str = ' '.join((f'[{val[0]}|{val[1]:.1f}]' for val in sorted(collected_subsystems.items(),
+                                                                           key=lambda x: (-x[1], x[0]))))
     return subsystem_str.strip()
 
 

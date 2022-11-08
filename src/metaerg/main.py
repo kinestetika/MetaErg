@@ -41,15 +41,11 @@ def parse_arguments():
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
     parser.add_argument('--download_database', default=False, action="store_true",
                         help='Download ready-made metaerg database.')
-    parser.add_argument('--create_database', default=False, action="store_true",
-                        help='Create metaerg database from scratch.')
+    parser.add_argument('--create_database', default='', help='Create metaerg database from scratch.')
     parser.add_argument('--install_deps', default='', help='Dir for installation of all dependencies '
                                                            '(helper programs). Dependencies will be installed here.')
     parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
     parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
-
-    parser.add_argument('--tasks', default='all', help='Subtasks to be performed while annotating or creating '
-                                                       'database.')
 
     return parser.parse_args()
 

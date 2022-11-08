@@ -49,7 +49,7 @@ PATH_TO_SIGNALP = None
 PATH_TO_TMHMM = None
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
-         translation_table, delimiter, checkm_dir, gtdbtk_dir, tasks, prefix, create_database, download_database,
+         translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
          install_deps, path_to_signalp, path_to_tmhmm, log_topics=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
@@ -64,15 +64,16 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     DATABASE_DIR = Path(database_dir).absolute()
     if not DATABASE_DIR.is_dir():
         raise Exception("No database dir provided or database dir is not a dir.")
-    TASKS = tasks
     if download_database:
         METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
         log(f'Ready to download databases.')
         return
     elif create_database:
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
-        if TASKS == 'all':
+        if create_database == 'all':
             TASKS = 'PVEBRCSA'
+        else:
+            TASKS = create_database
         log(f'Ready to create databases from scratch with tasks {TASKS}.')
         return
     elif install_deps:

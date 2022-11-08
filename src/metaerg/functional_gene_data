@@ -80,14 +80,11 @@ TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
 TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
 TIGR01912 Twin arginine targeting (Tat) protein translocase, subunit TatC, archaea
 
->Transport, Siderophore, Peptide, etc Import, TonB
+>Transport, Siderophore, Peptide, etc Import, TonB/TolA
 COG0810|PRK10819|TIGR01352 relay accross the periplasm (TonB)
-TIGR02794 relay accross the periplasm (tolA)
-TIGR02796 inner membrane subunit (tolQ)
-TIGR02797 inner membrane subunit (exbB group 1)
-TIGR02805 inner membrane subunit (exbB group 2)
-TIGR02803 inner membrane subunit (exbD group 1)
-TIGR02804 inner membrane subunit (exbD group 2)
+TIGR02794|COG0823|PRK04922|PRK00178 relay accross the periplasm (tolA/B)
+TIGR02797|TIGR02805|COG0811|TIGR02796|pfam01618 inner membrane subunit (exbB/motA/tolQ)
+TIGR02803|TIGR02804|COG0848|pfam02472|PRK11267 inner membrane subunit (exbD/tolR)
 NF038079 tonB-dependent receptor, siderophores, myxochelin MxcH family
 PRK13484 tonB-dependent receptor, siderophores, IreA family
 PRK13524 tonB-dependent receptor, siderophores, FepA family

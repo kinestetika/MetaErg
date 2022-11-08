@@ -88,15 +88,44 @@ FUNCTIONAL_GENE_URLS = ('https://zenodo.org/record/6365663/files/carbon.cycle.su
                         'https://zenodo.org/record/6365663/files/hydrogenase.hmm',
                         'https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/raw/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm')
 
+
+def add_hmm_file_to_db(hmm_file: Path, db_handle, names_done: set):
+    with open(hmm_file) as hmm_reader:
+        duplicates = []
+        written = 0
+        read = 0
+        hmm_lines = []
+        for line in hmm_reader:
+            if line.startswith('HMMER3/f'):
+                hmm_lines.clear()
+                read += 1
+                name = ''
+            hmm_lines.append(line)
+            if line.startswith('//'):
+                if name in names_done:  # avoid duplicates
+                    duplicates.append(name)
+                else:
+                    written += 1
+                    for l in hmm_lines:
+                        if l.startswith('ACC'):
+                            pass
+                        else:
+                            db_handle.write(l)
+                    names_done.add(name)
+            elif line.startswith('NAME'):
+                name = line[4:].strip()
+    print(hmm_file.name, 'read, written, duplicates', read, written, len(duplicates))
+
+
 @context.register_database_installer
 def install_functional_gene_databases():
     if 'S' not in context.TASKS:
         return
     hmm_dir = context.DATABASE_DIR / 'hmm'
     hmm_dir.mkdir(exist_ok=True, parents=True)
-    context.log(f'Installing functional gene configuration at {hmm_dir}...')
-    functional_gene_configuration.install_data()
-    context.log(f'Installing functional gene databases at {hmm_dir}...')
+    (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)
+    (hmm_dir / 'user_hmm').mkdir(exist_ok=True, parents=True)
+    context.log(f'Installing functional gene hmm database at {hmm_dir}...')
 
     with futures.ThreadPoolExecutor() as executor:
         outcomes = []
@@ -115,29 +144,8 @@ def install_functional_gene_databases():
             hmm_file = f.absolute()
             if f == all_hmms_file:
                 continue
-            with open(hmm_file) as hmm_reader:
-                duplicates = []
-                written = 0
-                read = 0
-                hmm_lines = []
-                for line in hmm_reader:
-                    if line.startswith('HMMER3/f'):
-                        hmm_lines.clear()
-                        read += 1
-                        name = ''
-                    hmm_lines.append(line)
-                    if line.startswith('//'):
-                        if name in names_done:  # avoid duplicates
-                            duplicates.append(name)
-                        else:
-                            written += 1
-                            for l in hmm_lines:
-                                if l.startswith('ACC'):
-                                    pass
-                                else:
-                                    output.write(l)
-                            names_done.add(name)
-                    elif line.startswith('NAME'):
-                        name = line[4:].strip()
-            print(hmm_file.name, 'read, written, duplicates', read, written, len(duplicates))
+            add_hmm_file_to_db(hmm_file, output, names_done)
+        for f in (hmm_dir / 'user_hmm').glob('*.hmm'):
+            hmm_file = f.absolute()
+            add_hmm_file_to_db(hmm_file, output, names_done)
     context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
