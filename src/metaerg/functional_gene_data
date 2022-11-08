@@ -63,7 +63,7 @@ TIGR00448 DNA-directed RNA polymerase (rpoE, archaea/eukarya)
 TIGR03670 DNA-directed RNA polymerase subunit B (rpoB, archaea)
 cd06927 L subunit of archaeal RNA polymerase
 
->Translocation Accross the Cytoplasmic Membrane, Sec
+>Transport, General Protein Translocation, Sec
 TIGR00963 preprotein translocase, subunit SecA
 TIGR00809 preprotein translocase, subunit SecB
 TIGR01129 preprotein translocase, subunit SecD
@@ -74,11 +74,33 @@ TIGR00810 preprotein translocase, subunit SecG
 TIGR00967 preprotein translocase, subunit SecY
 TIGR00869 preprotein translocase, subunit sec62
 
->Translocation Accross the Cytoplasmic Membrane, Tat, for Folded Proteins
+>Transport, Folded Protein Translocation, Tat
 TIGR01411 Twin arginine-targeting protein translocase, subunits TatAE
 TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
 TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
 TIGR01912 Twin arginine targeting (Tat) protein translocase, subunit TatC, archaea
+
+>Transport, Siderophore, Peptide, etc Import, TonB
+COG0810|PRK10819|TIGR01352 relay accross the periplasm (TonB)
+TIGR02794 relay accross the periplasm (tolA)
+TIGR02796 inner membrane subunit (tolQ)
+TIGR02797 inner membrane subunit (exbB group 1)
+TIGR02805 inner membrane subunit (exbB group 2)
+TIGR02803 inner membrane subunit (exbD group 1)
+TIGR02804 inner membrane subunit (exbD group 2)
+NF038079 tonB-dependent receptor, siderophores, myxochelin MxcH family
+PRK13484 tonB-dependent receptor, siderophores, IreA family
+PRK13524 tonB-dependent receptor, siderophores, FepA family
+PRK14050 tonB-dependent receptor, siderophores
+TIGR01783 tonB-dependent receptor, siderophores
+TIGR04056 tonB-dependent receptor, susC/ragA family
+TIGR04549 tonB-dependent receptor zinc metalohydrolase associated with susC/ragA
+TIGR01776 tonB-dependent receptor, lactoferrin and transferrin
+PRK10641|TIGR01779 tonB-dependent receptor, vitamin B12 receptor BtuB
+TIGR01778 tonB-dependent receptor, Copper
+TIGR01785 tonB-dependent receptor, heme/hemoglobin
+PRK13486 tonB-dependent receptor
+TIGR01782 tonB-dependent receptor
 
 >Respiration, Complex I
 COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
@@ -581,16 +603,16 @@ K27540 K27540 naphtalene carboxylase
 NmsA NmsA naphtylmethyl succinate synthase
 
 >Metabolism, Fatty Acids
-TIGR01749 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabA)
-TIGR00128 malonyl CoA-acyl carrier protein transacylase (FabD)
+PRK14656|PRK14657|PRK14659|PRK14660|PRK14661|PRK14663|TIGR00516 holo-[acyl-carrier-protein] synthase (acpS)
+TIGR01749|COG0764|cd01287 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabA)
+TIGR00128|COG0331 malonyl CoA-acyl carrier protein transacylase (FabD)
 TIGR03150 beta-ketoacyl-acyl-carrier-protein synthase II (FabF)
-TIGR00747 3-oxoacyl-[acyl-carrier-protein] synthase III (FabH)
-TIGR01750 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabZ)
-TIGR02445 acetyl-CoA C-acyltransferase (FadA)
-TIGR02437 fatty oxidation complex, alpha subunit (FadB)
-TIGR03151 enoyl-[acyl-carrier-protein] reductase (FabK)
-PRK05653 3-oxoacyl-[acyl-carrier protein] reductase   (FabG)
-PRK08594 enoyl-ACP reductase (FabI)
+TIGR00747|COG0332|CHL00203 3-oxoacyl-[acyl-carrier-protein] synthase III (FabH)
+TIGR03151|PLN02730|PRK06079|PRK06505|PRK06603|PRK06997|PRK07370|PRK07533|PRK07889|PRK08063|PRK08159|PRK08415|PRK08594|PRK08690 enoyl-[acyl-carrier-protein] reductase (FabI)
+TIGR01750|PRK00006|cd01288 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabZ)
+TIGR02445|pfam09403|PRK08947 acetyl-CoA C-acyltransferase (FadA)
+TIGR02437|PRK11730|COG1250 fatty oxidation complex, alpha subunit (FadB)
+PRK05557|PRK05565|PRK05786|PRK06077|PRK06463|PRK06550|PRK07666|PRK07792|PRK08217|PRK08261|PRK08642|PRK12825 3-oxoacyl-[acyl-carrier protein] reductase (FabG)
 PRK08063 enoyl-[acyl-carrier-protein] reductase (FabL)
 PRK13656 enoyl-[acyl-carrier-protein] reductase (FabV)
 
@@ -632,229 +654,14 @@ COG0245 2C-methyl-D-erythritol 2,4-cyclodiphosphate synthase (IspF, EC:4.6.1.12)
 COG0821 4-hydroxy-3-methylbut-2-enyl diphosphate synthase (IspG/GcpE, EC:1.17.4.3)
 COG0761 4-Hydroxy-3-methylbut-2-enyl diphosphate reductase (IspH, EC:1.17.1.2)
 
-# the following profiles are from FeGenie, version 1.2 (March 2022)
->Assimilation, Iron Import
-Iron_uptake_YfeA_Periplasmic_chelated_iron-binding_protein_Q56952_Yersinia_pestis_180610 YfeA-family-iron-binding-proteins
-Iron_uptake_YfeB_Chelated_iron_transport_system_membrane_protein_Q56953_Yersinia_pestis_180610 YfeB-family-membrane-proteins
-EfoO-Iron_uptake: EfoO iron uptake protein
-EfeB EfeB-family EfeB family peroxidase
-FutA1-iron_ABC_transporter_iron-binding-rep FutA1-family-iron-binding-proteins
-FutA2-iron_ABC_transporter_iron-binding-rep FutA2-family-iron-binding-proteins
-FutC-iron_ABC_transporter_ATPase-rep iron ABC transporter, FutC-family-ATPase
-FbpA-iron_binding_and_transport-rep FbpA-family-iron-binding-protein
-FbpB-FutB-iron_permease_fam1-rep FbpB-FutB-family-iron-permease
-FbpB-iron_permease_fam2-rep FbpB-family-iron-permease
-FbpC-iron_uptake_ATPase-rep FbpC-family-ATPase
-nramp Nramp-family-protein
-FeoA: FeoA iron uptake protein
-FeoB_Gate: FeoB iron uptake system protein
-FeoB_N: FeoB iron uptake system protein
-FeoB_C: FeoB iron uptake system protein
-FeoE FeoE-family-iron-efflux
-zip Zip-family-zink-and-iron-uptake
-FTR1: FTR1 iron uptake protein
-Gate: Gate iron uptake protein
-
->Assimilation, Iron, Siderophore Transport
-PvuB-FecB_vibrioferrin_transport|FecB-PvuB-vibrioferrin_transport PvuB-family-substrate-binding-protein
-FeuB-FhuB-PvuC-CbrB-PvuD-FeuC-CbrC|FhuB-FeuB-CbrB-PvuC-iron_ABC_transporter_periplasmic PvuC-family-permease
-PvuCD-FhuB-CbrBC-FeuB-CbrC-YfhA|PvuCD-FhuB-CbrBC-FeuBC PvuCD-family-permease
-FpuD-CbrD-FepC-FhuC-PvuDE-FecE-SstC-ViuC-Siderophore_ABC_transport PvuD-family-ATP-binding-protein
-FpuC-FhuC-FpuD-YusV-CbrD-FepC-PvuE-FecE-HatC-ATPase PvuE-family-permease
-FpuCD-YusV-CbrD-FepC-FepE-PvuE-ABC_transporters_ATPase|FecE-PvuE-FhuC-CbrD-FepC-YusV-FpuD-FpuC-PiuA-PirA-FepA-RhtA PvuE-family-ATP-binding-protein
-PvuE-FecB-vibrioferrin_transport PvuE-family-substrate-binding-protein
-Sid_FpvC_metal_ion_transport_PA2407_Paeruginosa_PAO1_180602 FpvC-family-siderophore-transport
-Sid_FpvD_ATPase_PA2408_Paeruginosa_PAO1_180602 FpvD-family-siderophore-transport
-PF01032-FecCD-YfhA-FpvE-YfeCD_transport_family FpvE-family-permease
-Sid_FpvF_metal_ion_transport_PA2410_Paeruginosa_PAO1_180602 FpvF-family-siderophore-transport
-Sid_FpvG_iron_reductase_PA2403_Paeruginosa_PAO1_180602 FpvG-family-siderophore-transport
-Sid_FpvH_iron_release_PA2404_Paeruginosa_PAO1_180602 FpvH-family-siderophore-transport
-Sid_FpvJ_PA2405_Paeruginosa_PAO1_180602 FpvJ-family-siderophore-transport
-FpvK-sid_Pyoverdine_uptake-rep FpvK-family-hypothetical
-Sid_FptB_Ferripyochelin_uptake_Pseudomonas_aeruginosa_PA4220_180623 FptB-family-siderophore-transport
-Sid_FptC_Ferripyochelin_uptake_Pseudomonas_aeruginosa_PA4219_180623 FptC-family-siderophore-transport
-Sid_FptX_Ferripyochelin_uptake_Pseudomonas_aeruginosa_PA4218_180623 FptX-family-siderophore-transport
-Sid_IroB_Shigella_dysenteriae_AAR13266.1_180606 IroB-family-siderophore-transport
-Sid_IroE_Shigella_dysenteriae_AAR13269.1_180606 IroE-family-siderophore-transport
-IroC-salmochelin_transport-rep IroC-family-ATP-binding-protein
-Sid_PvdR_Pyoverdine_export_Paeruginosa_PA2389_180623 PvdR-family-sideropore-export
-Sid_PvdT_Pyoverdine_export_Paeruginosa_PA2390_180623 PvdT-family-siderophore-export
-PiuA-siderophore_receptor-rep PiuA-family-siderophore-receptor
-Sid_YqjH_NADPH-dep_ferric_chelate_reductase_enterobactin_Q46871_Escherichia_coli_180606 YqjH-family-iron-reductase
-Sid_EntS_enterobactin_exporter_Ecoli_P24077_180603 EntS-family-siderophore-export
-Sid_ViuB_Vibriobactin_siderophore_transport_utilization_protein_Vibrio_cholerae_A5F660: Vibriobactin siderophore transport utilization protein
-PF00593-TonB_dependent_receptor-PiuA-PirA-FepA-RhtA PirA-family-siderophore-receptor
-LbtU-LbtB-legiobactin_receptor|LbtU_LbtB-legiobactin_receptor_2 LbtU-family-siderophore-receptor
-Sid_LbtC_Legiobactin_PAP2_superfamily_Legionella_oakridgensis_AHE65915.1_180604 MFS-transporter
-LbtU-LvtA-PiuA-PirA-RhtA-ViuA LbtU-family-siderophore receptor
-Sid_VabS_Vanchrobactin_Export_Vibrio_anguillarum_CAJ45638.1_180623 VabS-family-siderophore-export
-PirA-siderophore_receptor-rep PirA-family-siderophore-receptor
-PF06276-RhbCF-AcsD-IucA-IucC-PvsB-Ferric_iron_reductase_FhuF_like_transporter IucA-family-iron-reductase
-PF07715_sub-TonB_dependent_siderophore_receptor_plug-PirA-PiuA-FepA-RhtA-LvtA PirA-family-siderophore-receptor
-PF01497_Peripla_BP_2-HatD-SsstD-PhuT-FhuD-HmuT-YfiY-FpuA-FatB-ViuP-CbrA HatD-family-substrate-binding-protein
-
->Assimilation, Iron, Siderophore Transport, Putative
-PF03544_TonB_C TonB-family protein
-PF16031_TonB_N TonB-family protein
-PF13103_TonB_2 TonB-family protein
-HasB-TonB_paralog_heme_uptake_fam1-rep: TonB family protein
-PF01618-MotA_TolQ_ExbB_proton_channel_family ExbB-family protein
-PF02472-ExbD ExbD-family protein
-
->Assimilation, Iron, Siderophore Synthesis
-Sid_PchC_pyochelin_biosynthesis_Pseudomonas_aeruginosa_PA4229 PchC-family-siderophore-synthesis
-PvdDIJL-VabF-VibF-EntF-DhbF-MbtB-PchE VabF-family-siderophore-synthesis
-PF04183-IucA_IucC-rhbCF-AcsD-PvsD PvsD-family-siderophore-synthesis
-Sid_PchG_pyochelin_biosynthesis_Pseudomonas_aeruginosa_PA4224_180623 PchG-family-siderophore-synthesis
-Sid_PvdE_Pyoverdine_biosynthesis_Paeruginosa_PA2397_180623 PvdE-family-siderophore-synthesis
-Sid_PchB_pyochelin_biosynthesis_Pseudomonas_aeruginosa_Q51507 PchB-family-siderophore-synthesis
-Sid_RhbE_Rhizobactin_siderophore_biosynthesis_Rhizobium_meliloti_Q9Z3Q8: warning missing descr.
-Sid_PvdP_Pyoverdine_biosynthesis_Paeruginosa_PA2392_180623 PvdP-family-siderophore-synthesis
-VabE_Vanchrobactin_biosynthesis-rep VabE-family-siderophore-synthesis
-VabF_Vanchrobactin_biosynthesis-rep VabF-family-siderophore-synthesis
-PvsE-AcsE_vibrioferrin_biosynthesis-rep PvsE-family-siderophore-synthesis
-DhbC-VibC-VabC VabC-family-siderophore-synthesis
-Sid_PvdN_Pyoverdine_biosynthesis_Paeruginosa_PA2394_180623 PvdN-family-siderophore-synthesis
-VabG_Vanchrobactin_biosynthesis-rep VabG-family-siderophore-synthesis
-Sid_AcsB_Achromobactin_siderophore_synthesis_Dickeya_chrysanthemi_AAL14564.1: warning missing descr.
-VabB-EntB-DhbB-VenB-VibB VabB-family-siderophore-synthesis
-Sid_PvdO_Pyoverdine_biosynthesis_Paeruginosa_PA2395_180623 PvdO-family-siderophore-synthesis
-Sid_MbtC_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_NP_216898.1: warning missing descr.
-Sid_RhbA_Rhizobactin_biosynthesis_Rhizobium_meliloti_Q9Z3R2 RhbA-family-siderophore-synthesis
-Sid_PvdA_Pyoverdine_biosynthesis PvdA-family-siderophore-synthesis
-Sid_MbtH_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_NP_216893.1: warning missing descr.
-DhbE-PchD-VibE-VabE-EntE-IroD-PvdQ-MbtA VabE-family-siderophore-synthesis
-DhbB-EntB-VenB-VibB-VabB VabB-family-siderophore-synthesis
-PvsD-AcsD-IucA-IucC-RhbCF-PvsB PvsD-family-siderophore-synthesis
-Sid_VabD_Vanchrobactin_Biosynthesis_Vibrio_anguillarum_AAW66006.2_180623 VabD-family-siderophore-synthesis
-AsbE_petrobactin_synthesis-rep AsbE-family-siderophore-synthesis
-Sid_VibD_Vibriobactin_siderophore_biosynthesis_Vibrio_cholerae_AAD48884.1: warning missing descr.
-DhbA-VibA-VabA-EntA VabA-family-siderophore-synthesis
-VabA-DhbA-EntA-VibA VabA-family-siderophore-synthesis
-Sid_BesA_Bacillibactin_hydrolyze_Bsubtilis_YP_003867459.1_180603 BesA-family-siderophore-synthesis
-VabC-DhbC-VibC-EntC-AmoA-PchA VabC-family-siderophore-synthesis
-Sid_EntD_enterobactin_synthesis_Ecoli EntD-family-siderophore-synthesis
-Sid_EntD_enterobactin_synthesis_Ecoli: warning missing descr.
-Sid_RhbD_Rhizobactin_biosynthesis_Rhizobium_meliloti_Q9Z3Q9 RhbD-family-siderophore-synthesis
-Sid_PvdH_Pyoverdine_biosynthesis_Pseudomonas_aeruginosa_PA2413_180623 PvdH-family-siderophore-synthesis
-PvdQ_pyoverdine_biosynthesis-rep PvdQ-family-siderophore-synthesis
-Sid_AsbF_Petrobactin_biosynthesis_Bacillus_anthracis_Q81RQ4_180606 AsbF-family-siderophore-synthesis
-Sid_AsbC_Petrobactin_biosynthesis_Bacillus_anthracis_Q81RQ7_180623 AsbC-family-siderophore-synthesis
-Sid_PvdM_Pyoverdine_biosynthesis_Pseudomonas_fluorescens_PSF113_1846_180623 PvdM-family-siderophore-synthesis
-PvsB-AcsD-IucA-IucC-RhbCF-PvsD PvsD-family-siderophore-synthesis
-Sid_MbtJ_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_YP_177876.1: warning missing descr.
-PvdDIJL-VabF-VibF-EntF-DhbF-MbtBEF-PchE-AngR-PchF VabF-family-siderophore-synthesis
-Sid_PchI_pyochelin_biosynthesis_Pseudomonas_aeruginosa_PA4222_180623 PchI-family-siderophore-synthesis
-Sid_RhbB_Rhizobactin_biosynthesis_Rhizobium_meliloti_Q9Z3R1 RhbB-family-siderophore-synthesis
-IroD-VabH-enterochelin_esterase-rep VabH-family-siderophore-synthesis
-PvsA_vibrioferrin_biosynthesis-rep PvsA-family-siderophore-synthesis
-PvsC_vibrioferrin_biosynthesis-rep PvsC-family-siderophore-synthesis
-Sid_PvdF_Pyoverdine_biosynthesis_Paeruginosa_PA2396_180623 PvdF-family-siderophore-synthesis
-DhbF-PvdDIJL-VabF VabF-family-siderophore-synthesis
-Sid_AsbD_Petrobactin_biosynthesis_Bacillus_anthracis_Q81RQ6_180623 AsbD-family-siderophore-synthesis
-Sid_PchH_pyochelin_biosynthesis_Pseudomonas_aeruginosa_PA4223_180623 PchH-family-siderophore-synthesis
-Sid_VibH_Vanchrobactin_Biosynthesis_Vibrio_cholerae_AAG00565.1_180623 VibH-family-siderophore-synthesis
-Sid_AcsF_Achromobactin_siderophore_synthesis_Pseudomonas_syringae_EPF66771.1: warning missing descr.
-PvdDIJL-VabF-VibF-EntF-DhbF-MbtB-PchE-AngR_2 VabF-family-siderophore-synthesis
-Sid_MbtD_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_NP_216897.1: warning missing descr.
-Sid_IucD_Escherichia_coli_P11295 IucD-family-siderophore-synthesis
-Sid_MbtG_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_NP_216894.1: warning missing descr.
-Sid_IucB_Escherichia_coli_Q47317 IucB-family-siderophore-synthesis
-Sid_MbtI_Mycobactin_biosynthesis_Mycobacterium_tuberculosis_NC_000962.3: warning missing descr.
-
->Assimilation, Iron, Heme Uptake
-Heme_HasF_outer_membrane_protein_Pseudomonas_fluorescens_BAA88494.1 HasF-family-outer-membrane-protein
-HmuV-HatC-ViuC-Hemin_ABC_transporter_ATPase-rep substrate-binding-protein
-HmuY: HmuY heme uptake protein
-HasA: HasA heme uptake protein
-Heme_HasD_ABC_protein_Pseudomonas_fluorescens_BAA88492.1 HasD-family-ATP-binding-protein
-Heme_HasE_membrane_fusion_protein_Pseudomonas_fluorescens_BAA88493.1 HasE-family-membrane-fusion-protein
-HxuB-refseq: HxuB heme uptake protein
-Cofac_haem_bdg: heme uptake protein
-HxuA-refseq: HxuA heme uptake protein
-MHB: MHB heme uptake protein
-PF05031-NEAT NEAT-family-subtrate-binding-protein
-HutZ-heme_storage-rep HutZ-family-substrate-binding-protein
-
->Assimilation, Iron, Heme Oxygenase
-IsdG-heme-oxygenase_fam3-rep IsdG-family-heme-oxygenase
-HugZ-ChuZ-heme_oxygenase-rep HugZ-family-heme-oxygenase
-PF05171-HemS-PhuS-ChuS HemS-family-heme-degradation
-IsdG-heme-oxygenase_fam2-rep IsdG-family-heme-oxygenase
-Isd-LmHde_Heme_oxygenase_Listeria_monocytogenes_pdb_4kia Isd-family-heme-oxygenase
-PF01126-HmuO_Heme_oxygenase HmuO-family-heme-oxygenase
-IsdG-heme-oxygenase_fam1-rep IsdG-family-heme-oxygenase
-PF06228_ChuX_HutX ChuX-family-substrate-binding-protein
-PigA_Heme_oxygenase_Pseudomonas_aeruginosa_PDB_1sk7 PigA-family-heme-oxygenase
-HmoB_Heme_oxygenase_Bacillus_subtilis_subsp_spizizenii_str_W23_pdb_4fvc HmoB-family-heme-oxygenase
-HmoB_Heme_oxygenase_Bacillus_subtilis_subsp_spizizenii_str_W23_pdb_4fvc: warning missing descr.
-HemO_Heme_oxygenase_Neisseria_Meningitidis_PDB_1p3t HemO-family-heme-oxygenase
-HemO_Heme_oxygenase_Neisseria_Meningitidis_PDB_1p3t: warning missing descr.
-HupZ_Heme_binding_Group_A_Streptococcus_pdb_5esc HupZ-family-heme-oxygenase
-HupZ_Heme_binding_Group_A_Streptococcus_pdb_5esc: warning missing descr.
-MhuD_Heme_oxygenase_Mycobacterium_tuberculosis_pdb_4nl5 MhuD-family-heme-oxygenase
-IsdI-heme-oxygenase-rep IsdI-family-heme-oxygenase
-
->Respiration, Dissimilatory Iron Reduction
-EetA EetA, cytochrome? extracellular electron transport?
-CymA CymA, cytochrome? extracellular electron transport?
-DFE_0463 DFE_0463 cytochrome? extracellular electron transport?
-GACE_1845 GACE_1845 cytochrome? extracellular electron transport?
-DFE_0450 DFE_0450cytochrome? extracellular electron transport?
-EetB EetB cytochrome? extracellular electron transport?
-GACE_1846 GACE_1846 cytochrome? extracellular electron transport?
-FmnB FmnB cytochrome? extracellular electron transport?
-DmkA DmkA cytochrome? extracellular electron transport?
-MtrB_TIGR03509 MtrB_TIGR03509 cytochrome? extracellular electron transport?
-MtrA MtrA cytochrome? extracellular electron transport?
-OmcZ OmcZ cytochrome? extracellular electron transport?
-OmcF OmcF cytochrome? extracellular electron transport?
-DFE_0462 DFE_0462 cytochrome? extracellular electron transport?
-DmkB DmkB cytochrome? extracellular electron transport?
-t4ap t4ap cytochrome? extracellular electron transport?
-MtrC_TIGR03507 MtrC_TIGR03507 cytochrome? extracellular electron transport?
-DFE_0451 DFE_0451 cytochrome? extracellular electron transport?
-FmnA FmnA cytochrome? extracellular electron transport?
-OmcS OmcS cytochrome? extracellular electron transport?
-GACE_1843 GACE_1843 cytochrome? extracellular electron transport?
-DFE_0448 DFE_0448 cytochrome? extracellular electron transport?
-DFE_0464 DFE_0464 cytochrome? extracellular electron transport?
-DFE_0461 DFE_0461 cytochrome? extracellular electron transport?
-GACE_1847 GACE_1847 cytochrome? extracellular electron transport?
-PplA PplA cytochrome? extracellular electron transport?
-DFE_0465 DFE_0465 cytochrome? extracellular electron transport?
-DFE_0449 DFE_0449 cytochrome? extracellular electron transport?
-Ndh2 Ndh2 cytochrome? extracellular electron transport?
-GACE_1844 GACE_1844 cytochrome? extracellular electron transport?
-
->Respiration, Iron Oxidation
-FoxA: FoxA iron oxidation protein
-FoxB: FoxB iron oxidation protein
-FoxC: FoxC iron oxidation protein
-FoxE: FoxE iron oxidation protein
-FoxY: FoxY iron oxidation protein
-FoxZ: FoxZ iron oxidation protein
-Cyc1: Cyc1 iron oxidation protein
-Cyc2_repCluster3: Cyc2 iron oxidation protein
-Cyc2_repCluster1: Cyc2 iron oxidation protein
-Cyc2_repCluster2: Cyc2 iron oxidation protein
-MtoA: MtoA iron oxidation protein
-MtrB_TIGR03509: MtrB iron oxidation protein
-sulfocyanin: sulfocyanin iron oxidation protein
-
 >Metabolism, Magnetosome Biogenesis
-MamB: MamB magnetosome biogenesis gene
-MamI: MamI magnetosome biogenesis gene
-MamA: MamA magnetosome biogenesis gene
-MamL: MamL magnetosome biogenesis gene
-MamK: MamK magnetosome biogenesis gene
-MamE: MamE magnetosome biogenesis gene
-MamM: MamM magnetosome biogenesis gene
-MamP: MamP magnetosome biogenesis gene
-MamO: MamO magnetosome biogenesis gene
-MamQ: MamQ magnetosome biogenesis gene
+NF033616 magnetosome biogenesis gene MamB
+NF038051 magnetosome biogenesis gene MamC
+NF033615 magnetosome biogenesis gene MamM
+pfam18509 magnetochrome
 
 >Metabolism, Iron Storage
-PF00210-Ferritin_like_domain: ferritin protein
-PF13668_Ferritin_like_domain: ferritin protein
-Transferrin_TbpB_binding_protein_Haemophilus_influenzae_P44971: Transferrin binding protein
+COG2193 bacterioferritin (cytochrome b1)
+PRK10635|TIGR00754|PRK10304|cd00904|cd00907|pfam13668|pfam00210 bacterioferritin
+PRK10509|COG2906 bacterioferritin associated ferredoxin
+TIGR04535 ferritin-like protein
