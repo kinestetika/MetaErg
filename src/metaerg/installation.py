@@ -4,7 +4,7 @@ import os
 from shutil import which
 
 
-def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path):
+def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path):
     # Create the profile file.
     # To "activate" your metaerg installation, you will need to run, for example:
     # >source /home/my_name/bin/metaerg/bin/profile

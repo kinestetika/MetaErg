@@ -25,7 +25,7 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
     parser.add_argument('--contig_file', help='Fasta nucleotide file of the contigs, or dir that '
                                               'contains multiple fasta nucleotide files.')
-    parser.add_argument('--database_dir', required=True,  help='Dir that contains the annotation databases.')
+    parser.add_argument('--database_dir', help='Dir that contains the annotation databases.')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization and presentation of results.')
     parser.add_argument('--rename_genomes', default=False,  action="store_true",
@@ -195,8 +195,7 @@ def main():
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
         metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
-        install_all_helper_programs(context.BIN_DIR, context.DATABASE_DIR, context.PATH_TO_SIGNALP,
-                                    context.PATH_TO_TMHMM)
+        install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
         functional_gene_configuration.init_functional_gene_config()
         if context.PARALLEL_ANNOTATIONS > 1:
