@@ -6,6 +6,8 @@ from concurrent import futures
 from hashlib import md5
 
 import metaerg.run_and_read.diamond_and_blastn
+import metaerg.run_and_read.functional_genes
+import metaerg.run_and_read.antismash
 from metaerg import context
 from metaerg import registry
 from metaerg import functional_gene_configuration
@@ -16,7 +18,7 @@ from metaerg.installation import install_all_helper_programs
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.2.32"
+VERSION = "2.2.33"
 
 
 def parse_arguments():
@@ -188,7 +190,10 @@ def main():
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)
         # database_tarbal_file.unlink()
+        context.TASKS = 'SA'
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
+        metaerg.run_and_read.functional_genes.install_functional_gene_databases()
+        metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR, context.DATABASE_DIR, context.PATH_TO_SIGNALP,
                                     context.PATH_TO_TMHMM)

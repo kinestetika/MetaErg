@@ -77,7 +77,7 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
 
 
 @context.register_database_installer
-def format_blast_databases():
+def format_antismash_databases():
     if 'A' not in context.TASKS:
         return
     antismash_database_path = context.DATABASE_DIR / 'antismash'

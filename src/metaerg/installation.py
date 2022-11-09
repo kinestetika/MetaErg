@@ -19,7 +19,6 @@ def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signa
     PATH=$PATH:$BIOINF_PREFIX/tmhmm/bin
     PATH=$PATH:$BIOINF_PREFIX/repeatscout
     PATH=$PATH:$BIOINF_PREFIX/repeatmasker
-    PATH=$PATH:$BIOINF_PREFIX/genometools/bin
     PATH=$PATH:$BIOINF_PREFIX/minced
 
     PATH=$PATH:$BIOINF_PREFIX/perl/bin
@@ -68,6 +67,17 @@ def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signa
     os.chdir("repeatscout")
     os.system('make')
     os.chdir(bin_dir)
+    #(nseg) nseg 1.0.1 https://github.com/jebrosen/nseg
+    #(nseg is needed by repeatscout/repeatmasker)
+    os.chdir(bin_dir)
+    os.system('wget https://github.com/jebrosen/nseg/archive/refs/tags/v1.0.1.tar.gz')
+    os.system('tar -xf v1.0.1.tar.gz')
+    os.chdir("nseg-1.0.1")
+    os.system('make')
+    os.chdir(bin_dir)
+    os.system('ln -sf nseg-1.0.1/nseg nseg')
+    os.system('ln -sf nseg-1.0.1/nmerge nmerge')
+    os.system('rm v1.0.1.tar.gz')
     # (rmblast) rmblastn 2.11.0 http://www.repeatmasker.org/RMBlast.html
     # (rmblast is needed by repeatmasker)
     os.system('wget -q http://www.repeatmasker.org/rmblast-2.11.0+-x64-linux.tar.gz')
@@ -140,35 +150,6 @@ def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signa
     os.system('chmod a+x FastTreeMP')
     os.system('ln -sf FastTreeMP fasttree')
     os.system('ln -sf FastTreeMP FastTree')
-    # (antismash) https://antismash.secondarymetabolites.org
-    os.chdir(bin_dir)
-    antismash_wrapper = bin_dir / 'antismash'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write('''#!/bin/sh
-    CURRENT_VIRTUAL_ENV=$VIRTUAL_ENV
-    echo "leaving $CURRENT_VIRTUAL_ENV"
-    source /bio/bin/antismash-env/bin/activate
-    antismash "$@"
-    deactivate
-    source $CURRENT_VIRTUAL_ENV/bin/activate
-    ''')
-    antismash_wrapper = bin_dir / 'download-antismash-databases'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write('''#!/bin/sh
-    CURRENT_VIRTUAL_ENV=$VIRTUAL_ENV
-    echo "leaving $CURRENT_VIRTUAL_ENV"
-    source /bio/bin/antismash-env/bin/activate
-    download-antismash-databases "$@"
-    deactivate
-    source $CURRENT_VIRTUAL_ENV/bin/activate
-    ''')
-    os.system('chmod a+x download-antismash-databases')
-    cli_run(["antismash-env"])  # !python -m virtualenv antismash-env
-    os.chdir("antismash-env")
-    os.system('wget -q https://dl.secondarymetabolites.org/releases/6.1.1/antismash-6.1.1.tar.gz')
-    os.system('tar -xf antismash-6.1.1.tar.gz')
-    os.system('rm antismash-6.1.1.tar.gz')
-    os.system('./bin/pip install --upgrade ./antismash-6.1.1')
     # (tmhmm) tmhmm 2.0c https://services.healthtech.dtu.dk/software.php
     if path_to_tmhmm:
         os.chdir(bin_dir)
@@ -192,3 +173,20 @@ def install_all_helper_programs(bin_dir: Path, database_dir: Path, path_to_signa
         os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
         os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
         os.system(f'rm -rf {path_to_signalp.name}')
+    # (antismash) https://antismash.secondarymetabolites.org
+    os.chdir(bin_dir)
+    antismash_bin =  bin_dir / 'antismash-env' / 'bin'
+    antismash_wrapper = bin_dir / 'antismash'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "antismash"} "$@"\n')
+    os.system('chmod a+x antismash')
+    antismash_wrapper = bin_dir / 'download-antismash-databases'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
+    os.system('chmod a+x download-antismash-databases')
+    cli_run(["antismash-env"])  # !python -m virtualenv antismash-env
+    os.chdir("antismash-env")
+    os.system('wget -q https://dl.secondarymetabolites.org/releases/6.1.1/antismash-6.1.1.tar.gz')
+    os.system('tar -xf antismash-6.1.1.tar.gz')
+    os.system('rm antismash-6.1.1.tar.gz')
+    os.system('./bin/pip install --upgrade ./antismash-6.1.1')
