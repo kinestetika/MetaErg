@@ -1,0 +1,44 @@
+# /etc/docker/daemon.json
+# {
+#   "storage-opt": "dm.basesize=40G"
+# }
+#
+# systemctl start docker.service
+# docker build -t metaerg --network host metaerg/
+# docker login
+# docker tag container-id kinestetika/metaerg
+# docker push kinestetika/metaerg
+
+
+FROM archlinux:base-devel
+MAINTAINER Marc Strous
+COPY mirrorlist /etc/pacman.d/
+RUN pacman -Syu --noconfirm
+RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv
+RUN mkdir /bio
+RUN mkdir /bio/downloads
+RUN mkdir /bio/bin
+WORKDIR /bio/bin
+COPY signalp-6.0g.fast.tar.gz /bio/downloads
+COPY tmhmm-2.0c.Linux.tar.gz /bio/downloads
+COPY metaerg-2.2.33.tar.gz /bio/downloads
+RUN python -m virtualenv /bio/bin/metaerg-env
+ENV PATH="/bio/bin/ncbi-blast/bin:$PATH"
+ENV PATH="/bio/bin/infernal/binaries:$PATH"
+ENV PATH="/bio/bin/hmmer2/src:$PATH"
+ENV PATH="/bio/bin/hmmer3/bin:$PATH"
+ENV PATH="/bio/bin/tmhmm/bin:$PATH"
+ENV PATH="/bio/bin/repeatscout:$PATH"
+ENV PATH="/bio/bin/repeatmasker:$PATH"
+#ENV PATH="/bio/bin/genometools/bin:$PATH"
+ENV PATH="/bio/bin/minced:$PATH"
+ENV PATH="/bio/bin:$PATH"
+ENV PATH="/bio/bin/metaerg-env/bin:$PATH"
+RUN pip install --upgrade /bio/downloads/metaerg-2.2.33.tar.gz
+RUN metaerg --install_deps /bio/bin --path_to_signalp /bio/downloads/signalp-6.0g.fast.tar.gz --path_to_tmhmm /bio/downloads/tmhmm-2.0c.Linux.tar.gz
+RUN mkdir /databases
+RUN mkdir /data
+RUN mkdir /databases/antismash
+RUN rm -rf /bio/bin/antismash-env/lib/python3.10/site-packages/antismash/databases/
+RUN ln -s /databases/antismash /bio/bin/antismash-env/lib/python3.10/site-packages/antismash/databases
+RUN rm -r /bio/downloads

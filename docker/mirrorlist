@@ -1,0 +1,4 @@
+Server = http://mirror.csclub.uwaterloo.ca/archlinux/$repo/os/$arch
+Server = https://mirror.csclub.uwaterloo.ca/archlinux/$repo/os/$arch
+Server = http://mirror.arizona.edu/archlinux/$repo/os/$arch
+
