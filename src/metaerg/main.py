@@ -18,7 +18,7 @@ from metaerg.installation import install_all_helper_programs
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.2.33"
+VERSION = "2.2.34"
 
 
 def parse_arguments():
@@ -121,6 +121,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
     taxon_counts = dict(feature_data_cds.taxon.value_counts(normalize=True))
     properties['% CDS classified to taxon'] = 1 - taxon_counts['']
     properties['dominant taxon'] = ''
+    properties['% of CDS classified to dominant taxon'] = 0.0
     del taxon_counts['']
     for k, v in taxon_counts.items():
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
