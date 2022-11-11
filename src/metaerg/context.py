@@ -213,7 +213,7 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         log(exec)
     result = subprocess.run(exec.split(), stdout=stdout, stdin=stdin, stderr=stderr)
     if result.returncode != 0:
-        raise Exception(f'Error while trying to run "{exec}"')
+        log(f'WARNING: Error while trying to run "{exec}"')
 
 
 def download(url: str, file: Path):
