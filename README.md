@@ -33,7 +33,7 @@ The Metaerg 2.2 pipeline ...
 * annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
 * assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and HMM profiles from [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation).
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
-* saves annotations in apache feather format for effective exploration, statistics and visualization with Jupyter or R.
+* saves annotations as a fasta-amino-acid file, a genbank file and in [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) for effective exploration, statistics and visualization with python or R.
 * enables the user to add custom HMMs and expand the set of functional genes as needed. 
 
 ## Usage:
@@ -49,10 +49,13 @@ complete list, run:
 ```
 metaerg -h
 ```
+## Using the Docker Image
+Metaerg depends on many helper programs and may require some time and troubleshooting to install. To avoid these issues,
+use the [docker image](https://hub.docker.com/r/kinestetika/metaerg).
 
 ## Installation
 
-To install metaerg, its 18 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
+To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
 need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
 ```
 python -m virtualenv metaerg-env
@@ -88,3 +91,31 @@ with tasks:
 * C - build CDD
 * S - build specialized functional databases
 * A - build antismash database
+
+## Using the .feather output
+[Apache Feather format](https://arrow.apache.org/docs/python/feather.html) is a binary file format for tables. You can for example load these data as a pandas dataframe. In **R**, use the [arrow](https://arrow.apache.org/docs/r/) package. 
+Each table row contains a single gene or feature, defines by the following columns:
+
+```
+id                  the feature's unique identifier
+genome              the identifier of the genome the feature belongs to
+contig              the identifier of the contig the feature belongs to
+start               the start position of the feature (inclusive)
+end                 the start position of the feature (exclusive)
+strand              the strand (0 or 1 for + or - respectively)
+type                the type of feature (for example CDS, rRNA, tRNA, ncRNA, retrotransposon)
+inference           the program used to infer the feature (for example prodigal for CDS)
+subsystems          the subsystems (functional genes) the feauture is part of (for example "[ATP synthase|ATP synthase, subunit F0 B]")  
+descr               a succint description of the annotated function
+taxon               the taxon of the top blast hit
+notes               any other info (rarely used)
+seq                 the sequence of the feature (AA for CDS, otherwise NT)
+antismash           the function assigned by antismash, if any
+signal_peptide      the type of signal peptide found, if any.
+tmh                 the number of transmembrane helixes found
+tmh_topology        how the protein is oriented in the membrane, if tmh were found 
+blast               the top ten blast hits
+cdd                 the top ten cdd hits
+```
+
+You can for exampe use these data to inspect the distribution of subsystems, such as denitrification, hydrogen oxidation or the Calvin Cycle across a large set of MAGs, as follows:
