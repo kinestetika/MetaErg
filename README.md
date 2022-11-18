@@ -118,4 +118,35 @@ blast               the top ten blast hits
 cdd                 the top ten cdd hits
 ```
 
-You can for exampe use these data to inspect the distribution of subsystems, such as denitrification, hydrogen oxidation or the Calvin Cycle across a large set of MAGs, as follows:
+You can for example use python and pandas to inspect the distribution of subsystems, such as denitrification, hydrogen oxidation or the Calvin Cycle across a large set of MAGs, as follows:
+
+```commandline
+from pathlib import Path
+import pandas as pd
+
+from metaerg.main import load_contigs, compute_genome_properties
+
+data_dir = Path('/path/to/my/data')
+feather_dir = data_dir / 'all_genes.feather'
+contig_dir =  data_dir / 'contig_fna_files_one_per_genome'
+
+genome_properties = {}
+for f in sorted(feather_dir.glob('*')):
+    genome_name = f.name
+    contig_dict = load_contigs(genome_name, contig_dir / genome_name, delimiter='xxxx')
+    feature_data = pd.read_feather(f)
+    genome_properties[genome_name] = compute_genome_properties(contig_dict, feature_data)
+    
+all_genome_feature_data = None
+for k, v in genome_properties.items():
+    subsystems_df = v['subsystems'].rename(columns={'genes': k})
+    if all_genome_feature_data is None:
+        all_genome_feature_data = subsystems_df
+    else:
+        all_genome_feature_data[k] = subsystems_df[k]
+    all_genome_feature_data = all_genome_feature_data.copy()
+del all_genome_feature_data['profiles']
+#print(all_genome_feature_data.columns)
+    
+all_genome_feature_data.to_excel(data_dir / 'functional_gene_heatmap.xls')
+```
