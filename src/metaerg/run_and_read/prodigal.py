@@ -17,6 +17,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         for seq_rec in fasta_reader:
+            x_count = seq_rec['seq'].count('X')
+            if x_count > 0.2 * len(seq_rec['seq']):
+                context.log(f'{genome_name} Warning - skipping CDS with {x_count}/{len(seq_rec["seq"])} X in sequence...')
+                continue
             words = seq_rec['descr'].split('#')
             try:
                 m = ORF_ID_PATTERN.search(seq_rec['id'])

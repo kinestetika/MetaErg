@@ -7,7 +7,7 @@ from metaerg.datatypes.blast import taxon_at_genus, DBentry, BlastHit, BlastResu
 @context.register_html_writer
 def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     dir.mkdir(exist_ok=True, parents=True)
-    file = Path(dir, genome_name, "index_of_features.html")
+    file = Path(dir, genome_name, "feature_table.html")
     file.parent.mkdir(exist_ok=True, parents=True)
     with open(Path(file), 'w') as handle:
         handle.write(make_html(genome_name, feature_data, genome_properties))
@@ -34,8 +34,8 @@ def format_feature(f, format_hash, dominant_taxon, colors, path_to_feature_html)
     format_hash['taxon'] = taxon_at_genus(f.taxon)
     format_hash['type'] = f.type
     if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
-        format_hash['description'] = '<a target="gene details" href="{}">{}</a>'.format(
-            Path(path_to_feature_html, 'features', f'{f.id}.html'), f.descr)
+        format_hash['description'] = '<a target="Gene Details" href="feature-details.html#{}">{}</a>'.format(
+            f'{f.id}', f.descr)
     else:
         format_hash['description'] = f.descr
     if f.type in ('CDS', 'tRNA', 'rRNA', 'ncRNA', 'tmRNA', 'retrotransposon'):
@@ -77,9 +77,9 @@ def format_feature(f, format_hash, dominant_taxon, colors, path_to_feature_html)
 def format_hash_to_html(format_hash):
     return '''<tr>
     <td id=al>{f_id}</td> <td>{strand}</td> <td>{length:,}</td> <td>{type}</td> <td>{destination}</td> 
-    <td>{subsystem}</td> <td>{has_cdd}</td> <td {ci}>{ident}</td> <td {ca}>{align}</td> <td {cr}>{recall}</td> 
+    <td>{subsystem}</td> <td>{has_cdd}</td> <td{ci}>{ident}</td> <td{ca}>{align}</td> <td{cr}>{recall}</td> 
     <td id=al>{description}</td>
-    <td {ct}>{taxon}</td>
+    <td{ct}>{taxon}</td>
     </tr>'''.format(**format_hash)
 
 
@@ -87,7 +87,7 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
     """Injects the content into the html base, returns the html."""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome_name)
-    colors = 'id=cr id=cr id=co id=cb id=cg'.split()
+    colors = [' id=cr', ' id=cr', ' id=co', ' id=cb', ' id=cg']
 
     # table header
     table_headers = ''
@@ -106,6 +106,7 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
             previous_repeats.append(f)
         elif len(previous_repeats):
             format_hash = get_empty_format_dict()
+            format_hash['description'] = previous_repeats[0].id + ' ... ' + previous_repeats[-1].id
             format_hash['type'] = f'[{len(previous_repeats)} {prev_f.type}s]' if len(previous_repeats) > 1 \
                                   else prev_f.type
             format_hash['length'] = previous_repeats[-1].end - previous_repeats[0].start
@@ -119,8 +120,6 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            if type(f.seq) == float:
-                print(f)
             format_feature(f, format_hash, genome_properties['dominant taxon'], colors, path_to_feature_html)
             table_body += format_hash_to_html(format_hash)
         prev_f = f

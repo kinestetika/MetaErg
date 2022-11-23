@@ -7,13 +7,18 @@ from metaerg import context
 @context.register_html_writer
 def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
     """Writes a html file for each feature to dir <file>"""
-    dir = Path(dir, genome_name, 'features')
+    dir = Path(dir, genome_name)
     dir.mkdir(exist_ok=True, parents=True)
-    for f in feature_data.itertuples():
-        if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
-            f_filename = Path(dir, f'{f.id}.html')
-            with open(f_filename, 'w') as handle:
-                handle.write(make_feature_html(f, genome_properties['dominant taxon']))
+    file = dir / 'feature-details.html'
+
+    feature_html = ''
+    for feature in feature_data.itertuples():
+        if feature.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
+            feature_html += make_feature_html(feature, genome_properties['dominant taxon'])
+
+    html = _make_html_template().replace('FEATURE_HTML', feature_html)
+    with open(file, 'w') as handle:
+        handle.write(html)
 
 
 def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_id) -> str:
@@ -63,7 +68,7 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_i
 
 
 def make_feature_html(f, dominant_taxon) -> str:
-    html = _make_html_template()
+    html = _make_feature_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
         html = html.replace('HEADER', f'>{f.id} {f.descr} [{taxon_at_genus(f.taxon)}]')
@@ -91,7 +96,7 @@ def _make_html_template() -> str:
 <html>
 <head>
     <meta charset="utf-8">
-    <title>FEATURE_ID</title>
+    <title>Gene Details</title>
 </head>
 <body>
     <style>
@@ -115,7 +120,15 @@ def _make_html_template() -> str:
           margin: 0px;
            }
     </style>
-    <h3>HEADER</h3>
+    FEATURE_HTML
+</body>
+</html>
+'''
+
+
+def _make_feature_html_template() -> str:
+    return '''
+    <h3 id="FEATURE_ID">HEADER</h3>
     <div>SEQUENCE</div>
     <div id=f>
     <h3>Top Blast Hits</h3>
@@ -125,6 +138,4 @@ def _make_html_template() -> str:
     <h3>Other attributes</h3>
     ATTRIBUTE_TABLE
     </div>
-</body>
-</html>
 '''

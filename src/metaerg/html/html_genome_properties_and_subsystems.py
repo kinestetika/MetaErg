@@ -51,9 +51,8 @@ def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, p
             for function in sub_data.itertuples():
                 if function.Index:
                     subsystem_html += f'<tr><td>{function.Index}</td><td>\n'
-                    subsystem_html += ', '.join('<a target="_blank" href="{}">{}</a>'
-                                                .format(Path(path_to_feature_html, 'features', f'{f_id.split("@")[0]}.html'),
-                                                        f_id) for f_id in function.genes.split())
+                    subsystem_html += ', '.join('<a target="Gene Details" href="feature-details.html#{}">{}</a>'
+                                                .format(f_id.split("@")[0], f_id) for f_id in function.genes.split())
                 subsystem_html += f'</td></tr>\n'
             subsystem_html += '</table>\n'
     html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)

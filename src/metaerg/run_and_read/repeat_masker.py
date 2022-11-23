@@ -13,21 +13,42 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     lmer_table_file = context.spawn_file('lmer-table', genome_name)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome_name)
     repeatscout_file_filtered = context.spawn_file('repeatscout-filtered', genome_name)
+    repeatscout_file_filtered2 = context.spawn_file('repeatscout-filtered2', genome_name)
 
     context.run_external(f'build_lmer_table -sequence {fasta_file} -freq {lmer_table_file}')
     context.run_external(f'RepeatScout -sequence {fasta_file} -output {repeatscout_file_raw} -freq {lmer_table_file}')
     with open(repeatscout_file_filtered, 'w') as output, open(repeatscout_file_raw) as input:
         context.run_external('filter-stage-1.prl', stdin=input, stdout=output)
-    repeatmasker_output_file = Path(f'{fasta_file.name}.out')  # nothing we can do about that
-    if repeatscout_file_filtered.stat().st_size > 0:
-        context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} -dir . '
-                             f'{fasta_file}')
-    else:
-        context.log(f'({genome_name}) No repeats detected by repeatmasker.')
+
+    repeatmasker_output_file = fasta_file.parent / f'{fasta_file.name}.out'  # nothing we can do about that
+
+    if not repeatscout_file_filtered.stat().st_size:
+        context.log(f'({genome_name}) No repeats remaining after filter stage 1.')
+        finalize(False, genome_name, fasta_file, repeatmasker_output_file, result_files[0])
+        return
+
+    context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered} '
+                         f'-dir {fasta_file.parent} {fasta_file}')
+    with open(repeatscout_file_filtered2, 'w') as output, open(repeatscout_file_filtered) as input:
+        context.run_external(f'filter-stage-2.prl --cat={repeatmasker_output_file} --thresh=10', stdin=input, stdout=output)
+
+    if not repeatscout_file_filtered2.stat().st_size:
+        context.log(f'({genome_name}) No repeats remaining after filter stage 2.')
+        finalize(False, genome_name, fasta_file, repeatmasker_output_file, result_files[0])
+        return
+
+    context.run_external(f'RepeatMasker -pa {context.CPUS_PER_GENOME} -lib {repeatscout_file_filtered2} '
+                         f'-dir {fasta_file.parent} {fasta_file}')
+    finalize(True, genome_name, fasta_file, repeatmasker_output_file, result_files[0])
+
+
+def finalize(success: bool, genome_name: str, fasta_input_file: Path, repeatmasker_output_file: Path,
+             final_repeatmasker_output_file: Path):
+    if not success:
         with open(repeatmasker_output_file, 'w') as handle:
             handle.write('#No repeats detected by repeatmasker')
-    shutil.move(repeatmasker_output_file, result_files[0])
-    for file in Path.cwd().glob(f'{fasta_file.name}.*'):
+    shutil.move(repeatmasker_output_file, final_repeatmasker_output_file)
+    for file in fasta_input_file.parent.glob(f'{fasta_input_file.name}.*'):
         if file.is_dir():
             shutil.rmtree(file)
         else:
