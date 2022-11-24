@@ -48,6 +48,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             if blast_result.query() not in feature_data.index:
                 raise Exception(f'Found results for unknown feature {blast_result.query()}, '
                                 f'may need to rerun metaerg with --force')
+            blast_result.hits = blast_result.hits[:10]
+            feature_data.at[blast_result.query(), 'hmm'] = str(blast_result)
             for h in blast_result.hits:
                 db_entry = h.hit
                 confidence = 1.0

@@ -11,19 +11,16 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     # (if that is the path to your installation)
     profile = f'''
     export BIOINF_PREFIX={bin_dir}
-    PATH=$PATH:$BIOINF_PREFIX
-    PATH=$PATH:$BIOINF_PREFIX/ncbi-blast/bin
-    PATH=$PATH:$BIOINF_PREFIX/infernal/binaries
-    PATH=$PATH:$BIOINF_PREFIX/hmmer3/bin
-    PATH=$PATH:$BIOINF_PREFIX/hmmer2/src
-    PATH=$PATH:$BIOINF_PREFIX/tmhmm/bin
-    PATH=$PATH:$BIOINF_PREFIX/repeatscout
-    PATH=$PATH:$BIOINF_PREFIX/repeatmasker
-    PATH=$PATH:$BIOINF_PREFIX/minced
-
-    PATH=$PATH:$BIOINF_PREFIX/perl/bin
+    PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
+    PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
+    PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
+    PATH=$BIOINF_PREFIX/repeatscout:$PATH
+    PATH=$BIOINF_PREFIX/repeatmasker:$PATH
+    PATH=$BIOINF_PREFIX/minced:$PATH
+    PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
+    PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
+    PATH=$BIOINF_PREFIX:$PATH
     export PATH
-    export PERL5LIB=$BIOINF_PREFIX/perl:$BIOINF_PREFIX/perl/lib/perl5:$PERL5LIB
     '''
     profile_file = bin_dir / 'profile'
     with open(profile_file, "w") as profile_handle:

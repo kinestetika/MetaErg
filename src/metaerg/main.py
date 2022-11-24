@@ -18,7 +18,7 @@ from metaerg.installation import install_all_helper_programs
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.2.35"
+VERSION = "2.2.36"
 
 
 def parse_arguments():
@@ -167,6 +167,31 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'({genome_name}) Completed html visualization.')
 
 
+def write_functional_genes_to_xls():
+    excel_file = context.BASE_DIR / 'functional_genes.xls'
+    feather_files = [context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
+                     for genome_name in context.GENOME_NAMES]
+    fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
+                 for genome_name in context.GENOME_NAMES]
+    genome_properties = {}
+    for feather_file, contig_file in zip(feather_files, fna_files):
+        genome_name = contig_file.stem
+        contig_dict = load_contigs(genome_name, contig_file, delimiter='xxxx')
+        feature_data = pd.read_feather(feather_file)
+        genome_properties[genome_name] = compute_genome_properties(contig_dict, feature_data)
+
+    all_genome_feature_data = None
+    for genome_name, genome_property_hash in genome_properties.items():
+        subsystems_df = genome_property_hash['subsystems'].rename(columns={'genes': genome_name})
+        if all_genome_feature_data is None:
+            all_genome_feature_data = subsystems_df
+        else:
+            all_genome_feature_data[genome_name] = subsystems_df[genome_name]
+        all_genome_feature_data = all_genome_feature_data.copy()
+    del all_genome_feature_data['profiles']
+    all_genome_feature_data.to_excel(excel_file)
+
+
 def main():
     print(f'This is metaerg.py {VERSION}')
     context.init(**parse_arguments().__dict__)
@@ -216,8 +241,9 @@ def main():
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
         tmhmm.cleanup(context.BASE_DIR)
-    context.log(f'Done. Thank you for using metaerg.py {VERSION}')
-
+        context.log('Now writing excel files with functional genes per genome...')
+        write_functional_genes_to_xls()
+        context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 if __name__ == "__main__":
     main()

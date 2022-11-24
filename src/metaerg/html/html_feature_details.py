@@ -1,7 +1,11 @@
 from pathlib import Path
 import pandas as pd
+from math import log10
 from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult, taxon_at_genus
 from metaerg import context
+
+MAX_BLAST_HITS = 10
+COLORS = 'id=cr id=cr id=co id=cb id=cg'.split()
 
 
 @context.register_html_writer
@@ -21,19 +25,27 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
         handle.write(html)
 
 
-def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_id) -> str:
-    colors = 'id=cr id=cr id=co id=cb id=cg'.split()
+def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_id, title: str,
+                          headers: str ='percent id|query align|hit align|description|taxon') -> str:
     if blast_result:
         blast_result = eval(blast_result)
-        html = '<table>'
-        html += '<thead><tr> '
-        for column in ('percent id', 'query align', 'hit align', 'description', 'taxon'):
+        html = f'<h3>{title}</h3>\n'
+        html += '<table><thead><tr>\n'
+        columns = headers.split('|')
+        for column in columns:
             if column == 'description':
                 html += f'<th id=al>{column}</th>\n'
             else:
                 html += f'<th>{column}</th>\n'
         html += '</tr><thead>\n<tbody>\n'
-        for h in blast_result.hits:
+        for h in blast_result.hits[:MAX_BLAST_HITS]:
+            if 'evalue' == columns[0]:
+                percent_id = f'{h.evalue:.1e}'
+                color_value = len(COLORS)-1 if not h.evalue else min(0, max(int(-log10(h.evalue)/20),len(COLORS)-1))
+                percent_id_color = COLORS[color_value]
+            else:
+                percent_id = int(h.percent_id) if h.percent_id else ''
+                percent_id_color = COLORS[min(int(h.percent_id/20), len(COLORS)-1)]
             if include_id:
                 descr = h.hit.accession + ' ' + h.hit.descr
             else:
@@ -45,18 +57,18 @@ def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_i
             <td id=al>{}</td>
             <td {}>{}</td>
             </tr>'''.format(
-                colors[min(int(h.percent_id/20), len(colors)-1)],
-                int(h.percent_id),
+                percent_id_color,
+                percent_id,
 
-                colors[min(int(100 * h.aligned_length/f_length / 20), len(colors)-1)],
+                COLORS[min(int(100 * h.aligned_length/f_length / 20), len(COLORS)-1)],
                 int(100 * min(1.0, h.aligned_length/f_length)),
 
-                colors[min(int(100 * h.aligned_length/h.hit.length / 20), len(colors)-1)],
+                COLORS[min(int(100 * h.aligned_length/h.hit.length / 20), len(COLORS)-1)],
                 int(100 * min(1.0, h.aligned_length/h.hit.length)),
 
                 descr,
 
-                colors[int(len(colors) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
+                COLORS[int(len(COLORS) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
                            / (len (h.hit.taxon.split()) + 1))],
                 taxon_at_genus(h.hit.taxon)
             )
@@ -77,15 +89,23 @@ def make_feature_html(f, dominant_taxon) -> str:
     html = html.replace('SEQUENCE', f.seq)
     if f.type == 'CDS':
         length = (f.end - f.start) // 3
+        length_unit = 'aa'
     else:
         length = f.end - f.start
-    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon, include_id = False))
-    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon, include_id = True))
+        length_unit = 'nt'
+    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon, include_id = False,
+                                                             title='Top Blast Hits'))
+    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon, include_id = True,
+                                                           title='Top Conserved Domain Database Hits',
+                                                           headers='percent id|query align|hit align|description| '))
+    html = html.replace('HMM_TABLE', make_blast_table_html(f.hmm, length, dominant_taxon, include_id = True,
+                                                           title='Top Functional Gene HMM Hits',
+                                                           headers='evalue|query align|hit align|description| '))
     attribute_html = '<table>\n'
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f._asdict()[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
                                'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
-    attribute_html += f'<tr><td id=al>length</td><td id=al>{length}</td></tr>\n'
+    attribute_html += f'<tr><td id=al>length</td><td id=al>{length} {length_unit}</td></tr>\n'
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)
     return html
@@ -119,6 +139,9 @@ def _make_html_template() -> str:
           padding: 0px;
           margin: 0px;
            }
+        #gn {
+          background-color: gainsboro;
+            }
     </style>
     FEATURE_HTML
 </body>
@@ -128,13 +151,12 @@ def _make_html_template() -> str:
 
 def _make_feature_html_template() -> str:
     return '''
-    <h3 id="FEATURE_ID">HEADER</h3>
+    <div id=gn><h3 id="FEATURE_ID">HEADER</h3></div>
     <div>SEQUENCE</div>
     <div id=f>
-    <h3>Top Blast Hits</h3>
     BLAST_TABLE
-    <h3>Top Conserved Domain Database Hits</h3>
     CDD_TABLE
+    HMM_TABLE
     <h3>Other attributes</h3>
     ATTRIBUTE_TABLE
     </div>

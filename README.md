@@ -116,6 +116,7 @@ tmh                 the number of transmembrane helixes found
 tmh_topology        how the protein is oriented in the membrane, if tmh were found 
 blast               the top ten blast hits
 cdd                 the top ten cdd hits
+hmm                 the top ten hits to the functional gene hmm database 
 ```
 
 You can for example use python and pandas to inspect the distribution of subsystems, such as denitrification, hydrogen oxidation or the Calvin Cycle across a large set of MAGs, as follows:

@@ -2,7 +2,6 @@ from pathlib import Path
 import pandas as pd
 from metaerg import context
 
-
 GENOME_PROPERTY_FORMATS = {'size': ',',
                            '% GC': '.1%',
                            'N50': ',',
@@ -115,7 +114,7 @@ def _make_html_template() -> str:
 CONTENT_PROPERTIES
     </tbody></table>
     <p></p>
-    <h4 id=f><a href="index_of_features.html">View table with all genes</a></h4>
+    <h4 id=f><a href="feature_table.html">View table with all genes</a></h4>
     <p></p>
     <h3 id=f>Subsystems overview</h3>
 CONTENT_SUBSYSTEMS

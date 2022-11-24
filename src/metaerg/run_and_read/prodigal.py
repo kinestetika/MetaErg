@@ -7,8 +7,9 @@ from metaerg.datatypes import fasta
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
-                                 mask_targets=fasta.ALL_MASK_TARGETS)
+    # no masking here becasuse we want to arbitrate with repeatmasker results
+    #fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
+    #                             mask_targets=fasta.ALL_MASK_TARGETS)
     context.run_external(f'prodigal -g {context.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -a {result_files[0]}')
 
 
@@ -16,10 +17,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     new_features = []
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
+        feature_count_before_arbritration = len(feature_data.index)
+        rejected_cds_count = 0
         for seq_rec in fasta_reader:
             x_count = seq_rec['seq'].count('X')
-            if x_count > 0.2 * len(seq_rec['seq']):
-                context.log(f'{genome_name} Warning - skipping CDS with {x_count}/{len(seq_rec["seq"])} X in sequence...')
+            if x_count > 0.2 * len(seq_rec['seq'] or x_count >= 10):
+                rejected_cds_count += 1
                 continue
             words = seq_rec['descr'].split('#')
             try:
@@ -31,6 +34,22 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 continue
             start = int(words[1].strip()) - 1
             end = int(words[2].strip())
+
+            # reconciliation with repeats
+            overlapping_features = feature_data.loc[(feature_data['start'] < end) & (start < feature_data['end'])]
+            if len(overlapping_features.index):
+                overlap = 0
+                for i in overlapping_features.index:
+                    overlap += min(overlapping_features.at[i, "end"], end) - max(start, overlapping_features.at[i, "start"])
+                if overlap < 0.33 * (end-start):
+                    #for j in overlapping_features.index:
+                    #    print ('dropping', feature_data.at[j, 'inference'], 'X' in seq_rec['seq'], overlap, (end-start)/3)
+                    feature_data = feature_data.drop(index=overlapping_features.index)
+                else:
+                    rejected_cds_count += 1
+                    #print(f'{end-start} nt orf overlaps with {overlap} nt of repeats')
+                    continue
+
             strand = int(words[3].strip())
             if seq_rec['seq'].endswith('*'):
                 seq_rec['seq'] = seq_rec['seq'][:-1]
@@ -45,6 +64,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
                 feature['notes'] = 'partial protein'
             new_features.append(feature)
+        context.log(f'({genome_name}) Dropped {feature_count_before_arbritration - len(feature_data.index)} repeats and'
+                    f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')
         feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
         return feature_data, len(new_features)
 
