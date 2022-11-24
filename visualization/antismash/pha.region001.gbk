@@ -8,7 +8,7 @@ SOURCE
             .
 COMMENT     ##antiSMASH-Data-START##
             Version      :: 6.1.0
-            Run date     :: 2022-11-03 14:01:50
+            Run date     :: 2022-11-24 13:52:08
             NOTE: This is a single cluster extracted from a larger record!
             Orig. start  :: 31353
             Orig. end    :: 51885
@@ -16,7 +16,7 @@ COMMENT     ##antiSMASH-Data-START##
 FEATURES             Location/Qualifiers
      CDS             1..1068
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00050"
+                     /locus_tag="pha.pha.00043"
                      /product="mannose-1-phosphate guanylyltransferase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -73,7 +73,7 @@ FEATURES             Location/Qualifiers
                      /tool="antismash"
      CDS             1117..1854
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00051"
+                     /locus_tag="pha.pha.00044"
                      /product="hypothetical protein EA395_01890"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -89,7 +89,7 @@ FEATURES             Location/Qualifiers
                      histidine kinase (Score: 171.9; E-value: 4.9e-52)"
                      /gene_kind="regulatory"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00052"
+                     /locus_tag="pha.pha.00045"
                      /product="sensor histidine kinase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -110,7 +110,7 @@ FEATURES             Location/Qualifiers
                      N"
      CDS             4096..4905
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00053"
+                     /locus_tag="pha.pha.00046"
                      /product="3-methyl-2-oxobutanoate hydroxymethyltransferase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -123,7 +123,7 @@ FEATURES             Location/Qualifiers
                      SDRQPPFAKVYANLRETIQQAIQQYSDDVRSHPLFSSEQSGDQEKTI"
      CDS             5302..5472
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00054"
+                     /locus_tag="pha.pha.00047"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -139,7 +139,7 @@ FEATURES             Location/Qualifiers
                      E-value: 3.7e-46)"
                      /gene_kind="regulatory"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00055"
+                     /locus_tag="pha.pha.00048"
                      /product="protein kinase, partial"
                      /sec_met_domain="Pkinase (E-value: 1.6e-30, bitscore:
                      104.3, seeds: 54, tool: rule-based-clusters)"
@@ -165,9 +165,9 @@ FEATURES             Location/Qualifiers
                      (rule-based-clusters) Glycos_transf_1"
                      /gene_kind="biosynthetic-additional"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00056"
+                     /locus_tag="pha.pha.00049"
                      /product="glycosyltransferase family 1 protein, partial"
-                     /sec_met_domain="Glycos_transf_1 (E-value: 4.9e-08,
+                     /sec_met_domain="Glycos_transf_1 (E-value: 4.8e-08,
                      bitscore: 30.8, seeds: 63, tool: rule-based-clusters)"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -184,9 +184,9 @@ FEATURES             Location/Qualifiers
                      terpene: terpene_cyclase"
                      /gene_kind="biosynthetic"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00057"
+                     /locus_tag="pha.pha.00050"
                      /product="squalene--hopene cyclase"
-                     /sec_met_domain="terpene_cyclase (E-value: 2.6e-18,
+                     /sec_met_domain="terpene_cyclase (E-value: 2.5e-18,
                      bitscore: 64.4, seeds: 14, tool: rule-based-clusters)"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -209,7 +209,7 @@ FEATURES             Location/Qualifiers
                      SMCOG1079:oxidoreductase (Score: 190.6; E-value: 7.7e-58)"
                      /gene_kind="biosynthetic-additional"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00058"
+                     /locus_tag="pha.pha.00051"
                      /product="gfo/Idh/MocA family oxidoreductase"
                      /subsystems="[Metabolism, Inositol Phosphate
                      Biosynthesis|inositol 2-dehydrogenase (IolG EC:1.1.1.181,
@@ -230,7 +230,7 @@ FEATURES             Location/Qualifiers
                      (rule-based-clusters) RimK"
                      /gene_kind="biosynthetic-additional"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00059"
+                     /locus_tag="pha.pha.00052"
                      /product="glutathione synthase"
                      /sec_met_domain="RimK (E-value: 3.4e-15, bitscore: 54.1,
                      seeds: 4, tool: rule-based-clusters)"
@@ -246,11 +246,11 @@ FEATURES             Location/Qualifiers
                      IGGYLTEVNVTSPTGVREIDLLDNVRLGETVVNWMCDRIQHLPHRN"
      repeat          13178..13343
                      /inference="tandem-repeat-finder"
-                     /locus_tag="pha.pha.00060"
+                     /locus_tag="pha.pha.00053"
                      /notes="period size 55; copies 3.0"
      CDS             13443..13802
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00061"
+                     /locus_tag="pha.pha.00054"
                      /product="glyoxalase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -261,7 +261,7 @@ FEATURES             Location/Qualifiers
                      FTRDPDGNVIELSAE"
      CDS             13771..15114
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00062"
+                     /locus_tag="pha.pha.00055"
                      /product="recombinase family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -277,7 +277,7 @@ FEATURES             Location/Qualifiers
                      KTISIPQFWWDLTETERRFYFREFVRQIYIVRQGDRWQVQVNFSFRDD"
      CDS             15452..15649
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00063"
+                     /locus_tag="pha.pha.00056"
                      /product="hypothetical protein EA395_09610"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -285,20 +285,19 @@ FEATURES             Location/Qualifiers
                      /transl_table=11
                      /translation="MAILGTWVGLVGLVLFNGAVCLVLPRVLSLNWGQVFSGWLAQQST
                      APESSEAAAEVDEAVVSILN"
-     CDS             16174..16593
+     CDS             16330..16593
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00064"
+                     /locus_tag="pha.pha.00057"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
                      Phormidium_A"
                      /transl_table=11
-                     /translation="MNVHLSPLRYLAVISVCLLIAIFSVLPQYWSLSNSSAAILSLSAS
-                     GWVKSTPVTPRLLLTFPITLPSQDSTWSQPLKTFQETSTRDNPISQFGEIVTRLRRIFW
-                     AIARRCQLALQSTKALLITETNLTHKGDDMLENAA"
+                     /translation="MTPRLLLTFPITLPSQDSTWSQPLKTFQETSTRDNPISQFGEIVT
+                     RLRRIFWAIARRCQLALQSTKALLITETNLTHKGDDMLENAA"
      CDS             16617..17834
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00065"
+                     /locus_tag="pha.pha.00058"
                      /product="FtsW/RodA/SpoVE family cell cycle protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -314,7 +313,7 @@ FEATURES             Location/Qualifiers
                      RPSSTT"
      CDS             18484..18690
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00066"
+                     /locus_tag="pha.pha.00059"
                      /product="hypothetical protein HLUCCO16_10340"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -328,7 +327,7 @@ FEATURES             Location/Qualifiers
                      2.1e-73)"
                      /gene_kind="biosynthetic-additional"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00067"
+                     /locus_tag="pha.pha.00060"
                      /product="solanesyl diphosphate synthase"
                      /subsystems="[Metabolism, Isoprenoid
                      Biosynthesis|Geranylgeranyl pyrophosphate synthase (IspA,
@@ -345,7 +344,7 @@ FEATURES             Location/Qualifiers
                      SQSRELAAEHTRVAVEHLSHLPPSEAHQCLSRLADYLLSRCY"
      CDS             19777..20532
                      /inference="prodigal"
-                     /locus_tag="pha.pha.00068"
+                     /locus_tag="pha.pha.00061"
                      /product="ATP-dependent Clp endopeptidase proteolytic
                      subunit ClpP"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;

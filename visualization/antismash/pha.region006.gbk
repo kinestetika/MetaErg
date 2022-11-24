@@ -8,7 +8,7 @@ SOURCE
             .
 COMMENT     ##antiSMASH-Data-START##
             Version      :: 6.1.0
-            Run date     :: 2022-11-03 14:01:50
+            Run date     :: 2022-11-24 13:52:08
             NOTE: This is a single cluster extracted from a larger record!
             Orig. start  :: 3884699
             Orig. end    :: 3927411
@@ -59,7 +59,7 @@ FEATURES             Location/Qualifiers
                      2.5e-63)"
                      /gene_kind="transport"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04777"
+                     /locus_tag="pha.pha.04454"
                      /product="ABC transporter ATP-binding protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -76,7 +76,7 @@ FEATURES             Location/Qualifiers
                      3e-52)"
                      /gene_kind="transport"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04778"
+                     /locus_tag="pha.pha.04455"
                      /product="ABC transporter permease"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -89,11 +89,11 @@ FEATURES             Location/Qualifiers
                      ELVAATEGLGRRISVAQRFLRTDEIFAGLLVIGLIGLAIDLLFRLALKLCCSWTED"
      repeat          2063..2088
                      /inference="tandem-repeat-finder"
-                     /locus_tag="pha.pha.04779"
+                     /locus_tag="pha.pha.04456"
                      /notes="period size 13; copies 2.0"
      CDS             complement(2139..3152)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04780"
+                     /locus_tag="pha.pha.04457"
                      /product="ABC transporter substrate-binding protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -107,11 +107,11 @@ FEATURES             Location/Qualifiers
                      DNLEAFEPGDDMTSLPYAANEIADFLLANDFIDEKPDLQQLFDDRFVKAYAEEHQS"
      repeat          3167..3206
                      /inference="tandem-repeat-finder"
-                     /locus_tag="pha.pha.04781"
+                     /locus_tag="pha.pha.04458"
                      /notes="period size 13; copies 3.1"
      CDS             complement(3239..3955)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04782"
+                     /locus_tag="pha.pha.04459"
                      /product="hydrogenase nickel incorporation protein HypB"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -124,7 +124,7 @@ FEATURES             Location/Qualifiers
                      LRQQAAKGAAVQELVS"
      CDS             complement(4038..4394)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04783"
+                     /locus_tag="pha.pha.04460"
                      /product="hydrogenase maturation nickel metallochaperone
                      HypA"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
@@ -136,7 +136,7 @@ FEATURES             Location/Qualifiers
                      ELKIDRIEYADSSA"
      CDS             complement(4413..5612)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04784"
+                     /locus_tag="pha.pha.04461"
                      /product="agmatinase family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -152,11 +152,11 @@ FEATURES             Location/Qualifiers
                      "
      ncRNA           complement(5687..5856)
                      /inference="cmscan"
-                     /locus_tag="pha.pha.04785"
+                     /locus_tag="pha.pha.04462"
                      /product="ykkC-yxkD Guanidine-I riboswitch"
      CDS             complement(5948..7390)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04786"
+                     /locus_tag="pha.pha.04463"
                      /product="HEAT repeat domain-containing protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -176,7 +176,7 @@ FEATURES             Location/Qualifiers
                      EamA family (Score: 172; E-value: 3e-52)"
                      /gene_kind="transport"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04787"
+                     /locus_tag="pha.pha.04464"
                      /product="DMT family transporter"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -191,7 +191,7 @@ FEATURES             Location/Qualifiers
                      SISKSSVPPAASR"
      CDS             8785..9606
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04788"
+                     /locus_tag="pha.pha.04465"
                      /product="signal peptide peptidase SppA"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -204,7 +204,7 @@ FEATURES             Location/Qualifiers
                      ERAELDEIETAKPFWAKLLRSSSSVSRLSATGEWLEFELTTNGMPLWMYRP"
      CDS             9642..10052
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04789"
+                     /locus_tag="pha.pha.04466"
                      /product="chorismate mutase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -213,25 +213,28 @@ FEATURES             Location/Qualifiers
                      /translation="MEVCVVEADWTVRAIRGATTVPENTAEAIREAVAELLDELERHNS
                      FDPEQIVSVTFSVTPDLDALFPASVARQRPRWDNVPLLDVQHMSVKGDLERCVRFLIHV
                      NLPRNTELSHPYLRQAQQLRPDWSLSSSVGSS"
-     repeat          11110..11164
-                     /inference="repeatmasker"
-                     /locus_tag="pha.pha.04790"
-                     /notes="repeat (GCA)n"
-     CDS             11216..11803
+     CDS             10067..11803
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04791"
+                     /locus_tag="pha.pha.04467"
                      /product="DNA repair protein RecN"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
                      Phormidium_A"
                      /transl_table=11
-                     /translation="MDNLKFQVELSPIEATRWGSDRVRFLFSANPGEPLGPLGEIASGG
-                     EMSRFLLALKASFSEVDPVGTLIFDEIDVGVSGRVASTIAETLYRLSCHHQVLCVTHQP
-                     LVAAMADHHFRVMKQATQQGETARTRIEVRSLNHDQRRQELAQLVSGQHQDEFDSSATQ
-                     EAANTFADSLLSRAERLRQELNLPSTPTSSSP"
+                     /translation="MLVRLQIENFALIDDLDLSFGSGLNVLTGETGAGKSIVLDAVDLV
+                     LGGKATRRAIRTGADRARVEAWFELNPSETGGEAIACSRELLLGKRGCRSKYRLNGKAA
+                     SQRDVQQLRQQLVDIAAQGQAIQLAQTPHQRQLLDLYGGEALLKIRHQVAQDYDRLQQL
+                     QGRLKELQQQERQRSQQEQLWRYQFEELSRADLRDPQELEDLEQEAQRLNHVVELQQHS
+                     YHLYQTLYDNEEETAAADRLGQAESLLQEMVNYDKELTPLLILVNEALVRVQEAGEQIN
+                     RYGDELEADPARLQEVEARRQQLKRICRTYGPSLDDAIQHLETLQQQLHDLDHGDQRRE
+                     SLERDCQAQQQHLKQRCQQLRQRRQQAAHQLEARLIAALQPLAMDNLKFQVELSPIEAT
+                     RWGSDRVRFLFSANPGEPLGPLGEIASGGEMSRFLLALKASFSEVDPVGTLIFDEIDVG
+                     VSGRVASTIAETLYRLSCHHQVLCVTHQPLVAAMADHHFRVMKQATQQGETARTRIEVR
+                     SLNHDQRRQELAQLVSGQHQDEFDSSATQEAANTFADSLLSRAERLRQELNLPSTPTSS
+                     SP"
      CDS             12125..15169
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04792"
+                     /locus_tag="pha.pha.04468"
                      /product="adenylate/guanylate cyclase domain-containing
                      protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
@@ -258,7 +261,7 @@ FEATURES             Location/Qualifiers
                      VERCMLFEQQPPSEDWDGVWKLTDK"
      CDS             15325..15912
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04793"
+                     /locus_tag="pha.pha.04469"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -270,7 +273,7 @@ FEATURES             Location/Qualifiers
                      HRSRSSKGDAAEWQQLLNILDLAESLYQRLKD"
      CDS             15914..16987
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04794"
+                     /locus_tag="pha.pha.04470"
                      /product="leucine-rich repeat domain-containing protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -285,14 +288,14 @@ FEATURES             Location/Qualifiers
                      PLESSTCPIEPEQACRF"
      tRNA            17130..17203
                      /inference="aragorn"
-                     /locus_tag="pha.pha.04795"
+                     /locus_tag="pha.pha.04471"
                      /product="tRNA-His"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
                      Phormidium_A"
      CDS             complement(17257..17688)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04796"
+                     /locus_tag="pha.pha.04472"
                      /product="lactoylglutathione lyase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -303,7 +306,7 @@ FEATURES             Location/Qualifiers
                      HGSTVIAFVEDPTGYKIELIQLGTQGSAKDSKEMAGQSA"
      CDS             18005..18817
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04797"
+                     /locus_tag="pha.pha.04473"
                      /product="LPS biosynthesis glycosyltransferase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -316,7 +319,7 @@ FEATURES             Location/Qualifiers
                      LAVRFKARAKGVARLLKGNFLRRNTLKNSRVPWRLVKFCMARQLNKTL"
      CDS             18897..19925
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04798"
+                     /locus_tag="pha.pha.04474"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -332,26 +335,26 @@ FEATURES             Location/Qualifiers
      CDS             20001..22712
                      /NRPS_PKS="Domain: AMP-binding (22-447). E-value: 7e-81.
                      Score: 263.7. Matches aSDomain:
-                     nrpspksdomains_pha.pha.04799_AMP-binding.1"
+                     nrpspksdomains_pha.pha.04475_AMP-binding.1"
                      /NRPS_PKS="Domain: PCP (554-622). E-value: 5.7e-23. Score:
-                     72.8. Matches aSDomain: nrpspksdomains_pha.pha.04799_PCP.1"
+                     72.8. Matches aSDomain: nrpspksdomains_pha.pha.04475_PCP.1"
                      /NRPS_PKS="Domain: Thioesterase (643-880). E-value:
                      5.5e-24. Score: 77.7. Matches aSDomain:
-                     nrpspksdomains_pha.pha.04799_Thioesterase.1"
+                     nrpspksdomains_pha.pha.04475_Thioesterase.1"
                      /NRPS_PKS="type: NRPS-like protein"
                      /gene_functions="biosynthetic (rule-based-clusters)
-                     NRPS-like: AMP-binding"
-                     /gene_functions="biosynthetic (rule-based-clusters)
                      NRPS-like: PP-binding"
+                     /gene_functions="biosynthetic (rule-based-clusters)
+                     NRPS-like: AMP-binding"
                      /gene_functions="biosynthetic-additional (smcogs)
                      SMCOG1002:AMP-dependent synthetase and ligase (Score:
                      276.9; E-value: 4.4e-84)"
                      /gene_kind="biosynthetic"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04799"
+                     /locus_tag="pha.pha.04475"
                      /product="amino acid adenylation domain-containing protein,
                      partial"
-                     /sec_met_domain="AMP-binding (E-value: 5.7e-96, bitscore:
+                     /sec_met_domain="AMP-binding (E-value: 5.6e-96, bitscore:
                      319.6, seeds: 400, tool: rule-based-clusters)"
                      /sec_met_domain="PP-binding (E-value: 1.1e-14, bitscore:
                      52.7, seeds: 164, tool: rule-based-clusters)"
@@ -380,10 +383,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
-                     /domain_id="nrpspksdomains_pha.pha.04799_AMP-binding.1"
+                     /domain_id="nrpspksdomains_pha.pha.04475_AMP-binding.1"
                      /evalue="7.00E-81"
-                     /label="pha.pha.04799_AMP-binding.1"
-                     /locus_tag="pha.pha.04799"
+                     /label="pha.pha.04475_AMP-binding.1"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="447"
                      /protein_start="22"
                      /score="263.7"
@@ -399,11 +402,11 @@ FEATURES             Location/Qualifiers
                      TGDLGRYKSDGTVEIIGRLDNQVKLR"
      aSModule        20067..22640
                      /complete
-                     /domains="nrpspksdomains_pha.pha.04799_AMP-binding.1"
-                     /domains="nrpspksdomains_pha.pha.04799_PCP.1"
-                     /domains="nrpspksdomains_pha.pha.04799_Thioesterase.1"
+                     /domains="nrpspksdomains_pha.pha.04475_AMP-binding.1"
+                     /domains="nrpspksdomains_pha.pha.04475_PCP.1"
+                     /domains="nrpspksdomains_pha.pha.04475_Thioesterase.1"
                      /final_module
-                     /locus_tags="pha.pha.04799"
+                     /locus_tags="pha.pha.04475"
                      /monomer_pairings="X -> X"
                      /starter_module
                      /tool="antismash"
@@ -412,10 +415,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="abmotifs"
                      /detection="hmmscan"
-                     /domain_id="nrpspksmotif_pha.pha.04799_0001"
+                     /domain_id="nrpspksmotif_pha.pha.04475_0001"
                      /evalue="1.20E-07"
                      /label="NRPS-A_a3"
-                     /locus_tag="pha.pha.04799"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="193"
                      /protein_start="173"
                      /score="24.0"
@@ -425,10 +428,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="abmotifs"
                      /detection="hmmscan"
-                     /domain_id="nrpspksmotif_pha.pha.04799_0002"
+                     /domain_id="nrpspksmotif_pha.pha.04475_0002"
                      /evalue="1.20E-05"
                      /label="NRPS-A_a6"
-                     /locus_tag="pha.pha.04799"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="400"
                      /protein_start="371"
                      /score="17.7"
@@ -438,10 +441,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="abmotifs"
                      /detection="hmmscan"
-                     /domain_id="nrpspksmotif_pha.pha.04799_0003"
+                     /domain_id="nrpspksmotif_pha.pha.04475_0003"
                      /evalue="1.30E-10"
                      /label="NRPS-A_a8"
-                     /locus_tag="pha.pha.04799"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="457"
                      /protein_start="436"
                      /score="33.3"
@@ -452,10 +455,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
-                     /domain_id="nrpspksdomains_pha.pha.04799_PCP.1"
+                     /domain_id="nrpspksdomains_pha.pha.04475_PCP.1"
                      /evalue="5.70E-23"
-                     /label="pha.pha.04799_PCP.1"
-                     /locus_tag="pha.pha.04799"
+                     /label="pha.pha.04475_PCP.1"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="622"
                      /protein_start="554"
                      /score="72.8"
@@ -467,10 +470,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="nrpspksdomains.hmm"
                      /detection="hmmscan"
-                     /domain_id="nrpspksdomains_pha.pha.04799_Thioesterase.1"
+                     /domain_id="nrpspksdomains_pha.pha.04475_Thioesterase.1"
                      /evalue="5.50E-24"
-                     /label="pha.pha.04799_Thioesterase.1"
-                     /locus_tag="pha.pha.04799"
+                     /label="pha.pha.04475_Thioesterase.1"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="880"
                      /protein_start="643"
                      /score="77.7"
@@ -484,10 +487,10 @@ FEATURES             Location/Qualifiers
                      /aSTool="nrps_pks_domains"
                      /database="abmotifs"
                      /detection="hmmscan"
-                     /domain_id="nrpspksmotif_pha.pha.04799_0004"
+                     /domain_id="nrpspksmotif_pha.pha.04475_0004"
                      /evalue="3.20E-12"
                      /label="NRPS-te1"
-                     /locus_tag="pha.pha.04799"
+                     /locus_tag="pha.pha.04475"
                      /protein_end="727"
                      /protein_start="702"
                      /score="38.7"
@@ -495,7 +498,7 @@ FEATURES             Location/Qualifiers
                      /translation="QPQGPYHLLGVSIGGRVAFEMAYQL"
      CDS             complement(22736..24388)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04800"
+                     /locus_tag="pha.pha.04476"
                      /product="GTP-binding protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -513,7 +516,7 @@ FEATURES             Location/Qualifiers
                      WQPKDIPANPIPAPSPPPKAEDWGSPPPVDDGW"
      CDS             24552..25487
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04801"
+                     /locus_tag="pha.pha.04477"
                      /product="YihY/virulence factor BrkB family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -527,7 +530,7 @@ FEATURES             Location/Qualifiers
                      IGRFRRRNYRRYRQSQNSPQHSPQPLDSSH"
      CDS             complement(25463..25972)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04802"
+                     /locus_tag="pha.pha.04478"
                      /product="CYTH domain-containing protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -542,7 +545,7 @@ FEATURES             Location/Qualifiers
                      (Score: 316.3; E-value: 4.6e-96)"
                      /gene_kind="other"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04803"
+                     /locus_tag="pha.pha.04479"
                      /product="transposase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -557,7 +560,7 @@ FEATURES             Location/Qualifiers
                      ENDRDENAAINIKQVGASTCGLGKVSQAQPAFTV"
      CDS             27425..28288
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04804"
+                     /locus_tag="pha.pha.04480"
                      /product="shikimate dehydrogenase AroE"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -571,17 +574,17 @@ FEATURES             Location/Qualifiers
                      LLRHLS"
      CDS             complement(28473..28730)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04805"
+                     /locus_tag="pha.pha.04481"
                      /transl_table=11
                      /translation="MGLAGVGELGLLTSGFSFEFGGDDEEFEEAIADFAGGDGVAVGFK
                      DGGTAEGAGQESQGVGGQRWFGVGGKPEVDLPDFSCDSSR"
      repeat          29116..29206
                      /inference="tandem-repeat-finder"
-                     /locus_tag="pha.pha.04806"
+                     /locus_tag="pha.pha.04482"
                      /notes="period size 12; copies 7.6"
      CDS             complement(29479..30648)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04807"
+                     /locus_tag="pha.pha.04483"
                      /product="type II secretion system F family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -596,7 +599,7 @@ FEATURES             Location/Qualifiers
                      EFYEDEVEQAIKGLTSMMEPLMIVVIGGMVGSILLSMYLPMFAVMDAIG"
      CDS             complement(30785..31903)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04808"
+                     /locus_tag="pha.pha.04484"
                      /product="type IV pilus twitching motility protein PilT"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -611,7 +614,7 @@ FEATURES             Location/Qualifiers
                      KTSKIDEMDRLIDPRVKAGGAPTQGKVKAKAR"
      CDS             complement(31944..33959)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04809"
+                     /locus_tag="pha.pha.04485"
                      /product="GspE/PulE family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -631,7 +634,7 @@ FEATURES             Location/Qualifiers
                      ELKAKRKSSLTCSNCGAGLDPEWMDCPYCMTPRFQD"
      CDS             34344..35102
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04810"
+                     /locus_tag="pha.pha.04486"
                      /product="nucleotide exchange factor GrpE"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -644,7 +647,7 @@ FEATURES             Location/Qualifiers
                      RVLRHAMVKVATAPEPVVSSGESDTETSDS"
      CDS             35191..37479
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04811"
+                     /locus_tag="pha.pha.04487"
                      /product="molecular chaperone DnaK"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -666,7 +669,7 @@ FEATURES             Location/Qualifiers
                      EGDPDNPFF"
      CDS             37578..38702
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04812"
+                     /locus_tag="pha.pha.04488"
                      /product="molecular chaperone DnaJ"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -681,7 +684,7 @@ FEATURES             Location/Qualifiers
                      VNAEERELLEKLAKIRGERAGKGGVEGFLGGLFK"
      CDS             38699..38977
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04813"
+                     /locus_tag="pha.pha.04489"
                      /product="sulfurtransferase TusA family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -691,7 +694,7 @@ FEATURES             Location/Qualifiers
                      GQVLEVWLDEGEPIEQVPDSLTMAGYGIEDIRDCQGYFALQVRCPES"
      CDS             38974..40050
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04814"
+                     /locus_tag="pha.pha.04490"
                      /product="small ribosomal subunit biogenesis GTPase RsgA"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -706,7 +709,7 @@ FEATURES             Location/Qualifiers
                      RRRQHQTLQDLCEELDEK"
      CDS             complement(40095..40250)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04815"
+                     /locus_tag="pha.pha.04491"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -716,7 +719,7 @@ FEATURES             Location/Qualifiers
                      EANYLR"
      CDS             40416..40901
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04816"
+                     /locus_tag="pha.pha.04492"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -727,11 +730,11 @@ FEATURES             Location/Qualifiers
                      GIVEALESADEAPQNETGLQQVQQAQIQVKEAGAAAHEAARHIDQLARDLNQLCRGN"
      repeat          40905..40955
                      /inference="repeatmasker"
-                     /locus_tag="pha.pha.04817"
+                     /locus_tag="pha.pha.04493"
                      /notes="repeat (TCGTTAA)n"
      CDS             40956..41936
                      /inference="prodigal"
-                     /locus_tag="pha.pha.04818"
+                     /locus_tag="pha.pha.04494"
                      /product="hypothetical protein EA395_00470"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;

@@ -8,7 +8,7 @@ SOURCE
             .
 COMMENT     ##antiSMASH-Data-START##
             Version      :: 6.1.0
-            Run date     :: 2022-11-03 14:01:50
+            Run date     :: 2022-11-24 13:52:08
             NOTE: This is a single cluster extracted from a larger record!
             Orig. start  :: 1188308
             Orig. end    :: 1205898
@@ -16,7 +16,7 @@ COMMENT     ##antiSMASH-Data-START##
 FEATURES             Location/Qualifiers
      CDS             1..2109
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01420"
+                     /locus_tag="pha.pha.01296"
                      /product="Rne/Rng family ribonuclease"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -79,7 +79,7 @@ FEATURES             Location/Qualifiers
                      /tool="antismash"
      CDS             2106..2774
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01421"
+                     /locus_tag="pha.pha.01297"
                      /product="ribonuclease HII"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -92,7 +92,7 @@ FEATURES             Location/Qualifiers
                      "
      CDS             complement(2749..3120)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01422"
+                     /locus_tag="pha.pha.01298"
                      /product="hypothetical protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -103,7 +103,7 @@ FEATURES             Location/Qualifiers
                      RLQVFENNVELLNRLLERY"
      CDS             3269..4711
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01423"
+                     /locus_tag="pha.pha.01299"
                      /product="circularly permuted type 2 ATP-grasp protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -120,7 +120,7 @@ FEATURES             Location/Qualifiers
                      EGSLVVNSSQGGGAKDTWVLMD"
      CDS             4793..5797
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01424"
+                     /locus_tag="pha.pha.01300"
                      /product="alpha-E domain-containing protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -134,7 +134,7 @@ FEATURES             Location/Qualifiers
                      TIQDIIENGLHEFLDGFQKELNAVDDQISATFFSLSPLVSEPPMNRQVQTLTW"
      CDS             5879..6766
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01425"
+                     /locus_tag="pha.pha.01301"
                      /product="transglutaminase family protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -151,7 +151,7 @@ FEATURES             Location/Qualifiers
                      terpene: phytoene_synt"
                      /gene_kind="biosynthetic"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01426"
+                     /locus_tag="pha.pha.01302"
                      /product="phytoene/squalene synthetase"
                      /sec_met_domain="phytoene_synt (E-value: 1.1e-07, bitscore:
                      29.3, seeds: 8, tool: rule-based-clusters)"
@@ -167,14 +167,14 @@ FEATURES             Location/Qualifiers
                      SHLDYRQFPYRYWSAVRHDLRNWRWFPR"
      repeat          7755..7783
                      /inference="tandem-repeat-finder"
-                     /locus_tag="pha.pha.01427"
+                     /locus_tag="pha.pha.01303"
                      /notes="period size 15; copies 1.9"
      CDS             8043..10187
                      /gene_functions="regulatory (smcogs) SMCOG1003:sensor
                      histidine kinase (Score: 274.5; E-value: 4e-83)"
                      /gene_kind="regulatory"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01428"
+                     /locus_tag="pha.pha.01304"
                      /product="PAS domain S-box protein"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -195,7 +195,7 @@ FEATURES             Location/Qualifiers
                      QLLQNYLGGSSETSETVDSP"
      CDS             10316..11176
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01429"
+                     /locus_tag="pha.pha.01305"
                      /product="prolipoprotein diacylglyceryl transferase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -209,7 +209,7 @@ FEATURES             Location/Qualifiers
                      ESRAS"
      CDS             11320..12408
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01430"
+                     /locus_tag="pha.pha.01306"
                      /product="phosphate ABC transporter substrate-binding
                      protein PstS"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
@@ -225,7 +225,7 @@ FEATURES             Location/Qualifiers
                      YVPMPESLTDRIREELDAVTAG"
      CDS             12495..13472
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01431"
+                     /locus_tag="pha.pha.01307"
                      /product="phosphate ABC transporter permease subunit PstC"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -243,7 +243,7 @@ FEATURES             Location/Qualifiers
                      (Score: 57.8; E-value: 1.5e-17)"
                      /gene_kind="transport"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01432"
+                     /locus_tag="pha.pha.01308"
                      /product="phosphate ABC transporter permease PstA"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
@@ -261,7 +261,7 @@ FEATURES             Location/Qualifiers
                      4.4e-51)"
                      /gene_kind="transport"
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01433"
+                     /locus_tag="pha.pha.01309"
                      /product="phosphate ABC transporter ATP-binding protein
                      PstB"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
@@ -275,7 +275,7 @@ FEATURES             Location/Qualifiers
                      MHQASRVSDLTAFYNAEATQKGNKVGYLVEYDETTKIFHNPARQETQDYVSGRFG"
      CDS             complement(15473..16318)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01434"
+                     /locus_tag="pha.pha.01310"
                      /product="bifunctional hydroxymethylpyrimidine
                      kinase/phosphomethylpyrimidine kinase"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
@@ -290,7 +290,7 @@ FEATURES             Location/Qualifiers
                      "
      CDS             complement(16322..17590)
                      /inference="prodigal"
-                     /locus_tag="pha.pha.01435"
+                     /locus_tag="pha.pha.01311"
                      /product="cell division protein FtsZ"
                      /taxonomy="Bacteria; Cyanobacteria; Cyanobacteriia;
                      Cyanobacteriales; Geitlerinemaceae; Phormidium_A;
