@@ -1,5 +1,7 @@
 import argparse
 import tarfile
+
+import pandas
 import pandas as pd
 from pathlib import Path
 from concurrent import futures
@@ -183,6 +185,12 @@ def write_functional_genes_to_xls():
     all_genome_feature_data = None
     for genome_name, genome_property_hash in genome_properties.items():
         subsystems_df = genome_property_hash['subsystems'].rename(columns={'genes': genome_name})
+        try:
+            subsystems_df.drop('', level=0, axis=0, inplace=True)
+            subsystems_df.drop('secondary-metabolites', level=0, axis=0, inplace=True)
+        except Exception:
+            pass
+
         if all_genome_feature_data is None:
             all_genome_feature_data = subsystems_df
         else:
@@ -244,6 +252,7 @@ def main():
         context.log('Now writing excel files with functional genes per genome...')
         write_functional_genes_to_xls()
         context.log(f'Done. Thank you for using metaerg.py {VERSION}')
+
 
 if __name__ == "__main__":
     main()

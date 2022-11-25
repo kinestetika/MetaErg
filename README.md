@@ -125,7 +125,10 @@ You can for example use python and pandas to inspect the distribution of subsyst
 from pathlib import Path
 import pandas as pd
 
+from metaerg import functional_gene_configuration
 from metaerg.main import load_contigs, compute_genome_properties
+
+functional_gene_configuration.init_functional_gene_config()
 
 data_dir = Path('/path/to/my/data')
 feather_dir = data_dir / 'all_genes.feather'
@@ -141,6 +144,11 @@ for f in sorted(feather_dir.glob('*')):
 all_genome_feature_data = None
 for k, v in genome_properties.items():
     subsystems_df = v['subsystems'].rename(columns={'genes': k})
+    try:
+        subsystems_df.drop('', level=0, axis=0, inplace=True)
+        subsystems_df.drop('secondary-metabolites', level=0, axis=0, inplace=True)
+    except Exception:
+        pass
     if all_genome_feature_data is None:
         all_genome_feature_data = subsystems_df
     else:
