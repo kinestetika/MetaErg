@@ -411,6 +411,7 @@ A0A0S2KDX2|A0A0U5EVY4|A0A143QKN5|F4ANA5|G4RF04 methylamine dehydrogenase light c
 A0A0B5DX78|A0A0C4YG08|A0A1B3E829|A0A291N2S9|A0A291PDR0|A1BB97|B5ZF45|E1TJR4|F6IE79|K0CBH2 methylamine dehydrogenase heavy chain (mauB, ec:1.4.9.1)
 
 >Respiration, Hydrogenases Fe-Fe
+COG4624|TIGR02512|TIGR04105 Fe/Fe (iron only) hydrogenase
 WP_002568840 FeFehyd; hydrogenase, group A1
 WP_002727095 FeFehyd; hydrogenase, group A2
 WP_016268012 FeFehyd; hydrogenase, group A3
@@ -422,6 +423,23 @@ AIO18481 FeFehyd; hydrogenase, group C3
 WP_004030875 FeFehyd; hydrogenase, group Fe
 
 >Respiration, Hydrogenases NI-Fe
+COG3259|TIGR03295 Coenzyme F420-reducing hydrogenase, alpha subunit (FrhA)
+TIGR03289|COG1035 Coenzyme F420-reducing hydrogenase, beta subunit (FrhB)
+COG1908|TIGR00130 Coenzyme F420-reducing hydrogenase, delta subunit (FrhD)
+COG1941TIGR03294| Coenzyme F420-reducing hydrogenase, gamma subunit  (FrhG)
+COG4042 NiFe-hydrogenase-type-3 Eha subunit A (EhaA)
+COG4041 NiFe-hydrogenase-type-3 Eha subunit B (EhaB)
+COG4039 NiFe-hydrogenase-type-3 Eha subunit C (EhaC)
+COG4038 NiFe-hydrogenase-type-3 Eha subunit E (EhaE)
+COG4037|PRK06277 NiFe-hydrogenase-type-3 Eha subunit F (EhaF)
+COG4036 NiFe-hydrogenase-type-3 Eha subunit G (EhaG)
+COG4078 NiFe-hydrogenase-type-3 Eha subunit H (EhaH)
+COG1142 Fe-S-cluster-containing hydrogenase component 2 (HycB)
+PRK07571 bidirectional hydrogenase complex protein (HoxE)
+PRK07569 bidirectional hydrogenase complex protein (HoxU)
+PRK08345 cytochrome-c3 hydrogenase subunit gamma
+NF033181 nickel-dependent hydrogenase large subunit
+TIGR00391 NiFe hydrogenase small subunit (hupA/hydA/hupS/hoxK/vhtG)
 WP_015407385 NiFehyd; hydrogenase, group Ia
 WP_012675774 NiFehyd; hydrogenase, group Ib
 WP_011688559 NiFehyd; hydrogenase, group Ic
