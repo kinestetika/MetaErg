@@ -67,6 +67,12 @@ source /path/to/bin_dir/profile
 metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```
 
+IMPORTANT: Before running metaerg you need to run the following, to prepend the helper programs to your path:
+
+```commandline
+source /path/to/bin_dir/profile
+```
+
 The database was created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
 * NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
