@@ -10,7 +10,8 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     # no masking here becasuse we want to arbitrate with repeatmasker results
     #fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
     #                             mask_targets=fasta.ALL_MASK_TARGETS)
-    context.run_external(f'prodigal -g {context.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -a {result_files[0]}')
+    context.run_external(f'prodigal -g {context.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -a {result_files[0]}'
+                         f' -d {result_files[1]}')
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
@@ -75,6 +76,6 @@ def run_and_read_prodigal():
     return ({'pipeline_position': 61,
              'purpose': 'coding sequence prediction with prodigal',
              'programs': ('prodigal',),
-             'result_files': ('prodigal',),
+             'result_files': ('prodigal','prodigal-nucl'),
              'run': _run_programs,
              'read': _read_results})
