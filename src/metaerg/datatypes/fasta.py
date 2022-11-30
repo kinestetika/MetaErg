@@ -134,7 +134,7 @@ def write_fasta(handle, fasta, line_length=80):
         handle.write('\n')
 
 
-def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1, targets = None):
+def write_features_to_fasta(feature_data: pd.DataFrame, seq_type: str, base_file: Path, split=1, targets = None):
     if targets:
         feature_data = feature_data[feature_data['type'].isin(targets)]
     if not len(feature_data):
@@ -149,7 +149,12 @@ def write_features_to_fasta(feature_data: pd.DataFrame, base_file: Path, split=1
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
     for feature in feature_data.itertuples():
-        write_fasta(filehandles[int(records_written / records_per_file)], feature._asdict())
+        fasta_rec = {'id': feature.id, 'descr': feature.descr}
+        if 'aa' == seq_type:
+            fasta_rec['seq'] = feature.aa_seq
+        elif 'nt' == seq_type:
+            fasta_rec['seq'] = feature.nt_seq
+        write_fasta(filehandles[int(records_written / records_per_file)], fasta_rec)
         records_written += 1
     return paths
 

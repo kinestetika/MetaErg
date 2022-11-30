@@ -14,7 +14,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_features_to_fasta(feature_data, cds_aa_file, targets=('CDS',),
+        split_fasta_files = fasta.write_features_to_fasta(feature_data, 'aa', cds_aa_file, targets=('CDS',),
                                                                split=context.CPUS_PER_GENOME)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]

@@ -31,7 +31,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                        'strand': 1,
                        'type': 'repeat',
                        'inference': 'tandem-repeat-finder',
-                       'seq': seq,
+                       'nt_seq': seq,
                        'notes': f'period size {words[2]}; copies {words[3]}'}
             new_features.append(feature)
     feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)

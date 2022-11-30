@@ -69,7 +69,7 @@ def words2feature(words: list[str], contig, genome_name:str):
             'strand': strand,
             'type': 'repeat',
             'inference': 'repeatmasker',
-            'seq': seq}
+            'nt_seq': seq}
 
 
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:

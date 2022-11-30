@@ -10,8 +10,8 @@ import httpx
 
 from metaerg import registry
 
-DATAFRAME_COLUMNS = 'id genome contig start end strand type inference subsystems descr taxon notes seq antismash ' \
-                    'signal_peptide tmh tmh_topology blast cdd hmm'.split()
+DATAFRAME_COLUMNS = 'id genome contig start end strand type inference subsystems descr taxon notes aa_seq nt_seq ' \
+                    'antismash signal_peptide tmh tmh_topology blast cdd hmm'.split()
 
 BASE_DIR = Path()
 TEMP_DIR = Path()

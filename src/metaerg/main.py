@@ -154,8 +154,8 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
     fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR)
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
-    fasta.write_features_to_fasta(feature_data, faa_file, targets=('CDS',))
-    fasta.write_features_to_fasta(feature_data, rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
+    fasta.write_features_to_fasta(feature_data, 'aa', faa_file, targets=('CDS',))
+    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
     fasta.write_contigs_to_fasta(contig_dict, fna_file)
     with open(gbk_file, 'w') as gbk_writer:
         gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)

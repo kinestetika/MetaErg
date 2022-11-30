@@ -10,7 +10,7 @@ from metaerg.datatypes import fasta
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_features_to_fasta(feature_data, cds_aa_file, context.CPUS_PER_GENOME,
+        split_fasta_files = fasta.write_features_to_fasta(feature_data, 'aa', cds_aa_file, context.CPUS_PER_GENOME,
                                                           targets=('CDS',))
         split_signalp_files = [result_files[0].parent / f'{result_files[0].name}.{i}'
                                for i in range(len(split_fasta_files))]

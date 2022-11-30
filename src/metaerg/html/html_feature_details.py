@@ -86,7 +86,7 @@ def make_feature_html(f, dominant_taxon) -> str:
         html = html.replace('HEADER', f'>{f.id} {f.descr} [{taxon_at_genus(f.taxon)}]')
     else:
         html = html.replace('HEADER', f'>{f.id} {f.descr}')
-    html = html.replace('SEQUENCE', f.seq)
+    html = html.replace('SEQUENCE', f.aa_seq if 'CDS' == f.type else f.nt_seq)
     if f.type == 'CDS':
         length = (f.end - f.start) // 3
         length_unit = 'aa'

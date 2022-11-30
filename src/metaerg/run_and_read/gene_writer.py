@@ -25,10 +25,10 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 
     context.log(f'({genome_name}) Now writing proteins to fasta file...')
     cds_file = context.spawn_file('cds.faa', genome_name)
-    fasta.write_features_to_fasta(feature_data, cds_file, targets=('CDS',))
+    fasta.write_features_to_fasta(feature_data, 'aa', cds_file, targets=('CDS',))
     context.log(f'({genome_name}) Now writing RNA genes and features to fasta file...')
     rna_file = context.spawn_file('rna.fna', genome_name)
-    fasta.write_features_to_fasta(feature_data, rna_file, targets=RNA_TARGETS)
+    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=RNA_TARGETS)
     return feature_data, len(feature_data.index)
 
 

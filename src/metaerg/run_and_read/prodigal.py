@@ -61,7 +61,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                        'strand': strand,
                        'type': 'CDS',
                        'inference': 'prodigal',
-                       'seq': seq_rec['seq']}
+                       'aa_seq': seq_rec['seq']}
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
                 feature['notes'] = 'partial protein'
             new_features.append(feature)

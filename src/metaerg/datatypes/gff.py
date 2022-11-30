@@ -51,7 +51,7 @@ class GffParser:
                                'strand': strand,
                                'type': self.target_feature_type_dict[feature_type],
                                'inference': inference,
-                               'seq': seq}
+                               'nt_seq': seq}
                     yield feature
 
 

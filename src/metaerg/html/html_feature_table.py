@@ -42,7 +42,7 @@ def format_feature(f, format_hash, dominant_taxon, colors, path_to_feature_html)
         format_hash['strand'] = "+" if f.strand > 0 else "-"
     else:
         format_hash['strand'] = ''
-    format_hash['length'] = len(f.seq)
+    format_hash['length'] = len(f.aa_seq if 'CDS' == f.type else f.nt_seq)
     match f.tmh, f.signal_peptide, f.type:
         case [_, 'LIPO', _]:
             format_hash['destination'] = 'lipoprotein'

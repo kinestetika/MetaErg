@@ -92,7 +92,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                    'strand': hit.query_strand,
                    'type': f_type,
                    'inference': 'cmscan',
-                   'seq': seq,
+                   'nt_seq': seq,
                    'descr': "{} {}".format(hit.hit_id, hit.descr)}
         new_features.append(feature)
     feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)

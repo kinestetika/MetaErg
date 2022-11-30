@@ -38,7 +38,7 @@ def gbk_write_feature(writer, feature):
                 'signal_peptide': feature.signal_peptide,
                 'tmh':         feature.tmh,
                 'tmh-topology':feature.tmh_topology,
-                'translation': feature.seq if feature.type == 'CDS' else ''}
+                'translation': feature.aa_seq if feature.type == 'CDS' else ''}
     for k, v in gbk_keys.items():
         if v:
             writer.write(textwrap.fill(f'/{k}="{v}"', width = GBK_LINEWIDTH,
