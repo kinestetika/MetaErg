@@ -17,6 +17,10 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
     new_features = []
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
+    nucl_seq_hash = {}
+    with fasta.FastaParser(result_files[1], cleanup_seq=False) as fasta_reader:
+        for seq_rec in fasta_reader:
+            nucl_seq_hash[seq_rec['id']] = seq_rec['seq']
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         feature_count_before_arbritration = len(feature_data.index)
         rejected_cds_count = 0
@@ -61,7 +65,8 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                        'strand': strand,
                        'type': 'CDS',
                        'inference': 'prodigal',
-                       'aa_seq': seq_rec['seq']}
+                       'aa_seq': seq_rec['seq'],
+                       'nt_seq': nucl_seq_hash[seq_rec['id']]}
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
                 feature['notes'] = 'partial protein'
             new_features.append(feature)
