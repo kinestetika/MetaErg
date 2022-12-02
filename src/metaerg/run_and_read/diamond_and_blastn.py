@@ -14,6 +14,7 @@ import ncbi.datasets
 from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
+from metaerg.datatypes import ncbi_ftp
 
 DB_DESCRIPTIONS_FILENAME = 'db_descriptions.txt'
 DB_TAXONOMY_FILENAME = 'db_taxonomy.txt'
@@ -355,9 +356,6 @@ def install_prokaryote_database():
     taxon_list = []
     context.log(f'GTDBTK comprises {taxa_count} taxa...')
     with open(gtdbtk_taxonomy_file) as taxonomy_handle, open(descr_db, 'w') as descr_handle:
-        # determine line count for tqdm
-        ftp = FTP('ftp.ncbi.nlm.nih.gov')
-        ftp.login()
         success_count = 0
         genomes_in_cache_count = 0
         count = 0
@@ -377,27 +375,19 @@ def install_prokaryote_database():
             else:
                 try:
                     download_status = ''
-                    ftp.cwd('/genomes/all/')
-                    for acc_part in (accession[0:3], accession[4:7], accession[7:10], accession[10:13]):
-                        ftp.cwd(acc_part)
-                    ftp_dir_list = []
-                    ftp.dir('.', ftp_dir_list.append)
-                    ftp.cwd(ftp_dir_list[0].split()[-1])
-                    ftp_dir_list = []
-                    ftp.dir('.', ftp_dir_list.append)
-                    for l in ftp_dir_list:
-                        filename = l.split()[-1]
-                        if filename.endswith('_protein.faa.gz') and not future_faa_file.exists():
-                            download_status += '*'
-                            success_count += 1
-                            with open(future_faa_file, "wb") as local_handle:
-                                ftp.retrbinary("RETR " + filename, local_handle.write)
-                            taxon['in_local_cache'] = True
-                            genomes_in_cache_count += 1
-                        if filename.endswith('_rna_from_genomic.fna.gz') and not future_rna_file.exists():
-                            download_status += '*'
-                            with open(future_rna_file, "wb") as local_handle:
-                                ftp.retrbinary("RETR " + filename, local_handle.write)
+                    targets = []
+                    if not future_faa_file.exists():
+                        targets.append(('_protein.faa.gz', future_faa_file))
+                    if not future_rna_file.exists():
+                        targets.append(('_rna_from_genomic.fna.gz', future_rna_file))
+                    success = ncbi_ftp.fetch(accession, targets)
+                    if success[0]:
+                        download_status += '*'
+                        success_count += 1
+                        taxon['in_local_cache'] = True
+                        genomes_in_cache_count += 1
+                    if success[1]:
+                        download_status += '*'
                     if not download_status:
                         continue
                 except EOFError:
