@@ -137,11 +137,9 @@ def write_fasta(handle, fasta, line_length=80):
 def write_features_to_fasta(feature_data: pd.DataFrame, seq_type: str, base_file: Path, split=1, targets = None):
     if targets:
         feature_data = feature_data[feature_data['type'].isin(targets)]
-    if not len(feature_data):
-        raise Exception(f'No features with targets {targets} while writing to fasta!')
     number_of_records = len(feature_data.index)
     split = min(split, number_of_records)
-    records_per_file = number_of_records / split
+    records_per_file = number_of_records / split if split else number_of_records
     if split > 1:
         paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]
     else:
@@ -156,6 +154,9 @@ def write_features_to_fasta(feature_data: pd.DataFrame, seq_type: str, base_file
             fasta_rec['seq'] = feature.nt_seq
         write_fasta(filehandles[int(records_written / records_per_file)], fasta_rec)
         records_written += 1
+    if not len(feature_data):
+        context.log(f'WARNING: No [{", ".join(targets)}] features in genome, '
+                    f'fasta file(s) {", ".join(paths)} are empty!')
     return paths
 
 
