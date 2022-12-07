@@ -174,6 +174,7 @@ def compute_codon_usage_bias_for_genome(genome_id, feature_data: pd.DataFrame) -
                         for rp in ribosomal_proteins.itertuples()])
     # codon pair bias
     codon_pair_scores = compute_codon_pair_scores_for_feature_data(genome_id, filtered_feature_data)
+    # codon_pair_bias = sum(codon_pair_scores.values()) / (len(codon_pair_scores) - 1)
     codon_pair_bias = median([compute_codon_pair_bias_for_cds(rp, codon_pair_scores)
                               for rp in ribosomal_proteins.itertuples()])
     # keep track of # too short proteins filtered out and ribosomal proteins

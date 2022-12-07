@@ -2,9 +2,6 @@ import pandas as pd
 from metaerg import context
 from metaerg.datatypes import fasta
 
-RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
-
-
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     pass
 
@@ -23,12 +20,15 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     feature_data = feature_data.fillna({'tmh': 0})
     feature_data = feature_data.fillna('')
 
-    context.log(f'({genome_name}) Now writing proteins to fasta file...')
+    cds_count = len(feature_data[feature_data['type'] == 'CDS'])
+    rna_count = len(feature_data[feature_data['type'].isin(context.RNA_TARGETS)])
+
     cds_file = context.spawn_file('cds.faa', genome_name)
+    context.log(f'({genome_name}) Now writing {cds_count} proteins to fasta at {cds_file}...')
     fasta.write_features_to_fasta(feature_data, 'aa', cds_file, targets=('CDS',))
-    context.log(f'({genome_name}) Now writing RNA genes and features to fasta file...')
     rna_file = context.spawn_file('rna.fna', genome_name)
-    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=RNA_TARGETS)
+    context.log(f'({genome_name}) Now writing {rna_count} RNA genes and features to fasta at {rna_file}...')
+    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=context.RNA_TARGETS)
     return feature_data, len(feature_data.index)
 
 

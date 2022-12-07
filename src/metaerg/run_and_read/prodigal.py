@@ -41,18 +41,21 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             end = int(words[2].strip())
 
             # reconciliation with repeats
-            overlapping_features = feature_data.loc[(feature_data['start'] < end) & (start < feature_data['end'])]
+            overlapping_features = feature_data.loc[(feature_data['contig'] == contig_id)
+                                                     & (feature_data['start'] < end)
+                                                     & (start < feature_data['end'])]
             if len(overlapping_features.index):
                 overlap = 0
                 for i in overlapping_features.index:
                     overlap += min(overlapping_features.at[i, "end"], end) - max(start, overlapping_features.at[i, "start"])
-                if overlap < 0.33 * (end-start):
-                    #for j in overlapping_features.index:
-                    #    print ('dropping', feature_data.at[j, 'inference'], 'X' in seq_rec['seq'], overlap, (end-start)/3)
+                non_repeat_features = overlapping_features[overlapping_features['type'].isin(context.RNA_TARGETS)]
+                if len(non_repeat_features):
+                    rejected_cds_count += 1
+                    continue
+                elif overlap < 0.33 * (end-start):
                     feature_data = feature_data.drop(index=overlapping_features.index)
                 else:
                     rejected_cds_count += 1
-                    #print(f'{end-start} nt orf overlaps with {overlap} nt of repeats')
                     continue
 
             strand = int(words[3].strip())

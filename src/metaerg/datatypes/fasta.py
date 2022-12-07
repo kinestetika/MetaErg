@@ -156,7 +156,7 @@ def write_features_to_fasta(feature_data: pd.DataFrame, seq_type: str, base_file
         records_written += 1
     if not len(feature_data):
         context.log(f'WARNING: No [{", ".join(targets)}] features in genome, '
-                    f'fasta file(s) {", ".join(paths)} are empty!')
+                    f'fasta file(s) {", ".join([str(p.name) for p in paths])} are empty!')
     return paths
 
 

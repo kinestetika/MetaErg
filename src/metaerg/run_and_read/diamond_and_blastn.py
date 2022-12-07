@@ -31,12 +31,18 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
 
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome_name)
     rna_nt_file = context.spawn_file('rna.fna', genome_name)
-    blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+    blastn_result_file = context.spawn_file('blastn', genome_name)
+    if rna_nt_file.exists() and rna_nt_file.stat().st_size:
+        if context.FORCE or not blastn_result_file.exists() or not blastn_result_file.stat().st_size:
+            blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+            context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {blastn_result_file} -max_target_seqs 10 '
+                                 f'-outfmt 6')
+    else:
+        context.log(f'({genome_name}) Skipping blastn, fasta file with RNA genes missing or empty.')
+
+    cds_aa_file = context.spawn_file('cds.faa', genome_name)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
-    context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {result_files[1]} -max_target_seqs 10 '
-                         f'-outfmt 6')
     context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
                          f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
 
@@ -84,7 +90,9 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    with TabularBlastParser(result_files[1], 'BLAST', dbentry_from_string) as handle:
+
+    blastn_result_file = context.spawn_file('blastn', genome_name)
+    with TabularBlastParser(blastn_result_file, 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
@@ -100,7 +108,7 @@ def run_and_read_diamond_blastn():
                            Path(DB_RNA_FILENAME + '.nhr'),
                            Path(DB_DESCRIPTIONS_FILENAME),
                            Path(DB_TAXONOMY_FILENAME)),
-             'result_files': ('diamond', 'blastn'),
+             'result_files': ('diamond',),
              'run': _run_programs,
              'read': _read_results})
 

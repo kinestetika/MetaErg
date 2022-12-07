@@ -13,6 +13,8 @@ from metaerg import registry
 DATAFRAME_COLUMNS = 'id genome contig start end strand type inference subsystems descr taxon notes aa_seq nt_seq ' \
                     'antismash signal_peptide tmh tmh_topology blast cdd hmm'.split()
 
+RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
+
 BASE_DIR = Path()
 TEMP_DIR = Path()
 HTML_DIR = Path()
