@@ -20,7 +20,7 @@ from metaerg.installation import install_all_helper_programs
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.2.37"
+VERSION = "2.3.0"
 
 
 def parse_arguments():

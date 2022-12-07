@@ -1,4 +1,4 @@
-## metaerg.py, version 2.2.X
+## metaerg.py, version 2.3.X
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -19,7 +19,7 @@ more concise than the original version of metaerg and many other annotation tool
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
 work in progress, and can be expanded and customized as needed.
 
-The Metaerg 2.2 pipeline ...
+The Metaerg 2.3 pipeline ...
 * predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
 * predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/).
 * predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM.
