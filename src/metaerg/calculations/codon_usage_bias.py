@@ -1,3 +1,5 @@
+import math
+
 import pandas as pd
 import re
 from time import sleep
@@ -184,6 +186,18 @@ def compute_codon_usage_bias_for_genome(genome_id, feature_data: pd.DataFrame) -
                    consistency, codon_pair_bias, filtered_out, 0)
 
 
+def compute_codon_bias_estimate_doubling_time(feature_data: pd.DataFrame):
+    feature_data = feature_data[feature_data['type'] == 'CDS']
+    filtered_feature_data = feature_data[feature_data['aa_seq'].str.len() >= 80]
+    ribosomal_proteins = feature_data[feature_data['subsystems'].str.contains('ribosomal protein')]
+    # codon usage bias
+    background_frequencies = compute_codon_frequencies_for_feature_data(filtered_feature_data)
+    codon_usage_bias = median([compute_codon_usage_bias_for_feature(rp, background_frequencies)
+                               for rp in ribosomal_proteins.itertuples()])
+    doubling_time = math.pow(10, codon_usage_bias * -2.41937374 + 2.00361692)
+    return codon_usage_bias, doubling_time
+
+
 def parse_training_data(list_file) -> list[CUBData]:
     training_data = []
     refseq_acc_pattern = re.compile(r'(GCF_\d+)')
@@ -249,17 +263,29 @@ def main():
     training_data = parse_training_data(dir / 'CodonStatistics_Training.csv')
     # download_training_data(training_data, Path('/bio/databases/eggo-data/genomes'))
     count = 0
-    for entry in training_data:
-        df = load_feature_data(dir / 'genomes', entry)
-        if not df is None:
-            metaerg_entry = compute_codon_usage_bias_for_genome(entry.genome_id, df)
-            print(f'{count}/{len(training_data)} {metaerg_entry.nHE}/{entry.nHE}, '
-                  f'{metaerg_entry.CUBHE:.3f}/{entry.CUBHE:.3f} '
-                  f'{metaerg_entry.consistency:.3f}/{entry.consistency:.3f} '
-                  f'{metaerg_entry.CPB:.3f}/{entry.CPB:.3f} '
-                  f'{entry.genome_id}')
-            count += 1
-    print(count)
+    with open(dir / 'training_plus_metaerg.csv', 'w') as output:
+        for entry in training_data:
+            df = load_feature_data(dir / 'genomes', entry)
+            if not df is None:
+                metaerg_entry = compute_codon_usage_bias_for_genome(entry.genome_id, df)
+                print(f'{count}/{len(training_data)} {metaerg_entry.nHE}/{entry.nHE}, '
+                      f'{metaerg_entry.CUBHE:.3f}/{entry.CUBHE:.3f} '
+                      f'{metaerg_entry.consistency:.3f}/{entry.consistency:.3f} '
+                      f'{metaerg_entry.CPB:.3f}/{entry.CPB:.3f} '
+                      f'{entry.genome_id}')
+                count += 1
+                output.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(entry.genome_id,
+                                                                          entry.nHE,
+                                                                          entry.filtered,
+                                                                          entry.CUBHE,
+                                                                          entry.consistency,
+                                                                          entry.CPB,
+                                                                          entry.d,
+                                                                          metaerg_entry.nHE,
+                                                                          metaerg_entry.CUBHE,
+                                                                          metaerg_entry.consistency,
+                                                                          metaerg_entry.CPB,
+                                                                          ))
 
 
 if __name__ == "__main__":

@@ -19,6 +19,8 @@ GENOME_PROPERTY_FORMATS = {'size': ',',
                            '% CDS classified to taxon': '.1%',
                            '% of CDS classified to dominant taxon': '.1%',
                            'dominant taxon': '<',
+                           'codon usage bias': '.3f',
+                           'doubling_time (days)': '.1f'
                            }
 
 @context.register_html_writer

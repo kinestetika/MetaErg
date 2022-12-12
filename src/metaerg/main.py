@@ -17,6 +17,7 @@ from metaerg.datatypes import fasta, gbk
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
+from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
 from metaerg.run_and_read import *
 from metaerg.html import *
 
@@ -129,6 +130,9 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
         properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
         properties['dominant taxon'] = k
         break
+    codon_usage_bias, doubling_time = compute_codon_bias_estimate_doubling_time(feature_data)
+    properties['codon usage bias'] = codon_usage_bias
+    properties['doubling_time (days)'] = doubling_time
     properties['subsystems'] = functional_gene_configuration.aggregate(feature_data)
     return properties
 
