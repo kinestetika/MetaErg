@@ -214,8 +214,8 @@ COG3808|PLN02255|PLN02277|PRK00733 proton/sodium translocating pyrophosphatase
 
 >Respiration, Anaerobic, Dissimilatory Sulfate Reduction, Sulfate -> H2S
 PRK04149|COG2046|TIGR00339 sulfate adenylyltransferase (sat, ec:2.7.7.4)
-A0A0A7GDN9|A8MAT5|C8X4M7|C9RCT3|D5HFN4|F3YTT0|S6BVC5|W0SI19 aprA; adenylylsulfate reductase, subunit A (ec:1.8.99.2)
-A0A0M3TU33|A0A1K1LH60|A6M118|B1I2U0|C7NE97|C8X4M8|D3S0V2|F0QUP4|G4RNG3|L0KB20|N0BP05 aprB; adenylylsulfate reductase, subunit B (ec:1.8.99.2)
+TIGR02061 aprA; adenylylsulfate reductase, subunit A (ec:1.8.99.2)
+TIGR02060 aprB; adenylylsulfate reductase, subunit B (ec:1.8.99.2)
 TIGR02064 dsrA; dissimilatory sulfite reductase alpha subunit (ec:1.8.99.5)
 TIGR02066 dsrB; dissimilatory sulfite reductase beta subunit (ec:1.8.99.5)
 
@@ -225,14 +225,14 @@ PRK08221|TIGR02911 anaerobic sulfite reductase subunit B (asrB)
 TIGR02912 anaerobic sulfite reductase subunit C (asrC)
 
 >Respiration, Anaerobic, Dissimilatory Sulfur Reduction, Sulfur -> H2S
-C3MV16 sulfur reductase molybdopterin subunit (sreA)
-C3MP29 sulfur reductase FeS subunit (sreB)
-C3N2N9 sulfur reductase membrane anchor (sreC)
+#C3MV16 sulfur reductase molybdopterin subunit (sreA)
+#C3MP29 sulfur reductase FeS subunit (sreB)
+#C3N2N9 sulfur reductase membrane anchor (sreC)
 
 >Respiration, Anaerobic, Thiosulfate reduction, Thiosulfate -> H2S
-A0A0A8B468|A0A0K2SJC4|A0A1D7TP18|A0A1D8S6A5|A0L1C2|A0LNF8|A4ARY1|A7GZQ7|B3EPP4|B5YL37|B8DNR9|C6BWV8|C7MM00|D1B0I3|D4H8U3|E1QMF2|E4U7L0|E6VR87|F8E8N9|Q24QK7|Q2IL71|Q313L9|Q72FP0 thiosulfate reductase / polysulfide reductase chain A (phsA, psrA, ec:1.8.5.5)
-A9MLM9 thiosulfate reductase electron transport protein (phsB)
-A0A0S2HYL0|A0A1D8MUJ0|A0A1Z1SYV4 thiosulfate reductase cytochrome b subunit (phsC)
+PRK15488 thiosulfate reductase / polysulfide reductase chain A (phsA, psrA, ec:1.8.5.5)
+cd10551|cd10553 thiosulfate reductase electron transport protein (phsB, psrB)
+#A0A0S2HYL0|A0A1D8MUJ0|A0A1Z1SYV4 thiosulfate reductase cytochrome b subunit (phsC)
 
 >Assimilation, Sulfate Reduction, Sulfate  -> H2S
 PRK05124|TIGR02034 sulfate adenylyltransferase subunit 1 (cysN, ec:2.7.7.4)
@@ -243,7 +243,7 @@ TIGR00434 phosphoadenosine phosphosulfate reductase (cysH, ec:1.8.4.8, 1.8.4.10)
 TIGR02042 sulfite reductase (ferredoxin) (sir, ec:1.8.7.1)
 PRK03846|PRK00889 adenylylsulfate kinase (cysC, ec:2.7.1.25)
 PRK05506|PRK05537 bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC, ec:2.7.7.4,2.7.1.25)
-A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 PAPSS; 3'-phosphoadenosine 5'-phosphosulfate synthase (ec:2.7.7.4, 2.7.1.25)
+#A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 PAPSS; 3'-phosphoadenosine 5'-phosphosulfate synthase (ec:2.7.7.4, 2.7.1.25)
 
 >Respiration, Sulfide Oxidation, H2S -> Persulfide or sulfur
 A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 sqr; sulfide:quinone oxidoreductase (ec:1.8.5.4)
