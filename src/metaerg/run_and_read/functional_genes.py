@@ -1,5 +1,5 @@
 import os
-
+import shutil
 import pandas as pd
 from math import log10
 from pathlib import Path
@@ -128,6 +128,36 @@ def install_functional_gene_databases():
     (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)
     (hmm_dir / 'user_hmm').mkdir(exist_ok=True, parents=True)
     context.log(f'Installing functional gene hmm database at {hmm_dir}...')
+
+    current_working_dir = os.getcwd()
+    #fetch bd type oxygen reductases
+    bdor_dir = hmm_dir / 'bdor'
+    if bdor_dir.exists():
+        shutil.rmtree(bdor_dir)
+    bdor_dir.mkdir()
+    os.chdir(bdor_dir)
+    os.system('git init')
+    os.system('git remote add bdor https://github.com/ranjani-m/cytbd-superfamily.git')
+    os.system('git fetch bdor')
+    os.system('git checkout bdor/main -- Cytbd_HMM_2020_paper_version')
+    with open(hmm_dir / 'bdor.hmm', 'w') as writer:
+        for hmm_file in sorted((bdor_dir / 'Cytbd_HMM_2020_paper_version').glob('*.hmm')):
+            os.system(f'sed -i "s|^NAME.*|NAME  bdor_{hmm_file.stem}|" {hmm_file}')
+            context.run_external(f'/bio/bin/hmmer3/bin/hmmconvert {hmm_file}', stdout=writer)
+    #fetch heme copper oxidase hmms
+    hco_dir = hmm_dir / 'hco'
+    if hco_dir.exists():
+        shutil.rmtree(hco_dir)
+    hco_dir.mkdir()
+    os.chdir(hco_dir)
+    os.system('git init')
+    os.system('git remote add hco https://github.com/ranjani-m/HCO.git')
+    os.system('git fetch hco')
+    os.system('git checkout hco/main -- HMM')
+    with open(hmm_dir / 'hco.hmm', 'w') as writer:
+        for hmm_file in sorted((hco_dir / 'HMM').glob('*.hmm')):
+            os.system(f'sed -i "s|^NAME.*|NAME  hco_{hmm_file.stem}|" {hmm_file}')
+            context.run_external(f'/bio/bin/hmmer3/bin/hmmconvert {hmm_file}', stdout=writer)
 
     with futures.ThreadPoolExecutor() as executor:
         outcomes = []

@@ -5,6 +5,17 @@ from shutil import which
 
 
 def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path):
+    # check for required programs
+    success = True
+    for cmd in 'git make gcc tar wget perl sed'.split():
+        if cmd_loc := which(cmd):
+            print(f'{cmd}: will use {cmd_loc}')
+        else:
+            print(f'{cmd}: not found. Please install first using your system\'s package manager.')
+    if not success:
+        print('aborted installation of helper programs.')
+        return
+
     # Create the profile file.
     # To "activate" your metaerg installation, you will need to run, for example:
     # >source /home/my_name/bin/metaerg/bin/profile
