@@ -35,7 +35,7 @@ def init_functional_gene_config():
     global DATAFRAME_INDEX, SUBSYSTEM_DATA
     subsystems = []
     index_data = []
-    base_config_file = Path(__file__).parent / 'functional_gene_data'
+    base_config_file = Path(__file__).parent / 'run_and_read' / 'data' / 'functional_gene_data'
     parse_functional_gene_config_file(base_config_file, subsystems, index_data)
     user_config_dir = context.DATABASE_DIR / 'user_config'
     if user_config_dir.exists() and user_config_dir.is_dir():
