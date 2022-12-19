@@ -74,7 +74,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_canthyd():
     return ({'pipeline_position': 101,
-             'purpose': 'identification of functional genes with canthyd and metascan databases',
+             'purpose': 'identification of functional genes with HMMs',
              'programs': ('hmmscan',),
              'databases': (Path('hmm', 'functional_genes.hmm'),),
              'result_files': ('hmm',),

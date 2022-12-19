@@ -378,7 +378,6 @@ A0A1D7VYV8|A0A1D8UYA1|A0A1L6L960|Q2T435 fdhA; glutathione-independent formaldehy
 A0A072TLN4|A0A075AI99|A0A0D4DRT2|A0A0D4DU08|A0A0G3BL94|A0A0N7GSZ5|A0A0N9UG39|A0A1S3CMH6|A0A223S4F0|A0A238UBL7|A0A2I7YCN4|A0QRJ4|A0QXQ6|A1RCH0|A2BSH4|B3QIY4|B6JE72|B9KZ54|C5MIE3|D2AYW6|D5UTJ6|D8RVY7|E3IWK7|F2RIT6|F4CXK3|G4YYD7|G8N5E9|G8RJY5|I0IG60|I4F569|Q0RF44|Q24T09|Q9S247|R4UTE1|V4MF99 frmA, ADH5, adhC; S-(hydroxymethyl)glutathione dehydrogenase / alcohol dehydrogenase (ec:1.1.1.284,1.1.1.1)
 A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A1W6SSV6|B4GL76|F0Q5P0|F8NDK2|G0V7N5|J9JXA8|K8Z4L7|Q7RXB4|R7Q7V5 frmB, ESD, fghA; S-formylglutathione hydrolase (ec:3.1.2.12)
 A0A0H4KNW2 E1.1.1.306; S-(hydroxymethyl)mycothiol dehydrogenase (EC:1.1.1.306) (ec:1.1.1.306)
-A0A088T3F5|G2IT80|G3J8I7|T1Y6K1|W3X3E6 FDH; formate dehydrogenase (ec:1.17.1.9)
 A0A023X718|A0A068N9Q3|A0A0B6RZM4|A0A0C6FTJ4|A0A0D6JJF6|A0A0E3MGR3|A0A0F6SQ63|A0A0K2DDG9|A0A0M5ME63|A0A0S4PYI0|A0A0U5LF32|A0A1B3NK24|A0A1D7U0F1|A0A1D7W8Z2|A0A1D8GA19|A0A1D9GJZ1|A0A1N7CR67|A0A1P8F5L2|A3MT64|A5G6W3|A7H0E9|A9BF64|B0S2H9|B2UA19|B2UJH6|B4UMJ7|B8DLA6|B8DQZ4|B9LN92|C0QAZ5|C0QLZ4|C1B585|C5CWS8|C7MPH8|D1CF24|D5AQH0|D5WB02|D7CNB2|D8J9A1|D9S0A1|E1QIG7|F2KRH5|F6B9K3|F8BUM2|G0LGB2|G8LXD8|I0IQ25|I3ZCM8|I4BYB4|J9YVK1|O59078|Q1LJP2|Q3ADY7|Q609M3|Q65UM1|Q9HL15|W0JWZ6 fdoG, fdhF, fdwA; formate dehydrogenase major subunit (ec:1.17.1.9)
 A0A0A8K7Y2|A0A0K1JD12|A0A142XBS7|A1WBG0|B9MEW2 fdwB; formate dehydrogenase beta subunit (ec:1.17.1.9)
 A0A0F2L431|A0A126T7A4|A0A142XDM2|A0A142YF20|A0A1C7HH88|A0A1L7CRZ4|A0A1P8F5R7|A0A220UHP8|A0A2C8FCT2|A5D1I8|A6W8F0|B1XTZ4|B8DQZ5|B8FUK5|B9M612|C6E0Q1|C7LUC7|D6XSE6|G4RJU7|I0ENQ6|K4LIF1|M0LVJ8|O67147|Q728X1|S5YGD5 fdoH, fdsB; formate dehydrogenase iron-sulfur subunit
@@ -447,7 +446,7 @@ A0A0S2KDX2|A0A0U5EVY4|A0A143QKN5|F4ANA5|G4RF04 methylamine dehydrogenase light c
 A0A0B5DX78|A0A0C4YG08|A0A1B3E829|A0A291N2S9|A0A291PDR0|A1BB97|B5ZF45|E1TJR4|F6IE79|K0CBH2 methylamine dehydrogenase heavy chain (mauB, ec:1.4.9.1)
 
 >Respiration, Hydrogenases Fe-Fe
-COG4624|TIGR02512|TIGR04105 Fe/Fe (iron only) hydrogenase
+COG4624|TIGR02512|TIGR04105 FeFe (iron only) hydrogenase catch-all
 WP_002568840 FeFehyd; hydrogenase, group A1
 WP_002727095 FeFehyd; hydrogenase, group A2
 WP_016268012 FeFehyd; hydrogenase, group A3
@@ -458,53 +457,37 @@ WP_002848484 FeFehyd; hydrogenase, group C2
 AIO18481 FeFehyd; hydrogenase, group C3
 WP_004030875 FeFehyd; hydrogenase, group Fe
 
->Respiration, Hydrogenases NI-Fe
-COG3259|TIGR03295 Coenzyme F420-reducing hydrogenase, alpha subunit (FrhA)
-TIGR03289|COG1035 Coenzyme F420-reducing hydrogenase, beta subunit (FrhB)
-COG1908|TIGR00130 Coenzyme F420-reducing hydrogenase, delta subunit (FrhD)
-COG1941|TIGR03294 Coenzyme F420-reducing hydrogenase, gamma subunit  (FrhG)
-COG4042 NiFe-hydrogenase-type-3 Eha subunit A (EhaA)
-COG4041 NiFe-hydrogenase-type-3 Eha subunit B (EhaB)
-COG4039 NiFe-hydrogenase-type-3 Eha subunit C (EhaC)
-COG4038 NiFe-hydrogenase-type-3 Eha subunit E (EhaE)
-COG4037|PRK06277 NiFe-hydrogenase-type-3 Eha subunit F (EhaF)
-COG4036 NiFe-hydrogenase-type-3 Eha subunit G (EhaG)
-COG4078 NiFe-hydrogenase-type-3 Eha subunit H (EhaH)
-COG1142 Fe-S-cluster-containing hydrogenase component 2 (HycB)
-PRK07571 bidirectional hydrogenase complex protein (HoxE)
-PRK07569 bidirectional hydrogenase complex protein (HoxU)
-PRK08345 cytochrome-c3 hydrogenase subunit gamma
-NF033181 nickel-dependent hydrogenase large subunit
-TIGR00391 NiFe hydrogenase small subunit (hupA/hydA/hupS/hoxK/vhtG)
-WP_015407385 NiFehyd; hydrogenase, group Ia
-WP_012675774 NiFehyd; hydrogenase, group Ib
-WP_011688559 NiFehyd; hydrogenase, group Ic
-WP_023457248 NiFehyd; hydrogenase, group Id
-WP_008030254 NiFehyd; hydrogenase, group Ie
-WP_015898101 NiFehyd; hydrogenase, group If
-WP_011822511 NiFehyd; hydrogenase, group Ig
-WP_014267363 NiFehyd; hydrogenase, group Ih
-WP_022740096 NiFehyd; hydrogenase, group Ii
-WP_010878877 NiFehyd; hydrogenase, group Ij
-WP_012036281 NiFehyd; hydrogenase, group Ik
-WP_011603008 NiFehyd; hydrogenase, group IIa
-WP_011714112 NiFehyd; hydrogenase, group IIb
-WP_011383527.1 NiFehyd; hydrogenase, group IIc
-WP_010880487 NiFehyd; hydrogenase, group IId
-WP_012020882.1 NiFehyd; hydrogenase, group IIe
-WP_022846160 NiFehyd; hydrogenase, group IIIa
-WP_011719855 NiFehyd; hydrogenase, group IIIb
-WP_013637988 NiFehyd; hydrogenase, group IIIc
-WP_011686721 NiFehyd; hydrogenase, group IIId
-WP_022739022 NiFehyd; hydrogenase, group IVa
-WP_011388069 NiFehyd; hydrogenase, group IVb
-WP_026783288 NiFehyd; hydrogenase, group IVc
-WP_014122750 NiFehyd; hydrogenase, group IVd
-WP_022739883 NiFehyd; hydrogenase, group IVe
-WP_018133527 NiFehyd; hydrogenase, group IVf
-WP_013129492 NiFehyd; hydrogenase, group IVg
-WP_011018833 NiFehyd; hydrogenase, group IVh
-WP_004029221 NiFehyd; hydrogenase, group IVi
+>Respiration, Hydrogenases Ni-Fe
+COG3259|TIGR03295|NF033181|COG4042 NiFe hydrogenase catch-all
+WP_015407385 NiFe hydrogenase group Ia
+WP_012675774 NiFe hydrogenase group Ib
+WP_011688559 NiFe hydrogenase group Ic
+WP_023457248 NiFe hydrogenase group Id
+WP_008030254 NiFe hydrogenase group Ie
+WP_015898101 NiFe hydrogenase group If
+WP_011822511 NiFe hydrogenase group Ig
+WP_014267363 NiFe hydrogenase group Ih
+WP_022740096 NiFe hydrogenase group Ii
+WP_010878877 NiFe hydrogenase group Ij
+WP_012036281 NiFe hydrogenase group Ik
+WP_011603008 NiFe hydrogenase group IIa
+WP_011714112 NiFe hydrogenase group IIb
+WP_011383527.1 NiFe hydrogenase group IIc
+WP_010880487 NiFe hydrogenase group IId
+WP_012020882.1 NiFe hydrogenase group IIe
+WP_022846160 NiFe hydrogenase group IIIa
+WP_011719855 NiFe hydrogenase group IIIb
+WP_013637988 NiFe hydrogenase group IIIc
+WP_011686721 NiFe hydrogenase group IIId
+WP_022739022 NiFe hydrogenase group IVa
+WP_011388069 NiFe hydrogenase group IVb
+WP_026783288 NiFe hydrogenase group IVc
+WP_014122750 NiFe hydrogenase group IVd
+WP_022739883 NiFe hydrogenase group IVe
+WP_018133527 NiFe hydrogenase group IVf
+WP_013129492 NiFe hydrogenase group IVg
+WP_011018833 NiFe hydrogenase group IVh
+WP_004029221 NiFe hydrogenase group IVi
 
 >Respiration, Anaerobic, Chlorite and related
 TIGR02486|A0A1D7TK12 rdh, pceA ; Tetrachloroethene reductive dehalogenase catalytic subunit PceA (ec:1.21.99.5)
@@ -657,18 +640,18 @@ AhyA DESC  molybdopterin-family alkane C2 methylene hydroxylase
 sBmoZ undefined hydrocarbon degradation gene sBmoZ
 
 >Metabolism, Fatty Acids
-PRK14656|PRK14657|PRK14659|PRK14660|PRK14661|PRK14663|TIGR00516 holo-[acyl-carrier-protein] synthase (acpS)
+PRK14656|PRK14657|PRK14659|PRK14660|PRK14661|PRK14663|TIGR00516 holo-acyl-carrier-protein synthase (acpS)
 TIGR01749|COG0764|cd01287 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabA)
 TIGR00128|COG0331 malonyl CoA-acyl carrier protein transacylase (FabD)
 TIGR03150 beta-ketoacyl-acyl-carrier-protein synthase II (FabF)
-TIGR00747|COG0332|CHL00203 3-oxoacyl-[acyl-carrier-protein] synthase III (FabH)
-TIGR03151|PLN02730|PRK06079|PRK06505|PRK06603|PRK06997|PRK07370|PRK07533|PRK07889|PRK08063|PRK08159|PRK08415|PRK08594|PRK08690 enoyl-[acyl-carrier-protein] reductase (FabI)
+TIGR00747|COG0332|CHL00203 3-oxoacyl-acyl-carrier-protein synthase III (FabH)
+TIGR03151|PLN02730|PRK06079|PRK06505|PRK06603|PRK06997|PRK07370|PRK07533|PRK07889|PRK08063|PRK08159|PRK08415|PRK08594|PRK08690 enoyl-acyl-carrier-protein reductase (FabI)
 TIGR01750|PRK00006|cd01288 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabZ)
 TIGR02445|pfam09403|PRK08947 acetyl-CoA C-acyltransferase (FadA)
 TIGR02437|PRK11730|COG1250 fatty oxidation complex, alpha subunit (FadB)
-PRK05557|PRK05565|PRK05786|PRK06077|PRK06463|PRK06550|PRK07666|PRK07792|PRK08217|PRK08261|PRK08642|PRK12825 3-oxoacyl-[acyl-carrier protein] reductase (FabG)
-PRK08063 enoyl-[acyl-carrier-protein] reductase (FabL)
-PRK13656 enoyl-[acyl-carrier-protein] reductase (FabV)
+PRK05557|PRK05565|PRK05786|PRK06077|PRK06463|PRK06550|PRK07666|PRK07792|PRK08217|PRK08261|PRK08642|PRK12825 3-oxoacyl-acyl-carrier protein reductase (FabG)
+PRK08063 enoyl-acyl-carrier-protein reductase (FabL)
+PRK13656 enoyl-acyl-carrier-protein reductase (FabV)
 
 >Metabolism, Inositol Phosphate Biosynthesis
 pfam16670|PLN02222|PLN02223|PLN02230|PLN02952 phosphoinositide phospholipase C (EC 3.1.4.11)
@@ -736,10 +719,10 @@ TIGR04535 ferritin-like protein
 >Crispr-Cas systems, CAS-I
 # see https://www.nature.com/articles/nature21059
 DEDDh DEDDh (cd06127) DEDDh 3'-5' exonuclease domain family
-PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family [General function prediction only]
-PrimPol PrimPol (COG4951) Uncharacterized protein [Function unknown]
+PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
+PrimPol PrimPol (COG4951) Uncharacterized protein
 RT RT (pfam00078) Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains  [Transcription]
+WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
 cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
 cas2 cas2 (cd09638) CRISPR/Cas system-associated protein Cas2
 cas3 cas3 (cd09639) CRISPR/Cas system-associated protein Cas3
@@ -827,10 +810,10 @@ cas9 cas9 (cd09643) CRISPR/Cas system-associated protein Cas9
 cas9 cas9 (cd09643) CRISPR/Cas system-associated protein Cas9
 
 >Crispr-Cas systems, CAS-III
-PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family [General function prediction only]
-PrimPol PrimPol (COG4951) Uncharacterized protein [Function unknown]
+PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
+PrimPol PrimPol (COG4951) Uncharacterized protein
 RT RT (pfam00078) Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains  [Transcription]
+WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
 cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
 cas10 cas10 (cd09679) CRISPR/Cas system-associated protein Cas10
 cas2 cas2 (cd09638) CRISPR/Cas system-associated protein Cas2

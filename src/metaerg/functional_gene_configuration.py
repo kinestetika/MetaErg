@@ -74,15 +74,18 @@ def cleanup_subsystem_str(subsystem_str: str) -> str:
     for s in re.split(r'\s(?=\[)', subsystem_str):  # split at space if followed by [
         s = s.strip()[1:-1]
         if '|' in s:
-            gene_subsystem, gene_function, confidence = s.split('|')
-            confidence = float(confidence)
-            hash_str = f'{gene_subsystem}|{gene_function}'
             try:
+                gene_subsystem, gene_function, confidence = s.split('|')
+                confidence = float(confidence)
+                hash_str = f'{gene_subsystem}|{gene_function}'
                 prev_confidence = collected_subsystems[hash_str]
                 if confidence > prev_confidence:
                     collected_subsystems[hash_str] = confidence
             except KeyError:
                 collected_subsystems[hash_str] = confidence
+            except ValueError:
+                context.log(f'Error cleaning up subsystem "{s}"')
+
         else:
             collected_subsystems[s] = 0
     subsystem_str = ' '.join((f'[{val[0]}|{val[1]:.1f}]' for val in sorted(collected_subsystems.items(),

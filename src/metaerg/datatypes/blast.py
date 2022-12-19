@@ -65,7 +65,7 @@ class BlastHit:
         return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for (k, v) in self))
 
     def __len__(self):
-        return self.aligned_length
+        return max(self.aligned_length, 1)
 
 
 class BlastResult:
@@ -139,7 +139,6 @@ class TabularBlastParser:
                 case [query, hit, percent_id, aligned_length, mismatches, gaps, query_start, query_end, hit_start,
                       hit_end, evalue, score] if 'BLAST' == self.mode:
                     hit_db_entry = self.retrieve_db_entry(hit)
-                    # print(hit_db_entry)
                     b = BlastHit(query, hit_db_entry, float(percent_id), int(aligned_length), int(query_start),
                                  int(query_end), int(hit_start), int(hit_end), float(evalue), float(score),
                                  int(mismatches), int(gaps))
