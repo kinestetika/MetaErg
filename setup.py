@@ -26,7 +26,7 @@ setuptools.setup(
     package_dir={'': 'src'},
     package_data={'': ['functional_gene_data']},
     python_requires='>=3.10',
-    install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx', 'virtualenv', 'h5py', 'pyarrow', 'openpyxl'],
+    install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx', 'virtualenv', 'h5py', 'pyarrow', 'openpyxl', 'tqdm'],
     extras_require={  # Optional
         'dev': ['setuptools', 'build', 'twine'],
         'test': []
