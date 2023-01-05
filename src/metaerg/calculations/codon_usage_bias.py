@@ -10,6 +10,7 @@ from collections import namedtuple
 
 from tqdm import tqdm
 
+import context
 from metaerg.datatypes.fasta import FastaParser
 from metaerg.datatypes import ncbi_ftp
 
@@ -190,6 +191,9 @@ def compute_codon_bias_estimate_doubling_time(feature_data: pd.DataFrame):
     feature_data = feature_data[feature_data['type'] == 'CDS']
     filtered_feature_data = feature_data[feature_data['aa_seq'].str.len() >= 80]
     ribosomal_proteins = feature_data[feature_data['subsystems'].str.contains('ribosomal protein')]
+    if not len(ribosomal_proteins.index):
+        context.log('Warning: No ribosomomal proteins for genome.')
+        return 0, 0
     # codon usage bias
     background_frequencies = compute_codon_frequencies_for_feature_data(filtered_feature_data)
     codon_usage_bias = median([compute_codon_usage_bias_for_feature(rp, background_frequencies)
