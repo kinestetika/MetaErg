@@ -10,7 +10,7 @@ from collections import namedtuple
 
 from tqdm import tqdm
 
-import context
+from metaerg import context
 from metaerg.datatypes.fasta import FastaParser
 from metaerg.datatypes import ncbi_ftp
 
