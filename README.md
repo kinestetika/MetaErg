@@ -31,10 +31,14 @@ The Metaerg 2.3 pipeline ...
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
 * annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and HMM profiles from [MetaScan](https://github.com/gcremers/metascan), [HydDB](https://services.birc.au.dk/hyddb/) and [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation).
+* assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and commmunity contributed HMM profiles (see below).
+* estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 * saves annotations as a fasta-amino-acid file, a genbank file and in [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) for effective exploration, statistics and visualization with python or R.
-* enables the user to add custom HMMs and expand the set of functional genes as needed. 
+* saves an overview of all annotated genomes' properties and functions as an excel file. 
+* enables the user to add custom HMMs and expand the set of functional genes as needed.
+
+When using metaerg, please cite [Xiaoli Dong and Marc Strous (2019) Frontiers in Genetics](https://www.frontiersin.org/articles/10.3389/fgene.2019.00999/full)
 
 ## Usage:
 ```
@@ -81,7 +85,15 @@ The database was created from the following sources:
 * [RFAM](https://rfam.xfam.org/) and [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml) databases are also used.
 * Specialized function databases - [Cant-Hyd](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation/blob/main/HMMs/concatenated%20HMMs/CANT-HYD.hmm) and [MetaScan](https://zenodo.org/record/6365663).
 
-If you for some reason need to build this database yourself (this is usually not needed as the metaerg database can be 
+Community contributed HMM profiles are sourced from:
+* [HydDB](https://services.birc.au.dk/hyddb/) (Hydrogenase Families): Pleas cite [this](https://www.nature.com/articles/srep34212) paper.
+* [CANT-HYD](https://github.com/dgittins/CANT-HYD-HydrocarbonBiodegradation) (Genes involved in hydrocarbon degradation): Pleas cite [this](https://www.frontiersin.org/articles/10.3389/fmicb.2021.764058/full) paper.
+* [MetaScan](https://github.com/gcremers/metascan) (Various catabolisms): Pleas cite [this](https://www.frontiersin.org/articles/10.3389/fbinf.2022.861505/full?field=&journalName=Frontiers_in_Bioinformatics&id=861505) paper.
+* [CRISPR-CAS genes](https://www.nature.com/articles/nature21059): Pleas cite [this](https://www.nature.com/articles/nature21059) paper.
+* [Heme Copper Oxidase Families](https://github.com/ranjani-m/HCO): Pleas cite [this](https://www.biorxiv.org/content/10.1101/2021.10.15.464467v2.abstract) preprint.
+* [Cytochrome bd oxygen reductases](https://github.com/ranjani-m/cytbd-superfamily): Pleas cite [this](https://www.nature.com/articles/s41396-021-01019-4) paper.
+
+If you for some reason need to build the database yourself (this is usually not needed as the metaerg database can be 
 downloaded as shown above):
 
 ```
@@ -95,7 +107,7 @@ with tasks:
 * B - build PVE blast databases
 * R - build RFAM
 * C - build CDD
-* S - build specialized functional databases
+* S - build/update community contributed HMM databases
 * A - build antismash database
 
 ## Using the .feather output
