@@ -21,7 +21,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.7"
+VERSION = "2.3.8"
 
 
 def parse_arguments():
@@ -175,6 +175,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     for html_writer in registry.HTML_WRITER_REGISTRY:
         html_writer(genome_name, feature_data, genome_properties, context.HTML_DIR)
     # (5) update progress
+    current_progress = context.parse_metaerg_progress(genome_name)
     current_progress += 'visualization=complete\n'
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
