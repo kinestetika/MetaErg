@@ -215,8 +215,8 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         log(exec)
     result = subprocess.run(exec.split(), stdout=stdout, stdin=stdin, stderr=stderr)
     if result.returncode != 0:
-        log(f'WARNING: Error while trying to run "{exec}"')
         print(result.stderr)
+        raise Exception(f'WARNING: "{exec}" exited with non-zero status')
 
 
 def download(url: str, file: Path):
@@ -230,28 +230,56 @@ def sorted_annotators():
     return (registry.ANNOTATOR_REGISTRY[a] for a in sorted(list(registry.ANNOTATOR_REGISTRY.keys())))
 
 
+def parse_metaerg_progress(genome_name):
+    progress_file = spawn_file('metaerg_progress', genome_name)
+    progress = ''
+    if progress_file.exists():
+        with open(progress_file) as progress_reader:
+            for line in progress_reader:
+                progress += line
+    return progress
+
+
+def write_metaerg_progress(genome_name, new_progress):
+    progress_file = spawn_file('metaerg_progress', genome_name)
+    with open(progress_file, 'w') as writer:
+        writer.write(new_progress)
+
+
 def register_annotator(define_annotator):
     param = define_annotator()
 
     def annotator(genome_name, contig_dict, feature_data) -> pd.DataFrame:
         """Runs programs and reads results."""
+        # (1) Read metaerg progress file, udpdate progress and log the start of the analysis
+        current_progress = parse_metaerg_progress(genome_name)
+        if not '{}=complete'.format(param['annotator_key']) in current_progress:
+            current_progress += '{}=started\n'.format(param['annotator_key'])
+            write_metaerg_progress(genome_name, current_progress)
         log('({}) Starting {} ...', (genome_name, param['purpose']))
-        # (1) Make sure required databases are available
+
+        # (2) Make sure required databases are available
         for d in param.get('databases', []):
             d = DATABASE_DIR / d
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
                                                                                        param['purpose'], d))
                 return feature_data
-        # (2) Then, if force or the results files are not yet there, run the programs:
+        # (3) Then, if force or the results files are not yet there, run the programs:
         result_files = [spawn_file(f, genome_name) for f in param.get('result_files', [])]
-        previous_results_missing = False
+        analysis_already_completed = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
-                previous_results_missing = True
+                analysis_already_completed = False
                 break
-        if FORCE or previous_results_missing:
-            # (2) make sure that the helper programs are available:
+        # (4) check if we tried to run this analysis before without completing...
+        if '{}=started'.format(param['annotator_key']) in current_progress:
+            analysis_already_completed = False
+        elif '{}=complete'.format(param['annotator_key']) in current_progress:
+            analysis_already_completed = True
+
+        if FORCE or not analysis_already_completed:
+            # (5) make sure that the helper programs are available:
             all_programs_in_path = True
             p = 'X'
             for p in param.get('programs', []):
@@ -259,20 +287,31 @@ def register_annotator(define_annotator):
                 if not program_path:
                     all_programs_in_path = False
             if all_programs_in_path:
-                param['run'](genome_name, contig_dict, feature_data, result_files)
+                try:
+                    param['run'](genome_name, contig_dict, feature_data, result_files)
+                except Exception as e:
+                    log('({}) Error while running {}: {}', (genome_name, param['purpose'], str(e)))
+                    return feature_data
             else:
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
                 return feature_data
-        elif len(param.get('programs', [])):  # check if any previous results were expected
+        elif len(param.get('programs', [])):  # before logging this, do check if any result files will be parsed
             log('({}) Reusing existing results in {}.'. format(genome_name,
                                                               ', '.join(str(file) for file in result_files)))
-        # (4) If all results files are there, read the results:
-        all_results_created = True
+        # (6) Check if all results files are there, otherwise return:
+        results_complete = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
-                log('({}) Missing expected result file {}.', (genome_name, f))
-                return feature_data
-        feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
+                log('({}) Missing expected result file {}; this could mean no results were found or that a '
+                    'helper program failed to run.', (genome_name, f))
+                results_complete = False
+        # (7) Report success, update progress
+        current_progress = current_progress.replace('{}=started'.format(param['annotator_key']),
+                                                    '{}=complete'.format(param['annotator_key']))
+        write_metaerg_progress(genome_name, current_progress)
+        positive_count = 0
+        if results_complete:
+            feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
         log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
         return feature_data
 

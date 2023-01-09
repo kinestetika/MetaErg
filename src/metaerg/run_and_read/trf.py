@@ -41,6 +41,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 41,
+             'annotator_key': 'trf',
              'purpose': 'tandem repeat prediction with trf',
              'programs': ('trf',),
              'result_files': ('tandem-repeat-finder',),

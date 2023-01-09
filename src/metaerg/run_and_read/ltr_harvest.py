@@ -29,6 +29,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_ltr_harvest():
     return ({'pipeline_position': 31,
+             'annotator_key': 'ltr_harvest',
              'purpose': 'retrotransposon prediction with ltrharvest',
              'programs': ('gt',),
              'result_files': ('ltr_harvest',),

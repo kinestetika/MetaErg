@@ -57,6 +57,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 91,
+             'annotator_key': 'antismash',
              'purpose': 'prediction of secondary metabolite genes with antismash',
              'programs': ('antismash',),
              'result_files': ('antismash',),

@@ -26,6 +26,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_minced():
     return ({'pipeline_position': 1,
+             'annotator_key': 'minced',
              'purpose': 'CRISPR prediction with minced',
              'programs': ('minced',),
              'result_files': ("minced",),

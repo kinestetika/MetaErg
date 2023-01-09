@@ -102,6 +102,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_cmscan():
     return ({'pipeline_position': 21,
+             'annotator_key': 'cmscan',
              'purpose': 'noncoding (RNA) gene prediction with cmscan',
              'programs': ('cmscan',),
              'result_files': ("cmscan",),

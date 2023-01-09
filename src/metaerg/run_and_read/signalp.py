@@ -58,6 +58,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_signalp():
     return ({'pipeline_position': 121,
+             'annotator_key': 'signalp',
              'purpose': 'signal peptide prediction with signalp',
              'programs': ('signalp6',),
              'result_files': ('signalp',),

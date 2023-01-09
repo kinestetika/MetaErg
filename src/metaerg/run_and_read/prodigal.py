@@ -82,6 +82,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_prodigal():
     return ({'pipeline_position': 61,
+             'annotator_key': 'prodigal',
              'purpose': 'coding sequence prediction with prodigal',
              'programs': ('prodigal',),
              'result_files': ('prodigal','prodigal-nucl'),

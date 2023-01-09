@@ -102,6 +102,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_diamond_blastn():
     return ({'pipeline_position': 81,
+             'annotator_key': 'diamond_and_blastn',
              'purpose': 'function prediction and taxonomic classification of genes with diamond and blastn',
              'programs': ('diamond', 'blastn'),
              'databases': (Path(DB_PROTEINS_FILENAME + '.dmnd'),

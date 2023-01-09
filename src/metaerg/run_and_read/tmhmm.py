@@ -45,6 +45,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_tmhmm():
     return ({'pipeline_position': 111,
+             'annotator_key': 'tmhmm',
              'purpose': 'transmembrane helix prediction with tmhmm',
              'programs': ('tmhmm',),
              'result_files': ('tmhmm',),

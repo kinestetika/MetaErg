@@ -139,6 +139,10 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
 
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
+    current_progress = context.parse_metaerg_progress(genome_name)
+    if 'visualization=complete' in current_progress:
+        context.log(f'({genome_name}) already completed!')
+        return
     # (1) prepare dataframe
     feature_data = pd.DataFrame(columns=context.DATAFRAME_COLUMNS)
     # (2) load sequence data
@@ -170,6 +174,9 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
         html_writer(genome_name, feature_data, genome_properties, context.HTML_DIR)
+    # (5) update progress
+    current_progress += 'visualization=complete\n'
+    context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
 
 

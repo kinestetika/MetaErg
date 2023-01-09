@@ -107,6 +107,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_repeatmasker():
     return ({'pipeline_position': 51,
+             'annotator_key': 'repeat_masker',
              'purpose': 'repeat prediction with repeatmasker',
              'programs': ('build_lmer_table', 'RepeatScout', 'filter-stage-1.prl', 'RepeatMasker'),
              'result_files': ('repeatmasker',),

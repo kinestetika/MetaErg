@@ -69,6 +69,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_cdd():
     return ({'pipeline_position': 71,
+             'annotator_key': 'cdd',
              'purpose': 'function prediction using RPSBlast and the conserved domain database',
              'programs': ('rpsblast',),
              'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd.pal')),

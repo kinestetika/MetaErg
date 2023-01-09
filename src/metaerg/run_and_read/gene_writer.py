@@ -35,6 +35,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 @context.register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 66,
+             'annotator_key': 'write_genes',
              'purpose': 'feature ID generation',
              'programs': (),
              'result_files': (),
