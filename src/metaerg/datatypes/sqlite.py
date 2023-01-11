@@ -5,7 +5,7 @@ from metaerg.datatypes.blast import BlastResult, BlastHit, DBentry
 FEATURE_FIELDS = tuple('id genome contig start end strand type inference subsystems descr taxon notes ' \
                     'aa_seq nt_seq antismash signal_peptide tmh tmh_topology blast cdd hmm'.split())
 RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
-SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE features(
+SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE {}}(
     id TEXT,
     genome TEXT,
     contig TEXT,
@@ -115,7 +115,6 @@ class Feature:
     def length_aa(self):
         return (self.end - self.start) // 3
 
-
 def feature_factory(cursor, row) -> Feature:
     fields = [column[0] for column in cursor.description]
     return Feature(**{key: value for key, value in zip(fields, row)})
@@ -129,7 +128,7 @@ def create_db(sql_db_file):
     sql_db_file.unlink(missing_ok=True)
     connection = sql.connect(sql_db_file)
     cursor = connection.cursor()
-    cursor.execute(SQLITE_CREATE_TABLE_SYNTAX.format('prelim_features'))
+    cursor.execute(SQLITE_CREATE_TABLE_SYNTAX.format('features'))
 
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
@@ -159,6 +158,13 @@ def drop_feature(sql_connection, feature: Feature):
                    (feature.genome, feature.contig, feature.start, feature.end, feature.strand, feature.type,
                     feature.inference))
     sql_connection.commit()
+
+def count_features(sql_connection):
+    cursor = sql_connection.cursor()
+    result = cursor.execute('sp_spaceused features')
+    return result.fetchone()
+    # sum(1 for f in read_all_features(sql_connection))
+    # select Count(1) from features
 
 def read_feature_by_id(sql_connection, feature_id) -> Feature:
     cursor = sql_connection.cursor()

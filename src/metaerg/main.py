@@ -92,7 +92,7 @@ def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=Fa
     return contigs
 
 
-def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.DataFrame) -> dict:
+def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> dict:
     properties = {}
     contigs:list[dict] = list(contig_dict.values())
     contigs.sort(key=lambda c:len(c['seq']), reverse=True)
@@ -106,11 +106,28 @@ def compute_genome_properties(contig_dict: dict[str, dict], feature_data: pd.Dat
             properties['N50'] = len(c['seq'])
             break
 
-    feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
-    feature_data_cds = feature_data[feature_data['type'] == 'CDS']
-    feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
+    #feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
+    #feature_data_cds = feature_data[feature_data['type'] == 'CDS']
+    #feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
 
-    properties['# proteins'] = len(feature_data_cds.index)
+    for feature in sqlite.read_all_features(db_connection):
+        if feature.type == 'CDS':
+            properties['# proteins'] += 1
+            properties['% coding'] += feature.length_nt()
+            properties['mean protein length (aa)'] += feature.length_aa()
+        elif feature.type == 'rRNA':
+            properties['# ribosomal RNA'] += 1
+        elif feature.type == 'tRNA':
+            properties['# transfer RNA'] += 1
+        elif feature.type == 'ncRNA':
+            properties['# non-coding RNA'hist   ] += 1
+        elif feature.type == 'retrotransposon':
+            properties['# ribosomal RNA'] += 1
+        elif feature.type == 'crispr_repeat':
+            properties['# ribosomal RNA'] += 1
+        elif feature.type == 'repeat':
+            properties['# ribosomal RNA'] += 1
+
     properties['% coding'] = feature_data_cds['length'].sum() / properties['size']
     properties['mean protein length (aa)'] = feature_data_cds['length'].mean() / 3
     properties['# ribosomal RNA'] = len(feature_data[feature_data['type'] == 'rRNA'].index)
@@ -146,31 +163,36 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (1) prepare sqlite3 database
     db_file = context.spawn_file(genome_name, 'sqlite_db')
     db_connection = sqlite.connect_to_db(db_file)
-    #feature_data = pd.DataFrame(columns=sqlite.FEATURE_FIELDS)
     # (2) load sequence data
     contig_dict = load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
                                min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
     # (3) now annotate
     for annotator in context.sorted_annotators():
-        feature_data = annotator(genome_name, contig_dict, feature_data)
+        annotator(genome_name, contig_dict, db_connection)
     # feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
     # feature_data = pd.read_feather(feather_file)
     # feature_data = feature_data.set_index('id', drop=False)
 
     # (4) save results
-    context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk and .feather...')
+    context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk...')
     faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
     rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
     fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR)
     feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
-    fasta.write_features_to_fasta(feature_data, 'aa', faa_file, targets=('CDS',))
-    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
-    fasta.write_contigs_to_fasta(contig_dict, fna_file)
+    fasta.write_features_to_fasta(db_connection, 'aa', faa_file, targets=('CDS',))
+    fasta.write_features_to_fasta(db_connection, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
+    fasta.write_contigs_to_fasta(contig_dict, fna_file, db_connection)
     with open(gbk_file, 'w') as gbk_writer:
-        gbk.gbk_write_genome(gbk_writer, contig_dict, feature_data)
-    feature_data = feature_data.reset_index(drop=True)
-    feature_data.to_feather(feather_file)
+        gbk.gbk_write_genome(gbk_writer, contig_dict, db_connection)
+    if feature_count:= sqlite.count_features(db_connection) < 1e6:
+        context.log(f'({genome_name}) Writing {feature_count} annotations to .feather...')
+        rows = []
+        for feature in sqlite.read_all_features(db_connection):
+            rows.append({k: str(v) for k, v in feature})
+            pd.DataFrame(rows).to_feather(feather_file)
+    else:
+        context.log(f'({genome_name}) Skipping feather format, too many ({feature_count}) annotations...')
     # (5) visualize
     genome_properties = compute_genome_properties(contig_dict, feature_data)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')

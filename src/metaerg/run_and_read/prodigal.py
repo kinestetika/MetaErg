@@ -22,7 +22,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         for seq_rec in fasta_reader:
             nucl_seq_hash[seq_rec['id']] = seq_rec['seq']
     count = 0
-    feature_count_before_arbritration = sum(1 for f in sqlite.read_all_features(db_connection))
+    feature_count_before_arbritration = sqlite.count_features(db_connection)
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         rejected_cds_count = 0
         for seq_rec in fasta_reader:
@@ -75,7 +75,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 feature.notes = 'partial protein'
             sqlite.add_new_feature_to_db(db_connection, feature)
 
-        feature_count_after_arbritration = sum(1 for f in sqlite.read_all_features(db_connection))
+        feature_count_after_arbritration = sqlite.count_features(db_connection)
         context.log(f'({genome_name}) Dropped {feature_count_before_arbritration - feature_count_after_arbritration} repeats and'
                     f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')
         return count
