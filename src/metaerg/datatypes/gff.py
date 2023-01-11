@@ -2,6 +2,7 @@ from urllib.parse import unquote
 import re
 import gzip
 from metaerg.datatypes import fasta
+from metaerg.datatypes.sqlite import Feature
 
 class GffParser:
     def __init__(self, path, contig_dict, target_feature_type_dict:dict=None, inference:str=None):
@@ -45,13 +46,13 @@ class GffParser:
                     if len(qualifiers) % 2 != 0:
                         qualifiers = qualifiers[:-1]  # this happens for example with prodigal, ending with ";"
                     qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
-                    feature = {'contig': contig_name,
-                               'start': start,
-                               'end': end,
-                               'strand': strand,
-                               'type': self.target_feature_type_dict[feature_type],
-                               'inference': inference,
-                               'nt_seq': seq}
+                    feature = Feature(contig=contig_name,
+                               start=start,
+                               end=end,
+                               strand=strand,
+                               type=self.target_feature_type_dict[feature_type],
+                               inference=inference,
+                               nt_seq=seq)
                     yield feature
 
 

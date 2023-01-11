@@ -1,24 +1,24 @@
 import os
 import gzip
 import shutil
-import pandas as pd
 from math import log10
 from pathlib import Path
 from concurrent import futures
 
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
+from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg import functional_gene_configuration
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
     # the domtbl format includes alignment starts and ends, so we can use that information...
     context.run_external(f'hmmscan -o /dev/null -E 1e-6 --domtblout {result_files[0]} {hmm_db} {cds_aa_file}')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     db_entry = None
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
     functional_gene_db = {}
@@ -46,11 +46,12 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     with TabularBlastParser(result_files[0], 'HMMSCAN_DOM_TABLE', get_db_entry) as handle:
         hit_count = 0
         for blast_result in handle:
-            if blast_result.query() not in feature_data.index:
+            feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
+            if not feature:
                 raise Exception(f'Found results for unknown feature {blast_result.query()}, '
                                 f'may need to rerun metaerg with --force')
             blast_result.hits = blast_result.hits[:10]
-            feature_data.at[blast_result.query(), 'hmm'] = str(blast_result)
+            feature.hmm = blast_result
             for h in blast_result.hits:
                 db_entry = h.hit
                 confidence = 1.0
@@ -65,10 +66,11 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                         confidence = min(1.0, - log10(h.evalue) / 100)
                 if new_subsystem := functional_gene_configuration.match_hit(h, confidence):
                     hit_count += 1
-                    feature_data.at[blast_result.query(), 'subsystems'] = functional_gene_configuration.cleanup_subsystem_str(
-                        feature_data.at[blast_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
+                    feature.subsystems = functional_gene_configuration.cleanup_subsystem_str(
+                        feature.subsystems.strip() + ' ' + new_subsystem)
                 break
-    return feature_data, hit_count
+            sqlite.update_feature_in_db(db_connection, feature)
+    return hit_count
 
 
 @context.register_annotator
@@ -203,3 +205,4 @@ def install_functional_gene_databases():
             hmm_file = f.absolute()
             add_hmm_file_to_db(hmm_file, output, names_done, all_target_hmm_names)
     context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
+    os.chdir(current_working_dir)

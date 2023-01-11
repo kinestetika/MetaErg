@@ -1,35 +1,35 @@
 import pandas as pd
+
+import datatypes.sqlite
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
 def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
     pass
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
-    feature_data = feature_data.sort_values(by=['contig', 'start'])
-    j=0
-    for i in feature_data.index:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+    j = 0
+    for feature in sqlite.read_all_features(db_connection):
         if context.RENAME_CONTIGS:
             # contigs already contain genome name
-            feature_data.at[i, 'id'] = context.DELIMITER.join((feature_data.at[i, 'contig'], f'{j:05d}'))
+            feature.id = context.DELIMITER.join((feature.contig, f'{j:05d}'))
         else:
-            feature_data.at[i, 'id'] = context.DELIMITER.join((genome_name, feature_data.at[i, 'contig'], f'{j:05d}'))
+            feature.id = context.DELIMITER.join((genome_name, feature.contig, f'{j:05d}'))
         j += 1
-    feature_data = feature_data.set_index('id', drop=False)
-    feature_data = feature_data.fillna({'tmh': 0})
-    feature_data = feature_data.fillna('')
+        sqlite.update_feature_id_in_db(db_connection, feature)
 
-    cds_count = len(feature_data[feature_data['type'] == 'CDS'])
-    rna_count = len(feature_data[feature_data['type'].isin(context.RNA_TARGETS)])
+    cds_count = sum(1 for f in sqlite.read_all_features(db_connection, type='CDS'))
+    rna_count = sum(1 for f in sqlite.read_all_features(db_connection, type=sqlite.RNA_TARGETS))
 
     cds_file = context.spawn_file('cds.faa', genome_name)
     context.log(f'({genome_name}) Now writing {cds_count} proteins to fasta at {cds_file}...')
-    fasta.write_features_to_fasta(feature_data, 'aa', cds_file, targets=('CDS',))
+    fasta.write_features_to_fasta(db_connection, 'aa', cds_file, targets=('CDS',))
     rna_file = context.spawn_file('rna.fna', genome_name)
     context.log(f'({genome_name}) Now writing {rna_count} RNA genes and features to fasta at {rna_file}...')
-    fasta.write_features_to_fasta(feature_data, 'nt', rna_file, targets=context.RNA_TARGETS)
-    return feature_data, len(feature_data.index)
+    fasta.write_features_to_fasta(db_connection, 'nt', rna_file, targets=datatypes.sqlite.RNA_TARGETS)
+    return j
 
 
 @context.register_annotator

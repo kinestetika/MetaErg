@@ -1,8 +1,8 @@
 import re
 import gzip
 import textwrap
-import pandas as pd
-import numpy as np
+
+from metaerg.datatypes import sqlite
 
 GBK_LINEWIDTH = 80
 GBK_INDENT = 21
@@ -18,7 +18,7 @@ FEATURES             Location/Qualifiers
 '''
 
 
-def gbk_write_feature(writer, feature):
+def gbk_write_feature(writer, feature: sqlite.Feature):
     indent = ' '*GBK_INDENT
     if feature.strand >= 0:
         location = f'{int(feature.start) + 1}..{int(feature.end)}'
@@ -46,11 +46,10 @@ def gbk_write_feature(writer, feature):
             writer.write('\n')
 
 
-def gbk_write_genome(writer, contig_dict: dict, feature_data: pd.DataFrame):
-    for id, contig in contig_dict.items():
-        writer.write(GBK_HEADER.format(id, len(contig['seq']), id, id, id))
-        sub_data = feature_data[feature_data['contig'] == id]
-        for feature in sub_data.itertuples(name = 'Feature'):
+def gbk_write_genome(writer, contig_dict: dict, db_connection):
+    for contig_id, contig in contig_dict.items():
+        writer.write(GBK_HEADER.format(contig_id, len(contig['seq']), contig_id, contig_id, contig_id))
+        for feature in sqlite.read_all_features(db_connection, contig=contig_id):
             gbk_write_feature(writer, feature)
         writer.write('ORIGIN\n')
         lw = ((GBK_LINEWIDTH - 20) // 10) * 10

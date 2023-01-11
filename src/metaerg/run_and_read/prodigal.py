@@ -1,11 +1,12 @@
 import re
-import pandas as pd
 
+import datatypes.sqlite
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
     #fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
@@ -14,15 +15,15 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                          f' -d {result_files[1]}')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
-    new_features = []
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
     nucl_seq_hash = {}
     with fasta.FastaParser(result_files[1], cleanup_seq=False) as fasta_reader:
         for seq_rec in fasta_reader:
             nucl_seq_hash[seq_rec['id']] = seq_rec['seq']
+    count = 0
+    feature_count_before_arbritration = sum(1 for f in sqlite.read_all_features(db_connection))
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
-        feature_count_before_arbritration = len(feature_data.index)
         rejected_cds_count = 0
         for seq_rec in fasta_reader:
             x_count = seq_rec['seq'].count('X')
@@ -41,19 +42,19 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             end = int(words[2].strip())
 
             # reconciliation with repeats
-            overlapping_features = feature_data.loc[(feature_data['contig'] == contig_id)
-                                                     & (feature_data['start'] < end)
-                                                     & (start < feature_data['end'])]
-            if len(overlapping_features.index):
+            overlapping_features = [f for f in sqlite.read_all_features(db_connection, contig=contig_id, location=(start, end))]
+
+            if len(overlapping_features):
                 overlap = 0
-                for i in overlapping_features.index:
-                    overlap += min(overlapping_features.at[i, "end"], end) - max(start, overlapping_features.at[i, "start"])
-                non_repeat_features = overlapping_features[overlapping_features['type'].isin(context.RNA_TARGETS)]
+                for f in overlapping_features:
+                    overlap += min(f.end, end) - max(start, f.start)
+                non_repeat_features = [f for f in overlapping_features if f.type in datatypes.sqlite.RNA_TARGETS]
                 if len(non_repeat_features):
                     rejected_cds_count += 1
                     continue
                 elif overlap < 0.33 * (end-start):
-                    feature_data = feature_data.drop(index=overlapping_features.index)
+                    for overlapping_feature in overlapping_features:
+                        sqlite.drop_feature(db_connection, overlapping_feature)
                 else:
                     rejected_cds_count += 1
                     continue
@@ -61,22 +62,23 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
             strand = int(words[3].strip())
             if seq_rec['seq'].endswith('*'):
                 seq_rec['seq'] = seq_rec['seq'][:-1]
-            feature = {'genome': genome_name,
-                       'contig': contig_id,
-                       'start': start,
-                       'end': end,
-                       'strand': strand,
-                       'type': 'CDS',
-                       'inference': 'prodigal',
-                       'aa_seq': seq_rec['seq'],
-                       'nt_seq': nucl_seq_hash[seq_rec['id']]}
+            feature = sqlite.Feature(genome = genome_name,
+                       contig = contig_id,
+                       start = start,
+                       end = end,
+                       strand = strand,
+                       type = 'CDS',
+                       inference = 'prodigal',
+                       aa_seq = seq_rec['seq'],
+                       nt_seq = nucl_seq_hash[seq_rec['id']])
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
-                feature['notes'] = 'partial protein'
-            new_features.append(feature)
-        context.log(f'({genome_name}) Dropped {feature_count_before_arbritration - len(feature_data.index)} repeats and'
+                feature.notes = 'partial protein'
+            sqlite.add_new_feature_to_db(db_connection, feature)
+
+        feature_count_after_arbritration = sum(1 for f in sqlite.read_all_features(db_connection))
+        context.log(f'({genome_name}) Dropped {feature_count_before_arbritration - feature_count_after_arbritration} repeats and'
                     f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')
-        feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
-        return feature_data, len(new_features)
+        return count
 
 
 @context.register_annotator

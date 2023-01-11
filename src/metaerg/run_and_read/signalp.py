@@ -1,16 +1,16 @@
 import shutil
-import pandas as pd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_features_to_fasta(feature_data, 'aa', cds_aa_file, context.CPUS_PER_GENOME,
+        split_fasta_files = fasta.write_features_to_fasta(db_connection, 'aa', cds_aa_file, context.CPUS_PER_GENOME,
                                                           targets=('CDS',))
         split_signalp_files = [result_files[0].parent / f'{result_files[0].name}.{i}'
                                for i in range(len(split_fasta_files))]
@@ -35,7 +35,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         context.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {result_files[0]} --format none --organism other')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     count = 0
     signalp_result_file = result_files[0] / 'prediction_results.txt'
     if signalp_result_file.exists():
@@ -47,12 +47,14 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 if "OTHER" == words[1]:
                     continue
                 feature_id = words[0].split()[0]
-                if feature_id not in feature_data.index:
+                feature = sqlite.read_feature_by_id(db_connection, feature_id)
+                if not feature:
                     raise Exception(f'Found results for unknown feature {feature_id}, '
                                     f'may need to rerun metaerg with --force')
-                feature_data.at[feature_id, 'signal_peptide'] = words[1]
+                feature.signal_peptide = words[1]
+                sqlite.update_feature_in_db(db_connection, feature)
                 count += 1
-    return feature_data, count
+    return count
 
 
 @context.register_annotator

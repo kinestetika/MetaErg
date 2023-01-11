@@ -1,20 +1,20 @@
 import os
 import shutil
-import pandas as pd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
 from metaerg import functional_gene_configuration
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_features_to_fasta(feature_data, 'aa', cds_aa_file, targets=('CDS',),
+        split_fasta_files = fasta.write_features_to_fasta(db_connection, 'aa', cds_aa_file, targets=('CDS',),
                                                                split=context.CPUS_PER_GENOME)
         split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
                            for i in range(len(split_fasta_files))]
@@ -33,7 +33,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         context.run_external(f'rpsblast -db {cdd_database} -query {cds_aa_file} -out {result_files[0]} -outfmt 6 -evalue 1e-7')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     # load cdd index
     cdd = {}
     cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
@@ -50,20 +50,21 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
 
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
-            if cdd_result.query() not in feature_data.index:
+            feature = sqlite.read_feature_by_id(db_connection, cdd_result.query())
+            if not feature:
                 raise Exception(f'Found results for unknown feature {cdd_result.query()}, '
                                 f'may need to rerun metaerg with --force')
-            feature_data.at[cdd_result.query(), 'cdd'] = str(cdd_result)
+            feature.cdd = cdd_result
             cdd_result_count += 1
             if new_subsystem := functional_gene_configuration.match(cdd_result):
-                feature_data.at[cdd_result.query(), 'subsystems'] = functional_gene_configuration.cleanup_subsystem_str(
-                    feature_data.at[cdd_result.query(), 'subsystems'].strip() + ' ' + new_subsystem)
+                feature.subsystems = functional_gene_configuration.cleanup_subsystem_str(
+                    feature.subsystems.strip() + ' ' + new_subsystem)
             top_entry: DBentry = cdd_result.hits[0].hit
-            descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
-            if len(descr) > 35:
-                descr = descr[:35] + '...'
-            feature_data.at[cdd_result.query(), 'descr'] = descr
-    return feature_data, cdd_result_count
+            feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
+            if len(feature.descr) > 35:
+                feature.descr = feature.descr[:35] + '...'
+            sqlite.update_feature_in_db(db_connection, feature)
+    return cdd_result_count
 
 
 @context.register_annotator

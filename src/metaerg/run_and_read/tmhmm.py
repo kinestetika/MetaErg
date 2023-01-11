@@ -1,17 +1,17 @@
 import shutil
-import pandas as pd
+
 from metaerg import context
+from metaerg.datatypes import sqlite
 
-
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome_name)
     with open(result_files[0], 'w') as output, open(cds_aa_file) as input:
         context.run_external('tmhmm', stdin=input, stdout=output)
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     count = 0
-    current_feature_name = None
+    current_feature = None
     current_txt = ""
     feature_tmh_count = 0
     with open(result_files[0]) as tmhmm_handle:
@@ -24,22 +24,25 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     feature_tmh_count += 1
                     current_txt += f'{start}-{end},'
                 case [next_feature_name, _, orientation, _, _] if orientation in ('inside', 'outside'):
-                    if next_feature_name not in feature_data.index:
+                    next_feature = sqlite.read_feature_by_id(db_connection, next_feature_name)
+                    if not next_feature:
                         raise Exception(f'Found results for unknown feature {next_feature_name}, '
                                         f'may need to rerun metaerg with --force')
-                    if next_feature_name != current_feature_name:
+                    if isinstance(current_feature, sqlite.Feature) and next_feature.id != current_feature.id:
                         if feature_tmh_count:
-                            feature_data.at[current_feature_name, 'tmh'] = feature_tmh_count
-                            feature_data.at[current_feature_name, 'tmh_topology'] = current_txt[:-1]
+                            current_feature.tmh = feature_tmh_count
+                            current_feature.tmh_topology = current_txt[:-1]
+                            sqlite.update_feature_in_db(db_connection, current_feature)
                             count += 1
-                        current_feature_name = next_feature_name
+                        current_feature = next_feature
                         feature_tmh_count = 0
                         current_txt = 'i,' if 'inside' == orientation else 'o,'
         if feature_tmh_count:
-            feature_data.at[current_feature_name, 'tmh'] = feature_tmh_count
-            feature_data.at[current_feature_name, 'tmh_topology'] = current_txt[:-1]
+            current_feature.tmh = feature_tmh_count
+            current_feature.tmh_topology = current_txt[:-1]
+            sqlite.update_feature_in_db(db_connection, current_feature)
             count += 1
-    return feature_data, count
+    return count
 
 
 @context.register_annotator

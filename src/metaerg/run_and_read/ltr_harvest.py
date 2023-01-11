@@ -1,11 +1,12 @@
-import pandas as pd
 from metaerg import context
 from metaerg.datatypes import fasta, gff
+from metaerg.datatypes import gff
+from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
     ltr_index_file = context.spawn_file('ltr_index', genome_name)
 
@@ -16,14 +17,14 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         file.unlink()
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
-    new_features = []
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+    count = 0
     with gff.GffParser(result_files[0], contig_dict, inference='ltr_harvest',
                        target_feature_type_dict={'repeat_region': 'retrotransposon'}) as parser:
         for feature in parser:
-            new_features.append(feature)
-    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
-    return feature_data, len(new_features)
+            sqlite.add_new_feature_to_db(db_connection, feature)
+            count += 1
+    return count
 
 
 @context.register_annotator

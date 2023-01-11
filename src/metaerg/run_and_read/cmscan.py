@@ -1,18 +1,18 @@
 import shutil
-import pandas as pd
 from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 from collections import namedtuple
 
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
     rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
+        split_fasta_files = fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
                                                          mask_targets=fasta.ALL_MASK_TARGETS,
                                                          split=context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
@@ -28,12 +28,12 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
+        fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
                                      mask_targets=fasta.ALL_MASK_TARGETS)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': 'rRNA',
                             'LSU_rRNA_archaea': 'rRNA',
                             'LSU_rRNA_eukarya': 'rRNA',
@@ -73,7 +73,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                     hits.append(hit)
             else:
                 hits.append(hit)
-    new_features = []
+    count = 0
     for hit in hits:
         if hit.hit_id in NON_CODING_RNA_TYPES.keys():
             f_type = NON_CODING_RNA_TYPES[hit.hit_id]
@@ -85,18 +85,18 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         seq = contig['seq'][hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
             seq = fasta.reverse_complement(seq)
-        feature = {'genome': genome_name,
-                   'contig': hit.query_id,
-                   'start': hit.query_start - 1,
-                   'end': hit.query_end,
-                   'strand': hit.query_strand,
-                   'type': f_type,
-                   'inference': 'cmscan',
-                   'nt_seq': seq,
-                   'descr': "{} {}".format(hit.hit_id, hit.descr)}
-        new_features.append(feature)
-    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
-    return feature_data, len(new_features)
+        feature = sqlite.Feature(genome = genome_name,
+                   contig = hit.query_id,
+                   start = hit.query_start - 1,
+                   end = hit.query_end,
+                   strand = hit.query_strand,
+                   type = f_type,
+                   inference = 'cmscan',
+                   nt_seq = seq,
+                   descr = "{} {}".format(hit.hit_id, hit.descr))
+        sqlite.add_new_feature_to_db(db_connection, feature)
+        count += 1
+    return count
 
 
 @context.register_annotator

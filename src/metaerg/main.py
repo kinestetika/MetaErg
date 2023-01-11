@@ -1,7 +1,6 @@
 import argparse
 import tarfile
 
-import pandas
 import pandas as pd
 from pathlib import Path
 from concurrent import futures
@@ -10,6 +9,7 @@ from hashlib import md5
 import metaerg.run_and_read.diamond_and_blastn
 import metaerg.run_and_read.functional_genes
 import metaerg.run_and_read.antismash
+from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg import registry
 from metaerg import functional_gene_configuration
@@ -143,8 +143,10 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     if 'visualization=complete' in current_progress:
         context.log(f'({genome_name}) already completed!')
         return
-    # (1) prepare dataframe
-    feature_data = pd.DataFrame(columns=context.DATAFRAME_COLUMNS)
+    # (1) prepare sqlite3 database
+    db_file = context.spawn_file(genome_name, 'sqlite_db')
+    db_connection = sqlite.connect_to_db(db_file)
+    #feature_data = pd.DataFrame(columns=sqlite.FEATURE_FIELDS)
     # (2) load sequence data
     contig_dict = load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
                                min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)

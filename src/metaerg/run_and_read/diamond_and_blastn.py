@@ -1,7 +1,6 @@
 import re
 import gzip
 import shutil
-import pandas as pd
 from os import chdir
 from ftplib import FTP
 from pathlib import Path
@@ -13,6 +12,7 @@ import ncbi.datasets
 
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import BlastResult, DBentry, TabularBlastParser
 from metaerg.datatypes import ncbi_ftp
 
@@ -30,7 +30,7 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
                         'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 
 
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     rna_nt_file = context.spawn_file('rna.fna', genome_name)
     blastn_result_file = context.spawn_file('blastn', genome_name)
     if rna_nt_file.exists() and rna_nt_file.stat().st_size:
@@ -47,7 +47,7 @@ def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                          f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
@@ -73,12 +73,14 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
     # (3) parse diamond blast results
 
     def process_blast_result(blast_result: BlastResult):
-        if blast_result.query() not in feature_data.index:
+        feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
+        if not feature:
             raise Exception(f'Found results for unknown feature {blast_result.query()}, '
                             f'may need to rerun metaerg with --force')
-        feature_data.at[blast_result.query(), 'blast'] = str(blast_result)
-        feature_data.at[blast_result.query(), 'descr'] = blast_result.hits[0].hit.descr
-        feature_data.at[blast_result.query(), 'taxon'] =  blast_result.hits[0].hit.taxon
+        feature.blast = blast_result
+        feature.descr = blast_result.hits[0].hit.descr
+        feature.taxon =  blast_result.hits[0].hit.taxon
+        sqlite.update_feature_in_db(db_connection, feature)
 
     def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
@@ -96,7 +98,7 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    return feature_data, blast_result_count
+    return blast_result_count
 
 
 @context.register_annotator

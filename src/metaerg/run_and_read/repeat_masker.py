@@ -1,14 +1,13 @@
 import shutil
-import pandas as pd
 from pathlib import Path
 
 from metaerg import context
 from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
-
-def _run_programs(genome_name, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
     lmer_table_file = context.spawn_file('lmer-table', genome_name)
     repeatscout_file_raw = context.spawn_file('repeatscout-raw', genome_name)
@@ -55,28 +54,28 @@ def finalize(success: bool, genome_name: str, fasta_input_file: Path, repeatmask
             file.unlink()
 
 
-def words2feature(words: list[str], contig, genome_name:str):
+def words2feature(words: list[str], contig, genome_name:str) -> sqlite.Feature:
     start = int(words[5]) - 1
     end = int(words[6])
     strand = -1 if 'C' == words[8] else 1
     seq = contig['seq'][start:end]
     if strand < 0:
         seq = fasta.reverse_complement(seq)
-    return {'genome': genome_name,
-            'contig': contig['id'],
-            'start': start,
-            'end': end,
-            'strand': strand,
-            'type': 'repeat',
-            'inference': 'repeatmasker',
-            'nt_seq': seq}
+    return sqlite.Feature(genome = genome_name,
+                          contig = contig['id'],
+                          start = start,
+                          end = end,
+                          strand = strand,
+                          type = 'repeat',
+                          inference = 'repeatmasker',
+                          nt_seq = seq)
 
 
-def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_files) -> tuple:
+def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     """(1) simple repeats, these are consecutive
        (2) unspecified repeats, these occur scattered and are identified by an id in words[9]. We only
            add those when they occur 10 or more times."""
-    new_features = []
+    count = 0
     repeat_hash = dict()
     with open(result_files[0]) as repeatmasker_handle:
         for line in repeatmasker_handle:
@@ -90,18 +89,19 @@ def _read_results(genome_name, contig_dict, feature_data: pd.DataFrame, result_f
                 continue
             if 'Simple_repeat' == words[10]:
                 feature = words2feature(words, contig, genome_name)
-                new_features.append(feature)
-                feature['notes'] = f'repeat {words[9]}'
+                feature.notes = f'repeat {words[9]}'
+                sqlite.add_new_feature_to_db(db_connection, feature)
+                count += 1
             else:
                 repeat_list = repeat_hash.setdefault(words[9], list())
                 repeat_list.append(words2feature(words, contig, genome_name))
     for repeat_list in repeat_hash.values():
         if len(repeat_list) >= 10:
             for feature in repeat_list:
-                new_features.append(feature)
-                feature['notes'] = f' (occurs {len(repeat_list)}x)'
-    feature_data = pd.concat([feature_data, pd.DataFrame(new_features)], ignore_index=True)
-    return feature_data, len(new_features)
+                feature.notes = f' (occurs {len(repeat_list)}x)'
+                sqlite.add_new_feature_to_db(db_connection, feature)
+                count += 1
+    return count
 
 
 @context.register_annotator
