@@ -1,10 +1,11 @@
 import argparse
 import tarfile
-
-import pandas as pd
 from pathlib import Path
 from concurrent import futures
 from hashlib import md5
+from collections import Counter
+
+import pandas as pd
 
 import metaerg.run_and_read.diamond_and_blastn
 import metaerg.run_and_read.functional_genes
@@ -109,48 +110,47 @@ def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> di
     #feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
     #feature_data_cds = feature_data[feature_data['type'] == 'CDS']
     #feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
-
+    taxon_counts = Counter()
     for feature in sqlite.read_all_features(db_connection):
+        properties['# total features'] += 1
         if feature.type == 'CDS':
             properties['# proteins'] += 1
             properties['% coding'] += feature.length_nt()
             properties['mean protein length (aa)'] += feature.length_aa()
+            taxon_counts.update(feature.taxon, )
         elif feature.type == 'rRNA':
             properties['# ribosomal RNA'] += 1
+            taxon_counts.update(feature.taxon, )
         elif feature.type == 'tRNA':
             properties['# transfer RNA'] += 1
+            taxon_counts.update(feature.taxon, )
         elif feature.type == 'ncRNA':
-            properties['# non-coding RNA'hist   ] += 1
+            properties['# non-coding RNA'] += 1
+            taxon_counts.update(feature.taxon, )
         elif feature.type == 'retrotransposon':
-            properties['# ribosomal RNA'] += 1
+            properties['# retrotransposons'] += 1
+            properties['% repeats'] += feature.length_nt()
         elif feature.type == 'crispr_repeat':
-            properties['# ribosomal RNA'] += 1
+            properties['# CRISPR repeats'] += 1
+            properties['% repeats'] += feature.length_nt()
         elif feature.type == 'repeat':
-            properties['# ribosomal RNA'] += 1
-
-    properties['% coding'] = feature_data_cds['length'].sum() / properties['size']
-    properties['mean protein length (aa)'] = feature_data_cds['length'].mean() / 3
-    properties['# ribosomal RNA'] = len(feature_data[feature_data['type'] == 'rRNA'].index)
-    properties['# transfer RNA'] = len(feature_data[feature_data['type'] == 'tRNA'].index)
-    properties['# non-coding RNA'] = len(feature_data[feature_data['type'] == 'ncRNA'].index)
-    properties['# retrotransposons'] = len(feature_data[feature_data['type'] == 'retrotransposon'].index)
-    properties['# CRISPR repeats'] = len(feature_data[feature_data['type'] == 'crispr_repeat'].index)
-    properties['# other repeats'] = len(feature_data[feature_data['type'] == 'repeat'].index)
-    properties['% repeats'] = feature_data_repeats['length'].sum() / properties['size']
-    properties['# total features'] = len(feature_data.index)
-    taxon_counts = dict(feature_data_cds.taxon.value_counts(normalize=True))
-    properties['% CDS classified to taxon'] = 1 - taxon_counts['']
+            properties['# other repeats'] += 1
+            properties['% repeats'] += feature.length_nt()
+    properties['% coding'] /= properties['size']
+    properties['mean protein length (aa)'] /= properties['# proteins']
+    properties['% repeats'] /= properties['size']
+    properties['% CDS classified to taxon'] = 1 - taxon_counts[''] / taxon_counts.total()
     properties['dominant taxon'] = ''
     properties['% of CDS classified to dominant taxon'] = 0.0
     del taxon_counts['']
     for k, v in taxon_counts.items():
-        properties['% of CDS classified to dominant taxon'] = v / properties['% CDS classified to taxon']
+        properties['% of CDS classified to dominant taxon'] = v / taxon_counts.total()
         properties['dominant taxon'] = k
         break
-    codon_usage_bias, doubling_time = compute_codon_bias_estimate_doubling_time(feature_data)
+    codon_usage_bias, doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
     properties['codon usage bias'] = codon_usage_bias
     properties['doubling_time (days)'] = doubling_time
-    properties['subsystems'] = functional_gene_configuration.aggregate(feature_data)
+    properties['subsystems'] = functional_gene_configuration.aggregate(db_connection)
     return properties
 
 
@@ -194,7 +194,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     else:
         context.log(f'({genome_name}) Skipping feather format, too many ({feature_count}) annotations...')
     # (5) visualize
-    genome_properties = compute_genome_properties(contig_dict, feature_data)
+    genome_properties = compute_genome_properties(contig_dict, db_connection)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
         html_writer(genome_name, feature_data, genome_properties, context.HTML_DIR)

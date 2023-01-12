@@ -117,6 +117,9 @@ class Feature:
 
 def feature_factory(cursor, row) -> Feature:
     fields = [column[0] for column in cursor.description]
+    if len(fields) < 10:
+        print(fields[0])
+        return fields[0]
     return Feature(**{key: value for key, value in zip(fields, row)})
 
 def connect_to_db(sql_db_file):
@@ -160,18 +163,18 @@ def drop_feature(sql_connection, feature: Feature):
     sql_connection.commit()
 
 def count_features(sql_connection):
+    sql_connection.row_factory = None
     cursor = sql_connection.cursor()
-    result = cursor.execute('sp_spaceused features')
-    return result.fetchone()
-    # sum(1 for f in read_all_features(sql_connection))
-    # select Count(1) from features
+    total = sum(1 for f in cursor.execute('SELECT start FROM features'))
+    sql_connection.row_factory = feature_factory
+    return total
 
 def read_feature_by_id(sql_connection, feature_id) -> Feature:
     cursor = sql_connection.cursor()
     result = cursor.execute('SELECT * FROM features WHERE id = ?', (feature_id,))
     return result.fetchone()
 
-def read_all_features(sql_connection, contig='', type=None, location=None):
+def read_all_features(sql_connection, contig='', type=None, location=None, additional_sql=None):
     cursor = sql_connection.cursor()
 
     where_str = []
@@ -190,6 +193,8 @@ def read_all_features(sql_connection, contig='', type=None, location=None):
         where_str.append('start < ? AND ? < end')
         fields.append(location[1])
         fields.append(location[0])
+    if additional_sql:
+        where_str.append(additional_sql)
 
     where_str = ' AND '.join(where_str)
     if where_str:

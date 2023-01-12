@@ -1,6 +1,5 @@
 import math
 
-import pandas as pd
 import re
 from time import sleep
 from statistics import median, mean
@@ -13,10 +12,11 @@ from tqdm import tqdm
 from metaerg import context
 from metaerg.datatypes.fasta import FastaParser
 from metaerg.datatypes import ncbi_ftp
+from metaerg.datatypes import sqlite
 
 CUBData = namedtuple('CUBData', ['genome_id', 'nHE', 'CUBHE', 'consistency', 'CPB', 'filtered', 'd'])
 
-def compute_feature_codon_counts_by_aa(feature, codon_counts_by_aa = 0):
+def compute_feature_codon_counts_by_aa(feature, codon_counts_by_aa: dict|int = 0):
     if not isinstance(codon_counts_by_aa, dict):
         codon_counts_by_aa = {}
 
@@ -56,9 +56,9 @@ def convert_counts_to_frequencies(codon_counts_by_aa):
     return codon_freq_by_aa
 
 
-def compute_codon_frequencies_for_feature_data(feature_data: pd.DataFrame) -> dict:
+def compute_codon_frequencies_for_feature_data(db_connection, additional_sql: str = '') -> dict:
     genome_wide_codon_counts_by_aa = {}
-    for feature in feature_data.itertuples():
+    for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql=additional_sql):
         compute_feature_codon_counts_by_aa(feature, genome_wide_codon_counts_by_aa)
     genome_wide_codon_freq_by_aa = convert_counts_to_frequencies(genome_wide_codon_counts_by_aa)
     return genome_wide_codon_freq_by_aa
@@ -79,7 +79,7 @@ def compute_codon_usage_bias_for_feature(feature, genome_wide_codon_frequencies_
     return milc - correction_factor
 
 
-def compute_codon_pair_scores_for_feature_data(genome_id: str, feature_data: pd.DataFrame) -> dict:
+def compute_codon_pair_scores_for_feature_data(genome_id: str, db_connection, additional_sql: str = '') -> dict:
     # see https://www.science.org/doi/full/10.1126/science.1155761, supplement, Fig. 1
     codon_pair_counts = {}
     aa_pair_counts = {}
@@ -88,7 +88,7 @@ def compute_codon_pair_scores_for_feature_data(genome_id: str, feature_data: pd.
     codon2aa = {}
 
     ambiguous_codon_warnings = 0
-    for feature in feature_data.itertuples():
+    for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql=additional_sql):
         # to deal with start codon, always translated as M:
         aa_seq = feature.aa_seq[0:1].lower() + feature.aa_seq[1:].upper()
         nt_seq = feature.nt_seq[0:3].lower() + feature.nt_seq[3:].upper()
@@ -163,43 +163,44 @@ def compute_codon_pair_bias_for_cds(feature, codon_pair_scores) -> float:
     return cpb / len(feature.aa_seq)
 
 
-def compute_codon_usage_bias_for_genome(genome_id, feature_data: pd.DataFrame) -> CUBData:
-    feature_data = feature_data[feature_data['type'] == 'CDS']
-    filtered_feature_data = feature_data[feature_data['aa_seq'].str.len() >= 80]
-    ribosomal_proteins = feature_data[feature_data['subsystems'].str.contains('ribosomal protein')]
+def compute_codon_usage_bias_for_genome(genome_id, db_connection) -> CUBData:
     # codon usage bias
-    background_frequencies = compute_codon_frequencies_for_feature_data(filtered_feature_data)
-    codon_usage_bias = median([compute_codon_usage_bias_for_feature(rp, background_frequencies)
-                               for rp in ribosomal_proteins.itertuples()])
-    # consistency in codon usage bias
-    background_frequencies = compute_codon_frequencies_for_feature_data(ribosomal_proteins)
-    consistency = mean([compute_codon_usage_bias_for_feature(rp, background_frequencies)
-                        for rp in ribosomal_proteins.itertuples()])
-    # codon pair bias
-    codon_pair_scores = compute_codon_pair_scores_for_feature_data(genome_id, filtered_feature_data)
-    # codon_pair_bias = sum(codon_pair_scores.values()) / (len(codon_pair_scores) - 1)
-    codon_pair_bias = median([compute_codon_pair_bias_for_cds(rp, codon_pair_scores)
-                              for rp in ribosomal_proteins.itertuples()])
-    # keep track of # too short proteins filtered out and ribosomal proteins
-    filtered_out = len(feature_data[feature_data['aa_seq'].str.len() < 80])
+    background_frequencies = compute_codon_frequencies_for_feature_data(db_connection, additional_sql='end - start >= 240')
+    cub_ribosomal = [compute_codon_usage_bias_for_feature(rp, background_frequencies)
+                               for rp in sqlite.read_all_features(db_connection, type='CDS',
+                               additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')]
+    if len(cub_ribosomal):
+        codon_usage_bias = median(cub_ribosomal)
+        # consistency in codon usage bias
+        background_frequencies = compute_codon_frequencies_for_feature_data(db_connection,
+                                 additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')
+        consistency = mean([compute_codon_usage_bias_for_feature(rp, background_frequencies)
+                               for rp in sqlite.read_all_features(db_connection, type='CDS',
+                               additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')])
+        # codon pair bias
+        codon_pair_scores = compute_codon_pair_scores_for_feature_data(genome_id, db_connection, additional_sql='end - start >= 240')
+        # codon_pair_bias = sum(codon_pair_scores.values()) / (len(codon_pair_scores) - 1)
+        codon_pair_bias = median([compute_codon_pair_bias_for_cds(rp, codon_pair_scores)
+                                  for rp in sqlite.read_all_features(type='CDS', additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')])
+        # keep track of # too short proteins filtered out and ribosomal proteins
+        filtered_out = sum(1 for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql='end - start < 240')
+        return CUBData(genome_id, len(cub_ribosomal), codon_usage_bias, consistency, codon_pair_bias, filtered_out, 0)
+    else:
+        return CUBData(genome_id, 0, 0, 0, 0, 0, 0)
 
-    return CUBData(genome_id, len(ribosomal_proteins.index), codon_usage_bias,
-                   consistency, codon_pair_bias, filtered_out, 0)
 
-
-def compute_codon_bias_estimate_doubling_time(feature_data: pd.DataFrame):
-    feature_data = feature_data[feature_data['type'] == 'CDS']
-    filtered_feature_data = feature_data[feature_data['aa_seq'].str.len() >= 80]
-    ribosomal_proteins = feature_data[feature_data['subsystems'].str.contains('ribosomal protein')]
-    if not len(ribosomal_proteins.index):
+def compute_codon_bias_estimate_doubling_time(db_connection):
+    background_frequencies = compute_codon_frequencies_for_feature_data(db_connection, additional_sql='end - start >= 240')
+    cub_ribosomal = [compute_codon_usage_bias_for_feature(rp, background_frequencies)
+                               for rp in sqlite.read_all_features(db_connection, type='CDS',
+                               additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')]
+    if len(cub_ribosomal):
+        codon_usage_bias = median(cub_ribosomal)
+        doubling_time = math.pow(10, codon_usage_bias * -2.41937374 + 2.00361692)
+        return codon_usage_bias, doubling_time
+    else:
         context.log('Warning: No ribosomomal proteins for genome.')
         return 0, 0
-    # codon usage bias
-    background_frequencies = compute_codon_frequencies_for_feature_data(filtered_feature_data)
-    codon_usage_bias = median([compute_codon_usage_bias_for_feature(rp, background_frequencies)
-                               for rp in ribosomal_proteins.itertuples()])
-    doubling_time = math.pow(10, codon_usage_bias * -2.41937374 + 2.00361692)
-    return codon_usage_bias, doubling_time
 
 
 def parse_training_data(list_file) -> list[CUBData]:

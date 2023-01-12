@@ -3,6 +3,7 @@ import pandas as pd
 from pathlib import Path
 
 from metaerg import context
+from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import BlastResult, BlastHit
 
 DATAFRAME_INDEX = None
@@ -93,10 +94,10 @@ def cleanup_subsystem_str(subsystem_str: str) -> str:
     return subsystem_str.strip()
 
 
-def aggregate(feature_data: pd.DataFrame):
+def aggregate(db_connection):
     aggregated_subsystem_data = SUBSYSTEM_DATA.copy().sort_index()
     unstructured_subsystems = {}
-    for feature in feature_data.itertuples():
+    for feature in sqlite.read_all_features(db_connection):
         if not len(feature.subsystems):
             continue
         for s in re.split(r'\s(?=\[)', feature.subsystems):  # split at space if followed b y [
