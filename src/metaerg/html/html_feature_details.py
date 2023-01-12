@@ -1,6 +1,7 @@
 from pathlib import Path
-import pandas as pd
 from math import log10
+
+from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult, taxon_at_genus
 from metaerg import context
 
@@ -9,14 +10,14 @@ COLORS = 'id=cr id=cr id=co id=cb id=cg'.split()
 
 
 @context.register_html_writer
-def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
+def write_html(genome_name, db_connection, genome_properties:dict, dir):
     """Writes a html file for each feature to dir <file>"""
     dir = Path(dir, genome_name)
     dir.mkdir(exist_ok=True, parents=True)
     file = dir / 'feature-details.html'
 
     feature_html = ''
-    for feature in feature_data.itertuples():
+    for feature in sqlite.read_all_features(db_connection, type=('CDS', 'rRNA', 'ncRNA', 'retrotransposon')):
         if feature.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
             feature_html += make_feature_html(feature, genome_properties['dominant taxon'])
 
@@ -25,10 +26,9 @@ def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, 
         handle.write(html)
 
 
-def make_blast_table_html(blast_result: str, f_length, dominant_taxon, include_id, title: str,
+def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon, include_id, title: str,
                           headers: str ='percent id|query align|hit align|description|taxon') -> str:
     if blast_result:
-        blast_result = eval(blast_result)
         html = f'<h3>{title}</h3>\n'
         html += '<table><thead><tr>\n'
         columns = headers.split('|')

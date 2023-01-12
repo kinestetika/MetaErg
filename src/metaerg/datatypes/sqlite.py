@@ -180,7 +180,7 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
     where_str = []
     fields = []
     if type:
-        if isinstance(type, list):
+        if isinstance(type, list) or isinstance(type, tuple):
             where_str.append('type IN ({})'.format(','.join('?' for t in type)))
             fields.extend(type)
         else:

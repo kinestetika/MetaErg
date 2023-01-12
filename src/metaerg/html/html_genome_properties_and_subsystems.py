@@ -1,5 +1,4 @@
 from pathlib import Path
-import pandas as pd
 from metaerg import context
 
 GENOME_PROPERTY_FORMATS = {'size': ',',
@@ -24,14 +23,14 @@ GENOME_PROPERTY_FORMATS = {'size': ',',
                            }
 
 @context.register_html_writer
-def write_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, dir):
+def write_html(genome_name, db_connection, genome_properties:dict, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, genome_name, 'index.html')
     with open(file, 'w') as handle:
-        handle.write(make_html(genome_name, feature_data, genome_properties))
+        handle.write(make_html(genome_name, genome_properties))
 
 
-def make_html(genome_name, feature_data: pd.DataFrame, genome_properties:dict, path_to_feature_html='') -> str:
+def make_html(genome_name, genome_properties:dict) -> str:
     """injects the content into the html base, returns the html"""
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome_name)
