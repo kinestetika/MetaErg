@@ -1,11 +1,9 @@
 import sqlite3 as sql
 
-from metaerg.datatypes.blast import BlastResult, BlastHit, DBentry
-
 FEATURE_FIELDS = tuple('id genome contig start end strand type inference subsystems descr taxon notes ' \
                     'aa_seq nt_seq antismash signal_peptide tmh tmh_topology blast cdd hmm'.split())
 RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
-SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE {}}(
+SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE features(
     id TEXT,
     genome TEXT,
     contig TEXT,
@@ -131,7 +129,7 @@ def create_db(sql_db_file):
     sql_db_file.unlink(missing_ok=True)
     connection = sql.connect(sql_db_file)
     cursor = connection.cursor()
-    cursor.execute(SQLITE_CREATE_TABLE_SYNTAX.format('features'))
+    cursor.execute(SQLITE_CREATE_TABLE_SYNTAX)
 
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
@@ -150,8 +148,8 @@ def update_feature_id_in_db(sql_connection, feature: Feature):
     cursor = sql_connection.cursor()
     cursor.execute('UPDATE features SET id = ? WHERE genome = ? AND contig = ? AND start = ? AND end = ? AND '
                    'strand = ? AND type = ? AND inference = ?',
-                   (feature.genome, feature.contig, feature.start, feature.end, feature.strand, feature.type,
-                    feature.inference))
+                   (feature.id, feature.genome, feature.contig, feature.start, feature.end, feature.strand,
+                    feature.type, feature.inference))
     sql_connection.commit()
 
 def drop_feature(sql_connection, feature: Feature):
@@ -180,7 +178,7 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
     where_str = []
     fields = []
     if type:
-        if isinstance(type, list) or isinstance(type, tuple):
+        if isinstance(type, list) or isinstance(type, tuple)  or isinstance(type, set):
             where_str.append('type IN ({})'.format(','.join('?' for t in type)))
             fields.extend(type)
         else:
@@ -198,9 +196,10 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
 
     where_str = ' AND '.join(where_str)
     if where_str:
-        #print('SELECT * FROM features WHERE ' + where_str)
+        #print('SELECT * FROM features WHERE ' + where_str + ' ORDER BY contig, start')
+        #print(fields)
         return cursor.execute('SELECT * FROM features WHERE ' + where_str + ' ORDER BY contig, start', tuple(fields))
     else:
-        return cursor.execute('SELECT * FROM features ORDER BY start')
+        return cursor.execute('SELECT * FROM features ORDER BY contig, start')
     #for columns in result.fetchall():
     #    yield Feature(*columns)

@@ -1,6 +1,5 @@
 import pandas as pd
 
-import datatypes.sqlite
 from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
@@ -28,7 +27,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     fasta.write_features_to_fasta(db_connection, 'aa', cds_file, targets=('CDS',))
     rna_file = context.spawn_file('rna.fna', genome_name)
     context.log(f'({genome_name}) Now writing {rna_count} RNA genes and features to fasta at {rna_file}...')
-    fasta.write_features_to_fasta(db_connection, 'nt', rna_file, targets=datatypes.sqlite.RNA_TARGETS)
+    fasta.write_features_to_fasta(db_connection, 'nt', rna_file, targets=sqlite.RNA_TARGETS)
     return j
 
 

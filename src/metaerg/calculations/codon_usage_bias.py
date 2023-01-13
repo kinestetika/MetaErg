@@ -183,7 +183,7 @@ def compute_codon_usage_bias_for_genome(genome_id, db_connection) -> CUBData:
         codon_pair_bias = median([compute_codon_pair_bias_for_cds(rp, codon_pair_scores)
                                   for rp in sqlite.read_all_features(type='CDS', additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')])
         # keep track of # too short proteins filtered out and ribosomal proteins
-        filtered_out = sum(1 for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql='end - start < 240')
+        filtered_out = sum(1 for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql='end - start < 240'))
         return CUBData(genome_id, len(cub_ribosomal), codon_usage_bias, consistency, codon_pair_bias, filtered_out, 0)
     else:
         return CUBData(genome_id, 0, 0, 0, 0, 0, 0)

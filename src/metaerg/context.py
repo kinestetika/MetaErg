@@ -210,7 +210,6 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
         log(exec)
     result = subprocess.run(exec.split(), stdout=stdout, stdin=stdin, stderr=stderr)
     if result.returncode != 0:
-        print(result.stderr)
         raise Exception(f'WARNING: "{exec}" exited with non-zero status')
 
 
@@ -306,7 +305,7 @@ def register_annotator(define_annotator):
         write_metaerg_progress(genome_name, current_progress)
         positive_count = 0
         if results_complete:
-            feature_data, positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
+            positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
         log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
         return feature_data
 

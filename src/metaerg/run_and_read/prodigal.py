@@ -1,6 +1,5 @@
 import re
 
-import datatypes.sqlite
 from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
@@ -22,7 +21,8 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         for seq_rec in fasta_reader:
             nucl_seq_hash[seq_rec['id']] = seq_rec['seq']
     count = 0
-    feature_count_before_arbritration = sqlite.count_features(db_connection)
+    dropped_repeat_count = 0
+    repeat_count_before_arbitration = sum(1 for f in sqlite.read_all_features(db_connection, type='repeat'))
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         rejected_cds_count = 0
         for seq_rec in fasta_reader:
@@ -34,7 +34,6 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             try:
                 m = ORF_ID_PATTERN.search(seq_rec['id'])
                 contig_id = seq_rec['id'][0:m.start()]
-                contig = contig_dict[contig_id]
             except KeyError:
                 context.log(f'({genome_name}) Warning: Failed to find contig with "{seq_rec["id"]}"')
                 continue
@@ -42,19 +41,21 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             end = int(words[2].strip())
 
             # reconciliation with repeats
-            overlapping_features = [f for f in sqlite.read_all_features(db_connection, contig=contig_id, location=(start, end))]
+            overlapping_features = [f for f in sqlite.read_all_features(db_connection, contig=contig_id,
+                                    location=(start, end), type='rRNA tRNA tmRNA ncRNA crispr_repeat repeat retrotransposon'.split())]
 
             if len(overlapping_features):
                 overlap = 0
                 for f in overlapping_features:
                     overlap += min(f.end, end) - max(start, f.start)
-                non_repeat_features = [f for f in overlapping_features if f.type in datatypes.sqlite.RNA_TARGETS]
+                non_repeat_features = [f for f in overlapping_features if f.type in 'rRNA tRNA tmRNA ncRNA crispr_repeat retrotransposon'.split()]
                 if len(non_repeat_features):
                     rejected_cds_count += 1
                     continue
                 elif overlap < 0.33 * (end-start):
                     for overlapping_feature in overlapping_features:
                         sqlite.drop_feature(db_connection, overlapping_feature)
+                        dropped_repeat_count += 1
                 else:
                     rejected_cds_count += 1
                     continue
@@ -74,9 +75,9 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
                 feature.notes = 'partial protein'
             sqlite.add_new_feature_to_db(db_connection, feature)
+            count += 1
 
-        feature_count_after_arbritration = sqlite.count_features(db_connection)
-        context.log(f'({genome_name}) Dropped {feature_count_before_arbritration - feature_count_after_arbritration} repeats and'
+        context.log(f'({genome_name}) Dropped {dropped_repeat_count}/{repeat_count_before_arbitration} repeats and'
                     f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')
         return count
 
