@@ -102,7 +102,9 @@ def make_feature_html(f, dominant_taxon) -> str:
                                                            title='Top Functional Gene HMM Hits',
                                                            headers='evalue|query align|hit align|description| '))
     attribute_html = '<table>\n'
-    attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f._asdict()[k]}</td></tr>\n' for k in
+    f.tmh = '' if not f.tmh else f.tmh
+    f_as_dict = {k:v for k,v in f}
+    attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f_as_dict[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
                                'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
     attribute_html += f'<tr><td id=al>length</td><td id=al>{length} {length_unit}</td></tr>\n'

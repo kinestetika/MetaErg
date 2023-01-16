@@ -29,6 +29,7 @@ SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE features(
     hmm TEXT
 )'''
 SQLITE_UPDATE_SYNTAX = '''UPDATE features SET
+    id = ?,
     genome = ?,
     contig = ?,
     start = ?,
@@ -49,10 +50,11 @@ SQLITE_UPDATE_SYNTAX = '''UPDATE features SET
     blast = ?,
     cdd = ?,
     hmm = ? 
-WHERE id = ?'''
+WHERE rowid = ?'''
 
 class Feature:
     def __init__(self,
+                 rowid: int = 0,
                  id: str = '',
                  genome: str = '',
                  contig: str = '',
@@ -74,6 +76,7 @@ class Feature:
                  blast: str = '',
                  cdd: str = '',
                  hmm: str = ''):
+        self.rowid = rowid
         self.id = id
         self.genome = genome
         self.contig = contig
@@ -98,6 +101,8 @@ class Feature:
 
     def __iter__(self):
         for k, v in self.__dict__.items():
+            if k == 'rowid':
+                continue
             yield k, v
 
     def __repr__(self):
@@ -118,7 +123,6 @@ class Feature:
 def feature_factory(cursor, row) -> Feature:
     fields = [column[0] for column in cursor.description]
     if len(fields) < 10:
-        print(fields[0])
         return fields[0]
     return Feature(**{key: value for key, value in zip(fields, row)})
 
@@ -141,25 +145,23 @@ def add_new_feature_to_db(sql_connection, feature: Feature):
 
 def update_feature_in_db(sql_connection, feature: Feature):
     cursor = sql_connection.cursor()
-    feature_as_list = list(str(v) for k, v in feature)[1:]
-    feature_as_list.append(feature.id)
+    feature_as_list = list(str(v) for k, v in feature)
+    feature_as_list.append(feature.rowid)
     cursor.execute(SQLITE_UPDATE_SYNTAX, tuple(feature_as_list))
     sql_connection.commit()
 
-def update_feature_id_in_db(sql_connection, feature: Feature):
-    cursor = sql_connection.cursor()
-    cursor.execute('UPDATE features SET id = ? WHERE genome = ? AND contig = ? AND start = ? AND end = ? AND '
-                   'strand = ? AND type = ? AND inference = ?',
-                   (feature.id, feature.genome, feature.contig, feature.start, feature.end, feature.strand,
-                    feature.type, feature.inference))
-    sql_connection.commit()
+#def update_feature_id_in_db(sql_connection, feature: Feature):
+#    cursor = sql_connection.cursor()
+#    cursor.execute('UPDATE features SET id = ? WHERE genome = ? AND contig = ? AND start = ? AND end = ? AND '
+#                   'strand = ? AND type = ? AND inference = ?',
+#                   (feature.id, feature.genome, feature.contig, feature.start, feature.end, feature.strand,
+#                    feature.type, feature.inference))
+#    sql_connection.commit()
 
 def drop_feature(sql_connection, feature: Feature):
     cursor = sql_connection.cursor()
-    cursor.execute('DELETE FROM features WHERE genome = ? AND contig = ? AND start = ? AND end = ? AND '
-                   'strand = ? AND type = ? AND inference = ?',
-                   (feature.genome, feature.contig, feature.start, feature.end, feature.strand, feature.type,
-                    feature.inference))
+    cursor.execute('DELETE FROM features WHERE rowid = ?',
+                   (feature.rowid,))
     sql_connection.commit()
 
 def count_features(sql_connection):
@@ -171,7 +173,7 @@ def count_features(sql_connection):
 
 def read_feature_by_id(sql_connection, feature_id) -> Feature:
     cursor = sql_connection.cursor()
-    result = cursor.execute('SELECT * FROM features WHERE id = ?', (feature_id,))
+    result = cursor.execute('SELECT rowid, * FROM features WHERE id = ?', (feature_id,))
     return result.fetchone()
 
 def read_all_features(sql_connection, contig='', type=None, location=None, additional_sql=None):
@@ -200,8 +202,8 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
     if where_str:
         #print('SELECT * FROM features WHERE ' + where_str + ' ORDER BY contig, start')
         #print(fields)
-        return cursor.execute('SELECT * FROM features WHERE ' + where_str + ' ORDER BY contig, start', tuple(fields))
+        return cursor.execute('SELECT rowid, * FROM features WHERE ' + where_str + ' ORDER BY contig, start', tuple(fields))
     else:
-        return cursor.execute('SELECT * FROM features ORDER BY contig, start')
+        return cursor.execute('SELECT rowid, * FROM features ORDER BY contig, start')
     #for columns in result.fetchall():
     #    yield Feature(*columns)

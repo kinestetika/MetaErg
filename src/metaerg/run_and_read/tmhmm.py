@@ -28,7 +28,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                     if not next_feature:
                         raise Exception(f'Found results for unknown feature {next_feature_name}, '
                                         f'may need to rerun metaerg with --force')
-                    if isinstance(current_feature, sqlite.Feature) and next_feature.id != current_feature.id:
+                    if not current_feature or next_feature.id != current_feature.id:
                         if feature_tmh_count:
                             current_feature.tmh = feature_tmh_count
                             current_feature.tmh_topology = current_txt[:-1]

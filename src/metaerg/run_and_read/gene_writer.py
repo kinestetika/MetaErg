@@ -17,7 +17,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         else:
             feature.id = context.DELIMITER.join((genome_name, feature.contig, f'{j:05d}'))
         j += 1
-        sqlite.update_feature_id_in_db(db_connection, feature)
+        sqlite.update_feature_in_db(db_connection, feature)
 
     cds_count = sum(1 for f in sqlite.read_all_features(db_connection, type='CDS'))
     rna_count = sum(1 for f in sqlite.read_all_features(db_connection, type=sqlite.RNA_TARGETS))

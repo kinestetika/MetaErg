@@ -94,7 +94,17 @@ def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=Fa
 
 
 def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> dict:
-    properties = {}
+    properties = {'# total features':         0,
+                  '# proteins':               0,
+                  '# ribosomal RNA':          0,
+                  '# transfer RNA':           0,
+                  '# non-coding RNA':         0,
+                  '# retrotransposons':       0,
+                  '# CRISPR repeats':         0,
+                  '# other repeats':          0,
+                  '% coding':                 0.0,
+                  '% repeats':                0.0,
+                  'mean protein length (aa)': 0.0,}
     contigs:list[dict] = list(contig_dict.values())
     contigs.sort(key=lambda c:len(c['seq']), reverse=True)
     properties['size'] = sum(len(c['seq']) for c in contigs)
@@ -117,16 +127,16 @@ def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> di
             properties['# proteins'] += 1
             properties['% coding'] += feature.length_nt()
             properties['mean protein length (aa)'] += feature.length_aa()
-            taxon_counts.update(feature.taxon, )
+            taxon_counts.update((feature.taxon,))
         elif feature.type == 'rRNA':
             properties['# ribosomal RNA'] += 1
-            taxon_counts.update(feature.taxon, )
+            taxon_counts.update((feature.taxon,))
         elif feature.type == 'tRNA':
             properties['# transfer RNA'] += 1
-            taxon_counts.update(feature.taxon, )
+            taxon_counts.update((feature.taxon,))
         elif feature.type == 'ncRNA':
             properties['# non-coding RNA'] += 1
-            taxon_counts.update(feature.taxon, )
+            taxon_counts.update((feature.taxon,))
         elif feature.type == 'retrotransposon':
             properties['# retrotransposons'] += 1
             properties['% repeats'] += feature.length_nt()
@@ -185,13 +195,14 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     fasta.write_contigs_to_fasta(contig_dict, fna_file, db_connection)
     with open(gbk_file, 'w') as gbk_writer:
         gbk.gbk_write_genome(gbk_writer, contig_dict, db_connection)
-    if feature_count:= sqlite.count_features(db_connection) < 1e6:
+    feature_count = sqlite.count_features(db_connection)
+    if feature_count < 1e6:
         context.log(f'({genome_name}) Writing {feature_count} annotations to .feather format...')
         feather_file = context.spawn_file("annotations.feather", genome_name, context.BASE_DIR)
         rows = []
         for feature in sqlite.read_all_features(db_connection):
             rows.append({k: str(v) for k, v in feature})
-            pd.DataFrame(rows).to_feather(feather_file)
+        pd.DataFrame(rows).to_feather(feather_file)
     else:
         context.log(f'({genome_name}) Skipping feather format, too many ({feature_count}) annotations...')
     # (5) visualize
