@@ -171,7 +171,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
         context.log(f'({genome_name}) already completed!')
         return
     # (1) prepare sqlite3 database
-    db_file = context.spawn_file(genome_name, 'annotations.sqlite', context.BASE_DIR)
+    db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
     sqlite.create_db(db_file)
     db_connection = sqlite.connect_to_db(db_file)
     # (2) load sequence data
