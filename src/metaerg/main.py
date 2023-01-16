@@ -219,7 +219,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
 
 def write_functional_genes_to_xls():
     excel_file = context.BASE_DIR / 'functional_genes.xls'
-    db_files = [context.spawn_file(genome_name, 'annotations.sqlite', context.BASE_DIR)
+    db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
                      for genome_name in context.GENOME_NAMES]
     fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
                  for genome_name in context.GENOME_NAMES]
