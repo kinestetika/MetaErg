@@ -10,7 +10,7 @@ Unfortunately the interacive search box does not work with the github html visua
 files to your computer (i.e. using "git clone ..."), to try out the interactive part.
 
 Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
-dependencies. This new python version 2.2 overcomes some of those issues. Also, the annotation pipeline has further 
+dependencies. This new python version 2.3 overcomes some of those issues. Also, the annotation pipeline has further 
 evolved and has become more refined.
 
 By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
@@ -34,7 +34,7 @@ The Metaerg 2.3 pipeline ...
 * assigns genes to a built-in set of functions using [HMMER](http://hmmer.org) and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
-* saves annotations as a fasta-amino-acid file, a genbank file and in [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) for effective exploration, statistics and visualization with python or R.
+* saves annotations as a fasta-amino-acid file, a genbank file, as a sqlite database and in [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) for effective exploration, statistics and visualization with python or R.
 * saves an overview of all annotated genomes' properties and functions as an excel file. 
 * enables the user to add custom HMMs and expand the set of functional genes as needed.
 
@@ -110,9 +110,9 @@ with tasks:
 * S - build/update community contributed HMM databases
 * A - build antismash database
 
-## Using the .feather output
-[Apache Feather format](https://arrow.apache.org/docs/python/feather.html) is a binary file format for tables. You can for example load these data as a pandas dataframe. In **R**, use the [arrow](https://arrow.apache.org/docs/r/) package. 
-Each table row contains a single gene or feature, defines by the following columns:
+## Accessing the .feather and .mysql files
+[Apache Feather format](https://arrow.apache.org/docs/python/feather.html) is a binary file format for tables. Sqlite is a database format. You can for example load these data as a pandas dataframe. In **R**, use the [arrow](https://arrow.apache.org/docs/r/) package. 
+Each table/database row contains a single gene or feature, defined by the following columns:
 
 ```
 id                  the feature's unique identifier
@@ -137,43 +137,37 @@ cdd                 the top ten cdd hits
 hmm                 the top ten hits to the functional gene hmm database 
 ```
 
-You can for example use python and pandas to inspect the distribution of subsystems, such as denitrification, hydrogen oxidation or the Calvin Cycle across a large set of MAGs, as follows:
+You can for example use python and pandas to inspect annotations:
 
-```commandline
+``` python
 from pathlib import Path
 import pandas as pd
 
-from metaerg import functional_gene_configuration
-from metaerg.main import load_contigs, compute_genome_properties
+data_dir = Path('/path/to/my/data')
+feather_file = data_dir / 'my-genome.annotations.feather'
+contig_file =  data_dir / 'my-genome.fna'
 
-functional_gene_configuration.init_functional_gene_config()
+contig_dict = load_contigs('my-genome', contig_file, delimiter='xxxx')
+feature_data = pd.read_feather(feather_file)
+feature_data.set_index('id', inplace=True)
+
+for f in feature_data.itertuples():
+    for k, v in f._asdict().items():
+        print(f'{k:20}:{v}')
+    break  # comment out to iterate through all the genes...
+```
+
+Using the .mysql database is even easier:
+
+``` python
+from pathlib import Path
+from metaerg.datatypes import sqlite
 
 data_dir = Path('/path/to/my/data')
-feather_dir = data_dir / 'all_genes.feather'
-contig_dir =  data_dir / 'contig_fna_files_one_per_genome'
+sqlite_file = data_dir / 'my-genome.annotations.sqlite'
 
-genome_properties = {}
-for f in sorted(feather_dir.glob('*')):
-    genome_name = f.name
-    contig_dict = load_contigs(genome_name, contig_dir / genome_name, delimiter='xxxx')
-    feature_data = pd.read_feather(f)
-    genome_properties[genome_name] = compute_genome_properties(contig_dict, feature_data)
-    
-all_genome_feature_data = None
-for k, v in genome_properties.items():
-    subsystems_df = v['subsystems'].rename(columns={'genes': k})
-    try:
-        subsystems_df.drop('', level=0, axis=0, inplace=True)
-        subsystems_df.drop('secondary-metabolites', level=0, axis=0, inplace=True)
-    except Exception:
-        pass
-    if all_genome_feature_data is None:
-        all_genome_feature_data = subsystems_df
-    else:
-        all_genome_feature_data[k] = subsystems_df[k]
-    all_genome_feature_data = all_genome_feature_data.copy()
-del all_genome_feature_data['profiles']
-#print(all_genome_feature_data.columns)
-    
-all_genome_feature_data.to_excel(data_dir / 'functional_gene_heatmap.xls')
+db_connection = sqlite.connect_to_db(sqlite_file)
+for feature in sqlite.read_all_features(db_connection): 
+    print(feature)
+    break  # comment out to iterate through all the genes...
 ```
