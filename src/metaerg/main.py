@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.8"
+VERSION = "2.3.9"
 
 
 def parse_arguments():
@@ -47,7 +47,10 @@ def parse_arguments():
     parser.add_argument('--gtdbtk_dir', default='gtdbtk', help='Dir with the gtdbtk results (default: gtdbtk).')
     parser.add_argument('--download_database', default=False, action="store_true",
                         help='Download ready-made metaerg database.')
-    parser.add_argument('--create_database', default='', help='Create metaerg database from scratch.')
+    parser.add_argument('--create_database', default='all', help='Create metaerg database from scratch (default: all, '
+                                                                 'to create all components of the database.). Use '
+                                                                 'any combination of PVEBRCSA to only create specific '
+                                                                 'parts of the database (see README)')
     parser.add_argument('--install_deps', default='', help='Dir for installation of all dependencies '
                                                            '(helper programs). Dependencies will be installed here.')
     parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
