@@ -114,9 +114,9 @@ YOu can use the following arguments when running metaerg:
                         CAUTION: The metaerg databases are big, requiring approximately 165 Gb of 
                         disk space.
 --create_database       Use this argument to build the metaerg database from scratch. The metaerg
-                        database consists of several components. By default, this argument will build
-                        all. If you would like to build specific database components, use more of the
-                        following letters:
+                        database consists of several components. By default, this argument will
+                        build all. If you wish to build specific database components, use one or
+                        more of the following letters:
                         
                         P - build prokaryotes
                         V - build viruses
@@ -129,9 +129,9 @@ YOu can use the following arguments when running metaerg:
 
 --gtdbtk_dir            Use this argument with --create_database to point metaerg to the gtdbtk
                         database. It needs this to build its prokaryote blast database.
---install_deps          Use this argument to install all helper programs on your system. You need to
-                        follow this argument with an installation dir, where you want to have the 
-                        programs installed.
+--install_deps          Use this argument to install all helper programs on your system. You need
+                        to follow this argument with an installation dir, where you want to have
+                        the programs installed.
 --path_to_signalp       Use with --install_deps to point metaerg to the location of the signalp
                         installation tarball (currently signalp-6.0g.fast.tar.gz)
 --path_to_tmhmm         Use with --install_deps to point metaerg to the location of the tmhmm
@@ -259,3 +259,4 @@ for feature in sqlite.read_all_features(db_connection):
 ```
 
 ## How to add your own custom functional gene database and HMMs
+(work in progress... MS January 2023)
