@@ -1,4 +1,4 @@
-## metaerg.py, version 2.3.9
+## metaerg.py, version 2.3.10
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -13,7 +13,7 @@ Metaerg was originally developed in perl. It was relatively challenging to insta
 dependencies. This new python version 2.3 overcomes some of those issues. Also, the annotation pipeline has further 
 evolved and has become more refined.
 
-By using gtdbtk for taxonomic classification of genes and transferring functional annotations from the NCBI, metaerg.py
+By building its blast database off gtdbtk and transferring functional annotations from the NCBI, metaerg.py
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
 more concise than the original version of metaerg and many other annotation tools. In addition, metaerg uses NCBI's
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
@@ -48,20 +48,99 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 ```
 metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ --file_extension .fa
 ```
-Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer. There's a few more optional arguments, for a
-complete list, run:
+Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer.
+
+YOu can use the following arguments when running metaerg:
+```text
+--contig_file           A nucleotide fasta files with contigs to be annotated OR a dir containing nucleotide fasta files.
+--database_dir          The path to the metaerg database.
+--file_extension        If a dir was provided to --contig_file, the file extension of the nucleotide fasta files. 
+                        Default: .fna
+--rename_contigs        Assemblers may create very long names for contigs, which is suboptimal for presentation of 
+                        results. This argument will make metaerg rename the contigs more concisely.
+--rename_genomes        Binners may create very long names for bins/MAGs, which is suboptimal for presentation of 
+                        results. This argument will make metaerg rename the bins/MAGs more concisely. When using this
+                        option, contigs will also be renamed.
+--delimiter             Metaerg will create "locus tags" (unique IDs) for genes with according to the following scheme:
+                        "[MAG file name].[CONTIG name].[Gene number]". By default, '.' is used as the delimiter
+                        separating the three parts of the ID, as shown in the example. If you want to use a different
+                        character to separate the parts, use this argument. If your custom character is detected in
+                        filenames or contig names, and you are not renaming contigs or MAGs, metaerg will terminate with 
+                        an error message
+--prefix                When renaming genomes, by default genomes will be named "gXXXX", where 'g' is the prefix and 
+                        XXXX is a number. If you would like a different prefix, use this argument.
+--min_contig_length     Only annotate contigs that are longer than the specified length. Default: 0.
+--cpus                  Number of threads used for annotation. Default: threads available on the system / 2.
+--force                 Overwrite previous results. By default, results of previous steps will be kept.
+--contig_mode           Annotate contigs individually instead of assuming they are part of a genome, MAG or bin. When
+                        using this option, metaerg will not run repeatscout and will run prodigal in metagenome mode.
+--skip                  Use this argument to skip one or more annotation steps. Use the following names for the steps,
+                        with names to be skipped separated by a comma (,):
+                        
+                        antismash           Annotate genes involved in production of secondary metabolites and other 
+                                            aspects of the "interactome".
+                        aragorn             Call transfer RNAs.
+                        cdd                 Annotate gene functions according to NCBI's conserved domain database.
+                        cmscan              Call RNA genes (such as rRNA genes).
+                        diamond_and_blastn  Annotate gene functions and classify genes taxonomically based on 
+                                            homology to genes of other organisms. 
+                        hmm                 Annotate gene functions according to metaergs [built-in scheme](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data).
+                        ltr_harvest         Call retrotransposons.
+                        minced              Call CRSIPR repeats.
+                        prodigal            Call open reading frames (genes encoding proteins). If you skip this step,
+                                            no proteins will be annotated.
+                        signalp             Annotate cellular location of proteins via signal peptides.
+                        repeat_masker       Call any repeat sequences.
+                        tmhmm               Annotate transmembrane helixes (membrane proteins and anchors).
+                        trf                 Call tandem repeats.
+                          
+--translation_table     Translation table to be used when calling open reading frames with prodigal. Default: 11.
+--download_database     Use this argument to download and install the prebuilt metaerg database. CAUTION: The metaerg
+                        databases are big, requiring approximately 165 Gb of disk space.
+--create_database       Use this argument to build the metaerg database from scratch. The metaerg database consists of
+                        several components. By default, this argument will build all. If you would like to build 
+                        specific database components, use more of the following letters:
+                        
+                        P - build prokaryotes
+                        V - build viruses
+                        E - build eukaryotes
+                        B - format all (PVE) blast databases
+                        R - build RFAM
+                        C - build CDD
+                        S - build/update community contributed HMM databases
+                        A - build antismash database
+
+--gtdbtk_dir            Use this argument with --create_database to point metaerg to the gtdbtk database. It needs
+                        this to build its prokaryote blast database.
+--install_deps          Use this argument to install all helper programs on your system. You need to follow this 
+                        argument with an installation dir, where you want to have the programs installed.
+--path_to_signalp       Use with --install_deps to point metaerg to the location of the signalp installation
+                        tarball (currently signalp-6.0g.fast.tar.gz)
+--path_to_tmhmm         Use with --install_deps to point metaerg to the location of the tmhmm installation
+                        tarball (currently tmhmm-2.0c.Linux.tar.gz)
+                       
 ```
-metaerg -h
-```
+
 ## Using the Docker Image
 Metaerg depends on many helper programs and may require some time and troubleshooting to install. To avoid these issues,
-use the [docker image](https://hub.docker.com/r/kinestetika/metaerg).
+use the [docker image](https://hub.docker.com/r/kinestetika/metaerg). Alternatively, use singularity or apptainer to run 
+the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md):
+
+```commandline
+>singularity pull docker://kinestetika/metaerg
+>singularity run ~/metaerg_latest.sif
+```
+
+Or:
+```commandline
+>apptainer build metaerg.sif docker://kinestetika/metaerg:latest
+```
 
 ## Installation
 
 To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
 need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
-```
+```commandline
 python -m virtualenv metaerg-env
 source metaerg-env/bin/activate
 pip install --upgrade metaerg
@@ -71,12 +150,14 @@ source /path/to/bin_dir/profile
 metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```
 
-IMPORTANT: Before running metaerg you need to run the following, to prepend the helper programs to your path:
+If you install metaerg's helper programs this way, before running metaerg you need to run the following, to prepend the helper programs to your path:
 
 ```commandline
 source /path/to/bin_dir/profile
 ```
 
+
+## Database
 The database was created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
 * NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
@@ -96,21 +177,7 @@ Community contributed HMM profiles are sourced from:
 If you for some reason need to build the database yourself (this is usually not needed as the metaerg database can be 
 downloaded as shown above):
 
-```
-metaerg --create_database --database_dir /path/to/metaerg-databases/ --gtdbtk_dir /path/to/gtdbtk-database/ [--tasks [PVEBRC]]
-```
-
-with tasks:
-* P - build prokaryotes
-* V - build viruses
-* E - build eukaryotes
-* B - build PVE blast databases
-* R - build RFAM
-* C - build CDD
-* S - build/update community contributed HMM databases
-* A - build antismash database
-
-## Accessing the .feather and .mysql files
+## Accessing the .feather and .sqlite files
 [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) is a binary file format for tables. Sqlite is a database format. You can for example load these data as a pandas dataframe. In **R**, use the [arrow](https://arrow.apache.org/docs/r/) package. 
 Each table/database row contains a single gene or feature, defined by the following columns:
 
@@ -157,7 +224,7 @@ for f in feature_data.itertuples():
     break  # comment out to iterate through all the genes...
 ```
 
-Using the .mysql database is even easier:
+Using the .sqlite database is even easier:
 
 ``` python
 from pathlib import Path

@@ -5,7 +5,6 @@ import time
 from multiprocessing import cpu_count
 from pathlib import Path
 
-import pandas as pd
 import httpx
 
 from metaerg import registry
@@ -27,6 +26,8 @@ RENAME_CONTIGS = False
 RENAME_GENOMES = False
 MIN_CONTIG_LENGTH = 0
 TRANSLATION_TABLE = 0
+ACTIVE_ANNOTATORS = set('antismash aragorn cdd cmscan diamond_and_blastn hmm write_genes ltr_harvest minced prodigal '
+                        'signalp repeat_masker tmhmm trf'.split())
 DELIMITER = ''
 CPUS_PER_GENOME = 0
 CPUS_AVAILABLE = 0
@@ -47,11 +48,12 @@ PATH_TO_TMHMM = None
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, path_to_signalp, path_to_tmhmm, log_topics=''):
+         install_deps, path_to_signalp, path_to_tmhmm, log_topics='', contig_mode = False, skip=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
            CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, \
-           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM
+           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM, \
+           ACTIVE_ANNOTATORS
 
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
@@ -96,17 +98,23 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
         HTML_DIR = BASE_DIR / 'html'
 
+        TRANSLATION_TABLE = translation_table
+        if contig_mode:
+            TRANSLATION_TABLE = -1
+            ACTIVE_ANNOTATORS.remove('repeat_masker')
+        for skipped_step in skip.split(','):
+            ACTIVE_ANNOTATORS.remove(skipped_step)
+
         RENAME_CONTIGS = rename_contigs
         RENAME_GENOMES = rename_genomes
         MIN_CONTIG_LENGTH = min_contig_length
         FORCE = force
         FILE_EXTENSION = file_extension
-        TRANSLATION_TABLE = translation_table
         DELIMITER = delimiter
         PREFIX = prefix
 
         CPUS_PER_GENOME = int(cpus)
-        CPUS_AVAILABLE = cpu_count()
+        CPUS_AVAILABLE = cpu_count() / 2
 
         if HTML_DIR.exists():
             print(f'clearing html dir at {HTML_DIR}')
@@ -243,9 +251,11 @@ def write_metaerg_progress(genome_name, new_progress):
 def register_annotator(define_annotator):
     param = define_annotator()
 
-    def annotator(genome_name, contig_dict, feature_data) -> pd.DataFrame:
+    def annotator(genome_name, contig_dict, db_connection) -> int:
         """Runs programs and reads results."""
-        # (1) Read metaerg progress file, udpdate progress and log the start of the analysis
+        # (1) Read metaerg progress file, update progress and log the start of the analysis
+        if not param['annotator_key'] in ACTIVE_ANNOTATORS:
+            return 0
         current_progress = parse_metaerg_progress(genome_name)
         if not '{}=complete'.format(param['annotator_key']) in current_progress:
             current_progress += '{}=started\n'.format(param['annotator_key'])
@@ -258,7 +268,7 @@ def register_annotator(define_annotator):
             if not d.exists() or not d.stat().st_size:
                 log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
                                                                                        param['purpose'], d))
-                return feature_data
+                return 0
         # (3) Then, if force or the results files are not yet there, run the programs:
         result_files = [spawn_file(f, genome_name) for f in param.get('result_files', [])]
         analysis_already_completed = True
@@ -282,13 +292,13 @@ def register_annotator(define_annotator):
                     all_programs_in_path = False
             if all_programs_in_path:
                 try:
-                    param['run'](genome_name, contig_dict, feature_data, result_files)
+                    param['run'](genome_name, contig_dict, db_connection, result_files)
                 except Exception as e:
                     log('({}) Error while running {}: {}', (genome_name, param['purpose'], str(e)))
-                    return feature_data
+                    return 0
             else:
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
-                return feature_data
+                return 0
         elif len(param.get('programs', [])):  # before logging this, do check if any result files will be parsed
             log('({}) Reusing existing results in {}.'. format(genome_name,
                                                               ', '.join(str(file) for file in result_files)))
@@ -305,9 +315,9 @@ def register_annotator(define_annotator):
         write_metaerg_progress(genome_name, current_progress)
         positive_count = 0
         if results_complete:
-            positive_count = param['read'](genome_name, contig_dict, feature_data, result_files)
+            positive_count = param['read'](genome_name, contig_dict, db_connection, result_files)
         log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
-        return feature_data
+        return 0
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator
     return annotator

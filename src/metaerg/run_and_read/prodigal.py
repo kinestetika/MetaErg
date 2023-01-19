@@ -8,11 +8,11 @@ from metaerg.datatypes import sqlite
 def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
-    #fasta.write_contigs_to_fasta(contig_dict, fasta_file, feature_data, genome_name,
-    #                             mask_targets=fasta.ALL_MASK_TARGETS)
-    context.run_external(f'prodigal -g {context.TRANSLATION_TABLE} -m -f gff -q -i {fasta_file} -a {result_files[0]}'
-                         f' -d {result_files[1]}')
-
+    if context.TRANSLATION_TABLE < 0:
+        translate = '-p meta'
+    else:
+        translate = f'-g {context.TRANSLATION_TABLE}'
+    context.run_external(f'prodigal {translate} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
 
 def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')

@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.9"
+VERSION = "2.3.10"
 
 
 def parse_arguments():
@@ -30,6 +30,11 @@ def parse_arguments():
     parser.add_argument('--contig_file', help='Fasta nucleotide file of the contigs, or dir that '
                                               'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', help='Dir that contains the annotation databases.')
+    parser.add_argument('--contig_mode', default=False,  action="store_true",
+                        help='Annotate contigs individually instead of assuming they are part of a genome, MAG or bin.')
+    parser.add_argument('--skip', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
+                                                   "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
+                                                   "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization and presentation of results.')
     parser.add_argument('--rename_genomes', default=False,  action="store_true",
