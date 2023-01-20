@@ -46,7 +46,8 @@ metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
 ```
 To annotate a set of genomes in a given dir (each file should contain the contigs of a single genome):
 ```
-metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ --file_extension .fa
+metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ \
+--file_extension .fa
 ```
 Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer.
 
@@ -145,13 +146,13 @@ use the [docker image](https://hub.docker.com/r/kinestetika/metaerg). Alternativ
 the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md):
 
 ```commandline
->singularity pull docker://kinestetika/metaerg
->singularity run ~/metaerg_latest.sif
+singularity pull docker://kinestetika/metaerg
+singularity run ~/metaerg_latest.sif
 ```
 
 Or:
 ```commandline
->apptainer build metaerg.sif docker://kinestetika/metaerg:latest
+apptainer build metaerg.sif docker://kinestetika/metaerg:latest
 ```
 
 ## Installation
@@ -194,6 +195,10 @@ Community contributed HMM profiles are sourced from:
 
 If you for some reason need to build the database yourself (this is usually not needed as the metaerg database can be 
 downloaded as shown above):
+
+```commandline
+>metaerg --create_database --database_dir /path/to/metaerg/db --gtdbtk_dir /path/to/gtdbtkdir
+```
 
 ## Accessing the .feather and .sqlite files
 [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) is a binary file format for tables. Sqlite is a database format. You can for example load these data as a pandas dataframe. In **R**, use the [arrow](https://arrow.apache.org/docs/r/) package. 
@@ -258,5 +263,87 @@ for feature in sqlite.read_all_features(db_connection):
     break  # comment out to iterate through all the genes...
 ```
 
+## How Metaerg's functional gene calling works
+Metaerg contains a [data file](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) that defines metabolic modules, each consisting of multiple genes. These
+genes are identified using NCBI's Conserved Domain Database (cdd) and a custom set of Hidden Markov Models contributed 
+by the community/science literature. Here's what an example module looks like in the data file:
+
+```text
+>Respiration, Hydrogenases Ni-Fe
+COG3259|TIGR03295|NF033181|COG4042 NiFe hydrogenase catch-all
+WP_015407385 NiFe hydrogenase group Ia
+WP_012675774 NiFe hydrogenase group Ib
+WP_011688559 NiFe hydrogenase group Ic
+WP_023457248 NiFe hydrogenase group Id
+WP_008030254 NiFe hydrogenase group Ie
+WP_015898101 NiFe hydrogenase group If
+WP_011822511 NiFe hydrogenase group Ig
+WP_014267363 NiFe hydrogenase group Ih
+WP_022740096 NiFe hydrogenase group Ii
+WP_010878877 NiFe hydrogenase group Ij
+WP_012036281 NiFe hydrogenase group Ik
+WP_011603008 NiFe hydrogenase group IIa
+WP_011714112 NiFe hydrogenase group IIb
+WP_011383527.1 NiFe hydrogenase group IIc
+WP_010880487 NiFe hydrogenase group IId
+WP_012020882.1 NiFe hydrogenase group IIe
+WP_022846160 NiFe hydrogenase group IIIa
+WP_011719855 NiFe hydrogenase group IIIb
+WP_013637988 NiFe hydrogenase group IIIc
+WP_011686721 NiFe hydrogenase group IIId
+WP_022739022 NiFe hydrogenase group IVa
+WP_011388069 NiFe hydrogenase group IVb
+WP_026783288 NiFe hydrogenase group IVc
+WP_014122750 NiFe hydrogenase group IVd
+WP_022739883 NiFe hydrogenase group IVe
+WP_018133527 NiFe hydrogenase group IVf
+WP_013129492 NiFe hydrogenase group IVg
+WP_011018833 NiFe hydrogenase group IVh
+WP_004029221 NiFe hydrogenase group IVi
+```
+
+A metabolic module starts with a greater-than (>) sign followed by the name of the module. Each line after lists one 
+gene. The gene is defined by a one or more cdd or custom-hmm identifiers separated by or (|). After the identifiers 
+follows a space and finally the name of the gene (which can contain spaces). The example shows the Ni-Fe hydrogenase
+module. This module contains "catch-all" hydrogenase domains from the cdd database (as the first gene on the first line)
+as well as custom hmm's targeting specific subtypes of Ni-Fe hydrogenase. These hmm's were created by the [Greening Lab](https://www.nature.com/articles/srep34212).
+
+For cdd domains, metaerg will identify a protein as the gene when one of the cdd domains is among the top 5 cdd hits.
+For custom hmm's, metaerg will identify a protein as the gene if the hmm profile is the top hit and al least 70% of the 
+profile hmm aligns to the gene. If an hmm profile defines a trusted cutoff score, metaerg will use that score as the
+cutoff.
+
+The advantage of using cdd compared to custom hmm databases is that cdd contains profiles for most known genes. So if,
+for example, a protein resembles a hydrogenase, such as subunit nuoD of the respiratory complex I, cdd has
+no difficulty identifying nuoD as nuoD. However, the custom hmm database does not contain a nuoD profile, so nuoD genes,
+present in many bacterial genomes, will be erroneously identified as a NiFe hydrogenases if you only use custom profiles.
+This problem cannot be overcome by using a fixed e-value or score cutoff, as each hmm profile produces a unique 
+range of evalues and scores. In theory, this problem could be overcome by determining a trusted cutoff score for each
+profile. However, that is a lot of work and not commonly done when scientists create hmm databases.
+
+That being said, cdd is not good enough by itself, because it misses out on many important microbiome functions and \
+genes. Some genes are completely absent, and some are poorly defined. Expert input is needed for correct identification
+of these genes. That is why we need custom hmms.
+
+Metaerg's solution to this problem is to combine cdd with custom hmms. In the example, if a gene is not captured by the
+catch-all cdd hydrogenase modules, it is likely not a NiFe hydrogenase. If it is, the custom hmm's will show the 
+subtype of the NiFe hydrogenase.
+
 ## How to add your own custom functional gene database and HMMs
-(work in progress... MS January 2023)
+
+1. Locate your metaerg database dir. Inside the metaerg database dir, is a dir "hmm". 
+2. Within "hmm", create a new dir named "user_config", if it does not already exist.
+3. Inside "user_config", you can create one or more files with the extension ".config.txt".
+4. These files should be formatted like in the example above.
+5. Each module should start with >.
+6. Each gene starts with one or more cdd or custom hmm names, followed by a space and the gene name/description. 
+7. To query the cdd database for relevant cdd names, you use grep with the file "/path/to/metaerg/database/cdd/cddid.tbl."
+8. Within "hmm", create a new dir named "user_hmm", if it does not already exist.
+9. Add your custom hmm files to this dir.
+10. Update the metaerg database using the following command:
+
+```commandline
+>metaerg --create_database S --database_dir /path/to/metaerg/db 
+```
+
+11. Only those hmm profiles listed in your config file will actually be built into to the metaerg database

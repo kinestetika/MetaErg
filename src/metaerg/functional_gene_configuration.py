@@ -38,11 +38,10 @@ def init_functional_gene_config():
     index_data = []
     base_config_file = Path(__file__).parent / 'run_and_read' / 'data' / 'functional_gene_data'
     parse_functional_gene_config_file(base_config_file, subsystems, index_data)
-    user_config_dir = context.DATABASE_DIR / 'user_config'
+    user_config_dir = context.DATABASE_DIR / 'hmm' / 'user_config'
     if user_config_dir.exists() and user_config_dir.is_dir():
         for config_file in (context.DATABASE_DIR / 'user_config').glob('*' + CONFIG_DATA_FILE_EXTENSION):
-            parse_functional_gene_config_file(context.DATABASE_DIR / 'user_config' / config_file.name, subsystems,
-                                              index_data)
+            parse_functional_gene_config_file(user_config_dir / config_file.name, subsystems, index_data)
     DATAFRAME_INDEX = pd.MultiIndex.from_tuples(index_data, names=['subsystem', 'function'])
     SUBSYSTEM_DATA = pd.DataFrame(subsystems, dtype=str, index=DATAFRAME_INDEX)
     context.log(f'Complete configuration contains {len(subsystems)} genes.')

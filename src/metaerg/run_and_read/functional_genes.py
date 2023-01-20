@@ -139,8 +139,9 @@ def install_functional_gene_databases():
 
     hmm_dir = context.DATABASE_DIR / 'hmm'
     hmm_dir.mkdir(exist_ok=True, parents=True)
+    user_hmm_dir = hmm_dir / 'user_hmm'
     (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)  # used by functional_gene_configuration.py
-    (hmm_dir / 'user_hmm').mkdir(exist_ok=True, parents=True)  # used below
+    user_hmm_dir.mkdir(exist_ok=True, parents=True)  # used below
     context.log(f'Installing functional gene hmm database at {hmm_dir}...')
 
     current_working_dir = os.getcwd()
@@ -201,7 +202,7 @@ def install_functional_gene_databases():
             if f == all_hmms_file:
                 continue
             add_hmm_file_to_db(hmm_file, output, names_done, all_target_hmm_names)
-        for f in (hmm_dir / 'user_hmm').glob('*.hmm'):
+        for f in user_hmm_dir.glob('*.hmm'):
             hmm_file = f.absolute()
             add_hmm_file_to_db(hmm_file, output, names_done, all_target_hmm_names)
     context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
