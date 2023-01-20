@@ -42,11 +42,11 @@ When using metaerg, please cite [Xiaoli Dong and Marc Strous (2019) Frontiers in
 
 ## Usage:
 ```
-metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
+>metaerg --contig_file contig-file.fna --database_dir /path/to/metaerg-databases/
 ```
 To annotate a set of genomes in a given dir (each file should contain the contigs of a single genome):
 ```
-metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ \
+>metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ \
 --file_extension .fa
 ```
 Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer.
@@ -146,13 +146,13 @@ use the [docker image](https://hub.docker.com/r/kinestetika/metaerg). Alternativ
 the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md):
 
 ```commandline
-singularity pull docker://kinestetika/metaerg
-singularity run ~/metaerg_latest.sif
+>singularity pull docker://kinestetika/metaerg
+>singularity run ~/metaerg_latest.sif
 ```
 
 Or:
 ```commandline
-apptainer build metaerg.sif docker://kinestetika/metaerg:latest
+>apptainer build metaerg.sif docker://kinestetika/metaerg:latest
 ```
 
 ## Installation
@@ -160,21 +160,20 @@ apptainer build metaerg.sif docker://kinestetika/metaerg:latest
 To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
 need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
 ```commandline
-python -m virtualenv metaerg-env
-source metaerg-env/bin/activate
-pip install --upgrade metaerg
-metaerg --install_deps /path/to/bin_dir --database_dir /path/to/database_dir --path_to_signalp \
+>python -m virtualenv metaerg-env
+>source metaerg-env/bin/activate
+>pip install --upgrade metaerg
+>metaerg --install_deps /path/to/bin_dir --database_dir /path/to/database_dir --path_to_signalp \
     path/to/signalp.tar.gz --path_to_tmhmm path/to/tmhmm.tar.gz
-source /path/to/bin_dir/profile
-metaerg --download_database --database_dir /path/to/metaerg-databases/
+>source /path/to/bin_dir/profile
+>metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```
 
 If you install metaerg's helper programs this way, before running metaerg you need to run the following, to prepend the helper programs to your path:
 
 ```commandline
-source /path/to/bin_dir/profile
+>source /path/to/bin_dir/profile
 ```
-
 
 ## Database
 The database was created from the following sources:
