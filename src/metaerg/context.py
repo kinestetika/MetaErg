@@ -103,7 +103,10 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             TRANSLATION_TABLE = -1
             ACTIVE_ANNOTATORS.remove('repeat_masker')
         for skipped_step in skip.split(','):
-            ACTIVE_ANNOTATORS.remove(skipped_step)
+            try:
+                ACTIVE_ANNOTATORS.remove(skipped_step)
+            except KeyError:
+                pass
 
         RENAME_CONTIGS = rename_contigs
         RENAME_GENOMES = rename_genomes
