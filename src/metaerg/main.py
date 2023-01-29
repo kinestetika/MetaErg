@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.12"
+VERSION = "2.3.13"
 
 
 def parse_arguments():
@@ -64,7 +64,7 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=False, min_contig_length=500):
+def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=False, min_contig_length=0):
     if delimiter in genome_name:
         raise Exception(f'Genome id {genome_name} contains "{delimiter}"; change delimiter with '
                                 f'--delimiter [new delimiter] or use --rename_genomes')

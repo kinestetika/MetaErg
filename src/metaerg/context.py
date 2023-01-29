@@ -110,7 +110,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
         RENAME_CONTIGS = rename_contigs
         RENAME_GENOMES = rename_genomes
-        MIN_CONTIG_LENGTH = min_contig_length
+        MIN_CONTIG_LENGTH = int(min_contig_length)
         FORCE = force
         FILE_EXTENSION = file_extension
         DELIMITER = delimiter
