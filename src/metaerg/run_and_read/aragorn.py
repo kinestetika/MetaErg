@@ -13,11 +13,13 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
 
 def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     count = 0
+    ln = 0
     current_contig = None
     coord_regexp = re.compile(r'(c*)\[(\d+),(\d+)]')
     with open(result_files[0]) as aragorn_handle:
         for line in aragorn_handle:
             words = line.strip().split()
+            ln += 1
             match words:
                 case ['>end']:
                     break
@@ -25,23 +27,27 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                     current_contig = contig_dict[contig_name[1:]]
                 case [_, trna, coordinates, _, codon]:
                     if coord_match := coord_regexp.fullmatch(coordinates):
-                        strand = -1 if 'c' == coord_match.group(1) else 1
-                        start = max(0, int(coord_match.group(2)) - 1)
-                        end = min(len(current_contig['seq']), int(coord_match.group(3)))
-                        seq = current_contig['seq'][start:end]
-                        if strand < 0:
-                            seq = fasta.reverse_complement(seq)
-                        feature = sqlite.Feature(genome = genome_name,
-                                   contig = current_contig['id'],
-                                   start = start,
-                                   end = end,
-                                   strand = strand,
-                                   type = 'tRNA',
-                                   inference = 'aragorn',
-                                   nt_seq = seq,
-                                   descr = f'{trna}-{codon}')
-                        sqlite.add_new_feature_to_db(db_connection, feature)
-                        count += 1
+                        if current_contig:
+                            strand = -1 if 'c' == coord_match.group(1) else 1
+                            start = max(0, int(coord_match.group(2)) - 1)
+                            end = min(len(current_contig['seq']), int(coord_match.group(3)))
+                            seq = current_contig['seq'][start:end]
+                            if strand < 0:
+                                seq = fasta.reverse_complement(seq)
+                            feature = sqlite.Feature(genome = genome_name,
+                                       contig = current_contig['id'],
+                                       start = start,
+                                       end = end,
+                                       strand = strand,
+                                       type = 'tRNA',
+                                       inference = 'aragorn',
+                                       nt_seq = seq,
+                                       descr = f'{trna}-{codon}')
+                            sqlite.add_new_feature_to_db(db_connection, feature)
+                            count += 1
+                        else:
+                            context.log(f'Warning: Unexpected tRNA coordinates in "{line}" '
+                                    f'at line {ln - 1} of {result_files[0]}')
     return count
 
 

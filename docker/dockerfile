@@ -21,7 +21,7 @@ RUN mkdir /bio/bin
 WORKDIR /bio/bin
 COPY signalp-6.0g.fast.tar.gz /bio/downloads
 COPY tmhmm-2.0c.Linux.tar.gz /bio/downloads
-COPY metaerg-2.3.10.tar.gz /bio/downloads
+COPY metaerg-2.3.12.tar.gz /bio/downloads
 RUN python -m virtualenv /bio/bin/metaerg-env
 ENV PATH="/bio/bin/ncbi-blast/bin:$PATH"
 ENV PATH="/bio/bin/infernal/binaries:$PATH"
@@ -34,7 +34,7 @@ ENV PATH="/bio/bin/genometools/bin:$PATH"
 ENV PATH="/bio/bin/minced:$PATH"
 ENV PATH="/bio/bin:$PATH"
 ENV PATH="/bio/bin/metaerg-env/bin:$PATH"
-RUN pip install --upgrade /bio/downloads/metaerg-2.3.10.tar.gz
+RUN pip install --upgrade /bio/downloads/metaerg-2.3.12.tar.gz
 RUN metaerg --install_deps /bio/bin --path_to_signalp /bio/downloads/signalp-6.0g.fast.tar.gz --path_to_tmhmm /bio/downloads/tmhmm-2.0c.Linux.tar.gz
 RUN mkdir /databases
 RUN mkdir /data
