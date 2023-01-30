@@ -15,7 +15,10 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     with open(result_files[0]) as trf_handle:
         for line in trf_handle:
             if line.startswith("@"):
-                contig = contig_dict[line[1:].strip()]
+                contig_name = line[1:].strip()
+                if space_index := contig_name.find(' ') > 0:
+                    contig_name = contig_name[:space_index]
+                contig = contig_dict[contig_name]
                 continue
             if not contig:
                 continue

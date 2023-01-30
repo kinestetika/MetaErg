@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.14"
+VERSION = "2.3.15"
 
 
 def parse_arguments():
@@ -74,6 +74,7 @@ def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=Fa
         for c in fasta_reader:
             if len(c['seq']) < min_contig_length:
                 continue
+            c['descr'] = ''  # remove descr as it makes parsing results more difficult for some analyses
             contigs.append(c)
             if not rename_contigs:
                 if c['id'] in names_done:

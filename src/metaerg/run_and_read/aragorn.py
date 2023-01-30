@@ -24,6 +24,8 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 case ['>end']:
                     break
                 case [contig_name] if contig_name.startswith('>'):
+                    if space_index := contig_name.find(' ') > 0:
+                        contig_name = contig_name[:space_index]
                     current_contig = contig_dict[contig_name[1:]]
                 case [_, trna, coordinates, _, codon]:
                     if coord_match := coord_regexp.fullmatch(coordinates):
