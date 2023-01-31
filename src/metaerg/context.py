@@ -2,6 +2,7 @@ import shutil
 import os
 import subprocess
 import time
+import traceback
 from multiprocessing import cpu_count
 from pathlib import Path
 
@@ -297,7 +298,8 @@ def register_annotator(define_annotator):
                 try:
                     param['run'](genome_name, contig_dict, db_connection, result_files)
                 except Exception as e:
-                    log('({}) Error while running {}: {}', (genome_name, param['purpose'], str(e)))
+                    log('({}) Error while running {}: {}', (genome_name, param['purpose'],
+                                                            "".join(traceback.format_exception(e))))
                     return 0
             else:
                 log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))

@@ -13,6 +13,7 @@
 FROM archlinux:base-devel
 MAINTAINER Marc Strous
 COPY mirrorlist /etc/pacman.d/
+#RUN pacman -Sy --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm
 RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv
 RUN mkdir /bio
