@@ -155,7 +155,7 @@ def write_contigs_to_fasta(contig_dict: dict, base_file: Path, db_connection, ge
                            split=1, mask_targets=None):
     """writes contigs to fasta file(s), optionally masking features with N"""
     number_of_records = len(contig_dict)
-    split = min(split, number_of_records)
+    split = int(min(split, number_of_records))
     records_per_file = number_of_records / split
     if split > 1:
         paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]
