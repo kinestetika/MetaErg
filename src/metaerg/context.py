@@ -118,7 +118,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         PREFIX = prefix
 
         CPUS_PER_GENOME = int(cpus)
-        CPUS_AVAILABLE = cpu_count() / 2
+        CPUS_AVAILABLE = cpu_count() // 2
 
         if HTML_DIR.exists():
             print(f'clearing html dir at {HTML_DIR}')
@@ -147,7 +147,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                           f'in dir "{contig_file}"')
                 exit(1)
             PARALLEL_ANNOTATIONS = CPUS_PER_GENOME
-            CPUS_PER_GENOME = max(1, int(CPUS_PER_GENOME / len(CONTIG_FILES)))
+            CPUS_PER_GENOME = max(1, CPUS_PER_GENOME // len(CONTIG_FILES))
             PARALLEL_ANNOTATIONS = int(PARALLEL_ANNOTATIONS / CPUS_PER_GENOME)
         else:
             CONTIG_FILES = [contig_file]

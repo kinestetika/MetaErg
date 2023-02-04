@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.17"
+VERSION = "2.3.18"
 
 
 def parse_arguments():
