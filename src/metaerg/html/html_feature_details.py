@@ -145,6 +145,7 @@ def _make_html_template() -> str:
           background-color: gainsboro;
             }
     </style>
+    <p id=cr>This is a very large file - it takes some time until all genes are ready for display.</p>
     FEATURE_HTML
 </body>
 </html>

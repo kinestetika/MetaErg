@@ -22,7 +22,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.18"
+VERSION = "2.3.19"
 
 
 def parse_arguments():
@@ -32,17 +32,12 @@ def parse_arguments():
     parser.add_argument('--database_dir', help='Dir that contains the annotation databases.')
     parser.add_argument('--contig_mode', default=False,  action="store_true",
                         help='Annotate contigs individually instead of assuming they are part of a genome, MAG or bin.')
-    parser.add_argument('--skip', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
-                                                   "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
-                                                   "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization and presentation of results.')
     parser.add_argument('--rename_genomes', default=False,  action="store_true",
                         help='Renaming genomes can improve visualization and presentation of results.')
     parser.add_argument('--min_contig_length', default=0,  help='Shorter contigs will be filtered before annotaton.')
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
-    parser.add_argument('--force', default=False, action="store_true",
-                        help='Use force to overwrite previous result files.')
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
     parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
@@ -60,6 +55,16 @@ def parse_arguments():
                                                            '(helper programs). Dependencies will be installed here.')
     parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
     parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
+    parser.add_argument('--force', default=False, action="store_true",
+                        help='Use force to overwrite previous result files.')
+    parser.add_argument('--read_only', default=False, action='store_true', help="Do not run any helper programs, only "
+                                                                                "read results from previous runs.")
+    parser.add_argument('--skip_step', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
+                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
+                                                        "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
+    parser.add_argument('--run_step', default='', help="Only (re)run one or more annotation steps. Steps are: antismash, aragorn, "
+                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
+                                                        "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
 
     return parser.parse_args()
 
@@ -102,8 +107,11 @@ def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=Fa
     return contigs
 
 
-def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> dict:
-    properties = {'# total features':         0,
+def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_dict: dict[str, dict], db_connection) -> dict:
+    properties = {'genome name':              genome_name,
+                  'input fasta file':         input_fasta_file.name,
+                  '# total features':         0,
+                  '# contigs':                0,
                   '# proteins':               0,
                   '# ribosomal RNA':          0,
                   '# transfer RNA':           0,
@@ -117,6 +125,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> di
     contigs:list[dict] = list(contig_dict.values())
     contigs.sort(key=lambda c:len(c['seq']), reverse=True)
     properties['size'] = sum(len(c['seq']) for c in contigs)
+    properties['# contigs'] = len(contigs)
     properties['% GC'] = sum((c['seq'].count('G') + c['seq'].count('G') for c in contigs)) / \
                                (properties['size'] - sum((c['seq'].count('N') for c in contigs)))
     cum_size = 0
@@ -162,7 +171,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> di
     properties['dominant taxon'] = ''
     properties['% of CDS classified to dominant taxon'] = 0.0
     del taxon_counts['']
-    for k, v in taxon_counts.items():
+    for k, v in taxon_counts.most_common(1):
         properties['% of CDS classified to dominant taxon'] = v / taxon_counts.total()
         properties['dominant taxon'] = k
         break
@@ -176,7 +185,7 @@ def compute_genome_properties(contig_dict: dict[str, dict], db_connection) -> di
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     current_progress = context.parse_metaerg_progress(genome_name)
-    if 'visualization=complete' in current_progress:
+    if not context.FORCE and 'visualization=complete' in current_progress:
         context.log(f'({genome_name}) already completed!')
         return
     # (1) prepare sqlite3 database
@@ -215,7 +224,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     else:
         context.log(f'({genome_name}) Skipping feather format, too many ({feature_count}) annotations...')
     # (5) visualize
-    genome_properties = compute_genome_properties(contig_dict, db_connection)
+    genome_properties = compute_genome_properties(genome_name, input_fasta_file, contig_dict, db_connection)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
         html_writer(genome_name, db_connection, genome_properties, context.HTML_DIR)
@@ -224,20 +233,29 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     current_progress += 'visualization=complete\n'
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
+    return genome_properties
 
 
-def write_functional_genes_to_xls():
+def write_functional_genes_to_xls(genome_properties: dict):
     excel_file = context.BASE_DIR / 'functional_genes.xls'
-    db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
+    if not genome_properties:
+        db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
+                         for genome_name in context.GENOME_NAMES]
+        fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
                      for genome_name in context.GENOME_NAMES]
-    fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
-                 for genome_name in context.GENOME_NAMES]
-    genome_properties = {}
-    for db_file, contig_file in zip(db_files, fna_files):
-        genome_name = contig_file.stem
-        contig_dict = load_contigs(genome_name, contig_file, delimiter='xxxx')
-        db_connection = sqlite.connect_to_db(db_file)
-        genome_properties[genome_name] = compute_genome_properties(contig_dict, db_connection)
+        genome_name_mappings = {}
+        with open(context.GENOME_NAME_MAPPING_FILE) as name_mappings:
+            for line in name_mappings:
+                w = line.split()
+                genome_name_mappings[w[0]] = Path(w[2])
+        genome_properties = {}
+        for db_file, contig_file in zip(db_files, fna_files):
+            genome_name = contig_file.stem
+            contig_dict = load_contigs(genome_name, contig_file, delimiter='xxxx')
+            db_connection = sqlite.connect_to_db(db_file)
+            genome_properties[genome_name] = compute_genome_properties(genome_name,
+                                                                       genome_name_mappings.get(genome_name, 'unknown'),
+                                                                       contig_dict, db_connection)
 
     all_genome_feature_data = None
     for genome_name, genome_property_hash in genome_properties.items():
@@ -245,12 +263,15 @@ def write_functional_genes_to_xls():
         try:
             subsystems_df.drop('', level=0, axis=0, inplace=True)
             subsystems_df.drop('secondary-metabolites', level=0, axis=0, inplace=True)
-        except Exception:
+        except Exception as e:
             pass
 
         if all_genome_feature_data is None:
             all_genome_feature_data = subsystems_df
         else:
+            # all_genome_feature_data.to_excel(excel_file)
+            # new_adds_excell = context.BASE_DIR / 'functional_genes_new.xls'
+            #subsystems_df[genome_name].to_excel(new_adds_excell)
             all_genome_feature_data[genome_name] = subsystems_df[genome_name]
         all_genome_feature_data = all_genome_feature_data.copy()
     del all_genome_feature_data['profiles']
@@ -289,6 +310,7 @@ def main():
         install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
         functional_gene_configuration.init_functional_gene_config()
+        annotation_summaries = {}
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
@@ -296,18 +318,18 @@ def main():
                     outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
             for genome_name, future in outcomes.items():
                 try:
-                    r = future.result()
+                    annotation_summaries[genome_name] = future.result()
                 except Exception:
                     context.log(f'({genome_name}) Error while processing:')
                     raise
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                annotate_genome(genome_name, contig_file)
+                annotation_summaries[genome_name] = annotate_genome(genome_name, contig_file)
+        tmhmm.cleanup(context.BASE_DIR)
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
-        tmhmm.cleanup(context.BASE_DIR)
         context.log('Now writing excel files with functional genes per genome...')
-        write_functional_genes_to_xls()
+        write_functional_genes_to_xls(annotation_summaries)
         context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

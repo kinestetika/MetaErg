@@ -1,7 +1,10 @@
 from pathlib import Path
 from metaerg import context
 
-GENOME_PROPERTY_FORMATS = {'size': ',',
+GENOME_PROPERTY_FORMATS = {'genome name': '<',
+                           'input fasta file': '<',
+                           '# contigs': ',',
+                           'size': ',',
                            '% GC': '.1%',
                            'N50': ',',
                            '# proteins': ',',
