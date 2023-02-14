@@ -64,10 +64,11 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 else:
                     if h.evalue > 0:
                         confidence = min(1.0, - log10(h.evalue) / 100)
-                if new_subsystem := functional_gene_configuration.match_hit(h, confidence):
+                if new_matches := functional_gene_configuration.match_hit(h, confidence):
                     hit_count += 1
-                    feature.subsystems = functional_gene_configuration.cleanup_subsystem_str(
-                        feature.subsystems.strip() + ' ' + new_subsystem)
+                    for new_match in new_matches:
+                        if not new_match in feature.subsystems:
+                            feature.subsystems.append(new_match)
                 break
             sqlite.update_feature_in_db(db_connection, feature)
     return hit_count
@@ -133,9 +134,8 @@ def install_functional_gene_databases():
 
     functional_gene_configuration.init_functional_gene_config()
     all_target_hmm_names = set()
-    for t in functional_gene_configuration.SUBSYSTEM_DATA['profiles']:
-        for t1 in t.split('|'):
-            all_target_hmm_names.add(t1)
+    for gene_def in functional_gene_configuration.GENES:
+        all_target_hmm_names.update(gene_def.cues)
 
     hmm_dir = context.DATABASE_DIR / 'hmm'
     hmm_dir.mkdir(exist_ok=True, parents=True)

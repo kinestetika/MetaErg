@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path
 from metaerg import context
 from metaerg.datatypes import sqlite
+from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
 
 NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
 NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
@@ -113,7 +114,7 @@ def write_fasta(handle, fasta, line_length=80):
         pass
     try:
         if fasta["subsystems"]:
-            handle.write(f' ({fasta["subsystems"]})')
+            handle.write(f' {format_list_of_subsystem_genes(fasta["subsystems"])}')
     except KeyError:
         pass
     try:
@@ -138,7 +139,7 @@ def write_features_to_fasta(db_connection, seq_type: str, base_file: Path, split
     filehandles = [open(p, 'w') for p in paths]
     records_written = 0
     for feature in sqlite.read_all_features(db_connection, type=targets):
-        fasta_rec = {'id': feature.id, 'descr': feature.descr}
+        fasta_rec = {'id': feature.id, 'descr': feature.descr, 'subsystems': feature.subsystems, 'taxon': feature.taxon}
         if 'aa' == seq_type:
             fasta_rec['seq'] = feature.aa_seq
         elif 'nt' == seq_type:

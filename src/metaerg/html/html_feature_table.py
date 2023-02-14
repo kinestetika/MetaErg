@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from metaerg import context
+from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import taxon_at_genus
 
@@ -30,7 +31,7 @@ def get_empty_format_dict():
             'ci': '', 'ca': '', 'cr': '', 'ct': ''}
 
 
-def format_feature(f: sqlite.Feature, format_hash, dominant_taxon, colors):
+def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     format_hash['f_id'] = f.id
     format_hash['taxon'] = taxon_at_genus(f.taxon)
     format_hash['type'] = f.type
@@ -57,7 +58,7 @@ def format_feature(f: sqlite.Feature, format_hash, dominant_taxon, colors):
             format_hash['destination'] = 'cytoplasm'
         case [*_]:
             format_hash['destination'] = ''
-    format_hash['subsystem'] = f.subsystems
+    format_hash['subsystem'] = format_list_of_subsystem_genes(f.subsystems)
     format_hash['has_cdd'] = 'Y' if f.cdd is not None else ''
     if f.blast:
         format_hash['ident'] = f'{f.blast.hits[0].percent_id:.1f}'
@@ -66,9 +67,9 @@ def format_feature(f: sqlite.Feature, format_hash, dominant_taxon, colors):
         format_hash['ca'] = colors[min(int(f.blast.percent_aligned() / 20), len(colors) - 1)]
         format_hash['recall'] = f'{f.blast.percent_recall():.1f}'
         format_hash['cr'] = colors[min(int(f.blast.percent_recall() / 20), len(colors) - 1)]
-    dominant_taxon = dominant_taxon.split()
+    top_taxon = top_taxon.split()
     taxon = f.taxon.split()
-    format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(dominant_taxon)) / (len(taxon) + 1))]
+    format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(top_taxon)) / (len(taxon) + 1))]
 
 
 def format_hash_to_html(format_hash):
@@ -113,11 +114,11 @@ def make_html(genome_name, db_connection, genome_properties:dict) -> str:
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
+                format_feature(f, format_hash, genome_properties['classification (top taxon)'], colors)
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            format_feature(f, format_hash, genome_properties['dominant taxon'], colors)
+            format_feature(f, format_hash, genome_properties['classification (top taxon)'], colors)
             table_body += format_hash_to_html(format_hash)
         prev_f = f
     html = html.replace('TABLE_BODY', table_body)

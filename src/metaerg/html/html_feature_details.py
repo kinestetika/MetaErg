@@ -2,6 +2,7 @@ from pathlib import Path
 from math import log10
 
 from metaerg.datatypes import sqlite
+from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
 from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult, taxon_at_genus
 from metaerg import context
 
@@ -19,14 +20,14 @@ def write_html(genome_name, db_connection, genome_properties:dict, dir):
     feature_html = ''
     for feature in sqlite.read_all_features(db_connection, type=('CDS', 'rRNA', 'ncRNA', 'retrotransposon')):
         if feature.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
-            feature_html += make_feature_html(feature, genome_properties['dominant taxon'])
+            feature_html += make_feature_html(feature, genome_properties['classification (top taxon)'])
 
     html = _make_html_template().replace('FEATURE_HTML', feature_html)
     with open(file, 'w') as handle:
         handle.write(html)
 
 
-def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon, include_id, title: str,
+def make_blast_table_html(blast_result: BlastResult, f_length, top_taxon, include_id, title: str,
                           headers: str ='percent id|query align|hit align|description|taxon') -> str:
     if blast_result:
         html = f'<h3>{title}</h3>\n'
@@ -68,7 +69,7 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon, i
 
                 descr,
 
-                COLORS[int(len(COLORS) * len(set(h.hit.taxon.split()) & set(dominant_taxon.split()))
+                COLORS[int(len(COLORS) * len(set(h.hit.taxon.split()) & set(top_taxon.split()))
                            / (len (h.hit.taxon.split()) + 1))],
                 taxon_at_genus(h.hit.taxon)
             )
@@ -79,7 +80,7 @@ def make_blast_table_html(blast_result: BlastResult, f_length, dominant_taxon, i
         return ''
 
 
-def make_feature_html(f, dominant_taxon) -> str:
+def make_feature_html(f, top_taxon) -> str:
     html = _make_feature_html_template()
     html = html.replace('FEATURE_ID', f.id)
     if f.taxon:
@@ -93,20 +94,21 @@ def make_feature_html(f, dominant_taxon) -> str:
     else:
         length = f.end - f.start
         length_unit = 'nt'
-    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, dominant_taxon, include_id = False,
+    html = html.replace('BLAST_TABLE', make_blast_table_html(f.blast, length, top_taxon, include_id = False,
                                                              title='Top Blast Hits'))
-    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, dominant_taxon, include_id = True,
+    html = html.replace('CDD_TABLE', make_blast_table_html(f.cdd, length, top_taxon, include_id = True,
                                                            title='Top Conserved Domain Database Hits',
                                                            headers='percent id|query align|hit align|description| '))
-    html = html.replace('HMM_TABLE', make_blast_table_html(f.hmm, length, dominant_taxon, include_id = True,
+    html = html.replace('HMM_TABLE', make_blast_table_html(f.hmm, length, top_taxon, include_id = True,
                                                            title='Top Functional Gene HMM Hits',
                                                            headers='evalue|query align|hit align|description| '))
     attribute_html = '<table>\n'
     f.tmh = '' if not f.tmh else f.tmh
     f_as_dict = {k:v for k,v in f}
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f_as_dict[k]}</td></tr>\n' for k in
-                              ('start', 'end', 'strand', 'type', 'inference', 'subsystems', 'descr', 'taxon', 'notes',
+                              ('start', 'end', 'strand', 'type', 'inference', 'descr', 'taxon', 'notes',
                                'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
+    attribute_html += f'<tr><td id=al>subsystems</td><td id=al>{format_list_of_subsystem_genes(f.subsystems)}</td></tr>\n'
     attribute_html += f'<tr><td id=al>length</td><td id=al>{length} {length_unit}</td></tr>\n'
     attribute_html += '</table>\n'
     html = html.replace('ATTRIBUTE_TABLE', attribute_html)

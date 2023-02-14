@@ -5,6 +5,7 @@ from concurrent import futures
 from hashlib import md5
 from collections import Counter
 
+import openpyxl
 import pandas as pd
 
 import metaerg.run_and_read.diamond_and_blastn
@@ -22,7 +23,7 @@ from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_do
 from metaerg.run_and_read import *
 from metaerg.html import *
 
-VERSION = "2.3.19"
+VERSION = "2.3.20"
 
 
 def parse_arguments():
@@ -112,6 +113,7 @@ def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_d
                   'input fasta file':         input_fasta_file.name,
                   '# total features':         0,
                   '# contigs':                0,
+                  'N50 contig length':        0,
                   '# proteins':               0,
                   '# ribosomal RNA':          0,
                   '# transfer RNA':           0,
@@ -132,7 +134,7 @@ def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_d
     for c in contigs:
         cum_size += len(c['seq'])
         if cum_size >+ properties['size'] / 2:
-            properties['N50'] = len(c['seq'])
+            properties['N50 contig length'] = len(c['seq'])
             break
 
     #feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
@@ -167,13 +169,13 @@ def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_d
     properties['% coding'] /= properties['size']
     properties['mean protein length (aa)'] /= properties['# proteins']
     properties['% repeats'] /= properties['size']
-    properties['% CDS classified to taxon'] = 1 - taxon_counts[''] / taxon_counts.total()
-    properties['dominant taxon'] = ''
-    properties['% of CDS classified to dominant taxon'] = 0.0
+    properties['classification (top taxon)'] = ''
+    properties['% of CDS classified to top taxon'] = 0.0
+    properties['% of CDS that could be classified'] = 1 - taxon_counts[''] / taxon_counts.total()
     del taxon_counts['']
     for k, v in taxon_counts.most_common(1):
-        properties['% of CDS classified to dominant taxon'] = v / taxon_counts.total()
-        properties['dominant taxon'] = k
+        properties['% of CDS classified to top taxon'] = v / taxon_counts.total()
+        properties['classification (top taxon)'] = k
         break
     codon_usage_bias, doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
     properties['codon usage bias'] = codon_usage_bias
@@ -236,8 +238,8 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     return genome_properties
 
 
-def write_functional_genes_to_xls(genome_properties: dict):
-    excel_file = context.BASE_DIR / 'functional_genes.xls'
+def write_genome_properties_to_xls(genome_properties: dict):
+    excel_file = context.BASE_DIR / 'genome_properties.xls'
     if not genome_properties:
         db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
                          for genome_name in context.GENOME_NAMES]
@@ -257,25 +259,33 @@ def write_functional_genes_to_xls(genome_properties: dict):
                                                                        genome_name_mappings.get(genome_name, 'unknown'),
                                                                        contig_dict, db_connection)
 
-    all_genome_feature_data = None
+    e_workbook = openpyxl.Workbook()
+    e_column = 3
     for genome_name, genome_property_hash in genome_properties.items():
-        subsystems_df = genome_property_hash['subsystems'].rename(columns={'genes': genome_name})
-        try:
-            subsystems_df.drop('', level=0, axis=0, inplace=True)
-            subsystems_df.drop('secondary-metabolites', level=0, axis=0, inplace=True)
-        except Exception as e:
-            pass
+        e_sheet = e_workbook.active
+        row = 1
+        for k, v in genome_property_hash.items():
+            if 'subsystems' == k or 'classification (top taxon)' == k:
+                continue
+            e_sheet.cell(row=row, column=1).value = k
+            e_sheet.cell(row=row, column=e_column).value = v
+            row += 1
 
-        if all_genome_feature_data is None:
-            all_genome_feature_data = subsystems_df
-        else:
-            # all_genome_feature_data.to_excel(excel_file)
-            # new_adds_excell = context.BASE_DIR / 'functional_genes_new.xls'
-            #subsystems_df[genome_name].to_excel(new_adds_excell)
-            all_genome_feature_data[genome_name] = subsystems_df[genome_name]
-        all_genome_feature_data = all_genome_feature_data.copy()
-    del all_genome_feature_data['profiles']
-    all_genome_feature_data.to_excel(excel_file)
+        e_sheet.cell(row=row, column=1).value = 'classification (top taxon)'
+        for k, w in zip('kingdom phylum class order family genus species'.split(),
+                        genome_property_hash['classification (top taxon)'].split('; ')):
+            e_sheet.cell(row=row, column=2).value = k
+            e_sheet.cell(row=row, column=e_column).value = w
+            row += 1
+
+        for subsystem, genes in genome_property_hash['subsystems'].items():
+            e_sheet.cell(row=row, column=1).value = subsystem
+            for gene, feature_ids in genes.items():
+                e_sheet.cell(row=row, column=2).value = gene
+                e_sheet.cell(row=row, column=e_column).value = ', '.join(feature_ids)
+                row += 1
+        e_column += 1
+    e_workbook.save(excel_file)
 
 
 def main():
@@ -329,7 +339,7 @@ def main():
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
         context.log('Now writing excel files with functional genes per genome...')
-        write_functional_genes_to_xls(annotation_summaries)
+        write_genome_properties_to_xls(annotation_summaries)
         context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

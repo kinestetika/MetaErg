@@ -6,7 +6,7 @@ GENOME_PROPERTY_FORMATS = {'genome name': '<',
                            '# contigs': ',',
                            'size': ',',
                            '% GC': '.1%',
-                           'N50': ',',
+                           'N50 contig length': ',',
                            '# proteins': ',',
                            '% coding': '.1%',
                            'mean protein length (aa)': '.1f',
@@ -18,9 +18,9 @@ GENOME_PROPERTY_FORMATS = {'genome name': '<',
                            '# other repeats': ',',
                            '# total features': ',',
                            '% repeats': '.1%',
-                           '% CDS classified to taxon': '.1%',
-                           '% of CDS classified to dominant taxon': '.1%',
-                           'dominant taxon': '<',
+                           'classification (top taxon)': '<',
+                           '% of CDS classified to top taxon': '.1%',
+                           '% of CDS that could be classified': '.1%',
                            'codon usage bias': '.3f',
                            'doubling_time (days)': '.1f'
                            }
@@ -43,19 +43,17 @@ def make_html(genome_name, genome_properties:dict) -> str:
     subsystem_html = ''
     subsystem_data = genome_properties['subsystems']
     # subsystem_data
-    for subsystem in subsystem_data.index.unique('subsystem'):
-        sub_data = subsystem_data.loc[subsystem, :]
+    for subsystem, subsystem_genes in subsystem_data.items():
         subsystem_html += f'<b id=f>{subsystem}</b>'
-        if 'secondary-metabolites' == subsystem:
-            if len(sub_data.index):
+        if 'Secondary-metabolites' == subsystem:
+            if len(subsystem_genes):
                 subsystem_html += '<p id=f><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
         else:
             subsystem_html += '<table id=f>\n'
-            for function in sub_data.itertuples():
-                if function.Index:
-                    subsystem_html += f'<tr><td>{function.Index}</td><td>\n'
-                    subsystem_html += ', '.join('<a target="Gene Details" href="feature-details.html#{}">{}</a>'
-                                                .format(f_id.split("@")[0], f_id) for f_id in function.genes.split())
+            for gene_name, feature_ids in subsystem_genes.items():
+                subsystem_html += f'<tr><td>{gene_name}</td><td>\n'
+                subsystem_html += ', '.join('<a target="Gene Details" href="feature-details.html#{}">{}</a>'
+                                            .format(f_id, f_id) for f_id in feature_ids)
                 subsystem_html += f'</td></tr>\n'
             subsystem_html += '</table>\n'
     html = html.replace('CONTENT_SUBSYSTEMS', subsystem_html)

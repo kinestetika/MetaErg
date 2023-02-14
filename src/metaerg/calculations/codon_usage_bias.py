@@ -86,9 +86,10 @@ def compute_codon_pair_scores_for_feature_data(genome_id: str, db_connection, ad
     aa_counts = {}
     codon_counts = {}
     codon2aa = {}
-
+    feature_count = 0
     ambiguous_codon_warnings = 0
     for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql=additional_sql):
+        feature_count += 1
         # to deal with start codon, always translated as M:
         aa_seq = feature.aa_seq[0:1].lower() + feature.aa_seq[1:].upper()
         nt_seq = feature.nt_seq[0:3].lower() + feature.nt_seq[3:].upper()
@@ -135,7 +136,7 @@ def compute_codon_pair_scores_for_feature_data(genome_id: str, db_connection, ad
                 aa_pair_counts[x + y] = 1
     if ambiguous_codon_warnings > 0:
         print(
-            f'Warning, while computing codon pair scores, skipped {ambiguous_codon_warnings}/{len(feature_data)} '
+            f'Warning, while computing codon pair scores, skipped {ambiguous_codon_warnings}/{feature_count} '
             f'orf with identical codon translated to different AAs in {genome_id}')
 
     codon_pair_scores = {}
@@ -234,64 +235,64 @@ def download_training_data(training_data: list[CUBData], destination_dir: Path):
             sleep(2)
 
 
-def load_feature_data(dir: Path, entry: CUBData):
-    nt_file = dir / (entry.genome_id + '_cds_from_genomic.fna.gz')
-    aa_file = dir / (entry.genome_id + '_protein.faa.gz')
-    aa_seq_dict = {}
-    feature_data = []
-    try:
-        with FastaParser(aa_file, cleanup_seq=False) as reader:
-            for seq in reader:
-                aa_seq_dict[seq['id']] = seq
-
-        pattern_prot_id = re.compile(r'\[protein_id=(.+?)]')
-        with FastaParser(nt_file, cleanup_seq=False) as reader:
-            for seq in reader:
-                if m:= pattern_prot_id.search(seq['descr']):
-                    prot_id = m.group(1)
-                    feature_data.append({'id': prot_id,
-                                         'subsystems': aa_seq_dict[prot_id]['descr'],
-                                         'nt_seq': seq['seq'],
-                                         'aa_seq': aa_seq_dict[prot_id]['seq'],
-                                         'type': 'CDS'})
-        if not feature_data:
-            raise Exception(f'No data for {entry.genome_id}.')
-        return pd.DataFrame(feature_data)
-    except Exception:
-        aa_file.unlink(missing_ok=True)
-        nt_file.unlink(missing_ok=True)
-        return None
-
-
-def main():
-    dir = Path('/bio/databases/eggo-data/')
-    training_data = parse_training_data(dir / 'CodonStatistics_Training.csv')
-    # download_training_data(training_data, Path('/bio/databases/eggo-data/genomes'))
-    count = 0
-    with open(dir / 'training_plus_metaerg.csv', 'w') as output:
-        for entry in training_data:
-            df = load_feature_data(dir / 'genomes', entry)
-            if not df is None:
-                metaerg_entry = compute_codon_usage_bias_for_genome(entry.genome_id, df)
-                print(f'{count}/{len(training_data)} {metaerg_entry.nHE}/{entry.nHE}, '
-                      f'{metaerg_entry.CUBHE:.3f}/{entry.CUBHE:.3f} '
-                      f'{metaerg_entry.consistency:.3f}/{entry.consistency:.3f} '
-                      f'{metaerg_entry.CPB:.3f}/{entry.CPB:.3f} '
-                      f'{entry.genome_id}')
-                count += 1
-                output.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(entry.genome_id,
-                                                                          entry.nHE,
-                                                                          entry.filtered,
-                                                                          entry.CUBHE,
-                                                                          entry.consistency,
-                                                                          entry.CPB,
-                                                                          entry.d,
-                                                                          metaerg_entry.nHE,
-                                                                          metaerg_entry.CUBHE,
-                                                                          metaerg_entry.consistency,
-                                                                          metaerg_entry.CPB,
-                                                                          ))
+# def load_feature_data(dir: Path, entry: CUBData):
+#     nt_file = dir / (entry.genome_id + '_cds_from_genomic.fna.gz')
+#     aa_file = dir / (entry.genome_id + '_protein.faa.gz')
+#     aa_seq_dict = {}
+#     feature_data = []
+#     try:
+#         with FastaParser(aa_file, cleanup_seq=False) as reader:
+#             for seq in reader:
+#                 aa_seq_dict[seq['id']] = seq
+#
+#         pattern_prot_id = re.compile(r'\[protein_id=(.+?)]')
+#         with FastaParser(nt_file, cleanup_seq=False) as reader:
+#             for seq in reader:
+#                 if m:= pattern_prot_id.search(seq['descr']):
+#                     prot_id = m.group(1)
+#                     feature_data.append({'id': prot_id,
+#                                          'subsystems': aa_seq_dict[prot_id]['descr'],
+#                                          'nt_seq': seq['seq'],
+#                                          'aa_seq': aa_seq_dict[prot_id]['seq'],
+#                                          'type': 'CDS'})
+#         if not feature_data:
+#             raise Exception(f'No data for {entry.genome_id}.')
+#         return pd.DataFrame(feature_data)
+#     except Exception:
+#         aa_file.unlink(missing_ok=True)
+#         nt_file.unlink(missing_ok=True)
+#         return None
 
 
-if __name__ == "__main__":
-    main()
+# def main():
+#     dir = Path('/bio/databases/eggo-data/')
+#     training_data = parse_training_data(dir / 'CodonStatistics_Training.csv')
+#     # download_training_data(training_data, Path('/bio/databases/eggo-data/genomes'))
+#     count = 0
+#     with open(dir / 'training_plus_metaerg.csv', 'w') as output:
+#         for entry in training_data:
+#             df = load_feature_data(dir / 'genomes', entry)
+#             if not df is None:
+#                 metaerg_entry = compute_codon_usage_bias_for_genome(entry.genome_id, df)
+#                 print(f'{count}/{len(training_data)} {metaerg_entry.nHE}/{entry.nHE}, '
+#                       f'{metaerg_entry.CUBHE:.3f}/{entry.CUBHE:.3f} '
+#                       f'{metaerg_entry.consistency:.3f}/{entry.consistency:.3f} '
+#                       f'{metaerg_entry.CPB:.3f}/{entry.CPB:.3f} '
+#                       f'{entry.genome_id}')
+#                 count += 1
+#                 output.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(entry.genome_id,
+#                                                                           entry.nHE,
+#                                                                           entry.filtered,
+#                                                                           entry.CUBHE,
+#                                                                           entry.consistency,
+#                                                                           entry.CPB,
+#                                                                           entry.d,
+#                                                                           metaerg_entry.nHE,
+#                                                                           metaerg_entry.CUBHE,
+#                                                                           metaerg_entry.consistency,
+#                                                                           metaerg_entry.CPB,
+#                                                                           ))
+#
+#
+# if __name__ == "__main__":
+#     main()

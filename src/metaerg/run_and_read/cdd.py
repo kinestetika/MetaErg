@@ -45,6 +45,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     context.log(f'({genome_name}) Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
+    subsystem_result_count = 0
     def get_cdd_db_entry(id: str) -> DBentry:
         return cdd[int(id[4:])]
 
@@ -56,14 +57,17 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                                 f'may need to rerun metaerg with --force')
             feature.cdd = cdd_result
             cdd_result_count += 1
-            if new_subsystem := functional_gene_configuration.match(cdd_result):
-                feature.subsystems = functional_gene_configuration.cleanup_subsystem_str(
-                    feature.subsystems.strip() + ' ' + new_subsystem)
+            if new_matches := functional_gene_configuration.match(cdd_result):
+                for new_match in new_matches:
+                    if not new_match in feature.subsystems:
+                        feature.subsystems.append(new_match)
+                        subsystem_result_count += 1
             top_entry: DBentry = cdd_result.hits[0].hit
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
             sqlite.update_feature_in_db(db_connection, feature)
+    context.log(f'({genome_name}) Found {subsystem_result_count} matches to subsystems.')
     return cdd_result_count
 
 
