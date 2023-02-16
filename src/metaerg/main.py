@@ -41,7 +41,7 @@ def parse_arguments():
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
-    parser.add_argument('--translation_table', default=11, help='Which translation table to use (default 11).')
+    parser.add_argument('--translation_table', default=0, help='Which translation table to use (default 11).')
     parser.add_argument('--delimiter', default='.', help='Separater character used in feature ids.')
     parser.add_argument('--prefix', default='g', help='Prefix used when renaming genomes (default: g).')
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')

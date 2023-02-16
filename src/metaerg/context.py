@@ -27,7 +27,7 @@ MULTI_MODE = False
 RENAME_CONTIGS = False
 RENAME_GENOMES = False
 MIN_CONTIG_LENGTH = 0
-TRANSLATION_TABLE = 0
+TRANSLATION_TABLE = 11
 ACTIVE_ANNOTATORS = set('antismash aragorn cdd cmscan diamond_and_blastn hmm write_genes ltr_harvest minced prodigal '
                         'signalp repeat_masker tmhmm trf'.split())
 READ_ONLY = False
@@ -138,6 +138,8 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                 ACTIVE_ANNOTATORS.remove(skipped_step)
             except KeyError:
                 pass
+        if translation_table > 0:
+            TRANSLATION_TABLE = translation_table
         READ_ONLY = read_only
         # (3) set some global variables
         RENAME_CONTIGS = rename_contigs
@@ -147,7 +149,6 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         FILE_EXTENSION = file_extension
         DELIMITER = delimiter
         PREFIX = prefix
-        TRANSLATION_TABLE = translation_table
         # (4) set up multitreading
         CPUS_PER_GENOME = int(cpus)
         CPUS_AVAILABLE = cpu_count() // 2
