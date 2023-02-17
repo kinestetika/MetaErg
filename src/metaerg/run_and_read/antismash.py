@@ -5,7 +5,7 @@ from pathlib import Path
 from metaerg import context
 from metaerg.datatypes import gbk
 from metaerg.datatypes import sqlite
-from metaerg import functional_gene_configuration
+from metaerg.datatypes import functional_genes
 
 
 def _run_programs(genome_name, contig_dict, db_connection, result_files):
@@ -40,7 +40,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                             continue
                         feature.antismash =  ' '.join((f'(region {antismash_region_number})', antismash_region_name,
                                                        antismash_gene_function, antismash_gene_category))
-                        feature.subsystems.append(functional_gene_configuration.SECONDARY_METABOLITE_GENE)
+                        feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
                         sqlite.update_feature_in_db(db_connection, feature)
                         antismash_hit_count += 1
     return antismash_hit_count

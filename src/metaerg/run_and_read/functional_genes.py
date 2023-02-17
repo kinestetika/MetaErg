@@ -8,7 +8,7 @@ from concurrent import futures
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
 from metaerg.datatypes import sqlite
 from metaerg import context
-from metaerg import functional_gene_configuration
+from metaerg.datatypes import functional_genes
 
 
 def _run_programs(genome_name, contig_dict, db_connection, result_files):
@@ -64,7 +64,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 else:
                     if h.evalue > 0:
                         confidence = min(1.0, - log10(h.evalue) / 100)
-                if new_matches := functional_gene_configuration.match_hit(h, confidence):
+                if new_matches := functional_genes.match_hit(h, confidence):
                     hit_count += 1
                     for new_match in new_matches:
                         if not new_match in feature.subsystems:
@@ -132,15 +132,15 @@ def install_functional_gene_databases():
     if 'S' not in context.TASKS:
         return
 
-    functional_gene_configuration.init_functional_gene_config()
+    functional_genes.init_functional_gene_config()
     all_target_hmm_names = set()
-    for gene_def in functional_gene_configuration.GENES:
+    for gene_def in functional_genes.GENES:
         all_target_hmm_names.update(gene_def.cues)
 
     hmm_dir = context.DATABASE_DIR / 'hmm'
     hmm_dir.mkdir(exist_ok=True, parents=True)
     user_hmm_dir = hmm_dir / 'user_hmm'
-    (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)  # used by functional_gene_configuration.py
+    (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)  # used by functional_genes.py
     user_hmm_dir.mkdir(exist_ok=True, parents=True)  # used below
     context.log(f'Installing functional gene hmm database at {hmm_dir}...')
 

@@ -1,7 +1,7 @@
 import sqlite3 as sql
+from metaerg.datatypes.functional_genes import FunctionalGene
+from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult
 
-from metaerg.datatypes.blast import BlastResult, BlastHit, DBentry
-from metaerg.functional_gene_configuration import FunctionalGene
 
 FEATURE_FIELDS = tuple('id genome contig start end strand type inference subsystems descr taxon notes ' \
                     'aa_seq nt_seq antismash signal_peptide tmh tmh_topology blast cdd hmm'.split())

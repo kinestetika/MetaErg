@@ -74,7 +74,7 @@ def parse_functional_gene_config_file(file: Path):
 
 def init_functional_gene_config():
     context.log('Parsing functional gene config files...')
-    base_config_file = Path(__file__).parent / 'run_and_read' / 'data' / 'functional_gene_data'
+    base_config_file = Path(__file__).parent.parent / 'run_and_read' / 'data' / 'functional_gene_data'
     gene_count = parse_functional_gene_config_file(base_config_file)
     user_config_dir = context.DATABASE_DIR / 'hmm' / 'user_config'
     if user_config_dir.exists() and user_config_dir.is_dir():

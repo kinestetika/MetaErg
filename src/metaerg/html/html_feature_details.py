@@ -2,8 +2,8 @@ from pathlib import Path
 from math import log10
 
 from metaerg.datatypes import sqlite
-from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
-from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult, taxon_at_genus
+from metaerg.datatypes.functional_genes import format_list_of_subsystem_genes
+from metaerg.datatypes.blast import BlastResult, taxon_at_genus
 from metaerg import context
 
 MAX_BLAST_HITS = 10

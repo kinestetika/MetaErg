@@ -3,27 +3,26 @@ import tarfile
 from pathlib import Path
 from concurrent import futures
 from hashlib import md5
-from collections import Counter
 
-import openpyxl
 import pandas as pd
 
 import metaerg.run_and_read.diamond_and_blastn
 import metaerg.run_and_read.functional_genes
 import metaerg.run_and_read.antismash
 from metaerg.datatypes import sqlite
+from metaerg.run_and_read import *
+from metaerg.html import *
 from metaerg import context
 from metaerg import registry
-from metaerg import functional_gene_configuration
-from metaerg.datatypes import fasta, gbk
+from metaerg.datatypes import functional_genes
+from metaerg.datatypes import fasta
+from metaerg.datatypes import gbk
+from metaerg.datatypes.genome_properties import compute_genome_properties, write_genome_properties_to_xls
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
-from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
-from metaerg.run_and_read import *
-from metaerg.html import *
 
-VERSION = "2.3.20"
+VERSION = "2.3.21"
 
 
 def parse_arguments():
@@ -70,120 +69,6 @@ def parse_arguments():
     return parser.parse_args()
 
 
-def load_contigs(genome_name, input_fasta_file, delimiter='.', rename_contigs=False, min_contig_length=0):
-    if delimiter in genome_name:
-        raise Exception(f'Genome id {genome_name} contains "{delimiter}"; change delimiter with '
-                                f'--delimiter [new delimiter] or use --rename_genomes')
-    names_done = set()
-    contigs = list()
-    with fasta.FastaParser(input_fasta_file) as fasta_reader:
-        for c in fasta_reader:
-            if len(c['seq']) < min_contig_length:
-                continue
-            c['descr'] = ''  # remove descr as it makes parsing results more difficult for some analyses
-            contigs.append(c)
-            if not rename_contigs:
-                if c['id'] in names_done:
-                    raise Exception(f'Contig id {c["id"]} not unique. Use --rename_contigs to avoid this problem.')
-                names_done.add(c["id"])
-    contigs.sort(key=lambda c:len(c['seq']), reverse=True)
-    total_length = sum(len(c['seq']) for c in contigs)
-    context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length:,} from file.')
-    if rename_contigs:
-        contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
-        context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
-        i = 0
-        with open(contig_name_mapping_file, 'w') as mapping_writer:
-            for c in contigs:
-                new_id = f'{genome_name}.c{i:0>4}'
-                mapping_writer.write(f'{c["id"]}\t{new_id}\n')
-                c['id'] = new_id
-                i += 1
-    else:
-        for c_id in contigs:
-            if delimiter in c_id:
-                raise Exception(f'Contig id {c_id} contains "{delimiter}"; change delimiter with '
-                                f'--delimiter [new delimiter] or use --rename_contigs')
-    contigs = {c['id']: c for c in contigs}
-    return contigs
-
-
-def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_dict: dict[str, dict], db_connection) -> dict:
-    properties = {'genome name':              genome_name,
-                  'input fasta file':         input_fasta_file.name,
-                  '# total features':         0,
-                  '# contigs':                0,
-                  'N50 contig length':        0,
-                  '# proteins':               0,
-                  '# ribosomal RNA':          0,
-                  '# transfer RNA':           0,
-                  '# non-coding RNA':         0,
-                  '# retrotransposons':       0,
-                  '# CRISPR repeats':         0,
-                  '# other repeats':          0,
-                  '% coding':                 0.0,
-                  '% repeats':                0.0,
-                  'mean protein length (aa)': 0.0,}
-    contigs:list[dict] = list(contig_dict.values())
-    contigs.sort(key=lambda c:len(c['seq']), reverse=True)
-    properties['size'] = sum(len(c['seq']) for c in contigs)
-    properties['# contigs'] = len(contigs)
-    properties['% GC'] = sum((c['seq'].count('G') + c['seq'].count('G') for c in contigs)) / \
-                               (properties['size'] - sum((c['seq'].count('N') for c in contigs)))
-    cum_size = 0
-    for c in contigs:
-        cum_size += len(c['seq'])
-        if cum_size >+ properties['size'] / 2:
-            properties['N50 contig length'] = len(c['seq'])
-            break
-
-    #feature_data = feature_data.assign(length=feature_data['end'] - feature_data['start'])
-    #feature_data_cds = feature_data[feature_data['type'] == 'CDS']
-    #feature_data_repeats = feature_data[feature_data['type'].isin(('retrotransposon', 'crispr_repeat', 'repeat'))]
-    taxon_counts = Counter()
-    for feature in sqlite.read_all_features(db_connection):
-        properties['# total features'] += 1
-        if feature.type == 'CDS':
-            properties['# proteins'] += 1
-            properties['% coding'] += feature.length_nt()
-            properties['mean protein length (aa)'] += feature.length_aa()
-            taxon_counts.update((feature.taxon,))
-        elif feature.type == 'rRNA':
-            properties['# ribosomal RNA'] += 1
-            taxon_counts.update((feature.taxon,))
-        elif feature.type == 'tRNA':
-            properties['# transfer RNA'] += 1
-            taxon_counts.update((feature.taxon,))
-        elif feature.type == 'ncRNA':
-            properties['# non-coding RNA'] += 1
-            taxon_counts.update((feature.taxon,))
-        elif feature.type == 'retrotransposon':
-            properties['# retrotransposons'] += 1
-            properties['% repeats'] += feature.length_nt()
-        elif feature.type == 'crispr_repeat':
-            properties['# CRISPR repeats'] += 1
-            properties['% repeats'] += feature.length_nt()
-        elif feature.type == 'repeat':
-            properties['# other repeats'] += 1
-            properties['% repeats'] += feature.length_nt()
-    properties['% coding'] /= properties['size']
-    properties['mean protein length (aa)'] /= properties['# proteins']
-    properties['% repeats'] /= properties['size']
-    properties['classification (top taxon)'] = ''
-    properties['% of CDS classified to top taxon'] = 0.0
-    properties['% of CDS that could be classified'] = 1 - taxon_counts[''] / taxon_counts.total()
-    del taxon_counts['']
-    for k, v in taxon_counts.most_common(1):
-        properties['% of CDS classified to top taxon'] = v / taxon_counts.total()
-        properties['classification (top taxon)'] = k
-        break
-    codon_usage_bias, doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
-    properties['codon usage bias'] = codon_usage_bias
-    properties['doubling_time (days)'] = doubling_time
-    properties['subsystems'] = functional_gene_configuration.aggregate(db_connection)
-    return properties
-
-
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     current_progress = context.parse_metaerg_progress(genome_name)
@@ -195,8 +80,8 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     sqlite.create_db(db_file)
     db_connection = sqlite.connect_to_db(db_file)
     # (2) load sequence data
-    contig_dict = load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
-                               min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
+    contig_dict = fasta.load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
+                                     min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
     # (3) now annotate
     for annotator in context.sorted_annotators():
         annotator(genome_name, contig_dict, db_connection)
@@ -238,60 +123,9 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     return genome_properties
 
 
-def write_genome_properties_to_xls(genome_properties: dict):
-    excel_file = context.BASE_DIR / 'genome_properties.xls'
-    if not genome_properties:
-        db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
-                         for genome_name in context.GENOME_NAMES]
-        fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
-                     for genome_name in context.GENOME_NAMES]
-        genome_name_mappings = {}
-        with open(context.GENOME_NAME_MAPPING_FILE) as name_mappings:
-            for line in name_mappings:
-                w = line.split()
-                genome_name_mappings[w[0]] = Path(w[2])
-        genome_properties = {}
-        for db_file, contig_file in zip(db_files, fna_files):
-            genome_name = contig_file.stem
-            contig_dict = load_contigs(genome_name, contig_file, delimiter='xxxx')
-            db_connection = sqlite.connect_to_db(db_file)
-            genome_properties[genome_name] = compute_genome_properties(genome_name,
-                                                                       genome_name_mappings.get(genome_name, 'unknown'),
-                                                                       contig_dict, db_connection)
-
-    e_workbook = openpyxl.Workbook()
-    e_column = 3
-    for genome_name, genome_property_hash in genome_properties.items():
-        e_sheet = e_workbook.active
-        row = 1
-        for k, v in genome_property_hash.items():
-            if 'subsystems' == k or 'classification (top taxon)' == k:
-                continue
-            e_sheet.cell(row=row, column=1).value = k
-            e_sheet.cell(row=row, column=e_column).value = v
-            row += 1
-
-        e_sheet.cell(row=row, column=1).value = 'classification (top taxon)'
-        for k, w in zip('kingdom phylum class order family genus species'.split(),
-                        genome_property_hash['classification (top taxon)'].split('; ')):
-            e_sheet.cell(row=row, column=2).value = k
-            e_sheet.cell(row=row, column=e_column).value = w
-            row += 1
-
-        for subsystem, genes in genome_property_hash['subsystems'].items():
-            e_sheet.cell(row=row, column=1).value = subsystem
-            for gene, feature_ids in genes.items():
-                e_sheet.cell(row=row, column=2).value = gene
-                e_sheet.cell(row=row, column=e_column).value = ', '.join(feature_ids)
-                row += 1
-        e_column += 1
-    e_workbook.save(excel_file)
-
-
 def main():
     print(f'This is metaerg.py {VERSION}')
     context.init(**parse_arguments().__dict__)
-
     if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
         context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.TASKS}; '
                     f'force: {context.FORCE}.')
@@ -319,7 +153,7 @@ def main():
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
-        functional_gene_configuration.init_functional_gene_config()
+        functional_genes.init_functional_gene_config()
         annotation_summaries = {}
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}

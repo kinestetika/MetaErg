@@ -4,7 +4,7 @@ from pathlib import Path
 from concurrent.futures import ProcessPoolExecutor
 
 from metaerg import context
-from metaerg import functional_gene_configuration
+from metaerg.datatypes import functional_genes
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
@@ -57,7 +57,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                                 f'may need to rerun metaerg with --force')
             feature.cdd = cdd_result
             cdd_result_count += 1
-            if new_matches := functional_gene_configuration.match(cdd_result):
+            if new_matches := functional_genes.match(cdd_result):
                 for new_match in new_matches:
                     if not new_match in feature.subsystems:
                         feature.subsystems.append(new_match)

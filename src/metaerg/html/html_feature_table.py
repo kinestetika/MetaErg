@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from metaerg import context
-from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
+from metaerg.datatypes.functional_genes import format_list_of_subsystem_genes
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import taxon_at_genus
 

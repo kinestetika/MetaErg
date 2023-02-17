@@ -128,6 +128,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     exit(1)
             else:
                 folder.mkdir()
+        # (3) manage which steps to run
         if run_step:
             ACTIVE_ANNOTATORS = {step for step in run_step.split(',')}
         if contig_mode:
@@ -142,8 +143,6 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             TRANSLATION_TABLE = translation_table
         READ_ONLY = read_only
         # (3) set some global variables
-        RENAME_CONTIGS = rename_contigs
-        RENAME_GENOMES = rename_genomes
         MIN_CONTIG_LENGTH = int(min_contig_length)
         FORCE = force
         FILE_EXTENSION = file_extension
@@ -168,6 +167,8 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             log(f'Detected previous results - maintaining file structure for compatibility.')
             MULTI_MODE = True
         # (5) manage genome and contig naming
+        RENAME_CONTIGS = rename_contigs
+        RENAME_GENOMES = rename_genomes
         if RENAME_GENOMES:
             log('Will create new names for genomes.')
             RENAME_CONTIGS = True
@@ -225,7 +226,7 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
         dir = target_dir / program_name
         dir.mkdir(exist_ok=True)
         if dir.is_file():
-            if FORCE:
+            if FORCE and not READ_ONLY:
                 dir.unlink()
                 dir.mkdir(exist_ok=True)
             else:
@@ -234,7 +235,7 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
     else:
         file = target_dir / f'{genome_id}.{program_name}'
         if file.exists() and file.is_dir():
-            if FORCE:
+            if FORCE and not READ_ONLY:
                 shutil.rmtree(file)
         return file
 

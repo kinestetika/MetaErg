@@ -4,7 +4,7 @@ import numpy as np
 from pathlib import Path
 from metaerg import context
 from metaerg.datatypes import sqlite
-from metaerg.functional_gene_configuration import format_list_of_subsystem_genes
+from metaerg.datatypes.functional_genes import format_list_of_subsystem_genes
 
 NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
 NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
@@ -173,3 +173,43 @@ def write_contigs_to_fasta(contig_dict: dict, base_file: Path, db_connection, ge
     if mask_targets:
         context.log(f'({genome_name}) {masker.stats()}')
     return paths
+
+
+
+def load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER, rename_contigs=context.RENAME_CONTIGS,
+                 min_contig_length=context.MIN_CONTIG_LENGTH):
+    if delimiter in genome_name:
+        raise Exception(f'Genome id {genome_name} contains "{delimiter}"; change delimiter with '
+                                f'--delimiter [new delimiter] or use --rename_genomes')
+    names_done = set()
+    contigs = list()
+    with FastaParser(input_fasta_file) as fasta_reader:
+        for c in fasta_reader:
+            if len(c['seq']) < min_contig_length:
+                continue
+            c['descr'] = ''  # remove descr as it makes parsing results more difficult for some analyses
+            contigs.append(c)
+            if not rename_contigs:
+                if c['id'] in names_done:
+                    raise Exception(f'Contig id {c["id"]} not unique. Use --rename_contigs to avoid this problem.')
+                names_done.add(c["id"])
+    contigs.sort(key=lambda c:len(c['seq']), reverse=True)
+    total_length = sum(len(c['seq']) for c in contigs)
+    context.log(f'({genome_name}) Loaded {len(contigs)} contigs with total length {total_length:,} from file.')
+    if rename_contigs:
+        contig_name_mapping_file = context.spawn_file('contig.name.mappings', genome_name)
+        context.log(f'({genome_name}) Renaming contigs (see {contig_name_mapping_file})...')
+        i = 0
+        with open(contig_name_mapping_file, 'w') as mapping_writer:
+            for c in contigs:
+                new_id = f'{genome_name}.c{i:0>4}'
+                mapping_writer.write(f'{c["id"]}\t{new_id}\n')
+                c['id'] = new_id
+                i += 1
+    else:
+        for c_id in contigs:
+            if delimiter in c_id:
+                raise Exception(f'Contig id {c_id} contains "{delimiter}"; change delimiter with '
+                                f'--delimiter [new delimiter] or use --rename_contigs')
+    contigs = {c['id']: c for c in contigs}
+    return contigs

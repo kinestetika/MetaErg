@@ -1,29 +1,7 @@
 from pathlib import Path
-from metaerg import context
 
-GENOME_PROPERTY_FORMATS = {'genome name': '<',
-                           'input fasta file': '<',
-                           '# contigs': ',',
-                           'size': ',',
-                           '% GC': '.1%',
-                           'N50 contig length': ',',
-                           '# proteins': ',',
-                           '% coding': '.1%',
-                           'mean protein length (aa)': '.1f',
-                           '# ribosomal RNA': ',',
-                           '# transfer RNA': ',',
-                           '# non-coding RNA': ',',
-                           '# retrotransposons': ',',
-                           '# CRISPR repeats': ',',
-                           '# other repeats': ',',
-                           '# total features': ',',
-                           '% repeats': '.1%',
-                           'classification (top taxon)': '<',
-                           '% of CDS classified to top taxon': '.1%',
-                           '% of CDS that could be classified': '.1%',
-                           'codon usage bias': '.3f',
-                           'doubling_time (days)': '.1f'
-                           }
+from metaerg import context
+from metaerg.datatypes.genome_properties import GENOME_PROPERTY_FORMATS
 
 @context.register_html_writer
 def write_html(genome_name, db_connection, genome_properties:dict, dir):
