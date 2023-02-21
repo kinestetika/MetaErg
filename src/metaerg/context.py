@@ -139,7 +139,10 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                 ACTIVE_ANNOTATORS.remove(skipped_step)
             except KeyError:
                 pass
-        translation_table = int(translation_table)
+        try:
+            translation_table = int(translation_table)
+        except ValueError:
+            log(f'Please provide a number for --translation_table, not "{translation_table}"')
         if translation_table > 0:
             TRANSLATION_TABLE = translation_table
         READ_ONLY = read_only
