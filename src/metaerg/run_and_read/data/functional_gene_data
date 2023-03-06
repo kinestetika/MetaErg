@@ -189,7 +189,7 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 >Respiration, ATP synthase
 1 TIGR01042 Vacuolar ATPase V1, subunit A
 2 TIGR01040 Vacuolar ATPase V1, subunit B
-3 TIGR02923 Vacuolar or A0/A1 ATPase, subunit C
+3 TIGR02923|cd18121 Vacuolar or A0/A1 ATPase, subunit C
 4 TIGR00309 Vacuolar ATP synthase, subunit D
 5 TIGR01100 Vacuolar ATP synthase, proteolipid
 6 TIGR01101 Vacuolar ATP synthase, subunit F
@@ -215,10 +215,10 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 2 TIGR01041 Archaeal ATP synthase, subunit B
 3 cd00313 Archaeal ATP synthase, subunit F0 C
 
->Respiration, pyrophosphatase
+>Respiration, Pyrophosphatase
 1 COG3808|PLN02255|PLN02277|PRK00733 Proton/sodium translocating pyrophosphatase
 
->Sulfur Cycle, Dissimilatory Sulfate Reduction
+>Sulfur Cycle, Dissimilatory Sulfate Reduction (or reversed)
 1 PRK04149|COG2046|TIGR00339 Sulfate adenylyltransferase, Sat
 2 TIGR02061 Adenylylsulfate reductase, subunit AprA
 3 TIGR02060 Adenylylsulfate reductase, subunit AprB
@@ -239,18 +239,18 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 1 PRK03846|PRK00889 Adenylylsulfate kinase, CysC
 2 PRK05253|PRK12563|TIGR02039 Sulfate adenylyltransferase subunit 2, CysD
 3 PRK05124|TIGR02034 Sulfate adenylyltransferase subunit 1, CysN
-1 2 3 PRK05506|PRK05537 Bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC)
-1 2 3 A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 3'-phosphoadenosine 5'-phosphosulfate synthase, PAPSS
+1|2|3 PRK05506|PRK05537 Bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC)
+1|2|3 A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 3'-phosphoadenosine 5'-phosphosulfate synthase, PAPSS
 4 TIGR00434 Phosphoadenosine phosphosulfate reductase, CysH
 5 PRK10953|TIGR01931 Sulfite reductase (NADPH) flavoprotein alpha-component CysJ
 6 TIGR02041 Sulfite reductase (NADPH) hemoprotein beta-component CysI
-5 6 TIGR02042 Sulfite reductase, ferredoxinsir dependent, Sir
+5|6 TIGR02042 Sulfite reductase, ferredoxinsir dependent, Sir
 5 PRK15055|TIGR02910 Anaerobic sulfite reductase subunit A AsrA
 6 PRK08221|TIGR02911 Anaerobic sulfite reductase subunit AsrB
 TIGR02912 Anaerobic sulfite reductase subunit AsrC
 
 >Sulfur Cycle, Sulfide Oxidation, H2S -> Persulfide or sulfur
-1 2 A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 Sulfide:quinone oxidoreductase Sqr
+1|2 A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 Sulfide:quinone oxidoreductase Sqr
 1 A0A0D5L3Z8|D0L1U4|Q8KAS4 Sulfide dehydrogenase flavoprotein FccB
 2 A0KLX0|B4S944|L0GYT5|Q3AP22|Q87QC8 Sulfide dehydrogenase, cytochrome c subunit FccA
 
@@ -266,18 +266,18 @@ TIGR02912 Anaerobic sulfite reductase subunit AsrC
 5 TIGR04485 Sulfur-oxidizing protein SoxX
 6 PRK07474 Sulfur-oxidizing protein SoxY
 7 TIGR04490 Thiosulfate oxidation carrier protein SoxZ
-5 6 TIGR04557 Quinoprotein dehydrogenase-associated carrier SoxYZ-like
+5|6 TIGR04557 Quinoprotein dehydrogenase-associated carrier SoxYZ-like
 
 >Sulfur Cycle, Sulfite Oxidation, Sulfite -> Sulfate
 1 A0A0M4MFR7|A0A1J1EEW2|D5X0P6 Sulfite dehydrogenase (quinone) subunit SoeA
 2 A0A167GH90|A0A1D8S599|F4B4W1 Sulfite dehydrogenase (quinone) subunit SoeB
 3 A0A023NVR9|A0A1B1PNP7|A0A1C9VK46|A0A1D8IKM6|A0A1J1E581|A0A1L3I1S2|B8GUS5|D3DK32|G0JPZ2|G8B0M7|Q2W1C8|Q98BE5|S6BBV4 Sulfite dehydrogenase (quinone) subunit SoeC
-1 2 3 WP_011764874|WP_011803507|Q7P1Q4 Sulfite dehydrogenase, cytochrome C dependent subunit, SorB
-1 2 3 A0A075AI71|A0A0H3MDW2|A0A0S2EWV4|A0A179H534|A0A1I8MUV9|A0A1W4XXR1|A0A2H3WXQ7|A3KJG7|A7SP42|A8P4J6|B8NU07|C1HA82|D0NKC6|D8TX78|E3RMG9|G0S2S8|I1RGK9|Q54XJ8 Sulfite oxidase SUOX
+1|2|3 WP_011764874|WP_011803507|Q7P1Q4 Sulfite dehydrogenase, cytochrome C dependent subunit, SorB
+1|2|3 A0A075AI71|A0A0H3MDW2|A0A0S2EWV4|A0A179H534|A0A1I8MUV9|A0A1W4XXR1|A0A2H3WXQ7|A3KJG7|A7SP42|A8P4J6|B8NU07|C1HA82|D0NKC6|D8TX78|E3RMG9|G0S2S8|I1RGK9|Q54XJ8 Sulfite oxidase SUOX
 
 >Carbon Cycle, Methane Oxidation
 1 pfam14100|TIGR03080|cl21655 Methane/ammonia monooxygenase subunit PmoA/AmoA
-2 3 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
+2|3 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
 4 cd19412|TIGR03078|cl04829|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
 1 TIGR04550 Soluble methane/ammonia monoxygenase Smmo
 2 TIGR04550 Soluble methane monooxygenase-binding protein MmoD
@@ -289,14 +289,14 @@ TIGR02912 Anaerobic sulfite reductase subunit AsrC
 1 A0A160DSL2|A1WIX2 Methanol dehydrogenase (cytochrome c) subunit 2, Mdh2, MxaI
 1 A8P437|G4N5G7|M2M3K0|R7SWA7|W4JTB1|W4KD28 Alcohol oxidase MOX
 1 TIGR04266|WP_003349822 Methanol dehydrogenase Mdh
-1 A0A072TLN4|A0A075AI99|A0A0D4DRT2|A0A0D4DU08|A0A0G3BL94|A0A0N7GSZ5|A0A0N9UG39|A0A1S3CMH6|A0A223S4F0|A0A238UBL7|A0A2I7YCN4|A0QRJ4|A0QXQ6|A1RCH0|A2BSH4|B3QIY4|B6JE72|B9KZ54|C5MIE3|D2AYW6|D5UTJ6|D8RVY7|E3IWK7|F2RIT6|F4CXK3|G4YYD7|G8N5E9|G8RJY5|I0IG60|I4F569|Q0RF44|Q24T09|Q9S247|R4UTE1|V4MF99 S-(hydroxymethyl)glutathione dehydrogenase / alcohol dehydrogenase FrmA, ADH5, AdhC;
+A0A072TLN4|A0A075AI99|A0A0D4DRT2|A0A0D4DU08|A0A0G3BL94|A0A0N7GSZ5|A0A0N9UG39|A0A1S3CMH6|A0A223S4F0|A0A238UBL7|A0A2I7YCN4|A0QRJ4|A0QXQ6|A1RCH0|A2BSH4|B3QIY4|B6JE72|B9KZ54|C5MIE3|D2AYW6|D5UTJ6|D8RVY7|E3IWK7|F2RIT6|F4CXK3|G4YYD7|G8N5E9|G8RJY5|I0IG60|I4F569|Q0RF44|Q24T09|Q9S247|R4UTE1|V4MF99 S-(hydroxymethyl)glutathione dehydrogenase / alcohol dehydrogenase FrmA, ADH5, AdhC;
 2 A0A1D7VYV8|A0A1D8UYA1|A0A1L6L960|Q2T435 Glutathione-independent formaldehyde dehydrogenase FdhA
-2 A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A1W6SSV6|B4GL76|F0Q5P0|F8NDK2|G0V7N5|J9JXA8|K8Z4L7|Q7RXB4|R7Q7V5 S-formylglutathione hydrolase FrmB, ESD, FghA;
+A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A1W6SSV6|B4GL76|F0Q5P0|F8NDK2|G0V7N5|J9JXA8|K8Z4L7|Q7RXB4|R7Q7V5 S-formylglutathione hydrolase FrmB, ESD, FghA;
 2 A0A0H4KNW2 S-(hydroxymethyl)mycothiol dehydrogenase
 
 >Carbon Cycle, Formate Oxidation
-1 2 TIGR01553|TIGR01591|TIGR01701|cd02752|cd02792 Formate dehydrogenase, alpha subunit FdhA
-3 4  TIGR01582|cd10558|cd10562 Formate dehydrogenase, beta subunit FdhB
+1|2 TIGR01553|TIGR01591|TIGR01701|cd02752|cd02792 Formate dehydrogenase, alpha subunit FdhA
+3|4 TIGR01582|cd10558|cd10562 Formate dehydrogenase, beta subunit FdhB
 3 TIGR01562|pfam04216 Formate dehydrogenase accessory protein FdhE
 1 A0A024EGH5|A0A024HFB9|A0A060NKW1|A0A068SU23|A0A089NZR5|A0A089WUU7|A0A0D5LJE0|A0A0D6E357|A0A0K0X3B0|A0A126RDI4|A0A127K8P6|A0A1A9EXX0|A0A1U7D4X3|A0A1W6MZN1|A0A1X9UHW5|A0A231UKL4|A4XP97|B8EJ51|D7DMN0|F6ARL2|F7YGJ3|G0AID7|G8AQF4|G9A1M7|Q1MB09|Q2KWI9|Q608V0|S5XRM5|W0PGQ4|W8PK66 Formate dehydrogenase subunit delta, FdsD
 2 A0A060NJC6|A0A0A7RXW0|A0A0B5BHM3|A0A0F2KQQ8|A0A0H4VFT6|A0A0K1DZV1|A0A0K1HEJ5|A0A0M4L4C3|A0A0X8K9Z7|A0A169PT59|A0A172YES7|A0A193KCS9|A0A1B1NDY3|A0A1C7HGP7|A0A1C7HH10|A0A1D7TN59|A0A1P8XRZ5|A0A1Q5Y4G9|A0A1W6RHI0|A0A220USF5|A0A291PJX9|A0A2I8DS98|A1KB89|A1RQW0|A5G6W1|A6VCR5|A6X2W9|A7HBW7|A8GZN1|A8LNU6|B1M0X9|B9L5R4|C7Q9Q5|D3NYR7|E1SP78|E3JDM4|E5ANN0|F3Z0C2|I3TJC0|I3U9W4|I7GT51|J7IXV2|Q1QW89|Q8EAI0|S5PCZ3|S6BAQ8|W0DFV4 Formate dehydrogenase subunit gamma FdoI/FdsG
@@ -326,10 +326,10 @@ TIGR02912 Anaerobic sulfite reductase subunit AsrC
 3 CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit RbcS
 
 >Carbon Cycle, CO2 Fixation via Reductive Citrate (TCA, Arnon-Buchanan) Cycle
-1 COG0674|PRK08367|PRK09622 Pyruvate ferredoxin oxidoreductase alpha subunit PorA
-2 COG1013 Pyruvate ferredoxin oxidoreductase beta subunit PorB
-3 COG1144|PRK09624|PRK09624 Pyruvate ferredoxin oxidoreductase delta subunit PorD
-4 COG1014 Pyruvate ferredoxin oxidoreductase gamma subunit PorG
+1 COG0674|PRK08367|PRK09622|cd07034 Pyruvate:ferredoxin oxidoreductase alpha subunit PorA
+2 COG1013|TIGR02177 Pyruvate:ferredoxin oxidoreductase beta subunit PorB
+3 COG1144|PRK09624|PRK09624|TIGR02179 Pyruvate:ferredoxin oxidoreductase delta subunit PorD
+4 COG1014|TIGR02175 Pyruvate ferredoxin:oxidoreductase gamma subunit PorG
 5 PRK08659|PRK09627 2-oxoacid:acceptor oxidoreductase, alpha subunit Por/kor/oorA
 6 TIGR02177|PRK09628 2-oxoacid:acceptor oxidoreductase, beta subunit Por/kor/oorB
 7 TIGR02175|PRK08441 2-oxoacid:acceptor oxidoreductase, gamma subunit Por/kor/oorC
@@ -372,7 +372,7 @@ TIGR02912 Anaerobic sulfite reductase subunit AsrC
 16 A0A0B5DX78|A0A0C4YG08|A0A1B3E829|A0A291N2S9|A0A291PDR0|A1BB97|B5ZF45|E1TJR4|F6IE79|K0CBH2 Methylamine dehydrogenase heavy chain, MauB
 
 >Carbon Cycle, Hydrocarbon Degradation
-AlkB Alkane hydrolase, AlkB
+AlkB Alkane hydrolase AlkB
 AlmA_GroupI Flavin-binding alkane monooxygenase, AlmA_GroupI
 AlmA_GroupIII Flavin-binding alkane monooxygenase, AlmA_GroupIII
 CYP153 Alkane oxidizing cytochrome P450, CYP153
@@ -411,341 +411,339 @@ AhyA DESC Molybdopterin-family alkane C2 methylene hydroxylase
 sBmoZ Undefined hydrocarbon degradation gene sBmoZ
 
 >Nitrogen Cycle, Nitrification
-pfam14100|TIGR03080|cl21655 methane/ammonia monooxygenase subunit A (pmoA/amoA)
-TIGR03079|cl19551|pfam04744 methane/ammonia monooxygenase subunit B (pmoB/amoB)
-cd19412|TIGR03078|cl04829|pfam04896|cd22188 methane/ammonia monooxygenase subunit C (pmoC/amoC)
-TIGR04550 soluble methane/ammonia monoxygenase (smmo)
-TIGR04392 hydroxylamine dehydrogenase (hao, ec:1.7.2.6)
-A0A0B5GVF0|A0A0U3NDF4|A0A0U5N0A2|A0A0X8K2K6|A0A168G368|D5MLH7|F8D6S2|Q2SXG4|Q9YCG9|A0A1W1I2B6|Q1QHW9 nxrA; nitrate reductase / nitrite oxidoreductase, alpha subunit Nitrobacter (ec:1.7.5.1)
-A0A0H3GNX1|A0A1Y0HZR5|A8M8C4|D2PSR0|J7LAS1|L0JX22|Q1QHX1|A0A1W1I5Y1 nxrB; nitrate reductase / nitrite oxidoreductase, beta subunit (ec:1.7.5.1)
+1 pfam14100|TIGR03080|cl21655 Methane/ammonia monooxygenase subunit PmoA/AmoA
+2 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
+3 cd19412|TIGR03078|cl04829|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
+1 TIGR04550 Soluble methane/ammonia monoxygenase Smmo
+4 TIGR04392 Hydroxylamine dehydrogenase Hao
 
 >Nitrogen Cycle, Urea, Cyanate, Nitrile Hydrolysis
-PRK13207|PRK13206|PRK13308|PRK13309|TIGR01792 urease subunit alpha (ureC, ec:3.5.1.5)
-PRK13198|PRK13201|PRK13202|PRK13203|PRK13204|PRK13205|PRK13986|TIGR00192 urease subunit beta (ureB, ec:3.5.1.5)
-PRK13241|PRK13242|PRK13985|TIGR00193 urease subunit gamma (ureA, ec:3.5.1.5)
-PRK13261|PRK13262|PRK13263|PRK14112|PRK14113|PRK14711 urease accessory protein (UreE, ec:3.5.1.5)
-TIGR03407 urea ABC transporter, urea binding protein (urtA)
-TIGR03409 urea ABC transporter, permease protein (urtB)
-TIGR03408 urea ABC transporter, permease protein (urtC)
-TIGR03411 urea ABC transporter, ATP-binding protein (urtD)
-TIGR03410 urea ABC transporter, ATP-binding protein (urtE)
-A0A061H0T4|A0A0A8EXF5|A0A0C6FYZ2|A0A0J9UYN3|A0A0M4QLG3|A0A220YCS7|A0A2H3XKK4|E1ZMV9|F2JIW8|I3UP61|J3U6N7|K0INW1|K1XT98|M2XY85|O66587|Q07HM9 cynS; cyanate lyase (ec:4.2.1.104)
-A0A0M3UBQ9|A0A222E9L4|D2SH15|E3I8A7|H6MWW1|K9SJ64 nthA; nitrile hydratase subunit alpha (ec:4.2.1.84)
-A0A0A1DRF3|A0A0M4Q303|A0A126NXW7|B0ULZ7|E6VIG6|E6WMT2|F0QD97|F4CK12|F4CU20|F7ZB22|I7EYU4|K9UG14|R4WKY7|T1X8I4 nthB; nitrile hydratase subunit beta (ec:4.2.1.84)
+PRK13207|PRK13206|PRK13308|PRK13309|TIGR01792 Urease subunit UreC
+PRK13198|PRK13201|PRK13202|PRK13203|PRK13204|PRK13205|PRK13986|TIGR00192 Urease subunit UreB
+PRK13241|PRK13242|PRK13985|TIGR00193 Urease subunit UreA
+PRK13261|PRK13262|PRK13263|PRK14112|PRK14113|PRK14711 Urease accessory protein UreE
+TIGR03407 Urea ABC transporter, urea binding protein UrtA
+TIGR03409 Urea ABC transporter, permease protein UrtB
+TIGR03408 Urea ABC transporter, permease protein UrtC
+TIGR03411 Urea ABC transporter, ATP-binding protein UrtD
+TIGR03410 Urea ABC transporter, ATP-binding protein UrtE
+A0A061H0T4|A0A0A8EXF5|A0A0C6FYZ2|A0A0J9UYN3|A0A0M4QLG3|A0A220YCS7|A0A2H3XKK4|E1ZMV9|F2JIW8|I3UP61|J3U6N7|K0INW1|K1XT98|M2XY85|O66587|Q07HM9 Cyanate lyase CynS
+A0A0M3UBQ9|A0A222E9L4|D2SH15|E3I8A7|H6MWW1|K9SJ64 Nitrile hydratase subunit alpha, NthA
+A0A0A1DRF3|A0A0M4Q303|A0A126NXW7|B0ULZ7|E6VIG6|E6WMT2|F0QD97|F4CK12|F4CU20|F7ZB22|I7EYU4|K9UG14|R4WKY7|T1X8I4 Nitrile hydratase subunit beta, NthB
+
+>Nitrogen Cycle, Nitrate to nitrite and vice versa
+1 COG5013 nitrate reductase alpha subunit (NarG)
+2 COG2181 nitrate reductase gamma subunit (narI, narV, ec:1.7.5.1)
+1 PRK13532|TIGR01706 periplasmic nitrate reductase (NapA)
+2 COG3043|cl01153 periplasmic nitrate reductase (NapB)
+1 A0A0B5GVF0|A0A0U3NDF4|A0A0U5N0A2|A0A0X8K2K6|A0A168G368|D5MLH7|F8D6S2|Q2SXG4|Q9YCG9|A0A1W1I2B6|Q1QHW9 nxrA; nitrate reductase / nitrite oxidoreductase, alpha subunit Nitrobacter (ec:1.7.5.1)
+2 A0A0H3GNX1|A0A1Y0HZR5|A8M8C4|D2PSR0|J7LAS1|L0JX22|Q1QHX1|A0A1W1I5Y1 nxrB; nitrate reductase / nitrite oxidoreductase, beta subunit (ec:1.7.5.1)
 
 >Nitrogen Cycle, Denitrification
-COG5013 nitrate reductase alpha subunit (NarG)
-COG2181 nitrate reductase gamma subunit (narI, narV, ec:1.7.5.1)
-PRK13532|TIGR01706 periplasmic nitrate reductase (NapA)
-COG3043|cl01153 periplasmic nitrate reductase (NapB)
-A0A0F6Z3B6|A0A0K0XU36|A7NPI4|C7RR96|R4YN15 nitrite reductase (NO-forming) / hydroxylamine reductase (nirS, ec:1.7.2.1, 1.7.99.1)
-A0A075TX59|A0A0D5C031|A0A0D5L9A8|A0A0G3G6R0|A0A0K2GJ77|A0A0K2HAK1|A0A0S2TH06|A0A0X8K2L5|A0A128A0R2|A0A1Q1FME2|A0A1Q2TQW5|A0A1S6FCE7|A0A291G5N2|A3P6P0|D3P4B7|D8JSS7|E1VIX6|E1W6F5|E6SGG5|F4GPW7|K0IEZ7|Q47L45|S5TI99 nitrite reductase (NO-forming) (nirK, ec:1.7.2.1)
-hco_BNOR heme copper oxidase B1-family, cyt c dependent nitric oxide reductases (bNOR)
-hco_B1subII heme copper oxidase B1-family, subunit II
-hco_CNOR heme copper oxidase C-family cyt c dependent nitric oxide reductases (cNOR)
-hco_CsubII heme copper oxidase C-family, subunit II
-hco_ENOR heme copper oxidase B9-family cyt c dependent nitric oxide reductases (eNOR)
-hco_ENORsubII heme copper oxidase B9-family eNOR, subunit II
-hco_GNOR heme copper oxidase B6/7-family cyt c dependent nitric oxide reductases (gNOR)
-hco_GNORsubII heme copper oxidase B6/7-family gNOR, subunit II
-hco_NNOR heme copper oxidase B6/7-family cyt c dependent nitric oxide reductases (nNOR)
-hco_NNORsubII heme copper oxidase B6/7-family nNOR, subunit II
-hco_SNOR heme copper oxidase B6-family cyt c dependent nitric oxide reductases (sNOR)
-hco_SNORsubII heme copper oxidase B6-family sNOR, subunit II
-hco_QNOR heme copper oxidase C-family, quinol dependent nitric oxide reductases (qNOR)
-hco_NOD heme copper oxidase C-family, nitric oxide dismutase (NOD)
-COG4263|pfam18764|pfam18793 nitrous-oxide reductase (nosZ, ec:1.7.2.4)
+1 A0A0F6Z3B6|A0A0K0XU36|A7NPI4|C7RR96|R4YN15 Nitrite reductase (NO-forming) / hydroxylamine reductase NirS
+1 A0A075TX59|A0A0D5C031|A0A0D5L9A8|A0A0G3G6R0|A0A0K2GJ77|A0A0K2HAK1|A0A0S2TH06|A0A0X8K2L5|A0A128A0R2|A0A1Q1FME2|A0A1Q2TQW5|A0A1S6FCE7|A0A291G5N2|A3P6P0|D3P4B7|D8JSS7|E1VIX6|E1W6F5|E6SGG5|F4GPW7|K0IEZ7|Q47L45|S5TI99 Nitrite reductase (NO-forming) NirK
+2 hco_BNOR Heme-copper oxidase B1-family, cyt c dependent nitric oxide reductases (bNOR)
+3 hco_B1subII Heme-copper oxidase B1-family, subunit II
+2 hco_CNOR Heme-copper oxidase C-family cyt c dependent nitric oxide reductases (cNOR)
+3 hco_CsubII Heme-copper oxidase C-family, subunit II
+2 hco_ENOR Heme-copper oxidase B9-family cyt c dependent nitric oxide reductases (eNOR)
+3 hco_ENORsubII Heme-copper oxidase B9-family eNOR, subunit II
+2 hco_GNOR Heme-copper oxidase B6/7-family cyt c dependent nitric oxide reductases (gNOR)
+3 hco_GNORsubII Heme-copper oxidase B6/7-family gNOR, subunit II
+2 hco_NNOR Heme-copper oxidase B6/7-family cyt c dependent nitric oxide reductases (nNOR)
+3 hco_NNORsubII Heme-copper oxidase B6/7-family nNOR, subunit II
+2 hco_SNOR Heme-copper oxidase B6-family cyt c dependent nitric oxide reductases (sNOR)
+3 hco_SNORsubII Heme-copper oxidase B6-family sNOR, subunit II
+2|3 hco_QNOR Heme-copper oxidase C-family, quinol dependent nitric oxide reductases (qNOR)
+4 hco_NOD Heme-copper oxidase C-family, nitric oxide dismutase (NOD)
+4 COG4263|pfam18764|pfam18793 Nitrous-oxide reductase NosZ
 
 >Nitrogen Cycle, Dissimilatory Nitrite Reduction to Ammonia
-A0A0D8IC34|A0A0K1HDZ8|A0A1J0LKT9|A0A1P8WRL5|A0A1Q2MC47|A0A1Q2TNY1|A0A1S6IWG1|A0A1X9SLI3|A0KXS3|A0R7Y5|A1WWS9|A8FZS5|B0TFE5|B4UK71|B8FQW1|C8WLS6|D5ER81|D6XSM9|F4EZ22|I3XVV4|I9DE44|Q1DA92|Q4QLL8|TIGR04315 otr; octaheme c-type cytochrome, tetrathionate reductase (ec:1.7.2.2)
-TIGR03152|PRK11125|cd00548 cytochrome c nitrite reductase large/C552 subunit (nrfA)
-TIGR03146 cytochrome c nitrite reductase pentaheme subunit (NrfB)
-TIGR03149 cytochrome c nitrite reductase Fe-S protein (NrfC)
-TIGR03153 cytochrome c nitrite reductase small subunit (nrfH)
-A0A094RZ96|A0A0H3DVH9|A0A0K0WQA8|A0A140NIM1|A0A172SRS0|A0A1D7TNS2|A8FZ92|B7VGR3|J7KUN7|Q65RI7 NrfD; protein NrfD
+1|2|3|4|5 A0A0D8IC34|A0A0K1HDZ8|A0A1J0LKT9|A0A1P8WRL5|A0A1Q2MC47|A0A1Q2TNY1|A0A1S6IWG1|A0A1X9SLI3|A0KXS3|A0R7Y5|A1WWS9|A8FZS5|B0TFE5|B4UK71|B8FQW1|C8WLS6|D5ER81|D6XSM9|F4EZ22|I3XVV4|I9DE44|Q1DA92|Q4QLL8|TIGR04315 Octaheme c-type cytochrome, tetrathionate reductase Otr
+1 TIGR03152|PRK11125|cd00548 Cytochrome c nitrite reductase large/C552 subunit NrfA
+2 TIGR03146 Cytochrome c nitrite reductase pentaheme subunit NrfB
+3 TIGR03149 Cytochrome c nitrite reductase Fe-S subunit NrfC
+4 TIGR03153 Cytochrome c nitrite reductase small subunit NrfH
+5 A0A094RZ96|A0A0H3DVH9|A0A0K0WQA8|A0A140NIM1|A0A172SRS0|A0A1D7TNS2|A8FZ92|B7VGR3|J7KUN7|Q65RI7 Cytochrome c nitrite reductase subunit NrfD
 
 >Nitrogen Cycle, Assimilatory nitrate reduction to ammonia
-PRK09567 nirA; ferredoxin-nitrite reductase (ec:1.7.7.1)
-COG1251|cd19943|cd19944 nirB; nitrite reductase (NADH) large subunit (ec:1.7.1.15)
-COG2146|TIGR02378|PRK09511 nirD; nitrite reductase (NADH) small subunit (ec:1.7.1.15)
-A0A059VVY1|A0A099D9S6|A0A0B5I5Z1|A0A0F7N6A0|A0A143Q946|A0A1H1DF26|A0A1Y0HU88|A0A1Z3LHE8|D1A3S3|E1VZM8|F4CQU0|F4FC77|G2NWN9 nasB; assimilatory nitrate reductase electron transfer subunit
-A0A1A9IA83|C0QPT0|D2QF24|K9RRX3 narB; ferredoxin-nitrate reductase (ec:1.7.7.2)
-A0A0B4XNV5|A0A0B4Y0K1|A0A0C5VVE2|A0A0C5WSM9|A0A0C5XIS5|A0A0D6ECT2|A0A0H3FAQ8|A0A0S2FBU1|A0A0U5LKU9|A0A0X8LLJ8|A0A143PGT0|A0A144P391|A0A193GHE7|A0A1J0GLM5|A0A1P8UQ19|A0A1V0UAY8|A0A1Z1NJE2|A0A240UP03|A0A2H5A1X8|A6QAE2|A8H3J3|B0T0K2|B0UDN6|B1KPJ1|B1LXT5|B9LNQ5|C1CX85|C4L0G5|D0KZS5|D2R303|D2TL93|D5UHP1|E0SKC8|E1VMR6|F4ANS3|F5XN92|G8LF68|J7QR06|Q127U9|Q6FB27|Q87HA0|Q9KF71 nasA; assimilatory nitrate reductase catalytic subunit
-A0A061H168|A0A177DHT0|A0A1E7ENY3|A0A1Z5RNB1|A8PD06|B8CEC4|C5PJ79|F7W5I7|F8MIZ1|M3AQ53|P08619|R0GDA6|R7Q9D4 NR; nitrate reductase (NAD(P)H) (ec:1.7.1.1,1.7.1.2,1.7.1.3)
-A0A010QDC5|A8PD04|F7W036|F8NVU0|G0SA68|P38681 NIT-6; nitrite reductase (NAD(P)H) (ec:1.7.1.4)
+1 A0A061H168|A0A177DHT0|A0A1E7ENY3|A0A1Z5RNB1|A8PD06|B8CEC4|C5PJ79|F7W5I7|F8MIZ1|M3AQ53|P08619|R0GDA6|R7Q9D4 Nitrate reductase (NAD(P)H dependent)
+1 A0A0B4XNV5|A0A0B4Y0K1|A0A0C5VVE2|A0A0C5WSM9|A0A0C5XIS5|A0A0D6ECT2|A0A0H3FAQ8|A0A0S2FBU1|A0A0U5LKU9|A0A0X8LLJ8|A0A143PGT0|A0A144P391|A0A193GHE7|A0A1J0GLM5|A0A1P8UQ19|A0A1V0UAY8|A0A1Z1NJE2|A0A240UP03|A0A2H5A1X8|A6QAE2|A8H3J3|B0T0K2|B0UDN6|B1KPJ1|B1LXT5|B9LNQ5|C1CX85|C4L0G5|D0KZS5|D2R303|D2TL93|D5UHP1|E0SKC8|E1VMR6|F4ANS3|F5XN92|G8LF68|J7QR06|Q127U9|Q6FB27|Q87HA0|Q9KF71 Assimilatory nitrate reductase catalytic subunit NasA
+2 A0A059VVY1|A0A099D9S6|A0A0B5I5Z1|A0A0F7N6A0|A0A143Q946|A0A1H1DF26|A0A1Y0HU88|A0A1Z3LHE8|D1A3S3|E1VZM8|F4CQU0|F4FC77|G2NWN9 Assimilatory nitrate reductase electron transfer subunit NasB
+2 A0A1A9IA83|C0QPT0|D2QF24|K9RRX3 Ferredoxin-nitrate reductase NarB
+3 PRK09567 Ferredoxin-nitrite reductase NirA
+4 COG1251|cd19943|cd19944 Nitrite reductase (NADH) large subunit NirB
+5 COG2146|TIGR02378|PRK09511 Nitrite reductase (NADH) small subunit NirD
+3|4|5 A0A010QDC5|A8PD04|F7W036|F8NVU0|G0SA68|P38681 Nitrite reductase (NAD(P)H dependent) NIT-6
 
 >Nitrogen Cycle, Anammox
-KQ1Q0T4 hzsB; Hydrazine synthase subunit beta (EC:1.7.2.7) (ec:1.7.2.7)
-Q1Q0T3 hzsG; Hydrazine synthase subunit gamma (EC:1.7.2.7)  (ec:1.7.2.7)
-ALI93542|KHE92665 hzsA; hydrazine synthase subunit A (ec:1.7.2.7)
-Q1PW30 hdh, HzoA ; Hydrazine dehydrogenase, hydroxylamine oxidoreductase (ec:1.7.2.8)
+1 KQ1Q0T4 Hydrazine synthase subunit beta HzsB
+2 Q1Q0T3 Hydrazine synthase subunit gamma HzsG
+3 ALI93542|KHE92665 Hydrazine synthase subunit HzsA
+4 Q1PW30 Hydrazine dehydrogenase, hydroxylamine oxidoreductase Hdh/HzoA
 
 >Nitrogen Cycle, Nitrogen Fixation
-TIGR01282 nitrogenase molybdenum-iron protein alpha chain (nifD)
-TIGR01284 alternate nitrogenase molybdenum-iron protein alpha chain, V-Fe, Fe-Fe (nifD)
-TIGR01286 nitrogenase molybdenum-iron protein beta chain (nifK)
-TIGR01862 nitrogenase component I, alpha chain
-TIGR01290 nitrogenase cofactor biosynthesis protein (nifB)
-PRK14476|TIGR01283|TIGR01285 nitrogenase molybdenum-cofactor biosynthesis protein (nifE, nifN)
-PRK13232|PRK13233|PRK13234|PRK13235|PRK13236|TIGR01287 nitrogenase reductase, iron protein (nifH)
-PRK00810|PRK14102 nitrogenase stabilizing/protective protein (nifW)
+1 TIGR01282 Nitrogenase molybdenum-iron protein alpha chain NifD
+1 TIGR01284 Alternate nitrogenase molybdenum-iron protein alpha chain, V-Fe, Fe-Fe NifD
+2 TIGR01286 Nitrogenase molybdenum-iron protein beta chain NifK
+3 TIGR01862 Nitrogenase component I, alpha chain
+4 TIGR01290 Nitrogenase cofactor biosynthesis protein NifB
+5 PRK14476|TIGR01283|TIGR01285 Nitrogenase molybdenum-cofactor biosynthesis protein NifE/NifN
+6 PRK13232|PRK13233|PRK13234|PRK13235|PRK13236|TIGR01287 Nitrogenase reductase, iron protein NifH
+7 PRK00810|PRK14102 Nitrogenase stabilizing/protective protein NifW
 
 >Hydrogen Production (Fe-Fe Hydrogenases)
-COG4624|TIGR02512|TIGR04105 FeFe (iron only) hydrogenase catch-all
-WP_002568840 FeFehyd; hydrogenase, group A1
-WP_002727095 FeFehyd; hydrogenase, group A2
-WP_016268012 FeFehyd; hydrogenase, group A3
-WP_007063270 FeFehyd; hydrogenase, group A4
-AIO18483 FeFehyd; hydrogenase, group B
-WP_002572006 FeFehyd; hydrogenase, group C1
-WP_002848484 FeFehyd; hydrogenase, group C2
-AIO18481 FeFehyd; hydrogenase, group C3
-WP_004030875 FeFehyd; hydrogenase, group Fe
+1 COG4624|TIGR02512|TIGR04105 FeFe (iron only) hydrogenase catch-all
+2 WP_002568840 Fe-Fe hydrogenase, group A1
+2 WP_002727095 Fe-Fe hydrogenase, group A2
+2 WP_016268012 Fe-Fe hydrogenase, group A3
+2 WP_007063270 Fe-Fe hydrogenase, group A4
+2 AIO18483 Fe-Fe hydrogenase, group B
+2 WP_002572006 Fe-Fe hydrogenase, group C1
+2 WP_002848484 Fe-Fe hydrogenase, group C2
+2 AIO18481 Fe-Fe hydrogenase, group C3
+2 WP_004030875 Fe-Fe hydrogenase, group Fe
 
 >Hydrogen Production and Oxidation (Ni-Fe Hydrogenases)
-COG3259|TIGR03295|NF033181|COG4042 NiFe hydrogenase catch-all
-WP_015407385 NiFe hydrogenase group Ia
-WP_012675774 NiFe hydrogenase group Ib
-WP_011688559 NiFe hydrogenase group Ic
-WP_023457248 NiFe hydrogenase group Id
-WP_008030254 NiFe hydrogenase group Ie
-WP_015898101 NiFe hydrogenase group If
-WP_011822511 NiFe hydrogenase group Ig
-WP_014267363 NiFe hydrogenase group Ih
-WP_022740096 NiFe hydrogenase group Ii
-WP_010878877 NiFe hydrogenase group Ij
-WP_012036281 NiFe hydrogenase group Ik
-WP_011603008 NiFe hydrogenase group IIa
-WP_011714112 NiFe hydrogenase group IIb
-WP_011383527.1 NiFe hydrogenase group IIc
-WP_010880487 NiFe hydrogenase group IId
-WP_012020882.1 NiFe hydrogenase group IIe
-WP_022846160 NiFe hydrogenase group IIIa
-WP_011719855 NiFe hydrogenase group IIIb
-WP_013637988 NiFe hydrogenase group IIIc
-WP_011686721 NiFe hydrogenase group IIId
-WP_022739022 NiFe hydrogenase group IVa
-WP_011388069 NiFe hydrogenase group IVb
-WP_026783288 NiFe hydrogenase group IVc
-WP_014122750 NiFe hydrogenase group IVd
-WP_022739883 NiFe hydrogenase group IVe
-WP_018133527 NiFe hydrogenase group IVf
-WP_013129492 NiFe hydrogenase group IVg
-WP_011018833 NiFe hydrogenase group IVh
-WP_004029221 NiFe hydrogenase group IVi
+1 COG3259|TIGR03295|NF033181|COG4042 NiFe hydrogenase catch-all
+2 WP_015407385 NiFe hydrogenase group Ia
+2 WP_012675774 NiFe hydrogenase group Ib
+2 WP_011688559 NiFe hydrogenase group Ic
+2 WP_023457248 NiFe hydrogenase group Id
+2 WP_008030254 NiFe hydrogenase group Ie
+2 WP_015898101 NiFe hydrogenase group If
+2 WP_011822511 NiFe hydrogenase group Ig
+2 WP_014267363 NiFe hydrogenase group Ih
+2 WP_022740096 NiFe hydrogenase group Ii
+2 WP_010878877 NiFe hydrogenase group Ij
+2 WP_012036281 NiFe hydrogenase group Ik
+2 WP_011603008 NiFe hydrogenase group IIa
+2 WP_011714112 NiFe hydrogenase group IIb
+2 WP_011383527.1 NiFe hydrogenase group IIc
+2 WP_010880487 NiFe hydrogenase group IId
+2 WP_012020882.1 NiFe hydrogenase group IIe
+2 WP_022846160 NiFe hydrogenase group IIIa
+2 WP_011719855 NiFe hydrogenase group IIIb
+2 WP_013637988 NiFe hydrogenase group IIIc
+2 WP_011686721 NiFe hydrogenase group IIId
+2 WP_022739022 NiFe hydrogenase group IVa
+2 WP_011388069 NiFe hydrogenase group IVb
+2 WP_026783288 NiFe hydrogenase group IVc
+2 WP_014122750 NiFe hydrogenase group IVd
+2 WP_022739883 NiFe hydrogenase group IVe
+2 WP_018133527 NiFe hydrogenase group IVf
+2 WP_013129492 NiFe hydrogenase group IVg
+2 WP_011018833 NiFe hydrogenase group IVh
+2 WP_004029221 NiFe hydrogenase group IVi
 
 >Other Elements, Chlorite
-TIGR02486|A0A1D7TK12 rdh, pceA ; Tetrachloroethene reductive dehalogenase catalytic subunit PceA (ec:1.21.99.5)
-A0A0K2GA28|E8U2K5 cld; chlorite dismutase (ec:1.13.11.49)
-A0A010QQR5|A0A023X3G8|A0A075NSL2|A0A0A0NVR2|A0A0A8K457|A0A0B4XYA8|A0A0C5JWN0|A0A0C6FGZ0|A0A0C6P4N1|A0A0D6AZD9|A0A0D6B7L6|A0A0E3M7Y3|A0A0E3UWD1|A0A0F7NGK3|A0A0H3ASS6|A0A0H4P959|A0A0K2RUF9|A0A0P0NKY6|A0A0P0SD48|A0A0U2ZPC8|A0A0U4WMJ1|A0A0X8HBL9|A0A125T1W0|A0A142FS08|A0A160MXF1|A0A177DII8|A0A1B1M4N1|A0A1B1NCN6|A0A1B1PS83|A0A1B1ZSC7|A0A1B8U488|A0A1C7G6Z9|A0A1D7TZH5|A0A1D7W922|A0A1G4G9T9|A0A1H1CXY2|A0A1P8JRK4|A0A1P8PS40|A0A1X2L6D9|A0A2C9EK06|A0PNB6|A1SH73|A2R5H8|A2RHX2|A4YEQ5|A4YND9|A9IHN5|A9KS99|A9WF98|B1W2I1|B1XSM3|B3QPT1|B6HDU6|C5ANF9|C5CUA9|C6X4K2|D2PJB0|D3HJT1|D5E2F6|D5H197|D5VEH1|D7B7U4|D8J8M7|D8NH98|E1T4S6|E3RZ26|E6SBJ1|E6X9T8|E9EX80|F4B0I5|F4GZQ5|F7ZHD1|G0AAT0|G2PB02|G2SNQ7|G6YA49|G8R7U2|H5T021|H6RT83|I1S094|I2C0W1|I3WYX0|J7JFJ0|J9S6F8|K1WQQ7|K1X2R4|K9U250|M5AHI6|M9RCC2|Q01RF3|Q0SK70|Q1K7R5|Q213S4|Q24XU3|Q2W483|Q3JJY3|Q46PC7|Q4A097|Q5JEG7|Q5P813|Q6MLH1|Q72Q35|Q9RJT2|R4V003|R8BKV2|S3E9B1|U5MV00|V9XID6|X4ZEI9 dehII; 2-haloacid dehalogenase (ec:3.8.1.2)
+TIGR02486|A0A1D7TK12 Tetrachloroethene reductive dehalogenase catalytic subunit PceA/Rdh
+A0A0K2GA28|E8U2K5 Chlorite dismutase Cld
+A0A010QQR5|A0A023X3G8|A0A075NSL2|A0A0A0NVR2|A0A0A8K457|A0A0B4XYA8|A0A0C5JWN0|A0A0C6FGZ0|A0A0C6P4N1|A0A0D6AZD9|A0A0D6B7L6|A0A0E3M7Y3|A0A0E3UWD1|A0A0F7NGK3|A0A0H3ASS6|A0A0H4P959|A0A0K2RUF9|A0A0P0NKY6|A0A0P0SD48|A0A0U2ZPC8|A0A0U4WMJ1|A0A0X8HBL9|A0A125T1W0|A0A142FS08|A0A160MXF1|A0A177DII8|A0A1B1M4N1|A0A1B1NCN6|A0A1B1PS83|A0A1B1ZSC7|A0A1B8U488|A0A1C7G6Z9|A0A1D7TZH5|A0A1D7W922|A0A1G4G9T9|A0A1H1CXY2|A0A1P8JRK4|A0A1P8PS40|A0A1X2L6D9|A0A2C9EK06|A0PNB6|A1SH73|A2R5H8|A2RHX2|A4YEQ5|A4YND9|A9IHN5|A9KS99|A9WF98|B1W2I1|B1XSM3|B3QPT1|B6HDU6|C5ANF9|C5CUA9|C6X4K2|D2PJB0|D3HJT1|D5E2F6|D5H197|D5VEH1|D7B7U4|D8J8M7|D8NH98|E1T4S6|E3RZ26|E6SBJ1|E6X9T8|E9EX80|F4B0I5|F4GZQ5|F7ZHD1|G0AAT0|G2PB02|G2SNQ7|G6YA49|G8R7U2|H5T021|H6RT83|I1S094|I2C0W1|I3WYX0|J7JFJ0|J9S6F8|K1WQQ7|K1X2R4|K9U250|M5AHI6|M9RCC2|Q01RF3|Q0SK70|Q1K7R5|Q213S4|Q24XU3|Q2W483|Q3JJY3|Q46PC7|Q4A097|Q5JEG7|Q5P813|Q6MLH1|Q72Q35|Q9RJT2|R4V003|R8BKV2|S3E9B1|U5MV00|V9XID6|X4ZEI9 2-Haloacid dehalogenase DehII
 
 >Other Elements, Selenate
-A8ZSU1|C0QP50|E4NV35|tigr03479 pcrB; DMSO reductase family type II enzyme, molybdopterin subunit / Perchlorate reductase subunit alpha (EC:1.97.1.-)
-tigr03478|A8ZSU3 clrb, serB; selenate/chlorate reductase subunit beta (EC:1.97.1.9,1.97.1.1)
-WP_013516312.1 serC, clrC; selenate/chlorate reductase subunit gamma (EC:1.97.1.9,1.97.1.1)
-A0A0K2JAE8|A0A0S2I2D6|A0A1B2I589|A0A1J0GK47|A0A1J1CAE2|G8QZ37|Q6LQS9 ygfK; putative selenate reductase (ec:1.97.1.9)
-A0A1Y6K5H4|A0KK96 xdhD; putative selenate reductase molybdopterin-binding subunit
-A0A097R6V1|A0A0E0U3Z4|A0A0S2SMH4|A0A241TB99 ygfM; putative selenate reductase FAD-binding subunit
+A8ZSU1|C0QP50|E4NV35|tigr03479 DMSO reductase family type II enzyme, molybdopterin subunit / Perchlorate reductase subunit alpha, PcrB
+tigr03478|A8ZSU3 Selenate/chlorate reductase subunit beta Clrb/SerB
+WP_013516312.1 Selenate/chlorate reductase subunit gamma SerC/ClrC
+A0A0K2JAE8|A0A0S2I2D6|A0A1B2I589|A0A1J0GK47|A0A1J1CAE2|G8QZ37|Q6LQS9 Putative selenate reductase YgfK
+A0A1Y6K5H4|A0KK96 Putative selenate reductase molybdopterin-binding subunit XdhD
+A0A097R6V1|A0A0E0U3Z4|A0A0S2SMH4|A0A241TB99 Putative selenate reductase FAD-binding subunit YgfM
 
 >Other Elements, Arsenate
-A0A090K7L5|A0A0H3KQK3|A0A1W6JYC8|A4FT62|D5VKE0|H6NEV1|I3Y0F6|L0NMC5|M1RRM5|Q9Y8S0 aoxA; arsenite oxidase small subunit (ec:1.20.2.1,1.20.9.1)
-A0A023X8B4|A0A059WBK9|A0A075WGL7|A0A089ZC49|A0A0A7GCW9|A0A0C5X9J1|A0A0D6JGT6|A0A0E3UIU6|A0A0H4PE33|A0A0N9Z081|A0A0S2I1E2|A0A0X8UWZ7|A0A127HQT6|A0A142CSS0|A0A142XB88|A0A1B3NHF9|A0A1C9VAG6|A0A1P8KQ15|A0A1P8U4Q8|A0A1W1I7G0|A0A1W6ZQC9|A0A1Y0HLH5|A0A1Z4AD61|A0A223Z2L1|A0A248VV55|A0A2H1E8F1|A4FZ17|A4SF91|A4SZ94|A5WEJ8|B4UGE2|B6XU82|B8GPA1|B9E2B9|C6BHE7|C8WST2|D5BEU1|D7GG31|E6X102|F2GD98|F2NJ13|F4BT63|F7YWS8|F8E6C3|F9ZUW7|G0IY79|G8M097|H6SQE3|H9UJY3|K7S4I1|K9PDA7|L0DJD2|M9RNT4|O66910|Q3ZA56|Q9RZ30|T2G9A1|U5QHB2|W0E000|W1NB98 ARSC2, arsC; arsenate reductase (ec:1.20.4.4)
-A0A126V5W9|A0A1B2EMS1|A4FT63|B7VRR1|H6Q795|I3Y0F7|M1RIM3|Q96XX7 aoxB; arsenite oxidase large subunit (ec:1.20.2.1,1.20.9.1)
+A0A090K7L5|A0A0H3KQK3|A0A1W6JYC8|A4FT62|D5VKE0|H6NEV1|I3Y0F6|L0NMC5|M1RRM5|Q9Y8S0 Arsenite oxidase small subunit AoxA
+A0A023X8B4|A0A059WBK9|A0A075WGL7|A0A089ZC49|A0A0A7GCW9|A0A0C5X9J1|A0A0D6JGT6|A0A0E3UIU6|A0A0H4PE33|A0A0N9Z081|A0A0S2I1E2|A0A0X8UWZ7|A0A127HQT6|A0A142CSS0|A0A142XB88|A0A1B3NHF9|A0A1C9VAG6|A0A1P8KQ15|A0A1P8U4Q8|A0A1W1I7G0|A0A1W6ZQC9|A0A1Y0HLH5|A0A1Z4AD61|A0A223Z2L1|A0A248VV55|A0A2H1E8F1|A4FZ17|A4SF91|A4SZ94|A5WEJ8|B4UGE2|B6XU82|B8GPA1|B9E2B9|C6BHE7|C8WST2|D5BEU1|D7GG31|E6X102|F2GD98|F2NJ13|F4BT63|F7YWS8|F8E6C3|F9ZUW7|G0IY79|G8M097|H6SQE3|H9UJY3|K7S4I1|K9PDA7|L0DJD2|M9RNT4|O66910|Q3ZA56|Q9RZ30|T2G9A1|U5QHB2|W0E000|W1NB98 Arsenate reductase ArsC
+A0A126V5W9|A0A1B2EMS1|A4FT63|B7VRR1|H6Q795|I3Y0F7|M1RIM3|Q96XX7 Arsenite oxidase large subunit AoxB
 
 >Other Elements, Decaheme Cytochromes
-TIGR03507 MtrC ; decaheme c-type cytochrome, OmcA/MtrC family
-TIGR03509 MtrB ; decaheme-associated outer membrane protein, MtrB/PioB family
+TIGR03507 Decaheme c-type cytochrome, OmcA/MtrC family
+TIGR03509 Decaheme-associated outer membrane protein, MtrB/PioB family
 
 >Light, Photosystem I
-CHL00056|TIGR01335 photosystem I, P700 chlorophyll a A1 (psaA)
-CHL00054|TIGR01336 photosystem I, P700 chlorophyll a A2 (PsaB)
-CHL00065 photosystem I, subunit VII (PsaC)
-CHL00145 photosystem I, subunit II (PsaD)
-CHL00125 photosystem I, subunit IV (PsaE)
-CHL00132 photosystem I, subunit III (PsaF)
-TIGR03051 plant photosystem I reaction center subunit V (PsaG)
-CHL00186|TIGR03052 photosystem I, subunit VIII (PsaI)
-CHL00105 photosystem I, subunit IX (PsaJ)
-CHL00164|TIGR03049 photosystem I, subunit X; (PsaK)
-CHL00120 photosystem I, subunit XI; (PsaL)
-CHL00190|TIGR03053 photosystem I, subunit XII; (PsaM)
-TIGR03059 plant photosystem I subunit (PsaO)
+1 CHL00056|TIGR01335 Photosystem I, P700 chlorophyll a A1, PsaA
+2 CHL00054|TIGR01336 Photosystem I, P700 chlorophyll a A2, PsaB
+3 CHL00065 Photosystem I, subunit VII, PsaC
+4 CHL00145 Photosystem I, subunit II, PsaD
+5 CHL00125 Photosystem I, subunit IV, PsaE
+6 CHL00132 Photosystem I, subunit III, PsaF
+TIGR03051 Plant photosystem I reaction center subunit V, PsaG
+7 CHL00186|TIGR03052 Photosystem I, subunit VIII, PsaI
+8 CHL00105 Photosystem I, subunit IX, PsaJ
+9 CHL00164|TIGR03049 Photosystem I, subunit X, PsaK
+10 CHL00120 Photosystem I, subunit XI, PsaL
+11 CHL00190|TIGR03053 Photosystem I, subunit XII, PsaM
+TIGR03059 Plant photosystem I subunit, PsaO
 
 >Light, Photosystem II
-CHL00003|TIGR01151 photosystem II, subunit D1 (PsbA)
-CHL00062|TIGR03039 photosystem II, 47 kDa subunit (PsbB)
-CHL00035|TIGR01153|TIGR03041 photosystem II, 44 kDa subunit (PsbC)
-CHL00004|TIGR01152 photosystem II, subunit D2 (PsbD)
-CHL00064 photosystem II, subunit V (PsbE)
-CHL00039 photosystem II, subunit VI (PsbF)
-CHL00066|PRK02624 photosystem II, subunit H (PsbH)
-CHL00024|PRK02655 photosystem II, subunit I (PsbI)
-CHL00108|PRK02565 photosystem II, subunit J (PsbJ)
-CHL00047|PRK02553 photosystem II, subunit K (PsbK)
-CHL00038|PRK00753 photosystem II, subunit L (PsbL)
-CHL00080|PRK04989|TIGR03038 photosystem II, subunit M (PsbM)
-CHL00020|PRK13183 photosystem II, subunit N (PsbN)
-TIGR03042 photosystem II, subunit Q (PsbQ)
-CHL00031|PRK11875 photosystem II, subunit T (PsbT)
-CHL00133 photosystem II, cytochrome c550 subunit (PsbV)
-CHL00128 photosystem II, subunit W (PsbW)
-CHL00114 photosystem II, subunit X (PsbX)
-CHL00196|PRK13240 photosystem II, subunit Y (PsbY)
-CHL00082|PRK02576|TIGR03043 photosystem II, subunit Z (PsbZ)
-TIGR03044 photosystem II subunit Psb27
+1 CHL00003|TIGR01151 Photosystem II, subunit D1, PsbA
+2 CHL00062|TIGR03039 Photosystem II, 47 kDa subunit, PsbB
+3 CHL00035|TIGR01153|TIGR03041 Photosystem II, 44 kDa subunit, PsbC
+4 CHL00004|TIGR01152 Photosystem II, subunit D2, PsbD
+5 CHL00064 Photosystem II, subunit V, PsbE
+6 CHL00039 Photosystem II, subunit VI, PsbF
+7 CHL00066|PRK02624 Photosystem II protein PsbH
+8 CHL00024|PRK02655 Photosystem II protein PsbI
+9 CHL00108|PRK02565 Photosystem II protein PsbJ
+10 CHL00047|PRK02553 Photosystem II protein PsbK
+11 CHL00038|PRK00753 Photosystem II protein PsbL
+12 CHL00080|PRK04989|TIGR03038 Photosystem II protein PsbM
+13 CHL00020|PRK13183 Photosystem II protein PsbN
+14 TIGR03042 Photosystem II protein PsbQ
+15 CHL00031|PRK11875 Photosystem II protein PsbT
+16 CHL00133 Photosystem II, cytochrome c550 subunit PsbV
+17 CHL00128 Photosystem II protein PsbW
+18 CHL00114 Photosystem II protein PsbX
+19 CHL00196|PRK13240 Photosystem II protein PsbY
+20 CHL00082|PRK02576|TIGR03043 Photosystem II protein PsbZ
+21 TIGR03044 Photosystem II protein Psb27
 
 >Light, Proton Pumps
 COG5524|NF038020|cd14965|cd15028 Bacteriorhodopsin and similar
 
 >Metabolism, Glycolysis
-PTZ00107|PLN02914|PLN02596|PLN02405|PLN02362|COG4809|PRK00292|PRK12408|PRK14038|PRK14039|PRK14101|PTZ00288 hexokinase/glucokinase
-PLN02649|PRK00179|PRK00973|PRK03868|PRK04190|PRK14095|PRK14096|PRK14097|PTZ00430|TIGR02128|cd02218 glucose-6-phosphate-isomerase
-COG4809|COG0205|COG4809|PLN02251|PLN02564|PLN02884|PRK03202|PRK03979|PRK06830|PRK09513|PRK10294|PRK14071|PTZ00287|PTZ00468|TIGR02045|TIGR02477|TIGR02478|TIGR02482|TIGR02483|TIGR03168|TIGR03828 phosphofructokinase
-NF033379|PLN02227|PLN02425|PLN02455|PLN02858|PRK07226|PRK07315|PRK07709|PRK08610|PRK09196|PRK09197|PRK09250|PRK13399|PTZ00019|TIGR01520|TIGR01521 fructose-bisphosphate aldolase
-PLN02429|PLN02561|PRK00042|PRK04302|PRK13962|PRK14565|PRK14566|PRK14567|PRK14905|PRK15492|PTZ00333|TIGR00160 triosephosphate isomerase
-PLN00412|PLN02237|PLN02272|PLN02358|PLN03096|PRK04207|PRK07403|PRK07729|PRK08289|PRK08955|PRK15425|PTZ00023|PTZ00353|TIGR01546 glyceraldehyde-3-phosphate dehydrogenase
-COG0126|COG2074|PLN02282|PLN03034|PRK00073|PRK04220|PRK12337|PRK13962|PTZ00005|cl00198 phosphoglycerate kinase
-COG3635|PLN02538|PRK01112|PRK03482|PRK04024|PRK04135|PRK04200|PRK05434|PRK14115|PRK14116|PRK14118|PTZ00122|PTZ00123|TIGR00306|TIGR01258|TIGR01307 phosphoglycerate mutase
-PLN00191|PRK00077|PTZ00081|TIGR01060|cd03313 phosphopyruvate hydratase/enolase
-PLN02461|PLN02623|PLN02762|PLN02765|PRK05826|PRK06247|PRK06354|PRK06739|PRK08187|PRK09206|PRK14725|PTZ00066|PTZ00300|TIGR01064 pyruvate kinase
+1 PTZ00107|PLN02914|PLN02596|PLN02405|PLN02362|COG4809|PRK00292|PRK12408|PRK14038|PRK14039|PRK14101|PTZ00288 Hexokinase/glucokinase
+2 PLN02649|PRK00179|PRK00973|PRK03868|PRK04190|PRK14095|PRK14096|PRK14097|PTZ00430|TIGR02128|cd02218 Glucose-6-phosphate-isomerase
+3 COG4809|COG0205|COG4809|PLN02251|PLN02564|PLN02884|PRK03202|PRK03979|PRK06830|PRK09513|PRK10294|PRK14071|PTZ00287|PTZ00468|TIGR02045|TIGR02477|TIGR02478|TIGR02482|TIGR02483|TIGR03168|TIGR03828 Phosphofructokinase
+4 NF033379|PLN02227|PLN02425|PLN02455|PLN02858|PRK07226|PRK07315|PRK07709|PRK08610|PRK09196|PRK09197|PRK09250|PRK13399|PTZ00019|TIGR01520|TIGR01521 Fructose-bisphosphate aldolase
+5 PLN02429|PLN02561|PRK00042|PRK04302|PRK13962|PRK14565|PRK14566|PRK14567|PRK14905|PRK15492|PTZ00333|TIGR00160 Triosephosphate isomerase
+6 PLN00412|PLN02237|PLN02272|PLN02358|PLN03096|PRK04207|PRK07403|PRK07729|PRK08289|PRK08955|PRK15425|PTZ00023|PTZ00353|TIGR01546 Glyceraldehyde-3-phosphate dehydrogenase
+7 COG0126|COG2074|PLN02282|PLN03034|PRK00073|PRK04220|PRK12337|PRK13962|PTZ00005|cl00198 Phosphoglycerate kinase
+8 COG3635|PLN02538|PRK01112|PRK03482|PRK04024|PRK04135|PRK04200|PRK05434|PRK14115|PRK14116|PRK14118|PTZ00122|PTZ00123|TIGR00306|TIGR01258|TIGR01307 Phosphoglycerate mutase
+9 PLN00191|PRK00077|PTZ00081|TIGR01060|cd03313 Phosphopyruvate hydratase/enolase
+10 PLN02461|PLN02623|PLN02762|PLN02765|PRK05826|PRK06247|PRK06354|PRK06739|PRK08187|PRK09206|PRK14725|PTZ00066|PTZ00300|TIGR01064 Pyruvate kinase
 
 >Metabolism, Pentose Phosphate pathway
-PRK12853|TIGR03554 glucose-6-phosphate dehydrogenase
-COG0363|COG2706|PLN02360|PRK11028|TIGR01198 6-phosphogluconolactonase
-COG0362|COG1023|PRK12490|PTZ00142|TIGR00872|TIGR00873 6-phosphogluconate dehydrogenase
-PLN02384|PRK00702|PRK05571|COG0120|TIGR00021|TIGR00689 ribose-5-phosphate isomerase
-COG3623|PRK13209|PRK13210|PTZ00170|cd00429|TIGR01163 ribulose-5-phosphate 3-epimerase
-COG0021|PLN02790|PRK05899|PRK12753|PRK12754|PTZ00089|TIGR00232 transketolase
-COG0176|PRK03343|PRK03903|PRK05269|PRK09533|PRK12309|PRK12346|TIGR00874 transaldolase
+1 PRK12853|TIGR03554 Glucose-6-phosphate dehydrogenase
+2 COG0363|COG2706|PLN02360|PRK11028|TIGR01198 6-Phosphogluconolactonase
+3 COG0362|COG1023|PRK12490|PTZ00142|TIGR00872|TIGR00873 6-Phosphogluconate dehydrogenase
+4 PLN02384|PRK00702|PRK05571|COG0120|TIGR00021|TIGR00689 Ribose-5-phosphate isomerase
+5 COG3623|PRK13209|PRK13210|PTZ00170|cd00429|TIGR01163 Ribulose-5-phosphate 3-epimerase
+6 COG0021|PLN02790|PRK05899|PRK12753|PRK12754|PTZ00089|TIGR00232 Transketolase
+7 COG0176|PRK03343|PRK03903|PRK05269|PRK09533|PRK12309|PRK12346|TIGR00874 Transaldolase
 
 >Metabolism, Citric Acid/Krebs/TCA cycle
-COG0372|PLN02456|PRK05614|PRK12349|PRK12350|PRK14032|PRK14034|PRK14035|PRK14036|PRK14037|TIGR01793|TIGR01798 citrate synthase
-COG1048|COG1049|TIGR00117|TIGR01340|TIGR01341 aconitase
-COG0538|COG2838|COG4579|PLN00096|PLN00103|PLN00118|PLN00123|PLN03065|PRK06451|PRK07006|PRK07362|PRK08299|PRK08997|PRK09222|PTZ00435|TIGR00127 isocitrate dehydrogenase
-COG0567|PRK09404|TIGR00239|cl39092 2-oxoglutarate dehydrogenase, dehydrogenase (E1) component
-COG0508|PLN02226|TIGR01347|TIGR02927 pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide acyltransferase (E2) component
-COG1249 pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide dehydrogenase (E3) component
-COG0074|PRK05678|PTZ00187|TIGR01019 succinyl-CoA synthetase, alpha subunit (SucD)
-COG0045|TIGR01016 succinyl-CoA synthetase, beta subunit (SucC)
-COG1053|PLN00128|PRK05675|PRK05945|PRK06069|TIGR01811|TIGR01812|TIGR01816 succinate dehydrogenase (respiratory complex II), flavoprotein subunit (SdhA)
-COG0479|PLN00129|PRK05950|PRK06259|PRK07570|TIGR00384 succinate dehydrogenase (respiratory complex II), Fe-S protein subunit (SdhB)
-COG2009|PLN00126|PLN00127|PRK09487|TIGR02046 succinate dehydrogenase (respiratory complex II), cytochrome b subunit (SdhC)
-COG2142|PRK09488|TIGR02968 succinate dehydrogenase (respiratory complex II), hydrophobic anchor subunit (SdhD)
-COG0114|PLN00134|PRK00485|PRK12425|PRK15389|PRK15390|PRK15391|PRK15392|PTZ00226|cd01362|TIGR00979 fumarate hydratase
-PLN00106|PLN00112|PLN00135|PRK05086|PRK05442|PRK06223|PRK14025|PTZ00117|PTZ00325 malate dehydrogenase
+1 COG2609|PRK09405 Pyruvate dehydrogenase, dehydrogenase (E1) component
+2 COG0508|PLN02226|TIGR01347|TIGR02927 Pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide acyltransferase (E2) component
+3 COG1249 Pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide dehydrogenase (E3) component
+4 COG0372|PLN02456|PRK05614|PRK12349|PRK12350|PRK14032|PRK14034|PRK14035|PRK14036|PRK14037|TIGR01793|TIGR01798 Citrate synthase
+5 COG1048|COG1049|TIGR00117|TIGR01340|TIGR01341 Aconitase
+6 COG0538|COG2838|COG4579|PLN00096|PLN00103|PLN00118|PLN00123|PLN03065|PRK06451|PRK07006|PRK07362|PRK08299|PRK08997|PRK09222|PTZ00435|TIGR00127 Isocitrate dehydrogenase
+7 COG0567|PRK09404|TIGR00239|cl39092 2-Oxoglutarate dehydrogenase, dehydrogenase (E1) component
+8 COG0508|PLN02226|TIGR01347|TIGR02927 Pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide acyltransferase (E2) component
+9 COG1249 Pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide dehydrogenase (E3) component
+10 COG0074|PRK05678|PTZ00187|TIGR01019 Succinyl-CoA synthetase, alpha subunit, SucD
+11 COG0045|TIGR01016 Succinyl-CoA synthetase, beta subunit, SucC
+12 COG1053|PLN00128|PRK05675|PRK05945|PRK06069|TIGR01811|TIGR01812|TIGR01816 Succinate dehydrogenase (respiratory complex II), flavoprotein subunit SdhA
+13 COG0479|PLN00129|PRK05950|PRK06259|PRK07570|TIGR00384 Succinate dehydrogenase (respiratory complex II), Fe-S protein subunit SdhB
+14 COG2009|PLN00126|PLN00127|PRK09487|TIGR02046 Succinate dehydrogenase (respiratory complex II), cytochrome b subunit SdhC
+15 COG2142|PRK09488|TIGR02968 Succinate dehydrogenase (respiratory complex II), hydrophobic anchor subunit SdhD
+16 COG0114|PLN00134|PRK00485|PRK12425|PRK15389|PRK15390|PRK15391|PRK15392|PTZ00226|cd01362|TIGR00979 Fumarate hydratase
+17 PLN00106|PLN00112|PLN00135|PRK05086|PRK05442|PRK06223|PRK14025|PTZ00117|PTZ00325 Malate dehydrogenase
 
->Metabolism, Pyruvate
-COG2609|PRK09405 pyruvate dehydrogenase, dehydrogenase (E1) component
-COG0508|PLN02226|TIGR01347|TIGR02927 pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide acyltransferase (E2) component
-COG1249 pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide dehydrogenase (E3) component
-COG0674|cd07034 pyrovate/oxoglutarate:ferredoxin oxidoreductase, subunit alpha (PorA)
-COG1013|TIGR02177 pyrovate/oxoglutarate:ferredoxin oxidoreductase, subunit beta (PorB)
-COG1014|TIGR02175 pyrovate/oxoglutarate:ferredoxin oxidoreductase, subunit gamma (PorG)
-COG1144|TIGR02179 pyrovate/oxoglutarate:ferredoxin oxidoreductase, subunit delta (PorD)
-COG0039|COG1052|NF033901|PLN00105|PLN02602|PRK11197 lactate dehydrogenase
-cd01678|cd01677|COG1882 pyruvate formate lyase
+>Metabolism, Pyruvate Fermentation
+COG0039|COG1052|NF033901|PLN00105|PLN02602|PRK11197 Lactate dehydrogenase
+cd01678|cd01677|COG1882 Pyruvate formate lyase
 
 >Metabolism, Fatty Acids
-PRK14656|PRK14657|PRK14659|PRK14660|PRK14661|PRK14663|TIGR00516 holo-acyl-carrier-protein synthase (acpS)
-TIGR01749|COG0764|cd01287 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabA)
-TIGR00128|COG0331 malonyl CoA-acyl carrier protein transacylase (FabD)
-TIGR03150 beta-ketoacyl-acyl-carrier-protein synthase II (FabF)
-TIGR00747|COG0332|CHL00203 3-oxoacyl-acyl-carrier-protein synthase III (FabH)
-TIGR03151|PLN02730|PRK06079|PRK06505|PRK06603|PRK06997|PRK07370|PRK07533|PRK07889|PRK08063|PRK08159|PRK08415|PRK08594|PRK08690 enoyl-acyl-carrier-protein reductase (FabI)
-TIGR01750|PRK00006|cd01288 beta-hydroxyacyl-(acyl-carrier-protein) dehydratase (FabZ)
-TIGR02445|pfam09403|PRK08947 acetyl-CoA C-acyltransferase (FadA)
-TIGR02437|PRK11730|COG1250 fatty oxidation complex, alpha subunit (FadB)
-PRK05557|PRK05565|PRK05786|PRK06077|PRK06463|PRK06550|PRK07666|PRK07792|PRK08217|PRK08261|PRK08642|PRK12825 3-oxoacyl-acyl-carrier protein reductase (FabG)
-PRK08063 enoyl-acyl-carrier-protein reductase (FabL)
-PRK13656 enoyl-acyl-carrier-protein reductase (FabV)
+1 PRK14656|PRK14657|PRK14659|PRK14660|PRK14661|PRK14663|TIGR00516 Holo-acyl-carrier-protein synthase AcpS
+2 TIGR01749|COG0764|cd01287 Beta-hydroxyacyl-(acyl-carrier-protein) dehydratase FabA
+3 TIGR00128|COG0331 Malonyl CoA-acyl carrier protein transacylase FabD
+4 TIGR03150 Beta-ketoacyl-acyl-carrier-protein synthase II FabF
+5 TIGR00747|COG0332|CHL00203 3-Oxoacyl-acyl-carrier-protein synthase III FabH
+6 TIGR03151|PLN02730|PRK06079|PRK06505|PRK06603|PRK06997|PRK07370|PRK07533|PRK07889|PRK08063|PRK08159|PRK08415|PRK08594|PRK08690 Enoyl-acyl-carrier-protein reductase FabI
+7 TIGR01750|PRK00006|cd01288 Beta-hydroxyacyl-(acyl-carrier-protein) dehydratase FabZ
+8 TIGR02445|pfam09403|PRK08947 Acetyl-CoA C-acyltransferase FadA
+9 TIGR02437|PRK11730|COG1250 Fatty oxidation complex, alpha subunit FadB
+10 PRK05557|PRK05565|PRK05786|PRK06077|PRK06463|PRK06550|PRK07666|PRK07792|PRK08217|PRK08261|PRK08642|PRK12825 3-Oxoacyl-acyl-carrier protein reductase FabG
+11 PRK08063 Enoyl-acyl-carrier-protein reductase FabL
+12 PRK13656 Enoyl-acyl-carrier-protein reductase FabV
 
 >Metabolism, Inositol Phosphate Biosynthesis
-pfam16670|PLN02222|PLN02223|PLN02230|PLN02952 phosphoinositide phospholipase C (EC 3.1.4.11)
-pfam16726 inositol polyphosphate 5-phosphatase clathrin binding domain
-PRK10757 inositol-1-monophosphatase (SuhB)
-COG1260 Myo-inositol-1-phosphate synthase
-PLN02438 inositol-3-phosphate synthase
-TIGR04380|cl40708 inositol 2-dehydrogenase (IolG EC:1.1.1.181, EC:1.1.369)
-PRK04302 triosephosphate isomerase
-TIGR01859 fructose-1,6-bisphosphate aldolase (IolJ, EC:4.1.2.29)
-TIGR03396 phospholipase C, phosphocholine-specific
+1 pfam16670|PLN02222|PLN02223|PLN02230|PLN02952 Phosphoinositide phospholipase C
+2 pfam16726 Inositol polyphosphate 5-phosphatase clathrin binding domain
+3 PRK10757 Inositol-1-monophosphatase SuhB
+4 COG1260 Myo-inositol-1-phosphate synthase
+5 PLN02438 Inositol-3-phosphate synthase
+6 TIGR04380|cl40708 Inositol 2-dehydrogenase IolG
+7 PRK04302 Triosephosphate isomerase
+8 TIGR01859 Fructose-1,6-bisphosphate aldolase IolJ
+9 TIGR03396 Phospholipase C, phosphocholine-specific
 
 >Metabolism, Tetraether Biosynthesis
-PRK00843 NAD(P)-dependent glycerol-1-phosphate dehydrogenase
-TIGR04147 putative phosphoglycerol geranylgeranyltransferase
-PRK12882 geranylgeranylglycerol-phosphate geranylgeranyltransferase
-PRK04032 CDP-2,3-bis-(O-geranylgeranyl)-sn-glycerol synthase
-TIGR04217 archaetidylserine synthase
+1 PRK00843 NAD(P)-dependent glycerol-1-phosphate dehydrogenase
+2 TIGR04147 Putative phosphoglycerol geranylgeranyltransferase
+3 PRK12882 Geranylgeranylglycerol-phosphate geranylgeranyltransferase
+4 PRK04032 CDP-2,3-bis-(O-geranylgeranyl)-sn-glycerol synthase
+5 TIGR04217 Archaetidylserine synthase
 
 >Metabolism, Isoprenoid Biosynthesis, Squalene, Hopane
-COG0578 Glycerol-3-phosphate dehydrogenase (GlpA, EC:1.1.1.8)
-COG0240 Glycerol-3-phosphate dehydrogenase (GpsA, EC:1.1.1.8)
-COG2376 Dihydroxyacetone kinase (DAK1, EC:2.7.1.29)
-COG0371 Glycerol dehydrogenase or related enzyme, iron-containing ADH family (GldA, EC:1.1.1.6)
-COG3425 3-hydroxy-3-methylglutaryl CoA synthase (PksG, EC:2.3.3.10)
-COG1257 Hydroxymethylglutaryl-CoA reductase (HMG1, EC:1.1.1.34)
-COG1577 Mevalonate kinase (ERG12, EC:2.7.1.36)
-COG3890 Phosphomevalonate kinase (ERG8, EC:2.7.4.2)
-COG3407 Mevalonate pyrophosphate decarboxylase (MVD1, EC:4.1.1.33)
-COG1443 Isopentenyldiphosphate isomerase (Idi, EC:5.3.3.2)
-COG1304 FMN-dependent dehydrogenase, includes L-lactate dehydrogenase and type II isopentenyl diphosphate isomerase (LldD, EC:1.1.2.3)
-COG0743 1-deoxy-D-xylulose 5-phosphate reductoisomerase (Dxr, EC:1.1.1.267)
-COG0142 Geranylgeranyl pyrophosphate synthase (IspA, EC:2.5.1.1)
-COG1211 2-C-methyl-D-erythritol 4-phosphate cytidylyltransferase (IspD, EC:2.7.7.60)
-COG1947 4-diphosphocytidyl-2C-methyl-D-erythritol kinase (IspE, EC:2.7.1.148)
-COG0245 2C-methyl-D-erythritol 2,4-cyclodiphosphate synthase (IspF, EC:4.6.1.12)
-COG0821 4-hydroxy-3-methylbut-2-enyl diphosphate synthase (IspG/GcpE, EC:1.17.4.3)
-COG0761 4-Hydroxy-3-methylbut-2-enyl diphosphate reductase (IspH, EC:1.17.1.2)
-COG1562|TIGR01559|pfam00494 phytoene/squalene synthetase
-TIGR03466 hopanoid-associated sugar epimerase (hpnA)
-TIGR03469 hopene-associated glycosyltransferase (hpnB)
-TIGR03464 squalene synthase (hpnC)
-TIGR03465 squalene synthase (hpnD)
-TIGR03467 squalene-associated FAD-dependent desaturase (hpnE)
-TIGR03470 hopanoid biosynthesis associated radical SAM protein (hpnH)
-TIGR03471 hopanoid biosynthesis associated radical SAM protein (hpnJ)
-TIGR03473 hopanoid biosynthesis associated protein (hpnK)
-COG1657|TIGR01507|TIGR01787 squalene/hopane cyclase
-TIGR02734 phytoene desaturase
-TIGR03463 oxidosqualene cyclase
-pfam08491 squalene epoxidase
+1 COG0578 Glycerol-3-phosphate dehydrogenase GlpA
+2 COG0240 Glycerol-3-phosphate dehydrogenase GpsA
+3 COG2376 Dihydroxyacetone kinase DAK1
+4 COG0371 Glycerol dehydrogenase or related enzyme, iron-containing ADH family, GldA
+5 COG3425 3-hydroxy-3-methylglutaryl CoA synthase PksG
+6 COG1257 Hydroxymethylglutaryl-CoA reductase HMG1
+7 COG1577 Mevalonate kinase ERG12
+8 COG3890 Phosphomevalonate kinase ERG8
+9 COG3407 Mevalonate pyrophosphate decarboxylase MVD1
+10 COG1443 Isopentenyldiphosphate isomerase Idi
+11 COG1304 FMN-dependent dehydrogenase, includes L-lactate dehydrogenase and type II isopentenyl diphosphate isomerase, LldD
+12 COG0743 1-deoxy-D-xylulose 5-phosphate reductoisomerase Dxr
+13 COG0142 Geranylgeranyl pyrophosphate synthase IspA
+14 COG1211 2-C-methyl-D-erythritol 4-phosphate cytidylyltransferase IspD
+15 COG1947 4-diphosphocytidyl-2C-methyl-D-erythritol kinase IspE
+16 COG0245 2C-methyl-D-erythritol 2,4-cyclodiphosphate synthase IspF
+17 COG0821 4-hydroxy-3-methylbut-2-enyl diphosphate synthase IspG/GcpE
+18 COG0761 4-Hydroxy-3-methylbut-2-enyl diphosphate reductase IspH
+19 COG1562|TIGR01559|pfam00494 Phytoene/squalene synthetase
+20 TIGR03466 Hopanoid-associated sugar epimerase HpnA
+21 TIGR03469 Hopene-associated glycosyltransferase HpnB
+22 TIGR03464 Squalene synthase HpnC
+23 TIGR03465 Squalene synthase HpnD
+24 TIGR03467 Squalene-associated FAD-dependent desaturase HpnE
+25 TIGR03470 Hopanoid biosynthesis associated radical SAM protein HpnH
+26 TIGR03471 Hopanoid biosynthesis associated radical SAM protein HpnJ
+27 TIGR03473 Hopanoid biosynthesis associated protein HpnK
+28 COG1657|TIGR01507|TIGR01787 Squalene/hopane cyclase
+29 TIGR02734 Phytoene desaturase
+30 TIGR03463 Oxidosqualene cyclase
+31 pfam08491 Squalene epoxidase
 
 >Metabolism, Magnetosome Biogenesis
-NF033616 magnetosome biogenesis gene MamB
-NF038051 magnetosome biogenesis gene MamC
-NF033615 magnetosome biogenesis gene MamM
-pfam18509 magnetochrome
+1 NF033616 Magnetosome biogenesis gene MamB
+2 NF038051 Magnetosome biogenesis gene MamC
+3 NF033615 Magnetosome biogenesis gene MamM
+4 pfam18509 Magnetochrome
 
 >Metabolism, Iron Storage
-COG2193 bacterioferritin (cytochrome b1)
-PRK10635|TIGR00754|PRK10304|cd00904|cd00907|pfam13668|pfam00210 bacterioferritin
-PRK10509|COG2906 bacterioferritin associated ferredoxin
-TIGR04535 ferritin-like protein
+1 COG2193 Bacterioferritin (cytochrome b1)
+1 PRK10635|TIGR00754|PRK10304|cd00904|cd00907|pfam13668|pfam00210 Bacterioferritin
+PRK10509|COG2906 Bacterioferritin associated ferredoxin
+1 TIGR04535 Ferritin-like protein
 
 >Crispr-Cas systems, CAS-I
 # see https://www.nature.com/articles/nature21059
-DEDDh DEDDh (cd06127) DEDDh 3'-5' exonuclease domain family
-PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
-PrimPol PrimPol (COG4951) Uncharacterized protein
-RT RT (pfam00078) Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
-cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
-cas2 cas2 (cd09638) CRISPR/Cas system-associated protein Cas2
-cas3 cas3 (cd09639) CRISPR/Cas system-associated protein Cas3
-cas3HD cas3HD (cd09641) CRISPR/Cas system-associated protein Cas3''
-cas4 cas4 (cd09637) CRISPR/Cas system-associated protein Cas4
-cas6 cas6 (cd09652) Class 1 CRISPR-associated endoribonuclease Cas6
-casR casR (cd09655) CRISPR/Cas system-associated transcriptional regulator CasRa
-csx15 csx15 (cd09766) CRISPR/Cas system-associated protein Csx15
-csx16 csx16 (cd09695) CRISPR/Cas system-associated protein Csx16
+DEDDh 3'-5' exonuclease domain family DEDDh
+PD-DExK Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
+PrimPol Uncharacterized protein COG4951
+RT Reverse transcriptase (RNA-dependent DNA polymerase)
+WYL Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
+cas1 CRISPR/Cas system-associated protein Cas1
+cas2 CRISPR/Cas system-associated protein Cas2
+cas3 CRISPR/Cas system-associated protein Cas3
+cas3HD CRISPR/Cas system-associated protein Cas3''
+cas4 CRISPR/Cas system-associated protein Cas4
+cas6 Class 1 CRISPR-associated endoribonuclease Cas6
+casR CRISPR/Cas system-associated transcriptional regulator CasRa
+csx15 CRISPR/Cas system-associated protein Csx15
+csx16 CRISPR/Cas system-associated protein Csx16
 csx18 csx18 (cls000006)
 csx20 csx20 (cls000023)
-csx3 csx3 (cd09681) CRISPR/Cas system-associated protein Csx3
+csx3 CRISPR/Cas system-associated protein Csx3
 
 >Crispr-Cas systems, CAS-I-A
 cas5a cas5a (mkCas0161)
-cas8a1 cas8a1 (cd09698) CRISPR/Cas system-associated protein Csa8a2
-cas8a2 cas8a2 (cd09666) CRISPR/Cas system-associated protein Csa8a2
+cas8a1 CRISPR/Cas system-associated protein Csa8a1
+cas8a2 CRISPR/Cas system-associated protein Csa8a2
 cas8a3 cas8a3 (cls000290)
 cas8a4 cas8a4 (cls000706)
 cas8a5 cas8a5 (cls000809)
@@ -753,16 +751,16 @@ cas8a6 cas8a6 (cls000881)
 cas8a7 cas8a7 (cls000157)
 cas8a8 cas8a8 (mkCas0180)
 csa3 csa3 (cls000179)
-csa5gr11 csa5gr11 (cd09653) CRISPR/Cas system-associated protein Csa5
+csa5gr11 CRISPR/Cas system-associated protein Csa5
 
 >Crispr-Cas systems, CAS-I-B
 cas11b cas11b (mkCas0150)
-cas7b cas7b (cd09717) CRISPR/Cas system-associated RAMP superfamily protein Cas7
-cas8b1 cas8b1 (cd09672) CRISPR/Cas system-associated protein Cas8a1
+cas7b CRISPR/Cas system-associated RAMP superfamily protein Cas7
+cas8b1 CRISPR/Cas system-associated protein Cas8b1
 cas8b10 cas8b10 (mkCas0151)
-cas8b2 cas8b2 (cd09665) CRISPR/Cas system-associated protein Cas8a1
-cas8b3 cas8b3 (cd09713) CRISPR/Cas system-associated protein Cas8c
-cas8b4 cas8b4 (cd09715) CRISPR/Cas system-associated protein Cas8c
+cas8b2 CRISPR/Cas system-associated protein Cas8b2
+cas8b3 CRISPR/Cas system-associated protein Cas8b3
+cas8b4 CRISPR/Cas system-associated protein Cas8b4
 cas8b5 cas8b5 (mkCas0131)
 cas8b6 cas8b6 (mkCas0111)
 cas8b7 cas8b7 (mkCas0158)
@@ -770,90 +768,90 @@ cas8b8 cas8b8 (cls000685)
 cas8b9 cas8b9 (mkCas0203)
 
 >Crispr-Cas systems, CAS-I-C
-cas7 cas7 (cd09640) CRISPR/Cas system-associated RAMP superfamily protein Cas7
-cas8c cas8c (cd09642) CRISPR/Cas system-associated protein Cas8c
+cas7 CRISPR/Cas system-associated RAMP superfamily protein Cas7
+cas8c CRISPR/Cas system-associated protein Cas8c
 
 >Crispr-Cas systems, CAS-I-D
-cas10d cas10d (cd09712) CRISPR/Cas system-associated protein Cas10d
+cas10d CRISPR/Cas system-associated protein Cas10d
 cas11d cas11d (mkCas0094)
-csc1gr5 csc1gr5 (cd09711) CRISPR/Cas system-associated protein Csc1
-csc2gr7 csc2gr7 (cd09709) CRISPR/Cas system-associated protein Csc2
+csc1gr5 CRISPR/Cas system-associated protein Csc1
+csc2gr7 CRISPR/Cas system-associated protein Csc2
 
 >Crispr-Cas systems, CAS-I-E
-cas5 cas5 (cd09645) CRISPR/Cas system-associated RAMP superfamily protein Cas5
-cas6e cas6e (cd09664) CRISPR/Cas system-associated RAMP superfamily protein Cas6e
-cas8e cas8e (cd09669) CRISPR/Cas system-associated protein Cse1
-cse2gr11 cse2gr11 (cd09670) CRISPR/Cas system-associated protein Cse2
+cas5 CRISPR/Cas system-associated RAMP superfamily protein Cas5
+cas6e CRISPR/Cas system-associated RAMP superfamily protein Cas6e
+cas8e CRISPR/Cas system-associated protein Cas8e
+cse2gr11 CRISPR/Cas system-associated protein Cse2
 
 >Crispr-Cas systems, CAS-I-F
-cas3f cas3f (cd09673) CRISPR/Cas system-associated protein Cas3/Cas2
-cas5f cas5f (cd09676) CRISPR/Cas system-associated RAMP superfamily protein Csy2
-cas6f cas6f (cd09674) CRISPR/Cas system-associated RAMP superfamily protein Cas6f
-cas7f cas7f (cd09677) CRISPR/Cas system-associated RAMP superfamily protein Csy3
-cas8f cas8f (cd09675) CRISPR/Cas system-associated protein Csy1
+cas3f CRISPR/Cas system-associated protein Cas3f/Cas2
+cas5f CRISPR/Cas system-associated RAMP superfamily protein Csy2/Cas5f
+cas6f CRISPR/Cas system-associated RAMP superfamily protein Cas6f
+cas7f CRISPR/Cas system-associated RAMP superfamily protein Csy3/Cas7f
+cas8f CRISPR/Cas system-associated protein Csy1/Cas8f
 
 >Crispr-Cas systems, CAS-I-U
-cas5u cas5u (cd09667) CRISPR/Cas system-associated protein Csb2
-cas8u1 cas8u1 (cd09767) CRISPR/Cas system-associated protein Csx17
-cas8u2 cas8u2 (cd09765) CRISPR/Cas system-associated protein Csx14
-csb1gr7 csb1gr7 (pfam09617) CRISPR-associated protein GSU0053 (Cas_GSU0053)
+cas5u CRISPR/Cas system-associated protein Csb2/Cas5u
+cas8u1 CRISPR/Cas system-associated protein Csx17/Cas8u1
+cas8u2 CRISPR/Cas system-associated protein Csx14/Cas8u2
+csb1gr7 CRISPR-associated protein GSU0053 (Cas_GSU0053)
 csb2gr5 csb2gr5 (cls000315)
-csb3 csb3 (cd09764) CRISPR/Cas system-associated RAMP superfamily protein Csb3
+csb3 CRISPR/Cas system-associated RAMP superfamily protein Csb3
 
 >Crispr-Cas systems, CAS-II
-cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
-cas2 cas2 (cd09638) CRISPR/Cas system-associated protein Cas2
-cas4 cas4 (cd09637) CRISPR/Cas system-associated protein Cas4
+cas1 CRISPR/Cas system-associated protein Cas1
+cas2 CRISPR/Cas system-associated protein Cas2
+cas4 CRISPR/Cas system-associated protein Cas4
 
 >Crispr-Cas systems, CAS-II-A
-cas9 cas9 (cd09643) CRISPR/Cas system-associated protein Cas9
-csn2 csn2 (cd09644) CRISPR/Cas system-associated protein Csn2
+cas9 CRISPR/Cas system-associated protein Cas9
+csn2 CRISPR/Cas system-associated protein Csn2
 
 >Crispr-Cas systems, CAS-II-B
-cas9 cas9 (cd09643) CRISPR/Cas system-associated protein Cas9
+cas9 CRISPR/Cas system-associated protein Cas9
 
 >Crispr-Cas systems, CAS-II-C
-cas9 cas9 (cd09643) CRISPR/Cas system-associated protein Cas9
+cas9 CRISPR/Cas system-associated protein Cas9
 
 >Crispr-Cas systems, CAS-III
-PD-DExK PD-DExK (COG4804) Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
-PrimPol PrimPol (COG4951) Uncharacterized protein
-RT RT (pfam00078) Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL WYL (COG2378) Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
-cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
-cas10 cas10 (cd09679) CRISPR/Cas system-associated protein Cas10
-cas2 cas2 (cd09638) CRISPR/Cas system-associated protein Cas2
-cas6 cas6 (cd09652) Class 1 CRISPR-associated endoribonuclease Cas6
-csx1 csx1 (cd09660) CRISPR/Cas system-associated protein Csx1
-csx15 csx15 (cd09766) CRISPR/Cas system-associated protein Csx15
-csx16 csx16 (cd09695) CRISPR/Cas system-associated protein Csx16
+PD-DExK Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
+PrimPol Uncharacterized protein COG4951
+RT Reverse transcriptase (RNA-dependent DNA polymerase)
+WYL Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
+cas1 CRISPR/Cas system-associated protein Cas1
+cas10 CRISPR/Cas system-associated protein Cas10
+cas2 CRISPR/Cas system-associated protein Cas2
+cas6 Class 1 CRISPR-associated endoribonuclease Cas6
+csx1 CRISPR/Cas system-associated protein Csx1
+csx15 CRISPR/Cas system-associated protein Csx15
+csx16 CRISPR/Cas system-associated protein Csx16
 csx18 csx18 (cls000006)
 csx20 csx20 (cls000023)
-csx3 csx3 (cd09681) CRISPR/Cas system-associated protein Csx3
+csx3 CRISPR/Cas system-associated protein Csx3
 
 >Crispr-Cas systems, CAS-III-A
-csm2gr11 csm2gr11 (cd09647) CRISPR/Cas system-associated protein Csm2
-csm3gr7 csm3gr7 (cd09683) CRISPR/Cas system-associated RAMP superfamily protein Csm3
-csm4gr5 csm4gr5 (cd09663) CRISPR/Cas system-associated RAMP superfamily protein Csm4
-csm5gr7 csm5gr7 (cd09662) CRISPR/Cas system-associated RAMP superfamily protein Csm5
-csm6 csm6 (cd09694) CRISPR/Cas system-associated protein Csm6
+csm2gr11 CRISPR/Cas system-associated protein Csm2
+csm3gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm3gr7
+csm4gr5 CRISPR/Cas system-associated RAMP superfamily protein Csm4gr5
+csm5gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm5gr7
+csm6 CRISPR/Cas system-associated protein Csm6
 csx21 csx21 (mkCas0076)
 csx22 csx22 (mkCas0064)
 
 >Crispr-Cas systems, CAS-III-B
-cmr3gr5 cmr3gr5 (cd09656) CRISPR/Cas system-associated RAMP superfamily protein Cmr3
-cmr4gr7 cmr4gr7 (cd09682) CRISPR/Cas system-associated RAMP superfamily protein Cmr4
-cmr5gr11 cmr5gr11 (cd09654) CRISPR/Cas system-associated protein Cmr5
-cmr6gr7 cmr6gr7 (cd09661) CRISPR/Cas system-associated RAMP superfamily protein Cmr6
+cmr3gr5 CRISPR/Cas system-associated RAMP superfamily protein Cmr3gr5
+cmr4gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr4gr7
+cmr5gr11 CRISPR/Cas system-associated protein Cmr5gr11
+cmr6gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr6gr7
 cmr7 cmr7 (mkCas0152)
 cmr8gr7 cmr8gr7 (mkCas0143)
 
 >Crispr-Cas systems, CAS-III-C
-cmr1gr7 cmr1gr7 (cd09657) CRISPR/Cas system-associated RAMP superfamily protein Cmr1
+cmr1gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr1gr7
 
 >Crispr-Cas systems, CAS-III-D
-csm3gr7 csm3gr7 (cd09683) CRISPR/Cas system-associated RAMP superfamily protein Csm3
-csx10gr5 csx10gr5 (cd09700) CRISPR/Cas system-associated RAMP superfamily protein Csx10
+csm3gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm3gr7
+csx10gr5 CRISPR/Cas system-associated RAMP superfamily protein Csx10gr5
 csx19 csx19 (cls000059)
 csx23 csx23 (mkCas0160)
 csx24 csx24 (mkCas0135)
@@ -861,28 +859,28 @@ csx25 csx25 (mkCas0197)
 csx26 csx26 (mkCas0156)
 
 >Crispr-Cas systems, CAS-IV-A
-DinG DinG (cd09708) CRISPR/Cas system-associated DinG family helicase Csf4
-csf1gr8 csf1gr8 (cd09705) CRISPR/Cas system-associated protein Csf1
-csf2gr7 csf2gr7 (cd09706) CRISPR/Cas system-associated RAMP superfamily protein Csf2
-csf3gr5 csf3gr5 (cd09707) CRISPR/Cas system-associated RAMP superfamily protein Csf3
+DinG CRISPR/Cas system-associated DinG family helicase Csf4
+csf1gr8 CRISPR/Cas system-associated protein Csf1gr8
+csf2gr7 CRISPR/Cas system-associated RAMP superfamily protein Csf2gr7
+csf3gr5 CRISPR/Cas system-associated RAMP superfamily protein Csf3gr5
 csf4gr11 csf4gr11 (mkCas0072)
 csf5gr6 csf5gr6 (mkCas0159)
 
 >Crispr-Cas systems, CAS-V
-cas1 cas1 (cd09634) CRISPR/Cas system-associated protein Cas1
-cas4 cas4 (cd09637) CRISPR/Cas system-associated protein Cas4
+cas1 CRISPR/Cas system-associated protein Cas1
+cas4 CRISPR/Cas system-associated protein Cas4
 
 >Crispr-Cas systems, CAS-V-A
 cpf1 cpf1 (mkCas0192)
 
 >Crispr-Cas systems, CAS-V-B
-c2c1 c2c1 (c2c1)
+c2c1 (c2c1)
 
 >Crispr-Cas systems, CAS-VI-A
-c2c2 c2c2 (c2c2)
+c2c2 (c2c2)
 
 >Crispr-Cas systems, CAS-VI-C
-c2c3 c2c3 (c2c3)
+c2c3 (c2c3)
 
 >Crispr-Cas systems, undefined
 Cas9_archaeal cas9_archaeal
@@ -890,142 +888,142 @@ CasX casX
 CasY casY
 
 >Motility, Bacterial Flagellum
-TIGR03170|COG1261|PRK12786|PRK12617|PRK12618|PRK08515|PRK06005|PRK06804|PRK07018 Flagellar basal body P-ring formation protein FlgA
-cl30383|TIGR01396|COG1815|PRK12685|PRK12627|PRK12626|PRK12625|PRK12624|PRK12623|PRK12622|PRK12621|PRK12619|PRK12620|PRK05680|PRK06003|PRK06004|PRK06797|PRK07182 Flagellar basal body rod protein FlgB
-TIGR01395|COG1558|PRK12782|PRK12632|PRK12631|PRK12630|PRK12628|PRK12629|PRK05681|PRK06802 Flagellar basal body rod protein FlgC
-pfam03963|cl30617|cl29105|COG1843|PRK09619|PRK09618|PRK05842|PRK06009|PRK06655 Flagellar hook assembly protein FlgD
-TIGR02489|COG1749|PRK12637|PRK08425|PRK05682|PRK05841 Flagellar hook protein FlgE
-TIGR02490|COG4787|PRK12689|PRK12640|PRK12643|PRK12641|PRK12642 Flagellar basal body rod protein FlgF
-TIGR02488|COG4786|PRK12819|PRK12818|PRK12816|PRK12817|PRK12636|PRK12694|PRK12693|PRK12691|PRK12692 Flagellar basal body rod protein FlgG
-pfam02107|cl19182|COG2063|PRK12788|PRK12698|PRK00249|PRK12407|PRK12697 Flagellar basal body L-ring protein FlgH
-pfam02119|cl19280|COG1706|PRK05303|PRK12789 Flagellar basal body P-ring protein FlgI
-TIGR02541|COG1705|PRK12790|PRK05684|PRK12713|PRK12712|PRK12711|PRK12709|PRK12710 Flagellar assembly peptidoglycan hydrolase/muramidase FlgJ
-pfam02120|cl24001|TIGR02492|COG1256|PRK12715|PRK12714|PRK08871|PRK08471|PRK08147|PRK07739|PRK05683|PRK06665|PRK06799|PRK06945|PRK07191|PRK07521 Flagellar hook-associated protein FlgK
-cl30668|TIGR02550|COG1344|PRK14692|PRK12718|PRK08870|PRK08412|PRK08027|PRK07192|PRK07701 Flagellar hook-associated protein FlgL
-pfam04316|cl01052|TIGR03824|COG2747|PRK10810 Negative regulator of flagellin synthesis (Anti-sigma-28 factor) FlgM
-pfam05130|cl09176|COG3418|PRK15459 Flagellar/type III secretory pathway chaperone FlgN
-pfam17680 Flagellar H-ring protein FlgO
-cl24946|pfam16538|pfam16539|pfam16548 Flagellar P-ring protein FlgT
-PRK06819|PRK08026|PRK12805|pfam08884|pfam12445|pfam12613 Flagellin FliC/FljB
-COG1345|PRK06664|PRK08453|PRK08724|PRK12765|pfam02465|pfam07195 Flagellar capping protein FliD
-COG1677|cl09139|PRK12729|TIGR00205|PRK12728|PRK00253|PRK00732|PRK00790|PRK01482|PRK01699|PRK03907 Flagellar MS ring/basal body protein FliE
-COG1766|PRK06007|PRK07193|PRK12800|TIGR00206|cl40738 Flagellar MS ring/basal body protein FliF
-COG1536|TIGR00207|PRK07194|PRK05686 Flagellar motor switch protein FliG
-COG1317|PRK13386|PRK06800|PRK06669|PRK06032|PRK05687 Flagellar assembly protein FliH
-COG1157|TIGR01026|PRK08972|PRK08927|PRK08472|PRK07960|PRK07721|PRK07196|PRK06793|PRK06002|PRK05688 Flagellar protein export ATPase FliI
-COG2882|TIGR02473|PRK07720|PRK05689 Flagella biosynthesis chaperone FliJ
-pfam02120|cl38920|cl24001|cd17470|cd17466|PRK10118|COG3144 Flagellar hook-length control protein FliK
-COG1580|PRK05696|PRK05697|PRK06654|PRK07021|PRK07718|PRK08455|PRK12785|cl00681|pfam03748 Flagellar MS ring/basal body-associated protein FliL
-pfam16973|pfam01052|TIGR02480|pfam02154|cd17908|TIGR01397|COG1868|PRK06666|PRK12795|PRK08916|PRK08983 Flagellar motor switch protein FliM
-COG1886|PRK05698|PRK06033|PRK07963|PRK08433 Flagellar motor switch/type III secretory pathway protein FliN
-pfam00813|cl00593|TIGR01103|COG3190|PRK11486|PRK12430|TIGR03500|cl01247|pfam04347 Flagellar biogenesis protein FliO
-pfam01313|cl00867|TIGR01402|COG1987|PRK05700|PRK06010|PRK12781 Flagellar biosynthesis protein FliQ
-pfam01311|cl00734|COG1684|PRK05701|PRK12780|TIGR01400 Flagellar biosynthesis protein FliR
-COG1516|PRK05685|TIGR00208|cd16098|cl00654|pfam02561 Flagellin-specific chaperone FliS
-PRK10548|cl05125|pfam05400 Flagellar biosynthesis regulatory protein FliT
-COG1298|PRK06012|PRK12792|TIGR01398|PRK12773|PRK13109 Flagellar type III secretion system protein FlhA
-TIGR00328|COG1377|PRK05702|PRK12468 Flagellar type III secretion system protein FlhB
-pfam06366 Flagellar protein FlhE
-COG1291|PRK08124|PRK08456|PRK09110|PRK12482|TIGR03818|cl00568|pfam01618 Flagellar motor protein MotA
-TIGR03818|COG1360|PRK05996|PRK06667|PRK06925|PRK07734|PRK08457|PRK08944|PRK09041|PRK12799|cl39081 Flagellar motor protein MotB
-PRK09109 Flagellar motor protein MotC
-PRK09038 Flagellar motor protein MotD
-COG3334 Flagellar motility protein MotE, a chaperone for MotC folding
-pfam18393 Flagellar T ring protein MotY
+1 TIGR03170|COG1261|PRK12786|PRK12617|PRK12618|PRK08515|PRK06005|PRK06804|PRK07018 Flagellar basal body P-ring formation protein FlgA
+2 cl30383|TIGR01396|COG1815|PRK12685|PRK12627|PRK12626|PRK12625|PRK12624|PRK12623|PRK12622|PRK12621|PRK12619|PRK12620|PRK05680|PRK06003|PRK06004|PRK06797|PRK07182 Flagellar basal body rod protein FlgB
+3 TIGR01395|COG1558|PRK12782|PRK12632|PRK12631|PRK12630|PRK12628|PRK12629|PRK05681|PRK06802 Flagellar basal body rod protein FlgC
+4 pfam03963|cl30617|cl29105|COG1843|PRK09619|PRK09618|PRK05842|PRK06009|PRK06655 Flagellar hook assembly protein FlgD
+5 TIGR02489|COG1749|PRK12637|PRK08425|PRK05682|PRK05841 Flagellar hook protein FlgE
+6 TIGR02490|COG4787|PRK12689|PRK12640|PRK12643|PRK12641|PRK12642 Flagellar basal body rod protein FlgF
+7 TIGR02488|COG4786|PRK12819|PRK12818|PRK12816|PRK12817|PRK12636|PRK12694|PRK12693|PRK12691|PRK12692 Flagellar basal body rod protein FlgG
+8 pfam02107|cl19182|COG2063|PRK12788|PRK12698|PRK00249|PRK12407|PRK12697 Flagellar basal body L-ring protein FlgH
+9 pfam02119|cl19280|COG1706|PRK05303|PRK12789 Flagellar basal body P-ring protein FlgI
+10 TIGR02541|COG1705|PRK12790|PRK05684|PRK12713|PRK12712|PRK12711|PRK12709|PRK12710 Flagellar assembly peptidoglycan hydrolase/muramidase FlgJ
+11 pfam02120|cl24001|TIGR02492|COG1256|PRK12715|PRK12714|PRK08871|PRK08471|PRK08147|PRK07739|PRK05683|PRK06665|PRK06799|PRK06945|PRK07191|PRK07521 Flagellar hook-associated protein FlgK
+12 cl30668|TIGR02550|COG1344|PRK14692|PRK12718|PRK08870|PRK08412|PRK08027|PRK07192|PRK07701 Flagellar hook-associated protein FlgL
+13 pfam04316|cl01052|TIGR03824|COG2747|PRK10810 Negative regulator of flagellin synthesis (Anti-sigma-28 factor) FlgM
+14 pfam05130|cl09176|COG3418|PRK15459 Flagellar/type III secretory pathway chaperone FlgN
+15 pfam17680 Flagellar H-ring protein FlgO
+16 cl24946|pfam16538|pfam16539|pfam16548 Flagellar P-ring protein FlgT
+17 PRK06819|PRK08026|PRK12805|pfam08884|pfam12445|pfam12613 Flagellin FliC/FljB
+18 COG1345|PRK06664|PRK08453|PRK08724|PRK12765|pfam02465|pfam07195 Flagellar capping protein FliD
+19 COG1677|cl09139|PRK12729|TIGR00205|PRK12728|PRK00253|PRK00732|PRK00790|PRK01482|PRK01699|PRK03907 Flagellar MS ring/basal body protein FliE
+20 COG1766|PRK06007|PRK07193|PRK12800|TIGR00206|cl40738 Flagellar MS ring/basal body protein FliF
+21 COG1536|TIGR00207|PRK07194|PRK05686 Flagellar motor switch protein FliG
+22 COG1317|PRK13386|PRK06800|PRK06669|PRK06032|PRK05687 Flagellar assembly protein FliH
+23 COG1157|TIGR01026|PRK08972|PRK08927|PRK08472|PRK07960|PRK07721|PRK07196|PRK06793|PRK06002|PRK05688 Flagellar protein export ATPase FliI
+24 COG2882|TIGR02473|PRK07720|PRK05689 Flagella biosynthesis chaperone FliJ
+25 pfam02120|cl38920|cl24001|cd17470|cd17466|PRK10118|COG3144 Flagellar hook-length control protein FliK
+26 COG1580|PRK05696|PRK05697|PRK06654|PRK07021|PRK07718|PRK08455|PRK12785|cl00681|pfam03748 Flagellar MS ring/basal body-associated protein FliL
+27 pfam16973|pfam01052|TIGR02480|pfam02154|cd17908|TIGR01397|COG1868|PRK06666|PRK12795|PRK08916|PRK08983 Flagellar motor switch protein FliM
+28 COG1886|PRK05698|PRK06033|PRK07963|PRK08433 Flagellar motor switch/type III secretory pathway protein FliN
+29 pfam00813|cl00593|TIGR01103|COG3190|PRK11486|PRK12430|TIGR03500|cl01247|pfam04347 Flagellar biogenesis protein FliO
+30 pfam01313|cl00867|TIGR01402|COG1987|PRK05700|PRK06010|PRK12781 Flagellar biosynthesis protein FliQ
+31 pfam01311|cl00734|COG1684|PRK05701|PRK12780|TIGR01400 Flagellar biosynthesis protein FliR
+32 COG1516|PRK05685|TIGR00208|cd16098|cl00654|pfam02561 Flagellin-specific chaperone FliS
+33 PRK10548|cl05125|pfam05400 Flagellar biosynthesis regulatory protein FliT
+34 COG1298|PRK06012|PRK12792|TIGR01398|PRK12773|PRK13109 Flagellar type III secretion system protein FlhA
+35 TIGR00328|COG1377|PRK05702|PRK12468 Flagellar type III secretion system protein FlhB
+36 pfam06366 Flagellar protein FlhE
+37 COG1291|PRK08124|PRK08456|PRK09110|PRK12482|TIGR03818|cl00568|pfam01618 Flagellar motor protein MotA
+38 TIGR03818|COG1360|PRK05996|PRK06667|PRK06925|PRK07734|PRK08457|PRK08944|PRK09041|PRK12799|cl39081 Flagellar motor protein MotB
+39 PRK09109 Flagellar motor protein MotC
+40 PRK09038 Flagellar motor protein MotD
+41 COG3334 Flagellar motility protein MotE, a chaperone for MotC folding
+42 pfam18393 Flagellar T ring protein MotY
 
 >Motility, Type IV Pili
-COG4969|pfam14245|pfam18682 Major pilin PilA
-TIGR02538|COG2804 Type IV-A pilus assembly ATPase PilB, Type II general secretory pathway ATPase GspE/PulE
-TIGR02120|pfam05567 Type IV-A outer membrane protein PilC, Type II general secretory pathway GspF
-COG4968 Pilus assembly protein PilE
-COG3063 Pilus assembly protein PilF
-TIGR01175|COG4972|pfam07419|pfam11104 Inner membrane associated protein PilM
-COG3166|cl19830|pfam05137|pfam11104 Cytoplasmic pilus assembly protein PilN
-COG3167|cl01234|pfam04350|pfam04351 Pilus assembly protein PilO
-TIGR02515|TIGR02519|TIGR02520 Type IV pilus outer membrane pore PilQ, Type II general secretory pathway PulD
+1 COG4969|pfam14245|pfam18682 Major pilin PilA
+2 TIGR02538|COG2804 Type IV-A pilus assembly ATPase PilB, Type II general secretory pathway ATPase GspE/PulE
+3 TIGR02120|pfam05567 Type IV-A outer membrane protein PilC, Type II general secretory pathway GspF
+4 COG4968 Pilus assembly protein PilE
+5 COG3063 Pilus assembly protein PilF
+6 TIGR01175|COG4972|pfam07419|pfam11104 Inner membrane associated protein PilM
+7 COG3166|cl19830|pfam05137|pfam11104 Cytoplasmic pilus assembly protein PilN
+8 COG3167|cl01234|pfam04350|pfam04351 Pilus assembly protein PilO
+9 TIGR02515|TIGR02519|TIGR02520 Type IV pilus outer membrane pore PilQ, Type II general secretory pathway PulD
 
 >Transport, Protein Secretion, Type I
-COG1538|TIGR01844|PRK09465|cl30340 Outer membrane protein TolC
-TIGR01843|pfam00529|TIGR03794|pfam12700|pfam13437 Periplasmic linker HlyD
-TIGR01846|cd03252|cd18555|cd18566|cd18588|cd18779|cd18782|cd18783 Cytoplasmic membrane protein HlyB
+1 COG1538|TIGR01844|PRK09465|cl30340 Outer membrane protein TolC
+2 TIGR01843|pfam00529|TIGR03794|pfam12700|pfam13437 Periplasmic linker HlyD
+3 TIGR01846|cd03252|cd18555|cd18566|cd18588|cd18779|cd18782|cd18783 Cytoplasmic membrane protein HlyB
 
 >Transport, Protein Secretion, Type II
-COG1450|TIGR02517|cl39077 Type II secretion outer membrane protein GspD/PulD
-PRK09681|TIGR01713|pfam11356|COG3031 Type II secretion periplasmic linker GspC
-TIGR01710|cl29224|pfam11773 Type II secretion periplasmic protein/pilin GspG/PulG
-TIGR01708|pfam12019 Type II secretion periplasmic protein/pilin GspH/PulH
-TIGR01707 Type II secretion periplasmic protein GspI/PulI
-TIGR01711 Type II secretion periplasmic protein GspJ/PulJ
-NF037980|COG3156|cl38996|pfam03934 Type II secretion periplasmic protein/psuedopilin GspK/PulK
-TIGR02120|COG1459 Type II secretion membrane protein GspF/PulF
-TIGR01709|COG3297 Type II secretion membrane-associated protein GspL
-pfam04612|pfam10741|TIGR04412 Type II secretion membrane-associated protein GspM
-COG2804|TIGR02533|cd01129 Type II secretion membrane-associated protein GspE/PulE
+1 COG1450|TIGR02517|cl39077 Type II secretion outer membrane protein GspD/PulD
+2 PRK09681|TIGR01713|pfam11356|COG3031 Type II secretion periplasmic linker GspC
+3 TIGR01710|cl29224|pfam11773 Type II secretion periplasmic protein/pilin GspG/PulG
+4 TIGR01708|pfam12019 Type II secretion periplasmic protein/pilin GspH/PulH
+5 TIGR01707 Type II secretion periplasmic protein GspI/PulI
+6 TIGR01711 Type II secretion periplasmic protein GspJ/PulJ
+7 NF037980|COG3156|cl38996|pfam03934 Type II secretion periplasmic protein/psuedopilin GspK/PulK
+8 TIGR02120|COG1459 Type II secretion membrane protein GspF/PulF
+9 TIGR01709|COG3297 Type II secretion membrane-associated protein GspL
+10 pfam04612|pfam10741|TIGR04412 Type II secretion membrane-associated protein GspM
+11 COG2804|TIGR02533|cd01129 Type II secretion membrane-associated protein GspE/PulE
 
 >Transport, Protein Secretion, Type III
-TIGR02513 Type III secretion chaperone YscB
-TIGR02516}PRK15339|PRK15346 Type III secretion outer membrane ring protein EscC/YscC/HrcC
-PRK15367|TIGR02500|cl27782|pfam16693|pfam16697 Type III secretion inner membrane ring protein EscD/YscD/HrpQ
-TIGR02501 Type III secretion protein YscE
-TIGR02105|TIGR02105|cl09641|pfam09392|cl09641|pfam09392 Type III secretion needle protein YscF/MxiH/SsaG/EprI/PscF/EscF/SsaG
-TIGR02508|cl23891|pfam09477 Type III secretion chaperone YscG
-TIGR02497|cl14758|cl19575|cl19576|cl23893|pfam09613|pfam17001 Type III secretion protein YscI/HrpB
-TIGR02544|PRK15324|PRK15348|cl01907 Type III secretion inner membrane ring protein EscJ/YscJ/HrcJ
-PRK06328|PRK06937|PRK09098|TIGR02499|pfam06188|pfam06188 Type III secretion membrane-associated protein HrpE/YscL
-PRK06820|PRK06936|PRK07594 Type III secretion membrane-associated ATPase EscN/YscN/HrcN
-pfam07321|pfam16789 Type III secretion protein YscO
-TIGR02514|cd17466|cd17467|cl24001|cl38920|pfam02120 Type III secretion needle protein YscP
-TIGR02551|PRK06933|PRK08035|PRK08158 Type III secretion membrane-associated protein YscQ/HrcQ
-TIGR01102|PRK12796|PRK12797|cl00593 Type III secretion membrane-associated protein YscR/HrcR/SpaP
-PRK15333|PRK15350 Type III secretion membrane-associated protein EscS/YscS/HrcS
-PRK15332|PRK15349|TIGR01401 Type III secretion membrane-associated protein SpaR/YscT/HrcT
-TIGR01404|PRK08156|PRK09108|PRK12721|cl19167|pfam01312 Type III secretion membrane-associated protein EscU/YscU/HrcU
-TIGR01399|PRK12720|PRK15337 Type III secretion membrane-associated protein EscV/YscV/HrcV
-TIGR02567|cl15825|pfam09619 Type III secretion chaperone YscW
-NF038054|PRK15325 Type III secretion inner rod protein SctI/BsaK/PrgJ/MxiI
-PRK15374|pfam16535 Type III secretion tip/injectome protein SipB
-TIGR02101|NF038055|PRK15373|cl27854|pfam09599 Type III secretion tip/injectome protein SctB/YopD/EspB/IpaC/SipC
-TIGR02553|PRK15330 Type III secretion tip/injectome protein SipD
+1 TIGR02513 Type III secretion chaperone YscB
+2 TIGR02516}PRK15339|PRK15346 Type III secretion outer membrane ring protein EscC/YscC/HrcC
+3 PRK15367|TIGR02500|cl27782|pfam16693|pfam16697 Type III secretion inner membrane ring protein EscD/YscD/HrpQ
+4 TIGR02501 Type III secretion protein YscE
+5 TIGR02105|TIGR02105|cl09641|pfam09392|cl09641|pfam09392 Type III secretion needle protein YscF/MxiH/SsaG/EprI/PscF/EscF/SsaG
+6 TIGR02508|cl23891|pfam09477 Type III secretion chaperone YscG
+7 TIGR02497|cl14758|cl19575|cl19576|cl23893|pfam09613|pfam17001 Type III secretion protein YscI/HrpB
+8 TIGR02544|PRK15324|PRK15348|cl01907 Type III secretion inner membrane ring protein EscJ/YscJ/HrcJ
+9 PRK06328|PRK06937|PRK09098|TIGR02499|pfam06188|pfam06188 Type III secretion membrane-associated protein HrpE/YscL
+10 PRK06820|PRK06936|PRK07594 Type III secretion membrane-associated ATPase EscN/YscN/HrcN
+11 pfam07321|pfam16789 Type III secretion protein YscO
+12 TIGR02514|cd17466|cd17467|cl24001|cl38920|pfam02120 Type III secretion needle protein YscP
+13 TIGR02551|PRK06933|PRK08035|PRK08158 Type III secretion membrane-associated protein YscQ/HrcQ
+14 TIGR01102|PRK12796|PRK12797|cl00593 Type III secretion membrane-associated protein YscR/HrcR/SpaP
+15 PRK15333|PRK15350 Type III secretion membrane-associated protein EscS/YscS/HrcS
+16 PRK15332|PRK15349|TIGR01401 Type III secretion membrane-associated protein SpaR/YscT/HrcT
+17 TIGR01404|PRK08156|PRK09108|PRK12721|cl19167|pfam01312 Type III secretion membrane-associated protein EscU/YscU/HrcU
+18 TIGR01399|PRK12720|PRK15337 Type III secretion membrane-associated protein EscV/YscV/HrcV
+19 TIGR02567|cl15825|pfam09619 Type III secretion chaperone YscW
+20 NF038054|PRK15325 Type III secretion inner rod protein SctI/BsaK/PrgJ/MxiI
+21 PRK15374|pfam16535 Type III secretion tip/injectome protein SipB
+22 TIGR02101|NF038055|PRK15373|cl27854|pfam09599 Type III secretion tip/injectome protein SctB/YopD/EspB/IpaC/SipC
+23 TIGR02553|PRK15330 Type III secretion tip/injectome protein SipD
 
 >Transport, Protein Secretion, Type IV
-PRK13864|cd16892 Type IV secretion pilin VirB1
-NF033899 Type IV secretion pilin VirB2
-PRK13854|PRK13899|cl01501 Type IV secretion outer membrane protein VirB3
-PRK13853|PRK13898|TIGR00929|TIGR02746 Type IV secretion membrane ATPase VirB4
-PRK13859|cl12236|pfam17413 Type IV secretion outer membrane ring protein VirB7
-PRK13865|cd16384|cd16424|cl28928 Type IV secretion periplasmic protein VirB8
-PRK13861|TIGR02781|cd06911|cl11423 Type IV secretion outer membrane ring protein VirB9
-NF038091|NF038092|PRK13855|cd16426|cd16429|cd16430|cd16431|cl28929 Type IV secretion periplasmic protein VirB10
-PRK13851|PRK13900|TIGR02788 Type IV secretion membrane ATPase VirB11
-PRK13850|PRK13897|cd01127 Type IV secretion membrane protein VirD4
+1 PRK13864|cd16892 Type IV secretion pilin VirB1
+2 NF033899 Type IV secretion pilin VirB2
+3 PRK13854|PRK13899|cl01501 Type IV secretion outer membrane protein VirB3
+4 PRK13853|PRK13898|TIGR00929|TIGR02746 Type IV secretion membrane ATPase VirB4
+5 PRK13859|cl12236|pfam17413 Type IV secretion outer membrane ring protein VirB7
+6 PRK13865|cd16384|cd16424|cl28928 Type IV secretion periplasmic protein VirB8
+7 PRK13861|TIGR02781|cd06911|cl11423 Type IV secretion outer membrane ring protein VirB9
+8 NF038091|NF038092|PRK13855|cd16426|cd16429|cd16430|cd16431|cl28929 Type IV secretion periplasmic protein VirB10
+9 PRK13851|PRK13900|TIGR02788 Type IV secretion membrane ATPase VirB11
+10 PRK13850|PRK13897|cd01127 Type IV secretion membrane protein VirD4
 
 >Transport, Protein Secretion, Type V
 TIGR01414|TIGR02601|cl15373|TIGR04393|pfam03797 Autotransported effector with integrated outer membrane pore
 
 >Transport, Protein Secretion, Type VI
-TIGR03348|pfam06744 Type VI secretion periplasmic protein IcmF
-cl01370|PRK07033|TIGR03349|pfam09850 Type VI secretion periplasmic protein DotU
-TIGR03345 Type VI secretion membrane ATPase ClpV
-pfam05638 Type VI secretion needle protein hcp
-pfam05591|cl01402 Type VI secretion periplasmic protein VipA/hcp2
-pfam05943|cl05484|pfam18945 Type VI secretion periplasmic protein VipB/EvpB
-cl15462|pfam05947 Type VI secretion membrane associated protein TssF
-cl01404 Type VI secretion membrane associated protein TssG
-cl01405|pfam12790 Type VI secretion outer membrane lipoprotein VasD/EvfM/TssJ
+1 TIGR03348|pfam06744 Type VI secretion periplasmic protein IcmF
+2 cl01370|PRK07033|TIGR03349|pfam09850 Type VI secretion periplasmic protein DotU
+3 TIGR03345 Type VI secretion membrane ATPase ClpV
+4 pfam05638 Type VI secretion needle protein hcp
+5 pfam05591|cl01402 Type VI secretion periplasmic protein VipA/hcp2
+6 pfam05943|cl05484|pfam18945 Type VI secretion periplasmic protein VipB/EvpB
+7 cl15462|pfam05947 Type VI secretion membrane associated protein TssF
+8 cl01404 Type VI secretion membrane associated protein TssG
+9 cl01405|pfam12790 Type VI secretion outer membrane lipoprotein VasD/EvfM/TssJ
 
->Metabolism, Porphyrin
-COG0373|PRK00045|PRK00676|TIGR01035 Glutamyl-tRNA reductase HemA
-TIGR00713|COG0001 Glutamate-1-semialdehyde aminotransferase HemL
-PRK09064|PRK13392|PRK13393|cd06454|pfam09029 5-aminolevulinate synthase
-COG0113 Delta-aminolevulinic acid dehydratase, porphobilinogen synthase HemB
-TIGR00212|PRK00072|COG0181|cd13644 Porphobilinogen deaminase HemC
-COG1587|cd06578|cl03649|pfam02602 Uroporphyrinogen-III synthase HemD
-PRK00115|TIGR01464|COG0407 Uroporphyrinogen-III decarboxylase HemE
-COG0408 Oxygen-dependent coproporphyrinogen III oxidase HemF
-COG0635|TIGR00538|pfam06969 Oxygen-independent coproporphyrinogen III oxidase HemN
-COG4635|PRK11104 Menaquinone-dependent protoporphyrinogen IX oxidase HemG
-TIGR00562|TIGR00540|COG1232|COG3071|cl40743|pfam07219 Protoporphyrinogen oxidase HemY
-COG1981|TIGR00701|pfam03653 Cytochrome b contaning Protoporphyrinogen oxidase HemJ
+>Metabolism, Porphyrins
+1 COG0373|PRK00045|PRK00676|TIGR01035 Glutamyl-tRNA reductase HemA
+2 TIGR00713|COG0001 Glutamate-1-semialdehyde aminotransferase HemL
+3 PRK09064|PRK13392|PRK13393|cd06454|pfam09029 5-aminolevulinate synthase
+4 COG0113 Delta-aminolevulinic acid dehydratase, porphobilinogen synthase HemB
+5 TIGR00212|PRK00072|COG0181|cd13644 Porphobilinogen deaminase HemC
+6 COG1587|cd06578|cl03649|pfam02602 Uroporphyrinogen-III synthase HemD
+7 PRK00115|TIGR01464|COG0407 Uroporphyrinogen-III decarboxylase HemE
+8 COG0408 Oxygen-dependent coproporphyrinogen III oxidase HemF
+9 COG0635|TIGR00538|pfam06969 Oxygen-independent coproporphyrinogen III oxidase HemN
+10 COG4635|PRK11104 Menaquinone-dependent protoporphyrinogen IX oxidase HemG
+11 TIGR00562|TIGR00540|COG1232|COG3071|cl40743|pfam07219 Protoporphyrinogen oxidase HemY
+12 COG1981|TIGR00701|pfam03653 Cytochrome b contaning Protoporphyrinogen oxidase HemJ
 
 >Metabolism, Heme
 TIGR00109|COG0276|PRK00035|cd00419|cd03411 Protoheme ferro-lyase (ferrochelatase) HemH
@@ -1034,42 +1032,42 @@ COG1612|pfam02628 Heme A synthase CtaA
 COG0007|COG1648|PRK10637|TIGR01469|TIGR01470|cd11642 Uroporphyrinogen-III methylase (siroheme synthase) CysG/CobA
 
 >Metabolism, Chlorophyl
-TIGR01278 Light-independent protochlorophyllide reductase BchB
-TIGR01202 2-desacetyl-2-hydroxyethyl bacteriochlorophyllide A dehydrogenase BchC
-TIGR02031|PRK13406 Magnesium chelatase subunit ChlD/BchD
-TIGR02026 Magnesium-protoporphyrin IX monomethyl ester anaerobic oxidative cyclase BchE
-TIGR02029 Magnesium-protoporphyrin IX monomethyl ester aerobic oxidative cyclase AscF
-TIGR02020|cl06353|pfam07284 2-vinyl bacteriochlorophyllide hydratase BchF
-TIGR01476 Bacteriochlorophyll/chlorophyll synthetase BchG
-TIGR02025|PLN03241|PRK12493|PRK13405 Magnesium chelatase subunit ChlH/BchH
-TIGR02030|PRK13407|pfam01078|pfam13335 Magnesium chelatase subunit ChlI/BchI
-TIGR02019 Bacteriochlorophyll 4-vinyl reductase BchJ
-TIGR02021 Magnesium-protoporphyrin O-methyltransferase BchM/ChlM
-TIGR03056 Magnesium chelatase accessory protei BchO
+1 TIGR01278 Light-independent protochlorophyllide reductase BchB
+2 TIGR01202 2-desacetyl-2-hydroxyethyl bacteriochlorophyllide A dehydrogenase BchC
+3 TIGR02031|PRK13406 Magnesium chelatase subunit ChlD/BchD
+4 TIGR02026 Magnesium-protoporphyrin IX monomethyl ester anaerobic oxidative cyclase BchE
+5 TIGR02029 Magnesium-protoporphyrin IX monomethyl ester aerobic oxidative cyclase AscF
+6 TIGR02020|cl06353|pfam07284 2-vinyl bacteriochlorophyllide hydratase BchF
+7 TIGR01476 Bacteriochlorophyll/chlorophyll synthetase BchG
+8 TIGR02025|PLN03241|PRK12493|PRK13405 Magnesium chelatase subunit ChlH/BchH
+9 TIGR02030|PRK13407|pfam01078|pfam13335 Magnesium chelatase subunit ChlI/BchI
+10 TIGR02019 Bacteriochlorophyll 4-vinyl reductase BchJ
+11 TIGR02021 Magnesium-protoporphyrin O-methyltransferase BchM/ChlM
+12 TIGR03056 Magnesium chelatase accessory protei BchO
 
 >Metabolism, Cobalamin (Vitamin B12)
-cd03409|TIGR02442|COG4822|cd03412|cd03413|pfam06180 Cobalamin biosynthesis protein CbiK, cobaltochelatase
-cd03414|cd03415|cd03416|cl02784|pfam01903 Sirohydrochlorin cobalt chelatase (CbiX)/sirohydrochlorin iron chelatase (SirB)
-TIGR01467|cd11645 precorrin-2 C(20)-methyltransferase CbiL/CobI
-TIGR02435 Precorrin-3B synthase CobG
-TIGR01466|PRK15478|cd11646 Precorrin-3B C(17)-methyltransferase CbiH/CobJ
-TIGR01465|PRK15473|cd11641|pfam11760|pfam11761 Cobalt-precorrin-4 methyltransferase CbiF/CobM
-COG2073|PRK07027|cl12133|cl26443|pfam01890 Cobalamin biosynthesis protein CbiG
-COG1903|PRK00075|TIGR00312|cl00828|pfam01888 Cobalamin biosynthesis protein CbiD
-TIGR02434|COG2243|cd11643 Precorrin-2 methylase CobF
-cl00922|pfam02571 Precorrin-6x reductase CbiJ/CobK
-PRK00377|PRK07402|TIGR02469 Cobalt-precorrin-6Y C(15)-methyltransferase CbiT
-TIGR02467|cd11644 Precorrin-6y C5,15-methyltransferase (decarboxylating) CbiE
-COG2241|COG2242|pfam09469 Precorrin-6B methylase CobL
-COG2082|PRK08285|PRK05575|PRK06264|PRK08286|pfam02570|cl00913 Precorrin isomerase/methylmutase CbiC/CobH
-TIGR00379|cd05388|pfam01656 Cobyrinic acid a,c-diamide synthase CbiA/CobB
-TIGR02257|COG1429|PRK05989|PRK12321|pfam02514 Cobalamin biosynthesis protein CobN, Mg-chelatase
-TIGR01650|TIGR01650|PRK00235 Cobaltochelatase, protein CobS
-COG4547|TIGR01651|pfam06213|pfam11775|pfam12556 Cobaltochelatase, protein CobT
-COG2109|pfam02572 ATP:corrinoid adenosyltransferase BtuR/CobO/CobP
-TIGR00313|COG1492|cd05389 Cobyric acid synthase CbiP/CobQ
-COG1270|PRK07630 Cobalamin biosynthesis protein CobD/CbiB
-TIGR03162 Alpha-ribazole phosphatase CobC
-COG2087|cd00544|pfam02283 Adenosyl cobinamide kinase/adenosyl cobinamide phosphate guanylyltransferase CobU
-PRK00105|pfam02277|TIGR03160|TIGR04385|cd02439 Nicotinate-nucleotide--dimethylbenzimidazole phosphoribosyltransferase CobT
-COG0368|PRK00235|TIGR00317|cl00415|pfam02654 Cobalamin synthase CobS
+1|19 cd03409|TIGR02442|COG4822|cd03412|cd03413|pfam06180 Cobalamin biosynthesis protein CbiK, cobaltochelatase
+2 cd03414|cd03415|cd03416|cl02784|pfam01903 Sirohydrochlorin cobalt chelatase (CbiX)/sirohydrochlorin iron chelatase (SirB)
+3 TIGR01467|cd11645 precorrin-2 C(20)-methyltransferase CbiL/CobI
+3 TIGR02435 Precorrin-3B synthase CobG
+4 TIGR01466|PRK15478|cd11646 Precorrin-3B C(17)-methyltransferase CbiH/CobJ
+5 TIGR01465|PRK15473|cd11641|pfam11760|pfam11761 Cobalt-precorrin-4 methyltransferase CbiF/CobM
+6 COG2073|PRK07027|cl12133|cl26443|pfam01890 Cobalamin biosynthesis protein CbiG
+7 COG1903|PRK00075|TIGR00312|cl00828|pfam01888 Cobalamin biosynthesis protein CbiD
+6|7 TIGR02434|COG2243|cd11643 Precorrin-2 methylase CobF
+8 cl00922|pfam02571 Precorrin-6x reductase CbiJ/CobK
+9 PRK00377|PRK07402|TIGR02469 Cobalt-precorrin-6Y C(15)-methyltransferase CbiT
+10 TIGR02467|cd11644 Precorrin-6y C5,15-methyltransferase (decarboxylating) CbiE
+9|10 COG2241|COG2242|pfam09469 Precorrin-6B methylase CobL
+11 COG2082|PRK08285|PRK05575|PRK06264|PRK08286|pfam02570|cl00913 Precorrin isomerase/methylmutase CbiC/CobH
+12 TIGR00379|cd05388|pfam01656 Cobyrinic acid a,c-diamide synthase CbiA/CobB
+1 TIGR02257|COG1429|PRK05989|PRK12321|pfam02514 Cobalamin biosynthesis protein CobN, Mg-chelatase
+2 TIGR01650|TIGR01650|PRK00235 Cobaltochelatase, protein CobS
+19 COG4547|TIGR01651|pfam06213|pfam11775|pfam12556 Cobaltochelatase, protein CobT
+18 COG2109|pfam02572 ATP:corrinoid adenosyltransferase BtuR/CobO/CobP
+13 TIGR00313|COG1492|cd05389 Cobyric acid synthase CbiP/CobQ
+14 COG1270|PRK07630 Cobalamin biosynthesis protein CobD/CbiB
+15 TIGR03162 Alpha-ribazole phosphatase CobC
+16 COG2087|cd00544|pfam02283 Adenosyl cobinamide kinase/adenosyl cobinamide phosphate guanylyltransferase CobU
+16 PRK00105|pfam02277|TIGR03160|TIGR04385|cd02439 Nicotinate-nucleotide--dimethylbenzimidazole phosphoribosyltransferase CobT
+17 COG0368|PRK00235|TIGR00317|cl00415|pfam02654 Cobalamin synthase CobS

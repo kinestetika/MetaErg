@@ -3,11 +3,12 @@ from pathlib import Path
 from collections import Counter
 
 import openpyxl
+from openpyxl.styles import Font
 
 from metaerg import context
 from metaerg.datatypes import sqlite
-from metaerg.datatypes import functional_genes
 from metaerg.datatypes.fasta import load_contigs
+from metaerg.datatypes import functional_genes
 from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
 
 
@@ -106,6 +107,10 @@ def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_d
     properties['codon usage bias'] = codon_usage_bias
     properties['doubling_time (days)'] = doubling_time
     properties['subsystems'] = functional_genes.aggregate(db_connection)
+    properties['subsystem_summary'] = {}
+    for subsystem, subsystem_genes in properties['subsystems'].items():
+        subsystem_completeness = functional_genes.get_subsystem_completeness(subsystem, subsystem_genes)
+        properties['subsystem_summary'][subsystem] = subsystem_completeness
     return properties
 
 
@@ -132,14 +137,18 @@ def write_genome_properties_to_xls(genome_property_dict: dict):
 
     e_workbook = openpyxl.Workbook()
     e_column = 3
+    black = Font(color="000000")
+    grey = Font(color="AAAAAA")
+    green = Font(color="009900")
     rows_for_taxon = max(len(gp['classification (top taxon)'].split('; ')) for gp in genome_property_dict.values())
     for genome_name, genome_properties in genome_property_dict.items():
         e_sheet = e_workbook.active
         row = 1
+        e_sheet.cell(row=row, column=1).value = 'genome properties'
         for k in GENOME_PROPERTY_FORMATS.keys():
             if 'subsystems' == k or 'classification (top taxon)' == k:
                 continue
-            e_sheet.cell(row=row, column=1).value = k
+            e_sheet.cell(row=row, column=2).value = k
             value = genome_properties[k]
             if '%' in GENOME_PROPERTY_FORMATS[k]:
                 value *= 100
@@ -155,6 +164,29 @@ def write_genome_properties_to_xls(genome_property_dict: dict):
             e_sheet.cell(row=row, column=e_column).value = w
             row += 1
         row += max(0, rows_for_taxon - len(genome_properties['classification (top taxon)'].split('; ')))
+
+        e_sheet.cell(row=row, column=1).value = 'physiology summary'
+        for subsystem, value in genome_properties['subsystem_summary'].items():
+            if isinstance(value, float):
+                value *= 100
+                value = round(value, 0)
+                if value >= 80:
+                    color = green
+                elif value <= 50:
+                    color = grey
+                else:
+                    color = black
+                subsystem += ' (% complete)'
+            else:
+                if value > 0:
+                    color = green
+                else:
+                    color = grey
+                subsystem += ' (# genes)'
+            e_sheet.cell(row=row, column=2).value = subsystem
+            e_sheet.cell(row=row, column=e_column).value = value
+            e_sheet.cell(row=row, column=e_column).font = color
+            row += 1
 
         for subsystem, genes in genome_properties['subsystems'].items():
             e_sheet.cell(row=row, column=1).value = subsystem

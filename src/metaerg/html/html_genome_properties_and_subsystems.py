@@ -18,11 +18,15 @@ def make_html(genome_name, genome_properties:dict) -> str:
     # genome properties
     html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{genome_properties[k]:{GENOME_PROPERTY_FORMATS[k]}}</td></tr>\n'
                                                        for k in GENOME_PROPERTY_FORMATS.keys())))
+    # subsystem_summary
+    sssummary = genome_properties['subsystem_summary']
+    html = html.replace('CONTENT_SUBSYSTEM_SUMMARY', ''.join((f'<tr><td>{k}</td><td><a href="#{k}">{v:{"," if isinstance(v, int) else ".1%"}}</a></td></tr>\n'
+                                                             for k, v in sssummary.items() if (isinstance(v, float) and v>=0.5) or isinstance(v, int) and v>0)))
+    # subsystem_data
     subsystem_html = ''
     subsystem_data = genome_properties['subsystems']
-    # subsystem_data
     for subsystem, subsystem_genes in subsystem_data.items():
-        subsystem_html += f'<b id=f>{subsystem}</b>'
+        subsystem_html += f'<a id="{subsystem}"><b id=f>{subsystem}</b></a>'
         if 'Secondary-metabolites' == subsystem:
             if len(subsystem_genes):
                 subsystem_html += '<p id=f><a href="antismash/index.html" target="">View antismash results.</a></p>\n'
@@ -82,6 +86,8 @@ def _make_html_template() -> str:
   }
 </style>
 
+<h4 id=f><a href="feature_table.html">(View table with all genes here)</a></h4>
+<br>
 <h3 id=f>Genome properties</h4>
 <table id=f>
     <thead>
@@ -92,10 +98,10 @@ def _make_html_template() -> str:
     </thead>
     <tbody>
 CONTENT_PROPERTIES
+CONTENT_SUBSYSTEM_SUMMARY
     </tbody></table>
     <p></p>
-    <h4 id=f><a href="feature_table.html">View table with all genes</a></h4>
     <p></p>
-    <h3 id=f>Subsystems overview</h3>
+    <h3 id=f>Subsystems in Detail</h3>
 CONTENT_SUBSYSTEMS
 </body></html>'''

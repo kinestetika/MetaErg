@@ -15,11 +15,12 @@ class FunctionalGene:
         self.subsystem = subsystem
         self.gene = gene
         self.confidence = confidence
+        self.pathway_positions = []
         self.cues = frozenset()
 
     def __iter__(self):
         for k, v in self.__dict__.items():
-            if k == 'cues':
+            if k == 'cues' or k == 'pathway_positions':
                 continue
             yield k, v
 
@@ -64,9 +65,17 @@ def parse_functional_gene_config_file(file: Path):
                 current_subsystem = line[1:]
                 SUBSYSTEMS.append(current_subsystem)
             elif current_subsystem is not None:
+                pathway_positions = []
                 si = line.find(' ')
+                try:
+                    pathway_positions = [int(s) for s in line[:si].split('|')]
+                    line = line[si + 1:].strip()
+                    si = line.find(' ')
+                except ValueError:
+                    pass
                 new_gene_def = FunctionalGene(current_subsystem, line[si + 1:])
                 new_gene_def.cues = frozenset(line[:si].split('|'))
+                new_gene_def.pathway_positions = pathway_positions
                 GENES.append(new_gene_def)
     context.log(f'Parsed {len(SUBSYSTEMS)} subsystems, {len(GENES)} genes from {file} ...')
     return len(GENES)
@@ -116,5 +125,26 @@ def aggregate(db_connection):
         aggregated_subsystem_data[gene_def.subsystem][gene_def.gene] = []
     for feature in sqlite.read_all_features(db_connection):
         for gene in feature.subsystems:
-            aggregated_subsystem_data[gene.subsystem][gene.gene].append(feature.id)
+            if gene.confidence > 0.25:
+                aggregated_subsystem_data[gene.subsystem][gene.gene].append(feature.id)
     return aggregated_subsystem_data
+
+
+def get_subsystem_completeness(subsystem_name: str, genes: dict):
+    denominator = 0
+    positions_found = set()
+    total_positions = 0
+    for gene_def in GENES:
+        if gene_def.subsystem == subsystem_name:
+            for d in gene_def.pathway_positions:
+                denominator = max(denominator, d)
+    for gene_def in GENES:
+        if gene_def.subsystem == subsystem_name:
+            if gene_def.gene in genes.keys() and len(genes[gene_def.gene]):
+                if denominator:
+                    for p in gene_def.pathway_positions:
+                        positions_found.add(p)
+                else:
+                    total_positions += 1
+    return len(positions_found) / denominator if denominator > 0 else total_positions
+
