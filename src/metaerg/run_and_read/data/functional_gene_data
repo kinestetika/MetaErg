@@ -1,409 +1,414 @@
->Translation (Ribosome)
-CHL00129 ribosomal protein L1
-CHL00052 ribosomal protein L2
-CHL00143 ribosomal protein L3
-CHL00147 ribosomal protein L4
-CHL00078 ribosomal protein L5
-CHL00140 ribosomal protein L6
-CHL00160 ribosomal protein L9
-CHL00127 ribosomal protein L11
-CHL00083 ribosomal protein L12
-CHL00159 ribosomal protein L13
-CHL00057 ribosomal protein L14
-TIGR01071 ribosomal protein L15
-CHL00044 ribosomal protein L16
-CHL00139 ribosomal protein L18
-CHL00084 ribosomal protein L19
-CHL00068 ribosomal protein L20
-CHL00075 ribosomal protein L21
-CHL00034 ribosomal protein L22
-CHL00030 ribosomal protein L23
-CHL00141 ribosomal protein L24
-PRK05943 ribosomal protein L25
-CHL00121 ribosomal protein L27
-CHL00112 ribosomal protein L28
-CHL00154 ribosomal protein L29
-CHL00136 ribosomal protein L31
-CHL00152 ribosomal protein L32
-CHL00104 ribosomal protein L33
-CHL00115 ribosomal protein L34
-CHL00103 ribosomal protein L35
-CHL00029 ribosomal protein L36
-PRK00087 ribosomal protein S1
-CHL00067 ribosomal protein S2
-CHL00048 ribosomal protein S3
-CHL00113 ribosomal protein S4
-CHL00138 ribosomal protein S5
-CHL00123 ribosomal protein S6
-CHL00053 ribosomal protein S7
-CHL00042 ribosomal protein S8
-CHL00079 ribosomal protein S9
-CHL00135 ribosomal protein S10
-CHL00041 ribosomal protein S11
-CHL00051 ribosomal protein S12
-CHL00137 ribosomal protein S13
-CHL00074 ribosomal protein S14
-CHL00027 ribosomal protein S15
-CHL00005 ribosomal protein S16
-CHL00142 ribosomal protein S17
-CHL00077 ribosomal protein S18
-CHL00050 ribosomal protein S19
-CHL00102 ribosomal protein S20
+>Translation, Ribosome
+1 CHL00129 Ribosomal protein L1
+2 CHL00052 Ribosomal protein L2
+3 CHL00143 Ribosomal protein L3
+4 CHL00147 Ribosomal protein L4
+5 CHL00078 Ribosomal protein L5
+6 CHL00140 Ribosomal protein L6
+7 CHL00160 Ribosomal protein L9
+8 CHL00127 Ribosomal protein L11
+9 CHL00083 Ribosomal protein L12
+10 CHL00159 Ribosomal protein L13
+11 CHL00057 Ribosomal protein L14
+12 TIGR01071 Ribosomal protein L15
+13 CHL00044 Ribosomal protein L16
+14 CHL00139 Ribosomal protein L18
+15 CHL00084 Ribosomal protein L19
+16 CHL00068 Ribosomal protein L20
+17 CHL00075 Ribosomal protein L21
+18 CHL00034 Ribosomal protein L22
+19 CHL00030 Ribosomal protein L23
+20 CHL00141 Ribosomal protein L24
+21 PRK05943 Ribosomal protein L25
+22 CHL00121 Ribosomal protein L27
+23 CHL00112 Ribosomal protein L28
+24 CHL00154 Ribosomal protein L29
+25 CHL00136 Ribosomal protein L31
+26 CHL00152 Ribosomal protein L32
+27 CHL00104 Ribosomal protein L33
+28 CHL00115 Ribosomal protein L34
+29 CHL00103 Ribosomal protein L35
+30 CHL00029 Ribosomal protein L36
+31 PRK00087 Ribosomal protein S1
+32 CHL00067 Ribosomal protein S2
+33 CHL00048 Ribosomal protein S3
+34 CHL00113 Ribosomal protein S4
+35 CHL00138 Ribosomal protein S5
+36 CHL00123 Ribosomal protein S6
+37 CHL00053 Ribosomal protein S7
+38 CHL00042 Ribosomal protein S8
+39 CHL00079 Ribosomal protein S9
+40 CHL00135 Ribosomal protein S10
+41 CHL00041 Ribosomal protein S11
+42 CHL00051 Ribosomal protein S12
+43 CHL00137 Ribosomal protein S13
+44 CHL00074 Ribosomal protein S14
+45 CHL00027 Ribosomal protein S15
+46 CHL00005 Ribosomal protein S16
+47 CHL00142 Ribosomal protein S17
+48 CHL00077 Ribosomal protein S18
+49 CHL00050 Ribosomal protein S19
+50 CHL00102 Ribosomal protein S20
 
->Translation (RNA polymerase)
-CHL00013 RNA polymerase subunit alpha (rpoA)
-CHL00001 RNA polymerase subunit beta (rpoB)
-CHL00018 RNA polymerase subunit beta' (rpoC1)
-CHL00117 RNA polymerase subunit beta' (rpoC2)
-TIGR02387 DNA-directed RNA polymerase, gamma subunit (rpoC1, cyanobacteria)
-TIGR02388 DNA-directed RNA polymerase, subunit beta'' (rpoC2, cyanobacteria)
-TIGR02389|cd02582 DNA-directed RNA polymerase subunit A' (archaea)
-TIGR02390|cd06528 DNA-directed RNA polymerase subunit A' (archaea)
-TIGR00448 DNA-directed RNA polymerase (rpoE, archaea/eukarya)
-TIGR03670 DNA-directed RNA polymerase subunit B (rpoB, archaea)
-cd06927 L subunit of archaeal RNA polymerase
+>Translation, RNA polymerase
+1 CHL00013 RNA polymerase subunit alpha, RpoA
+2 CHL00001 RNA polymerase subunit beta, RpoB
+3 CHL00018 RNA polymerase subunit beta', RpoC1
+4 CHL00117 RNA polymerase subunit beta'', RpoC2
+3 TIGR02387 Cyanobacterial DNA-directed RNA polymerase, gamma subunit, RpoC1
+4 TIGR02388 Cyanobacterial DNA-directed RNA polymerase, subunit beta'', RpoC2
+1 TIGR02389|cd02582 Archaeal DNA-directed RNA polymerase subunit A''
+2 TIGR02390|cd06528 Archaeal DNA-directed RNA polymerase subunit A'
+3 TIGR00448 Archaeal/Eukaryal DNA-directed RNA polymerase, RpoE
+4 TIGR03670 Archaeal DNA-directed RNA polymerase subunit B, RpoB
+cd06927 Archaeal RNA polymerase subunit L
 
->Transport, General Protein Translocation, Sec
-TIGR00963 preprotein translocase, subunit SecA
-TIGR00809 preprotein translocase, subunit SecB
-TIGR01129 preprotein translocase, subunit SecD
-TIGR00964 preprotein translocase, subunit SecE, bacteria
-TIGR00327 preprotein translocase, subunit SecE, archaea/eukarya
-TIGR00966 preprotein translocase, subunit SecF
-TIGR00810 preprotein translocase, subunit SecG
-TIGR00967 preprotein translocase, subunit SecY
-TIGR00869 preprotein translocase, subunit sec62
-TIGR00739|COG1862|PRK05585|PRK05886|PRK06531|cl00806|pfam02699 preprotein translocase, subunit YajC
-COG0706|PRK00145|PRK00247|PRK01001|PRK01315|PRK01622|PRK02201|TIGR03593|TIGR03592|PRK03449|PRK02944|PRK02654|pfam14849|cl24006|cd20070|cd20069|cd19961|cd19960|cd19751|cd19668 preprotein translocase, membrane insertase YidC
-TIGR00064|COG0552|PRK10416|PRK14974|cd17874 signal recognition particle-docking protein FtsY
+>Transport, General Protein Translocation
+1 TIGR00963 Preprotein translocase, subunit SecA
+2 TIGR00809 Preprotein translocase, subunit SecB
+3 TIGR01129 Preprotein translocase, subunit SecD
+4 TIGR00964 Bacterial preprotein translocase, subunit SecE
+4 TIGR00327 Archaeal/Eukaryal preprotein translocase, subunit SecE
+5 TIGR00966 Preprotein translocase, subunit SecF
+6 TIGR00810 Preprotein translocase, subunit SecG
+7 TIGR00967 Preprotein translocase, subunit SecY
+TIGR00869 Preprotein translocase, subunit sec62
+8 TIGR00739|COG1862|PRK05585|PRK05886|PRK06531|cl00806|pfam02699 Preprotein translocase, subunit YajC
+9 COG0706|PRK00145|PRK00247|PRK01001|PRK01315|PRK01622|PRK02201|TIGR03593|TIGR03592|PRK03449|PRK02944|PRK02654|pfam14849|cl24006|cd20070|cd20069|cd19961|cd19960|cd19751|cd19668 Preprotein translocase, membrane insertase YidC
+10 TIGR00064|COG0552|PRK10416|PRK14974|cd17874 Signal recognition particle docking protein FtsY
 
->Transport, Folded Protein Translocation, Tat
-TIGR01411 Twin arginine-targeting protein translocase, subunits TatAE
-TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
-TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
-TIGR01912 Twin arginine targeting (Tat) protein translocase, subunit TatC, archaea
+>Transport, Folded Protein Translocation
+1 TIGR01411 Twin arginine-targeting protein translocase, subunits TatAE
+2 TIGR01410 Twin arginine-targeting protein translocase, subunit TatB
+3 TIGR00945 Twin arginine targeting (Tat) protein translocase, subunit TatC
+3 TIGR01912 Archaeal twin arginine targeting (Tat) protein translocase, subunit TatC
 
->Transport, Siderophore, Peptide, etc Import, TonB/TolA
-COG0810|PRK10819|TIGR01352 relay accross the periplasm (TonB)
-TIGR02794|COG0823|PRK04922|PRK00178 relay accross the periplasm (tolA/B)
-TIGR02797|TIGR02805|COG0811|TIGR02796|pfam01618 inner membrane subunit (exbB/motA/tolQ)
-TIGR02803|TIGR02804|COG0848|pfam02472|PRK11267 inner membrane subunit (exbD/tolR)
-NF038079 tonB-dependent receptor, siderophores, myxochelin MxcH family
-PRK13484 tonB-dependent receptor, siderophores, IreA family
-PRK13524 tonB-dependent receptor, siderophores, FepA family
-PRK14050 tonB-dependent receptor, siderophores
-TIGR01783 tonB-dependent receptor, siderophores
-TIGR04056 tonB-dependent receptor, susC/ragA family
-TIGR04549 tonB-dependent receptor zinc metalohydrolase associated with susC/ragA
-TIGR01776 tonB-dependent receptor, lactoferrin and transferrin
-PRK10641|TIGR01779 tonB-dependent receptor, vitamin B12 receptor BtuB
-TIGR01778 tonB-dependent receptor, Copper
-TIGR01785 tonB-dependent receptor, heme/hemoglobin
-PRK13486 tonB-dependent receptor
-TIGR01782 tonB-dependent receptor
+>Transport, Siderophore, Peptide, etc Import
+1 COG0810|PRK10819|TIGR01352 Periplasmic protein TonB
+1 TIGR02794|COG0823|PRK04922|PRK00178 Periplasmic protein TolA/B
+2 TIGR02797|TIGR02805|COG0811|TIGR02796|pfam01618 Inner membrane protein ExbB/MotA/TolQ
+3 TIGR02803|TIGR02804|COG0848|pfam02472|PRK11267 Inner membrane protein ExbD/TolR
+4 NF038079 TonB-dependent receptor, siderophores, myxochelin MxcH family
+4 PRK13484 TonB-dependent receptor, siderophores, IreA family
+4 PRK13524 TonB-dependent receptor, siderophores, FepA family
+4 PRK14050 TonB-dependent receptor, siderophores
+4 TIGR01783 TonB-dependent receptor, siderophores
+4 TIGR04056 TonB-dependent receptor, SusC/RagA family
+4 TIGR04549 TonB-dependent receptor zinc metalohydrolase associated with SusC/RagA
+4 TIGR01776 TonB-dependent receptor, lactoferrin and transferrin
+4 PRK10641|TIGR01779 TonB-dependent receptor, vitamin B12 receptor BtuB
+4 TIGR01778 TonB-dependent receptor, Copper
+4 TIGR01785 TonB-dependent receptor, heme/hemoglobin
+4 PRK13486 TonB-dependent receptor
+4 TIGR01782 TonB-dependent receptor
 
 >Respiration, Complex I
-COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3 (NuoA)
-COG0377|PRK14816|PRK14817|PRK14819|PRK14820|PRK06411 NADH:ubiquinone oxidoreductase 20 kD subunit (NuoB)
-COG0852|PRK07735|PRK08491 NADH:ubiquinone oxidoreductase 27 kD subunit (NuoC)
-COG0649|PRK06075|PRK12322 NADH:ubiquinone oxidoreductase 49 kD subunit (NuoD)
-COG1905|PRK12373|PRK07539 NADH:ubiquinone oxidoreductase 24 kD subunit (NuoE)
-COG1894|PRK13596|PRK11278 NADH:ubiquinone oxidoreductase, NADH-binding 51 kD subunit (NuoF)
-COG1034|PRK08166|PRK08493 NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit (NuoG)
-COG1005|PRK06076 NADH:ubiquinone oxidoreductase subunit 1 (NuoH)
-COG1143|PRK05888 NADH:ubiquinone oxidoreductase 23 kD subunit (NuoI)/Formate hydrogen lyase subunit 6
-COG0839|PRK06638 NADH:ubiquinone oxidoreductase subunit 6 (NuoJ)
-COG0713|PRK05715 NADH:ubiquinone oxidoreductase subunit 11 or 4L (NuoK)
-COG1009|PRK07376|PRK08168 NADH:ubiquinone oxidoreductase subunit 5 (NuoL)/Multisubunit Na+/H+ antiporter
-COG1008|PRK07363|PRK06473 NADH:ubiquinone oxidoreductase subunit 4 (NuoM)
-COG1007|PRK05777 NADH:ubiquinone oxidoreductase subunit 2 (NuoN)
+1 COG0838|PRK07756 NADH:ubiquinone oxidoreductase subunit 3, NuoA
+2 COG0377|PRK14816|PRK14817|PRK14819|PRK14820|PRK06411 NADH:ubiquinone oxidoreductase 20 kD subunit, NuoB
+3 COG0852|PRK07735|PRK08491 NADH:ubiquinone oxidoreductase 27 kD subunit, NuoC
+4 COG0649|PRK06075|PRK12322 NADH:ubiquinone oxidoreductase 49 kD subunit, NuoD
+5 COG1905|PRK12373|PRK07539 NADH:ubiquinone oxidoreductase 24 kD subunit, NuoE
+6 COG1894|PRK13596|PRK11278 NADH:ubiquinone oxidoreductase, NADH-binding 51 kD subunit, NuoF
+7 COG1034|PRK08166|PRK08493 NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit, NuoG
+8 COG1005|PRK06076 NADH:ubiquinone oxidoreductase subunit 1, NuoH
+9 COG1143|PRK05888 NADH:ubiquinone oxidoreductase 23 kD subunit. NuoI/Formate hydrogen lyase subunit 6
+10 COG0839|PRK06638 NADH:ubiquinone oxidoreductase subunit 6, NuoJ
+11 COG0713|PRK05715 NADH:ubiquinone oxidoreductase subunit 11 or 4L, NuoK
+12 COG1009|PRK07376|PRK08168 NADH:ubiquinone oxidoreductase subunit 5, NuoL/Multisubunit Na+/H+ antiporter
+13 COG1008|PRK07363|PRK06473 NADH:ubiquinone oxidoreductase subunit 4, NuoM
+14 COG1007|PRK05777 NADH:ubiquinone oxidoreductase subunit 2, NuoN
 
 >Respiration, Complex I, Na(+)-translocating
-TIGR01936|COG1726 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit A (NqrA)
-TIGR01937|COG1805 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit B (NqrB)
-TIGR01938|COG2869 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit C (NqrC)
-TIGR01939|COG1347 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit D (NqrD)
-TIGR01940|COG2209 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit E (NqrE)
-TIGR01941|COG2871 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit F (NqrF)
+1 TIGR01936|COG1726 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit A, NqrA
+2 TIGR01937|COG1805 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit B, NqrB
+3 TIGR01938|COG2869 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit C, NqrC
+4 TIGR01939|COG1347 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit D, NqrD
+5 TIGR01940|COG2209 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit E, NqrE
+6 TIGR01941|COG2871 NADH:ubiquinone oxidoreductase, Na(+)-translocating, subunit F, NqrF
 
 >Respiration, Electron Transport Complex Rnf
-TIGR01943 electron transport complex (rnfA)
-TIGR01944 electron transport complex (rnfB)
-TIGR01945 electron transport complex (rnfC)
-TIGR01946 electron transport complex (rnfD)
-TIGR01947 electron transport complex (rnfE)
-TIGR01948 electron transport complex (rnfF)
+1 TIGR01943 Electron transport complex protein RnfA
+2 TIGR01944 Electron transport complex protein RnfB
+3 TIGR01945 Electron transport complex protein RnfC
+4 TIGR01946 Electron transport complex protein RnfD
+5 TIGR01947 Electron transport complex protein RnfE
+6 TIGR01948 Electron transport complex protein RnfF
 
 >Respiration, Complex III
-CHL00037 cytochrome b6/f complex, cytochrome f subunit (petA)
-CHL00070 cytochrome b6/f complex, cytochrome b6 subunit (petB)
-COG0723|TIGR01416|TIGR03171|cd03471	Rieske Fe-S protein subunit
-CHL00058 cytochrome b6/f complex subunit IV (petD)
-COG3794|TIGR02656 Plastocyanin  (PetE)
-CHL00134 cytochrome b6/f complex, Rieske Fe-S protein subunit (petF)
-CHL00008 cytochrome b6/f complex, subunit V (petG)
-CHL00183 cytochrome b6/f complex, cytochrome c553 (petJ)
-CHL00106 cytochrome b6/f complex, subunit VI	(petL)
-PRK11876 cytochrome b6/f complex, subunit (petM)
-CHL00009 cytochrome b6/f complex, subunit VIII (petN)
+1 CHL00037 Cytochrome b6/f complex, cytochrome f subunit PetA
+2 CHL00070 Cytochrome b6/f complex, cytochrome b6 subunit PetB
+3 CHL00058 Cytochrome b6/f complex subunit IV PetD
+COG3794|TIGR02656 Plastocyanin PetE
+4 CHL00134|COG0723|TIGR01416|TIGR03171|cd03471 Rieske Fe-S protein subunit, PetF
+CHL00008 Cytochrome b6/f complex, subunit V PetG
+CHL00183 Cytochrome b6/f complex, cytochrome c553, PetJ
+CHL00106 Cytochrome b6/f complex, subunit VI PetL
+PRK11876 Cytochrome b6/f complex, subunit PetM
+CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 
->Respiration, Complex IV, Heme/Copper Oxidase Oxygen Reductases (including nitric oxide reductase and dismutase)
+>Respiration, Complex IV, Heme/Copper Oxidase Oxygen Reductases
 # see https://www.sciencedirect.com/science/article/pii/S0005272822003772 and https://www.biorxiv.org/content/10.1101/2021.10.15.464467v2
-TIGR00780|TIGR02843|TIGR02882|TIGR02891|cd00919|cd01661|cd01662|cd01663|cl00275 subunit I (ccoN, cyoB, qoxB)
-TIGR00781|TIGR02866|cd13842|cd13913|cd13914|cd13915|cd13916|cd13917|cd13918|cd13919 subunit II (ccoO, cyoB, coxB)
-TIGR00782|TIGR02842|TIGR02897|cd00386|cd02864|cd02865|cl00211 subunit III (ccoQ, cyoC, qoxC)
-hco_A heme copper oxidase A-family, cyt c and quinol dependent oxygen reductases
-hco_coxBCuA heme copper oxidase A-family cyt c dependent subunit II
-hco_coxBqox heme copper oxidase A-family quinol dependent subunit II
-hco_B1 heme copper oxidase B1-family, cyt c and quinol dependent oxygen reductases
-hco_B1subII heme copper oxidase B1-family, subunit II
-hco_B2 heme copper oxidase B2-family, cyt c dependent oxygen reductases
-hco_B3 heme copper oxidase B3-family, cyt c dependent oxygen reductases
-hco_B3subII heme copper oxidase B3-family, subunit II
-hco_B4 heme copper oxidase B4-family, cyt c and quinol dependent oxygen reductases
-hco_B4subII heme copper oxidase B4-family, subunit II
-hco_B5 heme copper oxidase B5-family, cyt c dependent oxygen reductases
-hco_B6 heme copper oxidase B6-family, cyt c dependent oxygen reductases
-hco_B6subII heme copper oxidase B6-family, subunit II
-hco_B7 heme copper oxidase B7-family, cyt c dependent oxygen reductases
-hco_B7subII heme copper oxidase B7-family, subunit II
-hco_B8 heme copper oxidase B8-family, cyt c dependent oxygen reductases
-hco_B8subII heme copper oxidase B8-family, subunit II
-hco_B9 heme copper oxidase B9-family, cyt c dependent oxygen reductases
-hco_C heme copper oxidase C-family cyt c dependent oxygen reductases
-hco_CsubII heme copper oxidase C-family, subunit II
+1 TIGR00780|TIGR02843|TIGR02882|TIGR02891|cd00919|cd01661|cd01662|cd01663|cl00275 Heme/copper oxidase complex subunit I, CcoN/CyoB/CoxB
+2 TIGR00781|TIGR02866|cd13842|cd13913|cd13914|cd13915|cd13916|cd13917|cd13918|cd13919 Heme/copper oxidase complex subunit II, CcoO/CyoB/CoxB
+3 TIGR00782|TIGR02842|TIGR02897|cd00386|cd02864|cd02865|cl00211 Heme/copper oxidase complex subunit III (ccoQ, cyoC, qoxC)
+4 hco_A Heme copper oxidase A-family, cyt c and quinol dependent oxygen reductase
+5 hco_coxBCuA Heme/copper oxidase A-family cyt c dependent subunit II
+5 hco_coxBqox Heme/copper oxidase A-family quinol dependent subunit II
+4 hco_B1 Heme/copper oxidase B1-family, cyt c and quinol dependent oxygen reductase
+5 hco_B1subII Heme/copper oxidase B1-family, subunit II
+4 hco_B2 Heme/copper oxidase B2-family, cyt c dependent oxygen reductases
+4 hco_B3 Heme/copper oxidase B3-family, cyt c dependent oxygen reductases
+5 hco_B3subII Heme/copper oxidase B3-family, subunit II
+4 hco_B4 Heme/copper oxidase B4-family, cyt c and quinol dependent oxygen reductase
+5 hco_B4subII Heme/copper oxidase B4-family, subunit II
+4 hco_B5 Heme/copper oxidase B5-family, cyt c dependent oxygen reductase
+4 hco_B6 Heme/copper oxidase B6-family, cyt c dependent oxygen reductase
+5 hco_B6subII Heme/copper oxidase B6-family, subunit II
+4 hco_B7 Heme/copper oxidase B7-family, cyt c dependent oxygen reductase
+5 hco_B7subII Heme/copper oxidase B7-family, subunit II
+4 hco_B8 Heme/copper oxidase B8-family, cyt c dependent oxygen reductase
+5 hco_B8subII Heme/copper oxidase B8-family, subunit II
+4 hco_B9 Heme/copper oxidase B9-family, cyt c dependent oxygen reductase
+4 hco_C Heme/copper oxidase C-family cyt c dependent oxygen reductase
+5 hco_CsubII Heme/copper oxidase C-family, subunit II
 
 >Respiration, Complex IV, bd/CydAA-type Oxygen Reductases
 # see https://www.nature.com/articles/s41396-021-01019-4
-PRK15097|cl00562|pfam01654 cyrochrome bd type oxygen reductases
-pfam02322 cyrochrome bd type oxygen reductases, subunit II
-bdor_OR-C cyrochrome bd type oxygen reductase, cytochrome c dependent
-bdor_OR-N cyrochrome bd type oxygen reductase, cytochrome c dependent
-bdor_qOR1 cyrochrome bd type oxygen reductase, quinol dependent, family 1
-bdor_qOR2 cyrochrome bd type oxygen reductase, quinol dependent, family 2
-bdor_qOR3 cyrochrome bd type oxygen reductase, quinol dependent, family 3
-bdor_qOR4a cyrochrome bd type oxygen reductase, quinol dependent, family 4a
+1 PRK15097|cl00562|pfam01654 Cyrochrome bd type oxygen reductase
+2 pfam02322 Cyrochrome bd type oxygen reductases, subunit II
+3 bdor_OR-C Cyrochrome bd type oxygen reductase, cytochrome c dependent
+3 bdor_OR-N Cyrochrome bd type oxygen reductase, cytochrome c dependent
+3 bdor_qOR1 Cyrochrome bd type oxygen reductase, quinol dependent, family 1
+3 bdor_qOR2 Cyrochrome bd type oxygen reductase, quinol dependent, family 2
+3 bdor_qOR3 Cyrochrome bd type oxygen reductase, quinol dependent, family 3
+3 bdor_qOR4a Cyrochrome bd type oxygen reductase, quinol dependent, family 4a
 
 >Respiration, Complex IV, Alternative Oxidase
-cd01053|pfam01786 alternative oxidase (quinol dependent)
+1 cd01053|pfam01786 Alternative oxidase, quinol dependent oxygen reductase
 
 >Respiration, ATP synthase
-TIGR01042 vacuolar ATPase V1, subunit A
-TIGR01040 vacuolar ATPase V1, subunit B
-TIGR02923 vacuolar or A0/A1 ATPase, subunit C
-TIGR00309 vacuolar ATP synthase, subunit D
-TIGR01100 vacuolar ATP synthase, proteolipid
-TIGR01101 vacuolar ATP synthase, subunit F
-TIGR01147 vacuolar ATP synthase, subunit G
-TIGR02926 vacuolar or A0/A1 ATPase, subunit H
-TIGR01131|CHL00046|PRK05815|COG0356|PRK13421 ATP synthase, subunit F0 A
-TIGR01144|PRK07352|CHL00019 ATP synthase, subunit F0 B
-PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B'
-TIGR01260|PRK07354|CHL00061 ATP synthase, subunit F0 C
-TIGR00962|PRK09281|CHL00059|COG0056 ATP synthase, subunit F1 alpha
-TIGR01039|CHL00060|PRK09280|COG0055 ATP synthase, subunit F1 beta
-TIGR01146|PRK05621|pfam00231|COG0224|cd12151|PRK13423 ATP synthase, F1 subunit gamma
-TIGR01145|pfam00213|PRK05758|PRK13429|CHL00119|COG0712 ATP synthase, F1 subunit delta
-TIGR01216|CHL00063|PRK00571|COG0355|PRK13446 ATP synthase, F1 subunit epsilon
-TIGR03306 alternate ATP synthase, subunit F0 A
-TIGR03321 alternate ATP synthase, subunit F0 B
-TIGR03322|cd00313 alternate ATP synthase, subunit F0 C
-TIGR03324 alternate ATP synthase, subunit F1 alpha
-TIGR03305 alternate ATP synthase, subunit F1 beta
-TIGR03323 alternate ATP synthase, subunit F1 gamma
-TIGR03166 alternate ATP synthase, subunit F1 epsilon
-TIGR01043 archaeal ATP synthase, subunit A
-TIGR01041 archaeal ATP synthase, subunit B
-cd00313 archaeal ATP synthase, subunit F0 C
-COG3808|PLN02255|PLN02277|PRK00733 proton/sodium translocating pyrophosphatase
+1 TIGR01042 Vacuolar ATPase V1, subunit A
+2 TIGR01040 Vacuolar ATPase V1, subunit B
+3 TIGR02923 Vacuolar or A0/A1 ATPase, subunit C
+4 TIGR00309 Vacuolar ATP synthase, subunit D
+5 TIGR01100 Vacuolar ATP synthase, proteolipid
+6 TIGR01101 Vacuolar ATP synthase, subunit F
+7 TIGR01147 Vacuolar ATP synthase, subunit G
+8 TIGR02926 Vacuolar or A0/A1 ATPase, subunit H
+1 TIGR01131|CHL00046|PRK05815|COG0356|PRK13421 ATP synthase, subunit F0 A
+2 TIGR01144|PRK07352|CHL00019 ATP synthase, subunit F0 B
+2 PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B'
+3 TIGR01260|PRK07354|CHL00061 ATP synthase, subunit F0 C
+4 TIGR00962|PRK09281|CHL00059|COG0056 ATP synthase, subunit F1 alpha
+5 TIGR01039|CHL00060|PRK09280|COG0055 ATP synthase, subunit F1 beta
+6 TIGR01146|PRK05621|pfam00231|COG0224|cd12151|PRK13423 ATP synthase, F1 subunit gamma
+7 TIGR01145|pfam00213|PRK05758|PRK13429|CHL00119|COG0712 ATP synthase, F1 subunit delta
+8 TIGR01216|CHL00063|PRK00571|COG0355|PRK13446 ATP synthase, F1 subunit epsilon
+1 TIGR03306 Alternate ATP synthase, subunit F0 A
+2 TIGR03321 Alternate ATP synthase, subunit F0 B
+3 TIGR03322|cd00313 Alternate ATP synthase, subunit F0 C
+4 TIGR03324 Alternate ATP synthase, subunit F1 alpha
+5 TIGR03305 Alternate ATP synthase, subunit F1 beta
+6 TIGR03323 Alternate ATP synthase, subunit F1 gamma
+8 TIGR03166 Alternate ATP synthase, subunit F1 epsilon
+1 TIGR01043 Archaeal ATP synthase, subunit A
+2 TIGR01041 Archaeal ATP synthase, subunit B
+3 cd00313 Archaeal ATP synthase, subunit F0 C
+
+>Respiration, pyrophosphatase
+1 COG3808|PLN02255|PLN02277|PRK00733 Proton/sodium translocating pyrophosphatase
 
 >Sulfur Cycle, Dissimilatory Sulfate Reduction
-PRK04149|COG2046|TIGR00339 sulfate adenylyltransferase (sat, ec:2.7.7.4)
-TIGR02061 aprA; adenylylsulfate reductase, subunit A (ec:1.8.99.2)
-TIGR02060 aprB; adenylylsulfate reductase, subunit B (ec:1.8.99.2)
-TIGR02064 dsrA; dissimilatory sulfite reductase alpha subunit (ec:1.8.99.5)
-TIGR02066 dsrB; dissimilatory sulfite reductase beta subunit (ec:1.8.99.5)
+1 PRK04149|COG2046|TIGR00339 Sulfate adenylyltransferase, Sat
+2 TIGR02061 Adenylylsulfate reductase, subunit AprA
+3 TIGR02060 Adenylylsulfate reductase, subunit AprB
+4 TIGR02064 Dissimilatory sulfite reductase alpha subunit DsrA
+5 TIGR02066 Dissimilatory sulfite reductase beta subunit DsrB
 
 >Sulfur Cycle, Dissimilatory Sulfur Reduction
-C3MV16 sulfur reductase molybdopterin subunit (sreA)
-C3MP29 sulfur reductase FeS subunit (sreB)
-C3N2N9 sulfur reductase membrane anchor (sreC)
+1 C3MV16 Sulfur reductase molybdopterin subunit SreA
+2 C3MP29 Sulfur reductase FeS subunit SreB
+3 C3N2N9 Sulfur reductase membrane anchor SreC
 
 >Sulfur Cycle, Dissimilatory Thiosulfate Reduction
-PRK15488 thiosulfate reductase / polysulfide reductase chain A (phsA, psrA, ec:1.8.5.5)
-cd10551|cd10553 thiosulfate reductase electron transport protein (phsB, psrB)
-A0A0S2HYL0|A0A1D8MUJ0|A0A1Z1SYV4 thiosulfate reductase cytochrome b subunit (phsC)
+1 PRK15488 Thiosulfate reductase / polysulfide reductase chain A, PhsA/PsrA
+2 cd10551|cd10553 Thiosulfate reductase electron transport protein PhsB/psrB
+3 A0A0S2HYL0|A0A1D8MUJ0|A0A1Z1SYV4 Thiosulfate reductase cytochrome b subunit PhsC
 
 >Sulfur Cycle, Assimilatory Sulfate Reduction
-PRK03846|PRK00889 adenylylsulfate kinase (cysC, ec:2.7.1.25)
-PRK05253|PRK12563|TIGR02039 sulfate adenylyltransferase subunit 2 (cysD, ec:2.7.7.4)
-PRK05124|TIGR02034 sulfate adenylyltransferase subunit 1 (cysN, ec:2.7.7.4)
-PRK05506|PRK05537 bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC, ec:2.7.7.4,2.7.1.25)
-A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 PAPSS; 3'-phosphoadenosine 5'-phosphosulfate synthase (ec:2.7.7.4, 2.7.1.25)
-TIGR00434 phosphoadenosine phosphosulfate reductase (cysH, ec:1.8.4.8, 1.8.4.10)
-PRK10953|TIGR01931 sulfite reductase (NADPH) flavoprotein alpha-component (cysJ, ec:1.8.1.2)
-TIGR02041 sulfite reductase (NADPH) hemoprotein beta-component (cysI, ec:1.8.1.2)
-TIGR02042 sulfite reductase (ferredoxin) (sir, ec:1.8.7.1)
-PRK15055|TIGR02910 anaerobic sulfite reductase subunit A (asrA)
-PRK08221|TIGR02911 anaerobic sulfite reductase subunit B (asrB)
-TIGR02912 anaerobic sulfite reductase subunit C (asrC)
+1 PRK03846|PRK00889 Adenylylsulfate kinase, CysC
+2 PRK05253|PRK12563|TIGR02039 Sulfate adenylyltransferase subunit 2, CysD
+3 PRK05124|TIGR02034 Sulfate adenylyltransferase subunit 1, CysN
+1 2 3 PRK05506|PRK05537 Bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC)
+1 2 3 A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 3'-phosphoadenosine 5'-phosphosulfate synthase, PAPSS
+4 TIGR00434 Phosphoadenosine phosphosulfate reductase, CysH
+5 PRK10953|TIGR01931 Sulfite reductase (NADPH) flavoprotein alpha-component CysJ
+6 TIGR02041 Sulfite reductase (NADPH) hemoprotein beta-component CysI
+5 6 TIGR02042 Sulfite reductase, ferredoxinsir dependent, Sir
+5 PRK15055|TIGR02910 Anaerobic sulfite reductase subunit A AsrA
+6 PRK08221|TIGR02911 Anaerobic sulfite reductase subunit AsrB
+TIGR02912 Anaerobic sulfite reductase subunit AsrC
 
 >Sulfur Cycle, Sulfide Oxidation, H2S -> Persulfide or sulfur
-A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 sqr; sulfide:quinone oxidoreductase (ec:1.8.5.4)
-A0A0D5L3Z8|D0L1U4|Q8KAS4 fccB; sulfide dehydrogenase (flavocytochrome c) flavoprotein chain (ec:1.8.2.3)
-A0KLX0|B4S944|L0GYT5|Q3AP22|Q87QC8 fccA; cytochrome subunit of sulfide dehydrogenase
+1 2 A0A023X4Q2|A0A023X6M3|A0A060HRF5|A0A0B5HNV5|A0A0E3M9K3|A0A0F6Z3Z5|A0A0F7D3R5|A0A0H2WJ53|A0A0M5JN41|A0A0P0N343|A0A1B3LJN3|A0A1D8TNE1|A0A1J0LT30|A0A1L3J8W3|A0A1N5TG20|A0A220YKS7|A0A2K5ANR2|A0LS86|A1WXL7|A4SCE6|A4WJD5|A4YGC9|A6Q1T1|A9A3Y1|B9KU62|C3MJE8|D1BHR0|D3T1V6|D6ZJB9|D7E7D8|D9Q2N8|E3IW84|E4U9A4|F2L0A3|F2L312|F8I3L4|G0JQP3|G0JTE8|G0L3L6|G2Z772|G4RJT9|G8RST0|H1XSZ6|H6RTJ6|H6SNT6|I0A0U3|K0JVG3|K9T817|L0ADJ1|L0FC26|L0GLS2|M1RCW4|Q1DFV9|Q3B3U2|Q978F6|S0AB89|U5WRN5|W0DHG7|W8X932 Sulfide:quinone oxidoreductase Sqr
+1 A0A0D5L3Z8|D0L1U4|Q8KAS4 Sulfide dehydrogenase flavoprotein FccB
+2 A0KLX0|B4S944|L0GYT5|Q3AP22|Q87QC8 Sulfide dehydrogenase, cytochrome c subunit FccA
 
 >Sulfur Cycle, Sulfur Oxidation, Sulfur -> Sulfite
-A0A0F8AD05|A0A0L8HDL9|A0A1E7FA36|C3Z8H4|I1M2S7|T1EG80 ETHE1; sulfur dioxygenase (ec:1.13.11.18)
-A0A191ZEW9|O66762|Q972K4 sor; sulfur oxygenase/reductase (ec:1.13.11.55)
+1 A0A0F8AD05|A0A0L8HDL9|A0A1E7FA36|C3Z8H4|I1M2S7|T1EG80 Sulfur dioxygenase ETHE1
+1 A0A191ZEW9|O66762|Q972K4 Sulfur oxygenase/reductase Sor
 
->Sulfur Cycle, Thiosulfate Oxidation, SOX complex, Thiosulfate -> Sulfate
-TIGR04484 sulfur-oxidizing protein SoxA (soxA, ec:2.8.5.2)
-TIGR04485 sulfur-oxidizing protein SoxX (soxX, ec:2.8.5.2)
-TIGR04486 thiosulfohydrolase (soxB, ec:3.1.6.20)
-TIGR04555|cd02113 sulfite dehydrogenase (soxC)
-PRK07474 sulfur-oxidizing protein SoxY (soxY)
-TIGR04490 thiosulfate oxidation carrier protein (soxZ)
-TIGR04557 quinoprotein dehydrogenase-associated carrier (SoxYZ-like)
-cd02113 S-disulfanyl-L-cysteine oxidoreductase SoxD (soxD, ec:1.8.2.6)
+>Sulfur Cycle, Thiosulfate Oxidation, Sox complex, Thiosulfate -> Sulfate
+1 TIGR04484 Sulfur-oxidizing protein SoxA
+2 TIGR04486 Thiosulfohydrolase SoxB
+3 TIGR04555|cd02113 Sulfite dehydrogenase SoxC
+4 cd02113 S-disulfanyl-L-cysteine oxidoreductase SoxD
+5 TIGR04485 Sulfur-oxidizing protein SoxX
+6 PRK07474 Sulfur-oxidizing protein SoxY
+7 TIGR04490 Thiosulfate oxidation carrier protein SoxZ
+5 6 TIGR04557 Quinoprotein dehydrogenase-associated carrier SoxYZ-like
 
 >Sulfur Cycle, Sulfite Oxidation, Sulfite -> Sulfate
-A0A0M4MFR7|A0A1J1EEW2|D5X0P6 soeA; sulfite dehydrogenase (quinone) subunit SoeA (ec:1.8.5.6)
-A0A167GH90|A0A1D8S599|F4B4W1 soeB; sulfite dehydrogenase (quinone) subunit SoeB
-A0A023NVR9|A0A1B1PNP7|A0A1C9VK46|A0A1D8IKM6|A0A1J1E581|A0A1L3I1S2|B8GUS5|D3DK32|G0JPZ2|G8B0M7|Q2W1C8|Q98BE5|S6BBV4 soeC; sulfite dehydrogenase (quinone) subunit SoeC
-WP_011764874|WP_011803507|Q7P1Q4 sorB; sulfite dehydrogenase (cytochrome C) subunit B
-A0A075AI71|A0A0H3MDW2|A0A0S2EWV4|A0A179H534|A0A1I8MUV9|A0A1W4XXR1|A0A2H3WXQ7|A3KJG7|A7SP42|A8P4J6|B8NU07|C1HA82|D0NKC6|D8TX78|E3RMG9|G0S2S8|I1RGK9|Q54XJ8 SUOX; sulfite oxidase (ec:1.8.3.1)
+1 A0A0M4MFR7|A0A1J1EEW2|D5X0P6 Sulfite dehydrogenase (quinone) subunit SoeA
+2 A0A167GH90|A0A1D8S599|F4B4W1 Sulfite dehydrogenase (quinone) subunit SoeB
+3 A0A023NVR9|A0A1B1PNP7|A0A1C9VK46|A0A1D8IKM6|A0A1J1E581|A0A1L3I1S2|B8GUS5|D3DK32|G0JPZ2|G8B0M7|Q2W1C8|Q98BE5|S6BBV4 Sulfite dehydrogenase (quinone) subunit SoeC
+1 2 3 WP_011764874|WP_011803507|Q7P1Q4 Sulfite dehydrogenase, cytochrome C dependent subunit, SorB
+1 2 3 A0A075AI71|A0A0H3MDW2|A0A0S2EWV4|A0A179H534|A0A1I8MUV9|A0A1W4XXR1|A0A2H3WXQ7|A3KJG7|A7SP42|A8P4J6|B8NU07|C1HA82|D0NKC6|D8TX78|E3RMG9|G0S2S8|I1RGK9|Q54XJ8 Sulfite oxidase SUOX
 
 >Carbon Cycle, Methane Oxidation
-pfam14100|TIGR03080|cl21655 methane/ammonia monooxygenase subunit A (pmoA/amoA)
-TIGR03079|cl19551|pfam04744 methane/ammonia monooxygenase subunit B (pmoB/amoB)
-cd19412|TIGR03078|cl04829|pfam04896|cd22188 methane/ammonia monooxygenase subunit C (pmoC/amoC)
-TIGR04550 soluble methane/ammonia monoxygenase (smmo)
-TIGR04550 soluble methane monooxygenase-binding protein (mmoD)
-A0A1W6N1N0|B2HJD1 soluble methane monooxygenase component A beta chain (mmoY. ec:1.14.13.25)
-A0A1W6MWT4|G8RLG2 soluble methane monooxygenase component A gamma chain (mmoZ, ec:1.14.13.25)
-ABE50581|WP_015824267|WP_020494391|YP_003205093|YP_002497622|EAV46784|YP_007912793 xoxF5; methanol dehydrogenase (cytochrome c) subunit 1 (ec:1.1.2.7)
-A0A160DSL2|A1WIX2 mdh2, mxaI; methanol dehydrogenase (cytochrome c) subunit 2 (ec:1.1.2.7)
-A8P437|G4N5G7|M2M3K0|R7SWA7|W4JTB1|W4KD28 MOX; alcohol oxidase (ec:1.1.3.13)
-TIGR04266|WP_003349822 mdh; methanol dehydrogenase (EC:1.1.1.244) (ec:1.1.1.244)
-TIGR01553|TIGR01591|TIGR01701|cd02752|cd02792 formate dehydrogenase, alpha subunit (fdhA, ec:1.17.98.3,1.8.98.6)
-TIGR01582|cd10558|cd10562 formate dehydrogenase, beta subunit (fdhB, ec:1.17.98.3,1.8.98.6)
-TIGR01562|pfam04216 formate dehydrogenase accessory protein (fdhE)
-A0A1D7VYV8|A0A1D8UYA1|A0A1L6L960|Q2T435 fdhA; glutathione-independent formaldehyde dehydrogenase (ec:1.2.1.46)
-A0A072TLN4|A0A075AI99|A0A0D4DRT2|A0A0D4DU08|A0A0G3BL94|A0A0N7GSZ5|A0A0N9UG39|A0A1S3CMH6|A0A223S4F0|A0A238UBL7|A0A2I7YCN4|A0QRJ4|A0QXQ6|A1RCH0|A2BSH4|B3QIY4|B6JE72|B9KZ54|C5MIE3|D2AYW6|D5UTJ6|D8RVY7|E3IWK7|F2RIT6|F4CXK3|G4YYD7|G8N5E9|G8RJY5|I0IG60|I4F569|Q0RF44|Q24T09|Q9S247|R4UTE1|V4MF99 frmA, ADH5, adhC; S-(hydroxymethyl)glutathione dehydrogenase / alcohol dehydrogenase (ec:1.1.1.284,1.1.1.1)
-A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A1W6SSV6|B4GL76|F0Q5P0|F8NDK2|G0V7N5|J9JXA8|K8Z4L7|Q7RXB4|R7Q7V5 frmB, ESD, fghA; S-formylglutathione hydrolase (ec:3.1.2.12)
-A0A0H4KNW2 E1.1.1.306; S-(hydroxymethyl)mycothiol dehydrogenase (EC:1.1.1.306) (ec:1.1.1.306)
-A0A023X718|A0A068N9Q3|A0A0B6RZM4|A0A0C6FTJ4|A0A0D6JJF6|A0A0E3MGR3|A0A0F6SQ63|A0A0K2DDG9|A0A0M5ME63|A0A0S4PYI0|A0A0U5LF32|A0A1B3NK24|A0A1D7U0F1|A0A1D7W8Z2|A0A1D8GA19|A0A1D9GJZ1|A0A1N7CR67|A0A1P8F5L2|A3MT64|A5G6W3|A7H0E9|A9BF64|B0S2H9|B2UA19|B2UJH6|B4UMJ7|B8DLA6|B8DQZ4|B9LN92|C0QAZ5|C0QLZ4|C1B585|C5CWS8|C7MPH8|D1CF24|D5AQH0|D5WB02|D7CNB2|D8J9A1|D9S0A1|E1QIG7|F2KRH5|F6B9K3|F8BUM2|G0LGB2|G8LXD8|I0IQ25|I3ZCM8|I4BYB4|J9YVK1|O59078|Q1LJP2|Q3ADY7|Q609M3|Q65UM1|Q9HL15|W0JWZ6 fdoG, fdhF, fdwA; formate dehydrogenase major subunit (ec:1.17.1.9)
-A0A0A8K7Y2|A0A0K1JD12|A0A142XBS7|A1WBG0|B9MEW2 fdwB; formate dehydrogenase beta subunit (ec:1.17.1.9)
-A0A0F2L431|A0A126T7A4|A0A142XDM2|A0A142YF20|A0A1C7HH88|A0A1L7CRZ4|A0A1P8F5R7|A0A220UHP8|A0A2C8FCT2|A5D1I8|A6W8F0|B1XTZ4|B8DQZ5|B8FUK5|B9M612|C6E0Q1|C7LUC7|D6XSE6|G4RJU7|I0ENQ6|K4LIF1|M0LVJ8|O67147|Q728X1|S5YGD5 fdoH, fdsB; formate dehydrogenase iron-sulfur subunit
-A0A024EGH5|A0A024HFB9|A0A060NKW1|A0A068SU23|A0A089NZR5|A0A089WUU7|A0A0D5LJE0|A0A0D6E357|A0A0K0X3B0|A0A126RDI4|A0A127K8P6|A0A1A9EXX0|A0A1U7D4X3|A0A1W6MZN1|A0A1X9UHW5|A0A231UKL4|A4XP97|B8EJ51|D7DMN0|F6ARL2|F7YGJ3|G0AID7|G8AQF4|G9A1M7|Q1MB09|Q2KWI9|Q608V0|S5XRM5|W0PGQ4|W8PK66 fdsD; formate dehydrogenase subunit delta (ec:1.17.1.9)
-A0A060NJC6|A0A0A7RXW0|A0A0B5BHM3|A0A0F2KQQ8|A0A0H4VFT6|A0A0K1DZV1|A0A0K1HEJ5|A0A0M4L4C3|A0A0X8K9Z7|A0A169PT59|A0A172YES7|A0A193KCS9|A0A1B1NDY3|A0A1C7HGP7|A0A1C7HH10|A0A1D7TN59|A0A1P8XRZ5|A0A1Q5Y4G9|A0A1W6RHI0|A0A220USF5|A0A291PJX9|A0A2I8DS98|A1KB89|A1RQW0|A5G6W1|A6VCR5|A6X2W9|A7HBW7|A8GZN1|A8LNU6|B1M0X9|B9L5R4|C7Q9Q5|D3NYR7|E1SP78|E3JDM4|E5ANN0|F3Z0C2|I3TJC0|I3U9W4|I7GT51|J7IXV2|Q1QW89|Q8EAI0|S5PCZ3|S6BAQ8|W0DFV4 fdoI, fdsG; formate dehydrogenase subunit gamma
+1 pfam14100|TIGR03080|cl21655 Methane/ammonia monooxygenase subunit PmoA/AmoA
+2 3 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
+4 cd19412|TIGR03078|cl04829|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
+1 TIGR04550 Soluble methane/ammonia monoxygenase Smmo
+2 TIGR04550 Soluble methane monooxygenase-binding protein MmoD
+3 A0A1W6N1N0|B2HJD1 Soluble methane monooxygenase component A beta chain MmoY
+4 A0A1W6MWT4|G8RLG2 Soluble methane monooxygenase component A gamma chain MmoZ
+
+>Carbon Cycle, Methanol Oxidation
+1 ABE50581|WP_015824267|WP_020494391|YP_003205093|YP_002497622|EAV46784|YP_007912793 Methanol dehydrogenase (cytochrome c) subunit 1, XoxF5
+1 A0A160DSL2|A1WIX2 Methanol dehydrogenase (cytochrome c) subunit 2, Mdh2, MxaI
+1 A8P437|G4N5G7|M2M3K0|R7SWA7|W4JTB1|W4KD28 Alcohol oxidase MOX
+1 TIGR04266|WP_003349822 Methanol dehydrogenase Mdh
+1 A0A072TLN4|A0A075AI99|A0A0D4DRT2|A0A0D4DU08|A0A0G3BL94|A0A0N7GSZ5|A0A0N9UG39|A0A1S3CMH6|A0A223S4F0|A0A238UBL7|A0A2I7YCN4|A0QRJ4|A0QXQ6|A1RCH0|A2BSH4|B3QIY4|B6JE72|B9KZ54|C5MIE3|D2AYW6|D5UTJ6|D8RVY7|E3IWK7|F2RIT6|F4CXK3|G4YYD7|G8N5E9|G8RJY5|I0IG60|I4F569|Q0RF44|Q24T09|Q9S247|R4UTE1|V4MF99 S-(hydroxymethyl)glutathione dehydrogenase / alcohol dehydrogenase FrmA, ADH5, AdhC;
+2 A0A1D7VYV8|A0A1D8UYA1|A0A1L6L960|Q2T435 Glutathione-independent formaldehyde dehydrogenase FdhA
+2 A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A1W6SSV6|B4GL76|F0Q5P0|F8NDK2|G0V7N5|J9JXA8|K8Z4L7|Q7RXB4|R7Q7V5 S-formylglutathione hydrolase FrmB, ESD, FghA;
+2 A0A0H4KNW2 S-(hydroxymethyl)mycothiol dehydrogenase
+
+>Carbon Cycle, Formate Oxidation
+1 2 TIGR01553|TIGR01591|TIGR01701|cd02752|cd02792 Formate dehydrogenase, alpha subunit FdhA
+3 4  TIGR01582|cd10558|cd10562 Formate dehydrogenase, beta subunit FdhB
+3 TIGR01562|pfam04216 Formate dehydrogenase accessory protein FdhE
+1 A0A024EGH5|A0A024HFB9|A0A060NKW1|A0A068SU23|A0A089NZR5|A0A089WUU7|A0A0D5LJE0|A0A0D6E357|A0A0K0X3B0|A0A126RDI4|A0A127K8P6|A0A1A9EXX0|A0A1U7D4X3|A0A1W6MZN1|A0A1X9UHW5|A0A231UKL4|A4XP97|B8EJ51|D7DMN0|F6ARL2|F7YGJ3|G0AID7|G8AQF4|G9A1M7|Q1MB09|Q2KWI9|Q608V0|S5XRM5|W0PGQ4|W8PK66 Formate dehydrogenase subunit delta, FdsD
+2 A0A060NJC6|A0A0A7RXW0|A0A0B5BHM3|A0A0F2KQQ8|A0A0H4VFT6|A0A0K1DZV1|A0A0K1HEJ5|A0A0M4L4C3|A0A0X8K9Z7|A0A169PT59|A0A172YES7|A0A193KCS9|A0A1B1NDY3|A0A1C7HGP7|A0A1C7HH10|A0A1D7TN59|A0A1P8XRZ5|A0A1Q5Y4G9|A0A1W6RHI0|A0A220USF5|A0A291PJX9|A0A2I8DS98|A1KB89|A1RQW0|A5G6W1|A6VCR5|A6X2W9|A7HBW7|A8GZN1|A8LNU6|B1M0X9|B9L5R4|C7Q9Q5|D3NYR7|E1SP78|E3JDM4|E5ANN0|F3Z0C2|I3TJC0|I3U9W4|I7GT51|J7IXV2|Q1QW89|Q8EAI0|S5PCZ3|S6BAQ8|W0DFV4 Formate dehydrogenase subunit gamma FdoI/FdsG
+3 A0A023X718|A0A068N9Q3|A0A0B6RZM4|A0A0C6FTJ4|A0A0D6JJF6|A0A0E3MGR3|A0A0F6SQ63|A0A0K2DDG9|A0A0M5ME63|A0A0S4PYI0|A0A0U5LF32|A0A1B3NK24|A0A1D7U0F1|A0A1D7W8Z2|A0A1D8GA19|A0A1D9GJZ1|A0A1N7CR67|A0A1P8F5L2|A3MT64|A5G6W3|A7H0E9|A9BF64|B0S2H9|B2UA19|B2UJH6|B4UMJ7|B8DLA6|B8DQZ4|B9LN92|C0QAZ5|C0QLZ4|C1B585|C5CWS8|C7MPH8|D1CF24|D5AQH0|D5WB02|D7CNB2|D8J9A1|D9S0A1|E1QIG7|F2KRH5|F6B9K3|F8BUM2|G0LGB2|G8LXD8|I0IQ25|I3ZCM8|I4BYB4|J9YVK1|O59078|Q1LJP2|Q3ADY7|Q609M3|Q65UM1|Q9HL15|W0JWZ6 Formate dehydrogenase major subunit FdoG/FdhF/FdwA
+4 A0A0A8K7Y2|A0A0K1JD12|A0A142XBS7|A1WBG0|B9MEW2 Formate dehydrogenase beta subunit FdwB
+5 A0A0F2L431|A0A126T7A4|A0A142XDM2|A0A142YF20|A0A1C7HH88|A0A1L7CRZ4|A0A1P8F5R7|A0A220UHP8|A0A2C8FCT2|A5D1I8|A6W8F0|B1XTZ4|B8DQZ5|B8FUK5|B9M612|C6E0Q1|C7LUC7|D6XSE6|G4RJU7|I0ENQ6|K4LIF1|M0LVJ8|O67147|Q728X1|S5YGD5 Formate dehydrogenase iron-sulfur subunit FdoH/FdsB
 
 >Carbon Cycle, Formaldehyde Assimilation via Ribulose Monophosphate pathway
-TIGR03128|cd04726 3-hexulose-6-phosphate synthase (hxlA, ec:4.1.2.43, 5.3.1.27)
-TIGR03127 6-phospho 3-hexuloisomerase (hxlB)
-cl00774 Formaldehyde-activating enzyme and bifunctional enzymes (fae/hps, ec:4.2.1.147, 4.1.2.43)
+1 TIGR03128|cd04726 3-hexulose-6-phosphate synthase HxlA
+2 TIGR03127 6-phospho 3-hexuloisomerase HxlB
+3 cl00774 Formaldehyde-activating enzyme and bifunctional enzymes Fae/Hps
 
 >Carbon Cycle, Formaldehyde Assimilation via Serine pathway
-PRK13580|cd00378 glycine hydroxymethyltransferase (glyA, SHMT, ec:2.1.2.1)
-B8EKC4 malate-CoA ligase subunit alpha (mtkB, ec:6.2.1.9)
-PRK14046 malate-CoA ligase subunit beta (mtkA, ec:6.2.1.9)
+1 PRK13580|cd00378 Glycine hydroxymethyltransferase GlyA/SHMT
+2 PRK14046 Malate-CoA ligase subunit beta MtkA
+3 B8EKC4 Malate-CoA ligase subunit alpha MtkB
 
 >Carbon Cycle, Carbon Monoxide Oxidation CO<=>CO2
-COG2080 aerobic carbon-monoxide dehydrogenase small subunit (coxS, ec:1.2.5.3)
-pfam06240 aerobic carbon-monoxide dehydrogenase subunit G (coxG)
-COG1319 aerobic carbon-monoxide or xanthine dehydrogenase, FAD-binding subunit (coxM, ec:1.2.5.3)
-A0A068STM5|A0A0B5E084|A0A0F2KWV3|A0A0K0XC89|A0A0K2DIW5|A0A0M5KPF9|A0A0S3PQQ7|A0A0U5MFJ0|A0A167GY46|A0A1B1N9R1|A0A1B3NHP3|A0A1S6ICP8|A0A1W6ZY51|A0A1W6ZY57|A0A1W7A121|A0A291LXN2|A0A2D2H1W4|A0QWI0|B1YD71|D2BCX6|F0QTX8|F2J394|F2L5F1|F4CTR1|G8MFU4|G9AJG2|I4BPP0|I4F486|L0NI64|M4ZW95|M9RHU6|Q0A8C6|Q1AUV4|Q2IVG0|Q2KW69|Q6N7R2|Q89E16|Q96Y29|R4SXV3|U3QS63|W0K2B1|X4Z9L5 coxL, cutL; aerobic carbon-monoxide dehydrogenase large subunit (ec:1.2.5.3)
+1 pfam06240 Aerobic carbon-monoxide dehydrogenase subunit CoxG
+2 A0A068STM5|A0A0B5E084|A0A0F2KWV3|A0A0K0XC89|A0A0K2DIW5|A0A0M5KPF9|A0A0S3PQQ7|A0A0U5MFJ0|A0A167GY46|A0A1B1N9R1|A0A1B3NHP3|A0A1S6ICP8|A0A1W6ZY51|A0A1W6ZY57|A0A1W7A121|A0A291LXN2|A0A2D2H1W4|A0QWI0|B1YD71|D2BCX6|F0QTX8|F2J394|F2L5F1|F4CTR1|G8MFU4|G9AJG2|I4BPP0|I4F486|L0NI64|M4ZW95|M9RHU6|Q0A8C6|Q1AUV4|Q2IVG0|Q2KW69|Q6N7R2|Q89E16|Q96Y29|R4SXV3|U3QS63|W0K2B1|X4Z9L5 Aerobic carbon-monoxide dehydrogenase large subunit CoxL/CutL
+3 COG1319 Aerobic carbon-monoxide or xanthine dehydrogenase, FAD-binding subunit CoxM
+4 COG2080 Aerobic carbon-monoxide dehydrogenase small subunit CoxS
 
 >Carbon Cycle, CO2 Fixation via Reductive Pentose Phosphate Cycle (Calvin cycle)
-PLN02318|PLN02348|PRK07429|PRK15453|COG3954 phosphoribulokinase (prkB, ec:2.7.1.19)
-CHL00040|COG1850|PRK04208|PRK13475 ribulose-bisphosphate carboxylase (RuBisCO) large subunit (rbcL, ec:4.1.1.39)
-CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit (rbcS, ec:4.1.1.39)
+1 PLN02318|PLN02348|PRK07429|PRK15453|COG3954 Phosphoribulokinase PrkB
+2 CHL00040|COG1850|PRK04208|PRK13475 ribulose-bisphosphate carboxylase (RuBisCO) large subunit RbcL
+3 CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit RbcS
 
 >Carbon Cycle, CO2 Fixation via Reductive Citrate (TCA, Arnon-Buchanan) Cycle
-COG0674|PRK08367|PRK09622 pyruvate ferredoxin oxidoreductase alpha subunit (porA, ec:1.2.7.1)
-COG1013 pyruvate ferredoxin oxidoreductase beta subunit (porB, ec:1.2.7.1)
-COG1144|PRK09624|PRK09624 pyruvate ferredoxin oxidoreductase delta subunit (porD, ec:1.2.7.1)
-COG1014 pyruvate ferredoxin oxidoreductase gamma subunit (porG, ec:1.2.7.1)
-PRK08659|PRK09627 2-oxoacid:acceptor oxidoreductase, alpha subunit (por/kor/oorA)
-TIGR02177|PRK09628 2-oxoacid:acceptor oxidoreductase, beta subunit (por/kor/oorB)
-TIGR02175|PRK08441 2-oxoacid:acceptor oxidoreductase, gamma subunit (por/kor/oorC)
-TIGR02179|PRK09626 2-oxoacid:acceptor oxidoreductase, delta subunit (por/kor/oorD)
-B3QY35|F0S092 ATP-citrate lyase alpha-subunit (aclA, ec:2.3.3.8)
-A0A222SIX7|E0UV43 ATP-citrate lyase beta-subunit (aclB, ec:2.3.3.8)
+1 COG0674|PRK08367|PRK09622 Pyruvate ferredoxin oxidoreductase alpha subunit PorA
+2 COG1013 Pyruvate ferredoxin oxidoreductase beta subunit PorB
+3 COG1144|PRK09624|PRK09624 Pyruvate ferredoxin oxidoreductase delta subunit PorD
+4 COG1014 Pyruvate ferredoxin oxidoreductase gamma subunit PorG
+5 PRK08659|PRK09627 2-oxoacid:acceptor oxidoreductase, alpha subunit Por/kor/oorA
+6 TIGR02177|PRK09628 2-oxoacid:acceptor oxidoreductase, beta subunit Por/kor/oorB
+7 TIGR02175|PRK08441 2-oxoacid:acceptor oxidoreductase, gamma subunit Por/kor/oorC
+8 TIGR02179|PRK09626 2-oxoacid:acceptor oxidoreductase, delta subunit Por/kor/oorD
+9 B3QY35|F0S092 ATP-citrate lyase alpha-subunit AclA
+10 A0A222SIX7|E0UV43 ATP-citrate lyase beta-subunit AclB
 
 >Carbon Cycle, CO2 Fixation via Acetyl-CoA (Wood-Ljungdahl) Pathway
-COG1152|TIGR00314 acetyl-CoA decarbonylase/synthase complex subunit alpha (cdhA, ec:2.1.1.245)
-TIGR00315 acetyl-CoA decarbonylase/synthase complex subunit epsilon (cdhB, ec:2.1.1.245)
-COG1614|TIGR00316|cl11685 acetyl-CoA decarbonylase/synthase complex subunit beta (cdhC, ec:2.1.1.245)
-COG2069|TIGR00381 acetyl-CoA decarbonylase/synthase complex subunit delta (cdhD, acsD, ec:2.1.1.245)
-COG1456 acetyl-CoA decarbonylase/synthase complex subunit gamma (cdhE, ec:2.1.1.245)
-PLN02759|PRK13505|PRK13506|PRK13507 formate--tetrahydrofolate ligase
-PLN02540|PRK09432 methylenetetrahydrofolate reductase (metF)
-PRK10792|PRK14168|PRK14169|PRK14170|PRK14171|PRK14175|PRK14177|PRK14178|PRK14179|PRK14181|PRK14185|PRK14186|PRK14187|PRK14188|PRK14189|PRK14191|PRK14192|PRK14194 bifunctional methylenetetrahydrofolate dehydrogenase/methenyltetrahydrofolate cyclohydrolase (FolD)
+1 COG1152|TIGR00314 Acetyl-CoA decarbonylase/synthase complex subunit alpha CdhA
+2 TIGR00315 Acetyl-CoA decarbonylase/synthase complex subunit epsilon CdhB
+3 COG1614|TIGR00316|cl11685 Acetyl-CoA decarbonylase/synthase complex subunit beta CdhC
+4 COG2069|TIGR00381 Acetyl-CoA decarbonylase/synthase complex subunit delta CdhD/AcsD
+5 COG1456 Acetyl-CoA decarbonylase/synthase complex subunit gamma CdhE
+6 PLN02759|PRK13505|PRK13506|PRK13507 Formate--tetrahydrofolate ligase
+7 PLN02540|PRK09432 Methylenetetrahydrofolate reductase MetF
+8 PRK10792|PRK14168|PRK14169|PRK14170|PRK14171|PRK14175|PRK14177|PRK14178|PRK14179|PRK14181|PRK14185|PRK14186|PRK14187|PRK14188|PRK14189|PRK14191|PRK14192|PRK14194 Bifunctional methylenetetrahydrofolate dehydrogenase/methenyltetrahydrofolate cyclohydrolase FolD
 
 >Carbon Cycle, CO2 Fixation via Dicarboxylate-hydroxybutyrate Cycle
-D0KSG7|F2L5Y3 K14465; succinate semialdehyde reductase (NADPH)
+1 D0KSG7|F2L5Y3 Succinate semialdehyde reductase (NADPH) K14465
 
 >Carbon Cycle, CO2 Fixation via 3-Hydroxypropionate Bi-Cycle
-A0A0B6SBX1|H6SIV6|Q2W044 malyl-CoA/(S)-citramalyl-CoA lyase (mcl, ec:4.1.3.24, 4.1.3.25)
+1 A0A0B6SBX1|H6SIV6|Q2W044 Malyl-CoA/(S)-citramalyl-CoA lyase Mcl
 
 >Carbon Cycle, Methanogenesis
-A0A088RCA2|A0A0E3L5N0|A0A0E3LCE4|A0A0E3LD37|A0A0E3NNR9|A0A0X8V1W3|A3DJ56|D5XDX7|D7DQV5|F6D4A6 mtaA; (methyl-Co(III) methanol-specific corrinoid protein):coenzyme M methyltransferase (ec:2.1.1.246)
-COG1152|TIGR00314 acetyl-CoA decarbonylase/synthase complex subunit alpha (cdhA, ec:2.1.1.245)
-TIGR00315 acetyl-CoA decarbonylase/synthase complex subunit epsilon (cdhB, ec:2.1.1.245)
-COG1614|TIGR00316|cl11685 acetyl-CoA decarbonylase/synthase complex subunit beta (cdhC, ec:2.1.1.245)
-COG2069|TIGR00381 acetyl-CoA decarbonylase/synthase complex subunit delta (cdhD, acsD, ec:2.1.1.245)
-COG1456 acetyl-CoA decarbonylase/synthase complex subunit gamma (cdhE, ec:2.1.1.245)
-A0A0F7IHA4|A0A0F8VLF9|A0A142Y8V1|A0A1D3L4W6|A0A2I8EUK4|Q0BU24|U6EE53 formylmethanofuran--tetrahydromethanopterin N-formyltransferase (ftr, ec:2.3.1.101)
-A0A0B7IU20|A0A0D6JAU5|A0A0F8XX17|A0A2I8VLY2|B2JX37|D1YZT8|F0SK26|H8I6Y9|K4MUB8|Q2FT11|Q2NEY8|W0EEI3 methenyltetrahydromethanopterin cyclohydrolase (mch, ec:3.5.4.27)
-A0A0A1F7T2|A0A0H3DAA9|A0A0K0SVU2|B2T9X3|Q7UF74 5,6,7,8-tetrahydromethanopterin hydro-lyase (fae, ec:4.2.1.147)
-D7E8X7 methyl-coenzyme M reductase subunit alpha (mcrA, ec:2.8.4.1)
-Q60390 methyl-coenzyme M reductase subunit beta (mcrB, ec:2.8.4.1)
-G7WN56 methyl-coenzyme M reductase subunit C (mcrC, ec:2.8.4.1)
-A0A0P9HYJ0|A0A0X3BMY4|C9RHJ9 methyl-coenzyme M reductase subunit gamma (mcrG, ec:2.8.4.1)
-Q12UC0 (methyl-Co(III) methylamine-specific corrinoid protein): coenzyme M methyltransferase (mtbA, ec:2.1.1.247)
-A0A0S2KDX2|A0A0U5EVY4|A0A143QKN5|F4ANA5|G4RF04 methylamine dehydrogenase light chain (mauA, ec:1.4.9.1)
-A0A0B5DX78|A0A0C4YG08|A0A1B3E829|A0A291N2S9|A0A291PDR0|A1BB97|B5ZF45|E1TJR4|F6IE79|K0CBH2 methylamine dehydrogenase heavy chain (mauB, ec:1.4.9.1)
+1 A0A088RCA2|A0A0E3L5N0|A0A0E3LCE4|A0A0E3LD37|A0A0E3NNR9|A0A0X8V1W3|A3DJ56|D5XDX7|D7DQV5|F6D4A6 (Methyl-Co(III) methanol-specific corrinoid protein):coenzyme M methyltransferase MtaA
+2 COG1152|TIGR00314 Acetyl-CoA decarbonylase/synthase complex subunit alpha CdhA
+3 TIGR00315 Acetyl-CoA decarbonylase/synthase complex subunit epsilon CdhB
+4 COG1614|TIGR00316|cl11685 Acetyl-CoA decarbonylase/synthase complex subunit beta CdhC
+5 COG2069|TIGR00381 Acetyl-CoA decarbonylase/synthase complex subunit delta CdhD/AcsD
+6 COG1456 Acetyl-CoA decarbonylase/synthase complex subunit gamma CdhE
+7 A0A0F7IHA4|A0A0F8VLF9|A0A142Y8V1|A0A1D3L4W6|A0A2I8EUK4|Q0BU24|U6EE53 Formylmethanofuran--tetrahydromethanopterin N-formyltransferase Ftr
+8 A0A0B7IU20|A0A0D6JAU5|A0A0F8XX17|A0A2I8VLY2|B2JX37|D1YZT8|F0SK26|H8I6Y9|K4MUB8|Q2FT11|Q2NEY8|W0EEI3 Methenyltetrahydromethanopterin cyclohydrolase Mch
+9 A0A0A1F7T2|A0A0H3DAA9|A0A0K0SVU2|B2T9X3|Q7UF74 5,6,7,8-Tetrahydromethanopterin hydro-lyase Fae
+10 D7E8X7 Methyl-coenzyme M reductase subunit McrA
+11 Q60390 Methyl-coenzyme M reductase subunit McrB
+12 G7WN56 Methyl-coenzyme M reductase subunit McrC
+13 A0A0P9HYJ0|A0A0X3BMY4|C9RHJ9 Methyl-coenzyme M reductase subunit gamma, McrG
+14 Q12UC0 (methyl-Co(III) Methylamine-specific corrinoid protein): coenzyme M methyltransferase MtbA
+15 A0A0S2KDX2|A0A0U5EVY4|A0A143QKN5|F4ANA5|G4RF04 Methylamine dehydrogenase light chain, MauA
+16 A0A0B5DX78|A0A0C4YG08|A0A1B3E829|A0A291N2S9|A0A291PDR0|A1BB97|B5ZF45|E1TJR4|F6IE79|K0CBH2 Methylamine dehydrogenase heavy chain, MauB
 
 >Carbon Cycle, Hydrocarbon Degradation
-AlkB AlkB alkane hydrolase
-AlmA_GroupI AlmA_GroupI flavin-binding alkane monooxygenase
-AlmA_GroupIII AlmA_GroupIII flavin-binding alkane monooxygenase
-CYP153 CYP153 alkane oxidizing cytochrome P450
-LadA_alpha LadA_alpha long-chain alkane hydrolase
-LadA_beta LadA_beta long-chain alkane hydrolase
-LadB LadB long-chain alkane hydrolase
-pBmoA pBmoA membrane-bound alkane monooxygenase subunit A
-pBmoB pBmoB membrane-bound alkane monooxygenase subunit B
-pBmoC pBmoC membrane-bound alkane monooxygenase subunit C
-PrmA PrmA propane 2-monooxygenase large subunit
-PrmC PrmC propane 2-monooxygenase small subunit
-sBmoX sBmoX soluble alkane monooxygenase subunit A
-sBmoY sBmoY soluble alkane monooxygenase subunit B
-DmpO DmpO phenol/toluene 2-monooxygenase (NADH dependent)
-DszC DszC dibenzothiophene monooxygenase
-MAH_alpha MAH_alpha benzene/toluene/naphtalene dioxygenase subunit alpha
-MAH_beta MAH_beta benzene/toluene/naphtalene dioxygenase subunit beta
-NdoB NdoB benzene/toluene/naphtalene dioxygenase subunit alpha
-non_NdoB_type non_NdoB_type similar to benzene/toluene/naphtalene dioxygenase subunit alpha
-NdoC NdoC benzene/toluene/naphtalene dioxygenase subunit beta
-TmoA_BmoA TmoA_BmoA toluene monooxygenase subunit A
-TmoB_BmoB TmoB_BmoB toluene monooxygenase subunit B
-TmoE TmoE toluene monooxygenase system protein E
-TomA1 TomA1 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
-TomA3 TomA3 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
-TomA4 TomA4 phenol/toluene monooxygenase/hydroxylase (NADH dependent)
-ahyA ahyA molybdopterin-family alkane C2 methylene hydroxylase
-AssA AssA alkylsuccinate synthase
-AbcA_1|AbcA_2 AbcA_1 benzene carboxylase
-BssA BssA benzylsuccinate synthase
-CmdA CmdA molybdopterin-family ethylbenzene dehydrogenase subunit alpha
-EbdA EbdA molybdopterin-family ethylbenzene dehydrogenase subunit alpha
-K27540 K27540 naphtalene carboxylase
-NmsA NmsA naphtylmethyl succinate synthase
-AhyA DESC  molybdopterin-family alkane C2 methylene hydroxylase
-sBmoZ undefined hydrocarbon degradation gene sBmoZ
+AlkB Alkane hydrolase, AlkB
+AlmA_GroupI Flavin-binding alkane monooxygenase, AlmA_GroupI
+AlmA_GroupIII Flavin-binding alkane monooxygenase, AlmA_GroupIII
+CYP153 Alkane oxidizing cytochrome P450, CYP153
+LadA_alpha Long-chain alkane hydrolase, LadA_alpha
+LadA_beta Long-chain alkane hydrolase, LadA_beta
+LadB Long-chain alkane hydrolase, LadB
+pBmoA Membrane-bound alkane monooxygenase subunit A. pBmoA
+pBmoB Membrane-bound alkane monooxygenase subunit B, pBmoB
+pBmoC Membrane-bound alkane monooxygenase subunit C, pBmoC
+PrmA Propane 2-monooxygenase large subunit, PrmA
+PrmC Propane 2-monooxygenase small subunit, PrmC
+sBmoX Soluble alkane monooxygenase subunit A, sBmoX
+sBmoY Soluble alkane monooxygenase subunit B, sBmoY
+DmpO Phenol/toluene 2-monooxygenase (NADH dependent) DmpO
+DszC Dibenzothiophene monooxygenase DszC
+MAH_alpha Benzene/toluene/naphtalene dioxygenase subunit alpha
+MAH_beta Benzene/toluene/naphtalene dioxygenase subunit beta
+NdoB Benzene/toluene/naphtalene dioxygenase subunit alpha, NdoB
+non_NdoB_type Similar to benzene/toluene/naphtalene dioxygenase subunit alpha
+NdoC Benzene/toluene/naphtalene dioxygenase subunit beta, NdoC
+TmoA_BmoA Toluene monooxygenase subunit A TmoA/BmoA
+TmoB_BmoB Toluene monooxygenase subunit B TmoB/BmoB
+TmoE Toluene monooxygenase system protein TmoE
+TomA1 Phenol/toluene monooxygenase/hydroxylase (NADH dependent) TomA1
+TomA3 Phenol/toluene monooxygenase/hydroxylase (NADH dependent) TomA3
+TomA4 Phenol/toluene monooxygenase/hydroxylase (NADH dependent) TomA4
+ahyA Molybdopterin-family alkane C2 methylene hydroxylase ahyA
+AssA Alkylsuccinate synthase AssA
+AbcA_1|AbcA_2 AbcA_1 Benzene carboxylase
+BssA Benzylsuccinate synthase BssA
+CmdA Molybdopterin-family ethylbenzene dehydrogenase subunit alpha, CmdA
+EbdA Molybdopterin-family ethylbenzene dehydrogenase subunit alpha, EbdA
+K27540 Naphtalene carboxylase, K27540
+NmsA Naphtylmethyl succinate synthase NmsA
+AhyA DESC Molybdopterin-family alkane C2 methylene hydroxylase
+sBmoZ Undefined hydrocarbon degradation gene sBmoZ
 
 >Nitrogen Cycle, Nitrification
 pfam14100|TIGR03080|cl21655 methane/ammonia monooxygenase subunit A (pmoA/amoA)
@@ -677,13 +682,13 @@ COG0578 Glycerol-3-phosphate dehydrogenase (GlpA, EC:1.1.1.8)
 COG0240 Glycerol-3-phosphate dehydrogenase (GpsA, EC:1.1.1.8)
 COG2376 Dihydroxyacetone kinase (DAK1, EC:2.7.1.29)
 COG0371 Glycerol dehydrogenase or related enzyme, iron-containing ADH family (GldA, EC:1.1.1.6)
-COG3425 3-hydroxy-3-methylglutaryl CoA synthase	(PksG, EC:2.3.3.10)
+COG3425 3-hydroxy-3-methylglutaryl CoA synthase (PksG, EC:2.3.3.10)
 COG1257 Hydroxymethylglutaryl-CoA reductase (HMG1, EC:1.1.1.34)
 COG1577 Mevalonate kinase (ERG12, EC:2.7.1.36)
 COG3890 Phosphomevalonate kinase (ERG8, EC:2.7.4.2)
 COG3407 Mevalonate pyrophosphate decarboxylase (MVD1, EC:4.1.1.33)
 COG1443 Isopentenyldiphosphate isomerase (Idi, EC:5.3.3.2)
-COG1304 FMN-dependent dehydrogenase, includes L-lactate dehydrogenase and type II isopentenyl diphosphate isomerase	(LldD, EC:1.1.2.3)
+COG1304 FMN-dependent dehydrogenase, includes L-lactate dehydrogenase and type II isopentenyl diphosphate isomerase (LldD, EC:1.1.2.3)
 COG0743 1-deoxy-D-xylulose 5-phosphate reductoisomerase (Dxr, EC:1.1.1.267)
 COG0142 Geranylgeranyl pyrophosphate synthase (IspA, EC:2.5.1.1)
 COG1211 2-C-methyl-D-erythritol 4-phosphate cytidylyltransferase (IspD, EC:2.7.7.60)
@@ -900,7 +905,7 @@ cl30668|TIGR02550|COG1344|PRK14692|PRK12718|PRK08870|PRK08412|PRK08027|PRK07192|
 pfam04316|cl01052|TIGR03824|COG2747|PRK10810 Negative regulator of flagellin synthesis (Anti-sigma-28 factor) FlgM
 pfam05130|cl09176|COG3418|PRK15459 Flagellar/type III secretory pathway chaperone FlgN
 pfam17680 Flagellar H-ring protein FlgO
-cl24946|pfam16538|pfam16539|pfam16548	Flagellar P-ring protein FlgT
+cl24946|pfam16538|pfam16539|pfam16548 Flagellar P-ring protein FlgT
 PRK06819|PRK08026|PRK12805|pfam08884|pfam12445|pfam12613 Flagellin FliC/FljB
 COG1345|PRK06664|PRK08453|PRK08724|PRK12765|pfam02465|pfam07195 Flagellar capping protein FliD
 COG1677|cl09139|PRK12729|TIGR00205|PRK12728|PRK00253|PRK00732|PRK00790|PRK01482|PRK01699|PRK03907 Flagellar MS ring/basal body protein FliE
@@ -912,7 +917,7 @@ COG2882|TIGR02473|PRK07720|PRK05689 Flagella biosynthesis chaperone FliJ
 pfam02120|cl38920|cl24001|cd17470|cd17466|PRK10118|COG3144 Flagellar hook-length control protein FliK
 COG1580|PRK05696|PRK05697|PRK06654|PRK07021|PRK07718|PRK08455|PRK12785|cl00681|pfam03748 Flagellar MS ring/basal body-associated protein FliL
 pfam16973|pfam01052|TIGR02480|pfam02154|cd17908|TIGR01397|COG1868|PRK06666|PRK12795|PRK08916|PRK08983 Flagellar motor switch protein FliM
-COG1886|PRK05698|PRK06033|PRK07963|PRK08433	Flagellar motor switch/type III secretory pathway protein FliN
+COG1886|PRK05698|PRK06033|PRK07963|PRK08433 Flagellar motor switch/type III secretory pathway protein FliN
 pfam00813|cl00593|TIGR01103|COG3190|PRK11486|PRK12430|TIGR03500|cl01247|pfam04347 Flagellar biogenesis protein FliO
 pfam01313|cl00867|TIGR01402|COG1987|PRK05700|PRK06010|PRK12781 Flagellar biosynthesis protein FliQ
 pfam01311|cl00734|COG1684|PRK05701|PRK12780|TIGR01400 Flagellar biosynthesis protein FliR

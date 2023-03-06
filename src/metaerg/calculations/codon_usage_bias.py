@@ -194,7 +194,7 @@ def compute_codon_bias_estimate_doubling_time(db_connection):
     background_frequencies = compute_codon_frequencies_for_feature_data(db_connection, additional_sql='end - start >= 240')
     cub_ribosomal = [compute_codon_usage_bias_for_feature(rp, background_frequencies)
                                for rp in sqlite.read_all_features(db_connection, type='CDS',
-                               additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')]
+                               additional_sql='end - start >= 240 AND subsystems LIKE "%Ribosomal protein%"')]
     if len(cub_ribosomal):
         codon_usage_bias = median(cub_ribosomal)
         doubling_time = math.pow(10, codon_usage_bias * -2.41937374 + 2.00361692)
