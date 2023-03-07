@@ -55,6 +55,8 @@ YOu can use the following arguments when running metaerg:
 ```text
 --contig_file           A nucleotide fasta files with contigs to be annotated OR a dir containing
                         nucleotide fasta files.
+--output_dir            The path where the results will be saved. Default: the dir that contains the
+                        contig file(s)                      
 --database_dir          The path to the metaerg database.
 --file_extension        If a dir was provided to --contig_file, the file extension of the 
                         nucleotide fasta files. Default: .fna
@@ -79,11 +81,15 @@ YOu can use the following arguments when running metaerg:
                         Default: 0.
 --cpus                  Number of threads used for annotation. Default: threads available 
                         on the system / 2.
---force                 Overwrite previous results. By default, results of previous steps will be
-                        kept.
 --contig_mode           Annotate contigs individually instead of assuming they are part of a 
                         genome, MAG or bin. When using this option, metaerg will not run 
-                        repeatscout and will run prodigal in metagenome mode.
+                        repeatscout and will run prodigal in metagenome mode. Use the option 
+                        --translation_table below to override using metagenome mode.
+--force                 Overwrite previous results. By default, results of previous steps will be
+                        kept. You need to specify which steps will be forced (see --skip for a list
+                        of steps Use --force all to overwrite all previous results.
+--update_annotations    Do not rerun any helper programs (keep previous results) but redo all the
+                        data processing. Use this option for example after you updated metaerg.
 --skip                  Use this argument to skip one or more annotation steps. Use the following
                         names for the steps, with names to be skipped separated by a comma (,):
                         
@@ -109,8 +115,10 @@ YOu can use the following arguments when running metaerg:
                                             anchors).
                         trf                 Call tandem repeats.
                           
---translation_table     Translation table to be used when calling open reading frames with prodigal. 
-                        Default: 11.
+--translation_table     Translation table(s) to be used when calling open reading frames with 
+                        prodigal. Default: 11,25. If the mean ORF length is less than 200 amino-
+                        acids, metaerg will rerun prodigal with the next translation table in the
+                        list.
 --download_database     Use this argument to download and install the prebuilt metaerg database.
                         CAUTION: The metaerg databases are big, requiring approximately 165 Gb of 
                         disk space.
