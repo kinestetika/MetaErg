@@ -113,20 +113,20 @@ def run_and_read_cmscan():
 
 @context.register_database_installer
 def install_cmscan_database():
-    if 'R' not in context.TASKS:
+    if 'R' not in context.DATABASE_TASKS:
         return
     rfam_dir = Path(context.DATABASE_DIR, 'rfam')
     rfam_dir.mkdir(exist_ok=True, parents=True)
 
     rfam_file = Path(rfam_dir, 'Rfam.cm')
-    if context.FORCE or not rfam_file.exists() or not rfam_file.stat().st_size:
+    if context.DATABASE_FORCE or not rfam_file.exists() or not rfam_file.stat().st_size:
         context.log(f'Installing the RFAM database to {rfam_file}...')
         context.run_external(
             f'wget -P {rfam_dir} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
         context.run_external(f'gunzip {rfam_file}.gz')
     else:
         context.log(f'Keeping existing conserved domain database in {rfam_file}, use --force to overwrite.')
-    if context.FORCE or not Path(context.DATABASE_DIR, "Rfam.cm.i1f").exists():
+    if context.DATABASE_FORCE or not Path(context.DATABASE_DIR, "Rfam.cm.i1f").exists():
         context.log(f'Running cmpress...')
         context.run_external(f'cmpress -F {rfam_file}')
     else:

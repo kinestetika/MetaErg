@@ -22,15 +22,32 @@ CONTIG_FILES = []
 GENOME_NAMES = []
 LOG_FILE = ''
 
-FORCE = False
 MULTI_MODE = False
 RENAME_CONTIGS = False
 RENAME_GENOMES = False
 MIN_CONTIG_LENGTH = 0
-TRANSLATION_TABLE = 11
-ACTIVE_ANNOTATORS = set('antismash aragorn cdd cmscan diamond_and_blastn hmm write_genes ltr_harvest minced prodigal '
-                        'signalp repeat_masker tmhmm trf'.split())
-READ_ONLY = False
+TRANSLATION_TABLE = [11,25]
+
+SKIP_ANNOTATOR = 0
+UPDATE_ANNOTATOR = 0.5
+RUN_ANNOTATOR = 1
+FORCE_ANNOTATOR = 2
+
+ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
+                     'aragorn': RUN_ANNOTATOR,
+                     'cdd': RUN_ANNOTATOR,
+                     'cmscan': RUN_ANNOTATOR,
+                     'diamond_and_blastn': RUN_ANNOTATOR,
+                     'hmm': RUN_ANNOTATOR,
+                     'write_genes': RUN_ANNOTATOR,
+                     'ltr_harvest': RUN_ANNOTATOR,
+                     'minced': RUN_ANNOTATOR,
+                     'prodigal': RUN_ANNOTATOR,
+                     'signalp': RUN_ANNOTATOR,
+                     'repeat_masker': RUN_ANNOTATOR,
+                     'tmhmm': RUN_ANNOTATOR,
+                     'trf': RUN_ANNOTATOR,
+                     'visualization': RUN_ANNOTATOR}
 DELIMITER = ''
 CPUS_PER_GENOME = 0
 CPUS_AVAILABLE = 0
@@ -43,21 +60,25 @@ METAERG_MODE_DOWNLOAD_DATABASE = 2
 METAERG_MODE_CREATE_DATABASE = 3
 METAERG_MODE_INSTALL_DEPS = 4
 METAERG_MODE = METAERG_MODE_RUN
-TASKS = 'all'
+DATABASE_TASKS = 'all'
+DATABASE_FORCE = False
 PREFIX = 'g'
 BIN_DIR =''
 PATH_TO_SIGNALP = None
 PATH_TO_TMHMM = None
 
+PROGRESS_STARTED = 'started'
+PROGRESS_COMPLETE = 'complete'
+
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, path_to_signalp, path_to_tmhmm, log_topics='', contig_mode = False, skip_step='', read_only=True,
-         run_step=''):
+         install_deps, path_to_signalp, path_to_tmhmm, update_annotations, output_dir, log_topics='',
+         contig_mode = False, skip_step=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
-           RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FORCE, FILE_EXTENSION, TRANSLATION_TABLE, \
-           CPUS_PER_GENOME, CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, \
-           GENOME_NAMES, CONTIG_FILES, DELIMITER, LOG_FILE, TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM, \
-           ACTIVE_ANNOTATORS, READ_ONLY
+           RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
+           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
+           DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM, ANNOTATOR_STATUS, \
+           DATABASE_FORCE
 
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
@@ -88,10 +109,11 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     elif create_database:
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
         if create_database == 'all':
-            TASKS = 'PVEBRCSA'
+            DATABASE_TASKS = 'PVEBRCSA'
         else:
-            TASKS = create_database
-        log(f'Ready to create databases from scratch with tasks {TASKS}.')
+            DATABASE_TASKS = create_database
+        DATABASE_FORCE = True if force else False
+        log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return
     else: # we're going to annotate genomes...
         # (1) collect contig files
@@ -110,12 +132,17 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                 if contig_file.exists():
                     CONTIG_FILES = [contig_file]
         if len(CONTIG_FILES):
-            BASE_DIR = CONTIG_FILES[0].parent
+            if output_dir:
+                BASE_DIR = Path(output_dir).absolute()
+                BASE_DIR.mkdir(parents=True, exist_ok=True)
+            else:
+                BASE_DIR = CONTIG_FILES[0].parent
         else:
             log(f'No contig files to annotate, did you type the correct file or file extension?')
             exit(1)
         # (2) manage file structure / folders
         TEMP_DIR = BASE_DIR / 'temp'
+        os.chdir(TEMP_DIR)
         CHECKM_DIR = Path(checkm_dir).absolute()
         GTDBTK_DIR = Path(gtdbtk_dir).absolute()
         GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
@@ -128,27 +155,41 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     exit(1)
             else:
                 folder.mkdir()
-        # (3) manage which steps to run
-        if run_step:
-            ACTIVE_ANNOTATORS = {step for step in run_step.split(',')}
+        # (3) manage annotator status
+        if update_annotations:
+            for k in ANNOTATOR_STATUS.keys():
+                ANNOTATOR_STATUS[k] = UPDATE_ANNOTATOR
+        if force:
+            # force implies update for other annotators
+            for k in ANNOTATOR_STATUS.keys():
+                ANNOTATOR_STATUS[k] = UPDATE_ANNOTATOR
+            if force == 'all':
+                for k in ANNOTATOR_STATUS.keys():
+                    ANNOTATOR_STATUS[k] = FORCE_ANNOTATOR
+            else:
+                for step in force.split(','):
+                    try:
+                        ANNOTATOR_STATUS[step] = FORCE_ANNOTATOR
+                    except KeyError:
+                        log(f'FATAL: Unknown annotation step "{step}". Valid steps are {", ".join(ANNOTATOR_STATUS.keys())}')
+                        exit()
         if contig_mode:
-            TRANSLATION_TABLE = -1
-            ACTIVE_ANNOTATORS.remove('repeat_masker')
+            TRANSLATION_TABLE = []
+            ANNOTATOR_STATUS['repeat_masker'] = SKIP_ANNOTATOR
         for skipped_step in skip_step.split(','):
             try:
-                ACTIVE_ANNOTATORS.remove(skipped_step)
+                ANNOTATOR_STATUS['skipped_step'] = SKIP_ANNOTATOR
             except KeyError:
-                pass
-        try:
-            translation_table = int(translation_table)
-        except ValueError:
-            log(f'Please provide a number for --translation_table, not "{translation_table}"')
-        if translation_table > 0:
-            TRANSLATION_TABLE = translation_table
-        READ_ONLY = read_only
+                log(f'FATAL: Unknown annotation step "{skipped_step}". Valid steps are {", ".join(ANNOTATOR_STATUS.keys())}')
+                exit()
+        if translation_table:
+            try:
+                TRANSLATION_TABLE = [int(t) for t in translation_table.split(',')]
+            except ValueError:
+                log(f'FATAL: Please provide a numbers separated by commas for --translation_table, not "{translation_table}"')
+                exit()
         # (3) set some global variables
         MIN_CONTIG_LENGTH = int(min_contig_length)
-        FORCE = force
         FILE_EXTENSION = file_extension
         DELIMITER = delimiter
         PREFIX = prefix
@@ -221,7 +262,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     mapping_file.write(f'{n}\t{o.stem}\t{o}\n')
 
         log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
-                  f'{CPUS_PER_GENOME} threads per genome and tasks {TASKS}.')
+                  f'{CPUS_PER_GENOME} threads per genome.')
 
 def spawn_file(program_name, genome_id, base_dir = None) -> Path:
     """computes a Path genome_id.program_name or, if multimode==True, program_name/genome_id"""
@@ -230,7 +271,7 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
         dir = target_dir / program_name
         dir.mkdir(exist_ok=True)
         if dir.is_file():
-            if FORCE and not READ_ONLY:
+            if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
                 dir.unlink()
                 dir.mkdir(exist_ok=True)
             else:
@@ -239,7 +280,7 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
     else:
         file = target_dir / f'{genome_id}.{program_name}'
         if file.exists() and file.is_dir():
-            if FORCE and not READ_ONLY:
+            if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
                 shutil.rmtree(file)
         return file
 
@@ -285,18 +326,24 @@ def sorted_annotators():
 
 def parse_metaerg_progress(genome_name):
     progress_file = spawn_file('metaerg_progress', genome_name)
-    progress = ''
+    progress = {}
     if progress_file.exists():
         with open(progress_file) as progress_reader:
             for line in progress_reader:
-                progress += line
+                #print(line.strip())
+                try:
+                    k, v = line.strip().split('=')
+                except ValueError:
+                    continue
+                progress[k]=v
     return progress
 
 
 def write_metaerg_progress(genome_name, new_progress):
     progress_file = spawn_file('metaerg_progress', genome_name)
     with open(progress_file, 'w') as writer:
-        writer.write(new_progress)
+        for k,v in new_progress.items():
+            writer.write(f'{k}={v}\n')
 
 
 def register_annotator(define_annotator):
@@ -305,14 +352,15 @@ def register_annotator(define_annotator):
     def annotator(genome_name, contig_dict, db_connection) -> int:
         """Runs programs and reads results."""
         # (1) Read metaerg progress file, update progress and log the start of the analysis
-        if not param['annotator_key'] in ACTIVE_ANNOTATORS:
+        if not ANNOTATOR_STATUS[param['annotator_key']]:
             return 0
-        if FORCE:
-            write_metaerg_progress(genome_name, '')
         current_progress = parse_metaerg_progress(genome_name)
-        if not '{}=complete'.format(param['annotator_key']) in current_progress:
-            current_progress += '{}=started\n'.format(param['annotator_key'])
+        if ANNOTATOR_STATUS[param['annotator_key']] == FORCE_ANNOTATOR or \
+           ANNOTATOR_STATUS[param['annotator_key']] == UPDATE_ANNOTATOR or \
+           not param['annotator_key'] in current_progress.keys():
+            current_progress[param['annotator_key']] = PROGRESS_STARTED
             write_metaerg_progress(genome_name, current_progress)
+
         log('({}) Starting {} ...', (genome_name, param['purpose']))
 
         # (2) Make sure required databases are available
@@ -330,12 +378,13 @@ def register_annotator(define_annotator):
                 analysis_already_completed = False
                 break
         # (4) check if we tried to run this analysis before without completing...
-        if '{}=started'.format(param['annotator_key']) in current_progress:
+        if current_progress[param['annotator_key']] == PROGRESS_STARTED or not param['annotator_key'] in current_progress.keys():
             analysis_already_completed = False
-        elif '{}=complete'.format(param['annotator_key']) in current_progress:
+        elif current_progress[param['annotator_key']] == PROGRESS_COMPLETE:
             analysis_already_completed = True
 
-        if not READ_ONLY and (FORCE or not analysis_already_completed):
+        if (not analysis_already_completed and ANNOTATOR_STATUS[param['annotator_key']] != UPDATE_ANNOTATOR) or \
+                ANNOTATOR_STATUS[param['annotator_key']] == FORCE_ANNOTATOR:
             # (5) make sure that the helper programs are available:
             all_programs_in_path = True
             p = 'X'
@@ -364,8 +413,7 @@ def register_annotator(define_annotator):
                     'helper program failed to run.', (genome_name, f))
                 results_complete = False
         # (7) Report success, update progress
-        current_progress = current_progress.replace('{}=started'.format(param['annotator_key']),
-                                                    '{}=complete'.format(param['annotator_key']))
+        current_progress[param['annotator_key']] = PROGRESS_COMPLETE
         write_metaerg_progress(genome_name, current_progress)
         positive_count = 0
         if results_complete:

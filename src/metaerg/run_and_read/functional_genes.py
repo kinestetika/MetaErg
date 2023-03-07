@@ -129,7 +129,7 @@ def add_hmm_file_to_db(hmm_file: Path, db_handle, names_done: set, targets: set)
 
 @context.register_database_installer
 def install_functional_gene_databases():
-    if 'S' not in context.TASKS:
+    if 'S' not in context.DATABASE_TASKS:
         return
 
     functional_genes.init_functional_gene_config()
@@ -188,7 +188,7 @@ def install_functional_gene_databases():
         outcomes = []
         for url in FUNCTIONAL_GENE_URLS:
             destination_file = hmm_dir / Path(url).name
-            if context.FORCE or not destination_file.exists() or not destination_file.stat().st_size:
+            if context.DATABASE_FORCE or not destination_file.exists() or not destination_file.stat().st_size:
                 outcomes.append(executor.submit(context.download, url, destination_file))
         for future in futures.as_completed(outcomes):
             future.result()

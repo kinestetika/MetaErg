@@ -172,7 +172,7 @@ def write_genome_properties_to_xls(genome_property_dict: dict):
                 value = round(value, 0)
                 if value >= 80:
                     color = green
-                elif value <= 50:
+                elif value < 51:
                     color = grey
                 else:
                     color = black
@@ -184,7 +184,8 @@ def write_genome_properties_to_xls(genome_property_dict: dict):
                     color = grey
                 subsystem += ' (# genes)'
             e_sheet.cell(row=row, column=2).value = subsystem
-            e_sheet.cell(row=row, column=e_column).value = value
+            if color is not grey:
+                e_sheet.cell(row=row, column=e_column).value = value
             e_sheet.cell(row=row, column=e_column).font = color
             row += 1
 

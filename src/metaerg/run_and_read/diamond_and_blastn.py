@@ -34,10 +34,9 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
     rna_nt_file = context.spawn_file('rna.fna', genome_name)
     blastn_result_file = context.spawn_file('blastn', genome_name)
     if rna_nt_file.exists() and rna_nt_file.stat().st_size:
-        if context.FORCE or not blastn_result_file.exists() or not blastn_result_file.stat().st_size:
-            blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
-            context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {blastn_result_file} -max_target_seqs 10 '
-                                 f'-outfmt 6')
+        blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
+        context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {blastn_result_file} -max_target_seqs 10 '
+                             f'-outfmt 6')
     else:
         context.log(f'({genome_name}) Skipping blastn, fasta file with RNA genes missing or empty.')
 
@@ -140,12 +139,12 @@ def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingd
 
 @context.register_database_installer
 def install_viral_database():
-    if 'V' not in context.TASKS:
+    if 'V' not in context.DATABASE_TASKS:
         return
     context.log('Downloading viral refseq from the NCBI...')
     VIR_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'vir')
     VIR_DB_DIR.mkdir(exist_ok=True, parents=True)
-    if Path(VIR_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+    if Path(VIR_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
         context.log(f'Keeping existing viral database in {VIR_DB_DIR}, use --force to overwrite.')
         return
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(VIR_DB_DIR)
@@ -193,12 +192,12 @@ def install_viral_database():
 
 @context.register_database_installer
 def install_eukaryote_database():
-    if 'E' not in context.TASKS:
+    if 'E' not in context.DATABASE_TASKS:
         return
     context.log('Downloading taxon-unique eukaryotic genomes using NCBI Datasets...')
     EUK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'euk')
     EUK_DB_DIR.mkdir(exist_ok=True, parents=True)
-    if Path(EUK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+    if Path(EUK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
         context.log(f'Keeping existing eukaryote database in {EUK_DB_DIR}, use --force to overwrite.')
         return
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(EUK_DB_DIR)
@@ -340,7 +339,7 @@ def install_eukaryote_database():
 
 @context.register_database_installer
 def install_prokaryote_database():
-    if 'P' not in context.TASKS:
+    if 'P' not in context.DATABASE_TASKS:
         return
     context.log('Downloading a gff file from the NCBI FTP server for each prokaryotic genome in gtdbtk...')
     PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')
@@ -349,7 +348,7 @@ def install_prokaryote_database():
     PROK_DB_DIR_FAA.mkdir(exist_ok=True)
     PROK_DB_DIR_FNA = Path(PROK_DB_DIR, 'fna')
     PROK_DB_DIR_FNA.mkdir(exist_ok=True)
-    if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE:
+    if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
         context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
         return
     RNA_DESCR_RE = re.compile(r'\[product=(.+?)]')
@@ -447,7 +446,7 @@ def compile_databases():
 
 @context.register_database_installer
 def format_blast_databases():
-    if 'B' not in context.TASKS:
+    if 'B' not in context.DATABASE_TASKS:
         return
     context.log('Concatenating and formatting blast databases for (prok, euk, vir)...')
     PROK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'pro')

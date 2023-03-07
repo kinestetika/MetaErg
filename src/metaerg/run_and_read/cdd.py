@@ -85,26 +85,26 @@ def run_and_read_cdd():
 
 @context.register_database_installer
 def install_cdd_database():
-    if 'C' not in context.TASKS:
+    if 'C' not in context.DATABASE_TASKS:
        return
     cdd_dir = context.DATABASE_DIR / 'cdd'
     context.log(f'Installing the conserved domain database to {cdd_dir}...')
     cdd_dir.mkdir(exist_ok=True, parents=True)
     cdd_index = cdd_dir / 'cddid.tbl'
-    if context.FORCE or (not cdd_index.exists() and not (cdd_dir / 'cddid.tbl.gz').exists()):
+    if context.DATABASE_FORCE or (not cdd_index.exists() and not (cdd_dir / 'cddid.tbl.gz').exists()):
         context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
-    if context.FORCE or not cdd_index.exists():
+    if context.DATABASE_FORCE or not cdd_index.exists():
         context.run_external(f'gunzip {cdd_index}.gz')
 
     temp_cdd_dir = context.DATABASE_DIR / 'cdd-temp'
     temp_cdd_dir.mkdir(exist_ok=True, parents=True)
-    if context.FORCE or (not (temp_cdd_dir / 'cdd.tar').exists() and not (temp_cdd_dir / 'cdd.tar.gz').exists()):
+    if context.DATABASE_FORCE or (not (temp_cdd_dir / 'cdd.tar').exists() and not (temp_cdd_dir / 'cdd.tar.gz').exists()):
         context.run_external(f'wget -P {temp_cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-    if context.FORCE or not (temp_cdd_dir / 'Tigr.pn').exists():
+    if context.DATABASE_FORCE or not (temp_cdd_dir / 'Tigr.pn').exists():
         context.run_external(f'tar -xf {temp_cdd_dir / "cdd.tar.gz"} -C {temp_cdd_dir}')
     current_dir = os.getcwd()
     os.chdir(temp_cdd_dir)
-    if context.FORCE or not (cdd_dir / 'Cdd.pal').exists():
+    if context.DATABASE_FORCE or not (cdd_dir / 'Cdd.pal').exists():
         context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {temp_cdd_dir / "Cdd.pn"} -out '
                              f'{cdd_dir / "Cdd"} -threshold 9.82 -scale 100.0 -dbtype rps '
                              f'-index true')

@@ -28,11 +28,12 @@ def gbk_write_feature(writer, feature: sqlite.Feature):
     writer.write('     {:<16}{}\n'.format(feature.type, textwrap.fill(location, width = GBK_LINEWIDTH,
                                                                       initial_indent = '',
                                                                       subsequent_indent = indent)))
+
     gbk_keys = {'locus_tag':  feature.id,
                 'inference':  feature.inference,
                 'product':    feature.descr,
                 'taxonomy':   feature.taxon,
-                'subsystems': feature.subsystems,
+                'subsystems': ' '.join([str(s) for s in feature.subsystems]),
                 'notes':      feature.notes,
                 'antismash':  feature.antismash,
                 'signal_peptide': feature.signal_peptide,

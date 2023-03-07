@@ -8,11 +8,24 @@ from metaerg.datatypes import sqlite
 def _run_programs(genome_name, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome_name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
-    if context.TRANSLATION_TABLE < 0:
-        translate = '-p meta'
+    if not context.TRANSLATION_TABLE:
+        context.run_external(f'prodigal -p meta -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
     else:
-        translate = f'-g {context.TRANSLATION_TABLE}'
-    context.run_external(f'prodigal {translate} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
+        for table in context.TRANSLATION_TABLE:
+            context.run_external(f'prodigal -g {table} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
+            count = 0
+            total_length = 0
+            with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
+                for seq_rec in fasta_reader:
+                    count += 1
+                    total_length += len(seq_rec['seq'])
+            mean = total_length / count
+            if mean > 200:
+                context.log(f'({genome_name}) Acceptable coding sequence prediction with translation table {table}, mean length {mean:.1f} aa.')
+                break
+            else:
+                context.log(f'({genome_name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
+
 
 def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')

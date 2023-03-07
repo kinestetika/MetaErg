@@ -1,5 +1,5 @@
 from metaerg import context
-from metaerg.datatypes import fasta, gff
+from metaerg.datatypes import fasta
 from metaerg.datatypes import gff
 from metaerg.datatypes import sqlite
 

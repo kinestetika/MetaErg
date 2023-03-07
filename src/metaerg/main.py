@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.22"
+VERSION = "2.3.26"
 
 
 def parse_arguments():
@@ -30,6 +30,7 @@ def parse_arguments():
     parser.add_argument('--contig_file', help='Fasta nucleotide file of the contigs, or dir that '
                                               'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', help='Dir that contains the annotation databases.')
+    parser.add_argument('--output_dir', default='', help='Dir that will contain the annotation results.')
     parser.add_argument('--contig_mode', default=False,  action="store_true",
                         help='Annotate contigs individually instead of assuming they are part of a genome, MAG or bin.')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
@@ -40,7 +41,7 @@ def parse_arguments():
     parser.add_argument('--cpus', default=0, help='How many cpus/threads to use (default: all = 0).')
     parser.add_argument('--file_extension', default='.fna', help='When annotating multiple files in a folder, extension'
                                                                  'of the fasta nucleotide files (default: .fna).')
-    parser.add_argument('--translation_table', default=0, help='Which translation table to use (default 11).')
+    parser.add_argument('--translation_table', default='', help='Which translation tables to use (default 11,25).')
     parser.add_argument('--delimiter', default='.', help='Separater character used in feature ids.')
     parser.add_argument('--prefix', default='g', help='Prefix used when renaming genomes (default: g).')
     parser.add_argument('--checkm_dir', default='checkm', help='Dir with the checkm results (default: checkm)')
@@ -55,14 +56,13 @@ def parse_arguments():
                                                            '(helper programs). Dependencies will be installed here.')
     parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
     parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
-    parser.add_argument('--force', default=False, action="store_true",
-                        help='Use force to overwrite previous result files.')
-    parser.add_argument('--read_only', default=False, action='store_true', help="Do not run any helper programs, only "
-                                                                                "read results from previous runs.")
+    parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
+                                                     'everything, or antismash, aragorn, cdd, cmscan, diamond_and_blastn, hmm, '
+                                                     'ltr_harvest, minced, prodigal, signalp, repeat_masker, tmhmm, trf, '
+                                                     'separated by commas (,) to redo specific steps')
+    parser.add_argument('--update_annotations', default=False, action='store_true', help="Do not run any helper programs, only "
+                                                                                "update annotations woth results from previous runs.")
     parser.add_argument('--skip_step', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
-                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
-                                                        "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
-    parser.add_argument('--run_step', default='', help="Only (re)run one or more annotation steps. Steps are: antismash, aragorn, "
                                                         "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
                                                         "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
 
@@ -72,7 +72,8 @@ def parse_arguments():
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     current_progress = context.parse_metaerg_progress(genome_name)
-    if not context.FORCE and 'visualization=complete' in current_progress:
+    if context.ANNOTATOR_STATUS['visualization'] != context.UPDATE_ANNOTATOR and \
+            current_progress.get('visualization', 0) == context.PROGRESS_COMPLETE:
         context.log(f'({genome_name}) already completed!')
         return
     # (1) prepare sqlite3 database
@@ -117,7 +118,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
         html_writer(genome_name, db_connection, genome_properties, context.HTML_DIR)
     # (5) update progress
     current_progress = context.parse_metaerg_progress(genome_name)
-    current_progress += 'visualization=complete\n'
+    current_progress['visualization'] = context.PROGRESS_COMPLETE
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
     return genome_properties
@@ -127,8 +128,7 @@ def main():
     print(f'This is metaerg.py {VERSION}')
     context.init(**parse_arguments().__dict__)
     if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
-        context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.TASKS}; '
-                    f'force: {context.FORCE}.')
+        context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.DATABASE_TASKS}; ')
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     elif context.METAERG_MODE == context.METAERG_MODE_DOWNLOAD_DATABASE:
@@ -146,7 +146,7 @@ def main():
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)
         # database_tarbal_file.unlink()
-        context.TASKS = 'SA'
+        context.DATABASE_TASKS = 'SA'
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
         metaerg.run_and_read.antismash.format_antismash_databases()
@@ -169,7 +169,7 @@ def main():
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
                 annotation_summaries[genome_name] = annotate_genome(genome_name, contig_file)
-        tmhmm.cleanup(context.BASE_DIR)
+        tmhmm.cleanup(context.TEMP_DIR)
         context.log('Now writing all-genomes overview html...')
         html_all_genomes.write_html(context.HTML_DIR)
         context.log('Now writing excel files with functional genes per genome...')

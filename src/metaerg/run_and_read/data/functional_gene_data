@@ -53,12 +53,12 @@
 >Translation, RNA polymerase
 1 CHL00013 RNA polymerase subunit alpha, RpoA
 2 CHL00001 RNA polymerase subunit beta, RpoB
-3 CHL00018 RNA polymerase subunit beta', RpoC1
-4 CHL00117 RNA polymerase subunit beta'', RpoC2
+3 CHL00018 RNA polymerase subunit beta-prime, RpoC1
+4 CHL00117 RNA polymerase subunit beta-prime-prime, RpoC2
 3 TIGR02387 Cyanobacterial DNA-directed RNA polymerase, gamma subunit, RpoC1
-4 TIGR02388 Cyanobacterial DNA-directed RNA polymerase, subunit beta'', RpoC2
-1 TIGR02389|cd02582 Archaeal DNA-directed RNA polymerase subunit A''
-2 TIGR02390|cd06528 Archaeal DNA-directed RNA polymerase subunit A'
+4 TIGR02388 Cyanobacterial DNA-directed RNA polymerase, subunit beta-prime-prime, RpoC2
+1 TIGR02389|cd02582 Archaeal DNA-directed RNA polymerase subunit A-prime-prime
+2 TIGR02390|cd06528 Archaeal DNA-directed RNA polymerase subunit A-prime
 3 TIGR00448 Archaeal/Eukaryal DNA-directed RNA polymerase, RpoE
 4 TIGR03670 Archaeal DNA-directed RNA polymerase subunit B, RpoB
 cd06927 Archaeal RNA polymerase subunit L
@@ -197,7 +197,7 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 8 TIGR02926 Vacuolar or A0/A1 ATPase, subunit H
 1 TIGR01131|CHL00046|PRK05815|COG0356|PRK13421 ATP synthase, subunit F0 A
 2 TIGR01144|PRK07352|CHL00019 ATP synthase, subunit F0 B
-2 PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B'
+2 PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B-prime
 3 TIGR01260|PRK07354|CHL00061 ATP synthase, subunit F0 C
 4 TIGR00962|PRK09281|CHL00059|COG0056 ATP synthase, subunit F1 alpha
 5 TIGR01039|CHL00060|PRK09280|COG0055 ATP synthase, subunit F1 beta
@@ -240,7 +240,7 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 2 PRK05253|PRK12563|TIGR02039 Sulfate adenylyltransferase subunit 2, CysD
 3 PRK05124|TIGR02034 Sulfate adenylyltransferase subunit 1, CysN
 1|2|3 PRK05506|PRK05537 Bifunctional bifunctional sulfate adenylyltransferase/adenylylsulfate kinase (CysN+CysC)
-1|2|3 A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 3'-phosphoadenosine 5'-phosphosulfate synthase, PAPSS
+1|2|3 A0A074ZH81|A9G7W0|Q4S2V0|R7Q5H4 3-phosphoadenosine 5-phosphosulfate synthase, PAPSS
 4 TIGR00434 Phosphoadenosine phosphosulfate reductase, CysH
 5 PRK10953|TIGR01931 Sulfite reductase (NADPH) flavoprotein alpha-component CysJ
 6 TIGR02041 Sulfite reductase (NADPH) hemoprotein beta-component CysI
@@ -722,7 +722,7 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 
 >Crispr-Cas systems, CAS-I
 # see https://www.nature.com/articles/nature21059
-DEDDh 3'-5' exonuclease domain family DEDDh
+DEDDh 3-5 exonuclease domain family DEDDh
 PD-DExK Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
 PrimPol Uncharacterized protein COG4951
 RT Reverse transcriptase (RNA-dependent DNA polymerase)
@@ -730,7 +730,7 @@ WYL Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WY
 cas1 CRISPR/Cas system-associated protein Cas1
 cas2 CRISPR/Cas system-associated protein Cas2
 cas3 CRISPR/Cas system-associated protein Cas3
-cas3HD CRISPR/Cas system-associated protein Cas3''
+cas3HD CRISPR/Cas system-associated protein Cas3-prime-prime
 cas4 CRISPR/Cas system-associated protein Cas4
 cas6 Class 1 CRISPR-associated endoribonuclease Cas6
 casR CRISPR/Cas system-associated transcriptional regulator CasRa

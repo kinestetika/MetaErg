@@ -15,6 +15,7 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
         gbk_file = Path(gbk_file.parent, gbk_file.name + '.gbk')
     with open(gbk_file, 'w') as handle:
         gbk.gbk_write_genome(handle, contig_dict, db_connection)
+    shutil.rmtree(result_files[0])
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 
@@ -71,7 +72,7 @@ def write_html(genome_name, db_connection, genome_properties:dict, dir):
 
 @context.register_database_installer
 def format_antismash_databases():
-    if 'A' not in context.TASKS:
+    if 'A' not in context.DATABASE_TASKS:
         return
     antismash_database_path = context.DATABASE_DIR / 'antismash'
     context.log(f'Installing antismash database at {antismash_database_path}')
