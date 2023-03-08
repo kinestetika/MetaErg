@@ -1,4 +1,4 @@
-## metaerg.py, version 2.3.26
+## metaerg.py, version 2.3.27
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 

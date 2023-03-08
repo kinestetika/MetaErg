@@ -127,6 +127,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         else:
             contig_file = Path(contig_file).absolute()
             if contig_file.is_dir():
+                FILE_EXTENSION = file_extension
                 CONTIG_FILES = [f.absolute() for f in sorted(contig_file.glob(f'*{FILE_EXTENSION}')) if f.is_file()]
             else:
                 if contig_file.exists():
@@ -190,7 +191,6 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                 exit()
         # (3) set some global variables
         MIN_CONTIG_LENGTH = int(min_contig_length)
-        FILE_EXTENSION = file_extension
         DELIMITER = delimiter
         PREFIX = prefix
         # (4) set up multitreading

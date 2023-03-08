@@ -155,8 +155,11 @@ def write_features_to_fasta(db_connection, seq_type: str, base_file: Path, split
 def write_contigs_to_fasta(contig_dict: dict, base_file: Path, db_connection, genome_name='',
                            split=1, mask_targets=None):
     """writes contigs to fasta file(s), optionally masking features with N"""
+    if not len(contig_dict):
+        context.log(f'({genome_name}) WARNING: No contigs to write to {base_file}!')
+        return None
     number_of_records = len(contig_dict)
-    split = int(min(split, number_of_records))
+    split = int(min(max(split, 1), number_of_records))
     records_per_file = number_of_records / split
     if split > 1:
         paths = [Path(base_file.parent, f'{base_file.name}.{i}') for i in range(split)]

@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.26"
+VERSION = "2.3.27"
 
 
 def parse_arguments():
@@ -83,6 +83,9 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     # (2) load sequence data
     contig_dict = fasta.load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
                                      min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
+    if not len(contig_dict):
+        context.log(f'({genome_name}) WARNING: {input_fasta_file} appears to contain no fasta data... aborting!')
+        return
     # (3) now annotate
     for annotator in context.sorted_annotators():
         annotator(genome_name, contig_dict, db_connection)
