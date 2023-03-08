@@ -11,16 +11,16 @@ COLORS = 'id=cr id=cr id=co id=cb id=cg'.split()
 
 
 @context.register_html_writer
-def write_html(genome_name, db_connection, genome_properties:dict, dir):
+def write_html(genome, db_connection, dir):
     """Writes a html file for each feature to dir <file>"""
-    dir = Path(dir, genome_name)
+    dir = Path(dir, genome.name)
     dir.mkdir(exist_ok=True, parents=True)
     file = dir / 'feature-details.html'
 
     feature_html = ''
     for feature in sqlite.read_all_features(db_connection, type=('CDS', 'rRNA', 'ncRNA', 'retrotransposon')):
         if feature.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
-            feature_html += make_feature_html(feature, genome_properties['classification (top taxon)'])
+            feature_html += make_feature_html(feature, genome.top_taxon)
 
     html = _make_html_template().replace('FEATURE_HTML', feature_html)
     with open(file, 'w') as handle:

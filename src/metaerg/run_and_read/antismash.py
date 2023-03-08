@@ -8,9 +8,9 @@ from metaerg.datatypes import sqlite
 from metaerg.datatypes import functional_genes
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
+def _run_programs(genome, contig_dict, db_connection, result_files):
     """Should execute the helper programs to complete the analysis"""
-    gbk_file = context.spawn_file('gbk', genome_name)
+    gbk_file = context.spawn_file('gbk', genome.name)
     if context.MULTI_MODE:
         gbk_file = Path(gbk_file.parent, gbk_file.name + '.gbk')
     with open(gbk_file, 'w') as handle:
@@ -19,7 +19,7 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives."""
     antismash_hit_count = 0
     for f in sorted(result_files[0].glob('*region*.gbk')):

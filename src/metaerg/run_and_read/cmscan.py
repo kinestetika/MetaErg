@@ -8,11 +8,11 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    fasta_file = context.spawn_file('masked', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    fasta_file = context.spawn_file('masked', genome.name)
     rfam_database = Path(context.DATABASE_DIR, 'rfam', 'Rfam.cm')
     if context.CPUS_PER_GENOME > 1:
-        split_fasta_files = fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
+        split_fasta_files = fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                                          mask_targets=fasta.ALL_MASK_TARGETS,
                                                          split=context.CPUS_PER_GENOME)
         split_cmscan_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
@@ -28,12 +28,12 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
                 split_input_file.unlink()
                 split_output_file.unlink()
     else:
-        fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
+        fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                      mask_targets=fasta.ALL_MASK_TARGETS)
         context.run_external(f'cmscan --rfam --tblout {result_files[0]} {rfam_database} {fasta_file}')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     NON_CODING_RNA_TYPES = {'LSU_rRNA_bacteria': 'rRNA',
                             'LSU_rRNA_archaea': 'rRNA',
                             'LSU_rRNA_eukarya': 'rRNA',
@@ -85,7 +85,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         seq = contig['seq'][hit.query_start - 1:hit.query_end]
         if hit.query_strand < 0:
             seq = fasta.reverse_complement(seq)
-        feature = sqlite.Feature(genome = genome_name,
+        feature = sqlite.Feature(genome = genome.name,
                    contig = hit.query_id,
                    start = hit.query_start - 1,
                    end = hit.query_end,

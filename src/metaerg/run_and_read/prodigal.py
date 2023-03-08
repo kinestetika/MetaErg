@@ -5,8 +5,8 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    fasta_file = context.spawn_file('masked', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    fasta_file = context.spawn_file('masked', genome.name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
     if not context.TRANSLATION_TABLE:
         context.run_external(f'prodigal -p meta -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
@@ -21,13 +21,14 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
                     total_length += len(seq_rec['seq'])
             mean = total_length / count
             if mean > 200:
-                context.log(f'({genome_name}) Acceptable coding sequence prediction with translation table {table}, mean length {mean:.1f} aa.')
+                context.log(f'({genome.name}) Acceptable coding sequence prediction with translation table {table}, mean length {mean:.1f} aa.')
+                genome.genetic_code = table
                 break
             else:
-                context.log(f'({genome_name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
+                context.log(f'({genome.name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     ORF_ID_PATTERN = re.compile(r'_(\d+?)$')
     nucl_seq_hash = {}
     with fasta.FastaParser(result_files[1], cleanup_seq=False) as fasta_reader:
@@ -48,7 +49,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 m = ORF_ID_PATTERN.search(seq_rec['id'])
                 contig_id = seq_rec['id'][0:m.start()]
             except KeyError:
-                context.log(f'({genome_name}) Warning: Failed to find contig with "{seq_rec["id"]}"')
+                context.log(f'({genome.name}) Warning: Failed to find contig with "{seq_rec["id"]}"')
                 continue
             start = int(words[1].strip()) - 1
             end = int(words[2].strip())
@@ -76,7 +77,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             strand = int(words[3].strip())
             if seq_rec['seq'].endswith('*'):
                 seq_rec['seq'] = seq_rec['seq'][:-1]
-            feature = sqlite.Feature(genome = genome_name,
+            feature = sqlite.Feature(genome = genome.name,
                        contig = contig_id,
                        start = start,
                        end = end,
@@ -90,7 +91,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             sqlite.add_new_feature_to_db(db_connection, feature)
             count += 1
 
-        context.log(f'({genome_name}) Dropped {dropped_repeat_count}/{repeat_count_before_arbitration} repeats and'
+        context.log(f'({genome.name}) Dropped {dropped_repeat_count}/{repeat_count_before_arbitration} repeats and'
                     f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')
         return count
 

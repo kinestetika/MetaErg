@@ -4,17 +4,17 @@ from metaerg import context
 from metaerg.datatypes.genome_properties import GENOME_PROPERTY_FORMATS
 
 @context.register_html_writer
-def write_html(genome_name, db_connection, genome_properties:dict, dir):
+def write_html(genome, db_connection, dir):
     dir.mkdir(exist_ok=True, parents=True)
-    file = Path(dir, genome_name, 'index.html')
+    file = Path(dir, genome.name, 'index.html')
     with open(file, 'w') as handle:
-        handle.write(make_html(genome_name, genome_properties))
+        handle.write(make_html(genome))
 
 
-def make_html(genome_name, genome_properties:dict) -> str:
+def make_html(genome) -> str:
     """injects the content into the html base, returns the html"""
     html = _make_html_template()
-    html = html.replace('GENOME_NAME', genome_name)
+    html = html.replace('GENOME_NAME', genome.name)
     # genome properties
     html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{genome_properties[k]:{GENOME_PROPERTY_FORMATS[k]}}</td></tr>\n'
                                                        for k in GENOME_PROPERTY_FORMATS.keys())))

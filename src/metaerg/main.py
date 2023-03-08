@@ -76,19 +76,35 @@ def annotate_genome(genome_name, input_fasta_file: Path):
             current_progress.get('visualization', 0) == context.PROGRESS_COMPLETE:
         context.log(f'({genome_name}) already completed!')
         return
-    # (1) prepare sqlite3 database
-    db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
-    sqlite.create_db(db_file)
-    db_connection = sqlite.connect_to_db(db_file)
+    # (1) prepare feature sqlite3 database
+    feature_db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
+    sqlite.create_db(feature_db_file)
+    feature_db_connection = sqlite.connect_to_db(feature_db_file)
     # (2) load sequence data
     contig_dict = fasta.load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
                                      min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
     if not len(contig_dict):
         context.log(f'({genome_name}) WARNING: {input_fasta_file} appears to contain no fasta data... aborting!')
         return
+    genome = sqlite.Genome(name=genome_name, input_fasta_file=input_fasta_file)
+
+    contigs: list[dict] = list(contig_dict.values())
+    contigs.sort(key=lambda c: len(c['seq']), reverse=True)
+
+    genome.size = sum(len(c['seq']) for c in contigs)
+    genome.number_of_contigs = len(contigs)
+    genome.fraction_gc = sum((c['seq'].count('G') + c['seq'].count('G') for c in contigs)) / \
+                       (genome.size - sum((c['seq'].count('N') for c in contigs)))
+    cum_size = 0
+    for c in contigs:
+        cum_size += len(c['seq'])
+        if cum_size > + genome.size / 2:
+            genome.n50_contig_length = len(c['seq'])
+            break
+
     # (3) now annotate
     for annotator in context.sorted_annotators():
-        annotator(genome_name, contig_dict, db_connection)
+        annotator(genome, contig_dict, feature_db_connection)
     # feather_file = context.spawn_file("all_genes.feather", genome_name, context.BASE_DIR)
     # feature_data = pd.read_feather(feather_file)
     # feature_data = feature_data.set_index('id', drop=False)
@@ -99,31 +115,33 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
     gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
     fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR)
-    fasta.write_features_to_fasta(db_connection, 'aa', faa_file, targets=('CDS',))
-    fasta.write_features_to_fasta(db_connection, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
-    fasta.write_contigs_to_fasta(contig_dict, fna_file, db_connection)
+    fasta.write_features_to_fasta(feature_db_connection, 'aa', faa_file, targets=('CDS',))
+    fasta.write_features_to_fasta(feature_db_connection, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
+    fasta.write_contigs_to_fasta(contig_dict, fna_file, feature_db_connection)
     with open(gbk_file, 'w') as gbk_writer:
-        gbk.gbk_write_genome(gbk_writer, contig_dict, db_connection)
-    feature_count = sqlite.count_features(db_connection)
+        gbk.gbk_write_genome(gbk_writer, contig_dict, feature_db_connection)
+    feature_count = sqlite.count_features(feature_db_connection)
     if feature_count < 1e6:
         context.log(f'({genome_name}) Writing {feature_count} annotations to .feather format...')
         feather_file = context.spawn_file("annotations.feather", genome_name, context.BASE_DIR)
         rows = []
-        for feature in sqlite.read_all_features(db_connection):
+        for feature in sqlite.read_all_features(feature_db_connection):
             rows.append({k: str(v) for k, v in feature})
         pd.DataFrame(rows).to_feather(feather_file)
     else:
         context.log(f'({genome_name}) Skipping feather format, too many ({feature_count}) annotations...')
     # (5) visualize
-    genome_properties = compute_genome_properties(genome_name, input_fasta_file, contig_dict, db_connection)
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
-        html_writer(genome_name, db_connection, genome_properties, context.HTML_DIR)
+        html_writer(genome, feature_db_connection, context.HTML_DIR)
     # (5) update progress
     current_progress = context.parse_metaerg_progress(genome_name)
     current_progress['visualization'] = context.PROGRESS_COMPLETE
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
+    genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
+    genome_db_connection = sqlite.connect_to_db(genome_db_file)
+    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, genome=genome) this needs thought
     return genome_properties
 
 

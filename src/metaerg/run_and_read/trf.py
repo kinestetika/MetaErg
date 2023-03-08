@@ -3,14 +3,14 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    fasta_file = context.spawn_file('masked', genome.name)
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
     with open(result_files[0], 'w') as output:
         context.run_external(f'trf {fasta_file} 2 7 7 80 10 50 500 -d -h -ngs', stdout=output)
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
     with open(result_files[0]) as trf_handle:
         for line in trf_handle:
@@ -26,7 +26,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             start = int(words[0]) - 1
             end = int(words[1])
             seq = contig['seq'][start:end]
-            feature = sqlite.Feature(genome = genome_name,
+            feature = sqlite.Feature(genome = genome.name,
                                      contig = contig['id'],
                                      start = start,
                                      end = end,

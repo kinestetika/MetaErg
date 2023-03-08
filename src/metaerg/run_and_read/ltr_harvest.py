@@ -4,20 +4,20 @@ from metaerg.datatypes import gff
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    fasta_file = context.spawn_file('masked', genome.name)
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
-    ltr_index_file = context.spawn_file('ltr_index', genome_name)
+    ltr_index_file = context.spawn_file('ltr_index', genome.name)
 
     context.run_external(f'gt suffixerator -db {fasta_file} -indexname {ltr_index_file} -tis -suf -lcp -des -ssp -sds -dna')
     context.run_external(f'gt ltrharvest -index {ltr_index_file} -gff3 {result_files[0]} -seqids')
     # remove index files
-    for file in ltr_index_file.parent.glob(f'{genome_name}.ltr_index*'):
+    for file in ltr_index_file.parent.glob(f'{genome.name}.ltr_index*'):
         file.unlink()
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
     with gff.GffParser(result_files[0], contig_dict, inference='ltr_harvest',
                        target_feature_type_dict={'repeat_region': 'retrotransposon'}) as parser:

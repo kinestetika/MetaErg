@@ -5,13 +5,13 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    fasta_file = context.spawn_file('masked', genome_name)
-    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome_name,
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    fasta_file = context.spawn_file('masked', genome.name)
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                       mask_targets=fasta.ALL_MASK_TARGETS)
     context.run_external(f'aragorn -l -t -gc{context.TRANSLATION_TABLE} {fasta_file} -w -o {result_files[0]}')
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
     ln = 0
     current_contig = None
@@ -36,7 +36,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                             seq = current_contig['seq'][start:end]
                             if strand < 0:
                                 seq = fasta.reverse_complement(seq)
-                            feature = sqlite.Feature(genome = genome_name,
+                            feature = sqlite.Feature(genome = genome.name,
                                        contig = current_contig['id'],
                                        start = start,
                                        end = end,

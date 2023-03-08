@@ -9,16 +9,17 @@ from metaerg.datatypes.blast import DBentry, TabularBlastParser
 from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg.datatypes import functional_genes
+from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
     # the domtbl format includes alignment starts and ends, so we can use that information...
     context.run_external(f'hmmscan -o /dev/null -E 1e-6 --domtblout {result_files[0]} {hmm_db} {cds_aa_file}')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     db_entry = None
     hmm_db = context.DATABASE_DIR / 'hmm' / 'functional_genes.hmm'
     functional_gene_db = {}
@@ -38,7 +39,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                 db_entry.descr = line[4:].strip()
             elif line.startswith('LENG'):
                 db_entry.length = int(line[4:].strip())
-    context.log(f'({genome_name}) {len(functional_gene_db)} functional gene profiles in database.')
+    context.log(f'({genome.name}) {len(functional_gene_db)} functional gene profiles in database.')
 
     def get_db_entry(db_id) -> DBentry:
         return functional_gene_db[db_id]
@@ -71,6 +72,13 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
                             feature.subsystems.append(new_match)
                 break
             sqlite.update_feature_in_db(db_connection, feature)
+    # with all subsystems annotated, we are ready to update the genome's subsystems:
+    genome.codon_usage_bias, genome.doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
+    genome.subsystems = functional_genes.aggregate(db_connection)
+    for subsystem, subsystem_genes in genome.subsystems.items():
+        subsystem_completeness = functional_genes.get_subsystem_completeness(subsystem, subsystem_genes)
+        genome.subsystem_summary[subsystem] = subsystem_completeness
+
     return hit_count
 
 

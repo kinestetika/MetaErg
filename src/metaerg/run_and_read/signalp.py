@@ -7,8 +7,8 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
     if context.CPUS_PER_GENOME > 1:
         split_fasta_files = fasta.write_features_to_fasta(db_connection, 'aa', cds_aa_file, context.CPUS_PER_GENOME,
                                                           targets=('CDS',))
@@ -27,7 +27,7 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
                     with open(signalp_result_file, 'rb') as input:
                         shutil.copyfileobj(input, output)
                 else:
-                    context.log(f'({genome_name}) WARNING - missing part of signalp output!')
+                    context.log(f'({genome.name}) WARNING - missing part of signalp output!')
                 if split_signalp_dir.exists():
                     shutil.rmtree(split_signalp_dir)
                 split_cds_aa_file.unlink(missing_ok=True)
@@ -35,7 +35,7 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
         context.run_external(f'signalp6 --fastafile {cds_aa_file} --output_dir {result_files[0]} --format none --organism other')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
     signalp_result_file = result_files[0] / 'prediction_results.txt'
     if signalp_result_file.exists():

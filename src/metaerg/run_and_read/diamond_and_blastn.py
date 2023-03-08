@@ -1,6 +1,7 @@
 import re
 import gzip
 import shutil
+from collections import Counter
 from os import chdir
 from ftplib import FTP
 from pathlib import Path
@@ -30,23 +31,23 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
                         'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    rna_nt_file = context.spawn_file('rna.fna', genome_name)
-    blastn_result_file = context.spawn_file('blastn', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    rna_nt_file = context.spawn_file('rna.fna', genome.name)
+    blastn_result_file = context.spawn_file('blastn', genome.name)
     if rna_nt_file.exists() and rna_nt_file.stat().st_size:
         blastn_db = Path(context.DATABASE_DIR, DB_RNA_FILENAME)
         context.run_external(f'blastn -db {blastn_db} -query {rna_nt_file} -out {blastn_result_file} -max_target_seqs 10 '
                              f'-outfmt 6')
     else:
-        context.log(f'({genome_name}) Skipping blastn, fasta file with RNA genes missing or empty.')
+        context.log(f'({genome.name}) Skipping blastn, fasta file with RNA genes missing or empty.')
 
-    cds_aa_file = context.spawn_file('cds.faa', genome_name)
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
     diamond_db = Path(context.DATABASE_DIR, DB_PROTEINS_FILENAME)
     context.run_external(f'diamond blastp -d {diamond_db} -q {cds_aa_file} -o {result_files[0]} -f 6 '
                          f'--threads {context.CPUS_PER_GENOME} --fast --max-target-seqs 10')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     # (1) load databse descriptions
     db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
     descriptions = {'p': {}, 'e': {}, 'v': {}}
@@ -57,7 +58,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             descriptions[words[0]][int(words[1])] = words[2].strip()
             if not descriptions[words[0]][int(words[1])]:
                 entries_without_descr += 1
-    context.log(f'({genome_name}) Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])})'
+    context.log(f'({genome.name}) Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])})'
                 f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. Empty'
                 f' descriptions: {entries_without_descr}.')
     # (2) load database taxonomy
@@ -67,10 +68,10 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         for line in taxon_handle:
             words = line.split('\t')
             taxonomy[words[0]][int(words[1])] = words[2].strip().replace('~', '; ')
-    context.log(f'({genome_name}) Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
+    context.log(f'({genome.name}) Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
                 f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
     # (3) parse diamond blast results
-
+    taxon_counts = Counter()
     def process_blast_result(blast_result: BlastResult):
         feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
         if not feature:
@@ -80,6 +81,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
         feature.descr = blast_result.hits[0].hit.descr
         feature.taxon =  blast_result.hits[0].hit.taxon
         sqlite.update_feature_in_db(db_connection, feature)
+        taxon_counts.update((feature.taxon,))
 
     def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
@@ -92,11 +94,19 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             blast_result_count += 1
             process_blast_result(blast_result)
 
-    blastn_result_file = context.spawn_file('blastn', genome_name)
+    blastn_result_file = context.spawn_file('blastn', genome.name)
     with TabularBlastParser(blastn_result_file, 'BLAST', dbentry_from_string) as handle:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
+    # (4) update genome
+    genome.fraction_classified = taxon_counts.total() / (genome.number_of_features - genome.number_of_crispr_repeats -
+                                                         genome.number_of_other_repeats - genome.number_of_retrotransposons)
+    for k, v in taxon_counts.most_common(1):
+        genome.fraction_classified_to_top_taxon = v / taxon_counts.total()
+        genome.top_taxon = k
+        break
+
     return blast_result_count
 
 

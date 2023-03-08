@@ -7,12 +7,12 @@ from metaerg.datatypes.blast import taxon_at_genus
 
 
 @context.register_html_writer
-def write_html(genome_name, db_connection, genome_properties:dict, dir):
+def write_html(genome, db_connection, dir):
     dir.mkdir(exist_ok=True, parents=True)
-    file = Path(dir, genome_name, "feature_table.html")
+    file = Path(dir, genome.name, "feature_table.html")
     file.parent.mkdir(exist_ok=True, parents=True)
     with open(Path(file), 'w') as handle:
-        handle.write(make_html(genome_name, db_connection, genome_properties))
+        handle.write(make_html(genome, db_connection))
 
 
 def get_empty_format_dict():
@@ -81,10 +81,10 @@ def format_hash_to_html(format_hash):
     </tr>'''.format(**format_hash)
 
 
-def make_html(genome_name, db_connection, genome_properties:dict) -> str:
+def make_html(genome, db_connection) -> str:
     """Injects the content into the html base, returns the html."""
     html = _make_html_template()
-    html = html.replace('GENOME_NAME', genome_name)
+    html = html.replace('GENOME_NAME', genome.name)
     colors = [' id=cr', ' id=cr', ' id=co', ' id=cb', ' id=cg']
 
     # table header
@@ -114,11 +114,11 @@ def make_html(genome_name, db_connection, genome_properties:dict) -> str:
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome_properties['classification (top taxon)'], colors)
+                format_feature(f, format_hash, genome.top_taxon, colors)
                 table_body += format_hash_to_html(format_hash)
         else:
             format_hash = get_empty_format_dict()
-            format_feature(f, format_hash, genome_properties['classification (top taxon)'], colors)
+            format_feature(f, format_hash, genome.top_taxon, colors)
             table_body += format_hash_to_html(format_hash)
         prev_f = f
     html = html.replace('TABLE_BODY', table_body)

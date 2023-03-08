@@ -349,29 +349,29 @@ def write_metaerg_progress(genome_name, new_progress):
 def register_annotator(define_annotator):
     param = define_annotator()
 
-    def annotator(genome_name, contig_dict, db_connection) -> int:
+    def annotator(genome, contig_dict, db_connection) -> int:
         """Runs programs and reads results."""
         # (1) Read metaerg progress file, update progress and log the start of the analysis
         if not ANNOTATOR_STATUS[param['annotator_key']]:
             return 0
-        current_progress = parse_metaerg_progress(genome_name)
+        current_progress = parse_metaerg_progress(genome.name)
         if ANNOTATOR_STATUS[param['annotator_key']] == FORCE_ANNOTATOR or \
            ANNOTATOR_STATUS[param['annotator_key']] == UPDATE_ANNOTATOR or \
            not param['annotator_key'] in current_progress.keys():
             current_progress[param['annotator_key']] = PROGRESS_STARTED
-            write_metaerg_progress(genome_name, current_progress)
+            write_metaerg_progress(genome.name, current_progress)
 
-        log('({}) Starting {} ...', (genome_name, param['purpose']))
+        log('({}) Starting {} ...', (genome.name, param['purpose']))
 
         # (2) Make sure required databases are available
         for d in param.get('databases', []):
             d = DATABASE_DIR / d
             if not d.exists() or not d.stat().st_size:
-                log('({}) Unable to run {}, or parse results, database "{}" missing', (genome_name,
+                log('({}) Unable to run {}, or parse results, database "{}" missing', (genome.name,
                                                                                        param['purpose'], d))
                 return 0
         # (3) Then, if force or the results files are not yet there, run the programs:
-        result_files = [spawn_file(f, genome_name) for f in param.get('result_files', [])]
+        result_files = [spawn_file(f, genome.name) for f in param.get('result_files', [])]
         analysis_already_completed = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
@@ -394,31 +394,31 @@ def register_annotator(define_annotator):
                     all_programs_in_path = False
             if all_programs_in_path:
                 try:
-                    param['run'](genome_name, contig_dict, db_connection, result_files)
+                    param['run'](genome, contig_dict, db_connection, result_files)
                 except Exception as e:
-                    log('({}) Error while running {}: {}', (genome_name, param['purpose'],
+                    log('({}) Error while running {}: {}', (genome.name, param['purpose'],
                                                             "".join(traceback.format_exception(e))))
                     return 0
             else:
-                log('({}) Unable to run {}, helper program "{}" not in path', (genome_name, param['purpose'], p))
+                log('({}) Unable to run {}, helper program "{}" not in path', (genome.name, param['purpose'], p))
                 return 0
         elif len(param.get('programs', [])):  # before logging this, do check if any result files will be parsed
-            log('({}) Reusing existing results in {}.'. format(genome_name,
+            log('({}) Reusing existing results in {}.'. format(genome.name,
                                                               ', '.join(str(file) for file in result_files)))
         # (6) Check if all results files are there, otherwise return:
         results_complete = True
         for f in result_files:
             if not f.exists() or not f.stat().st_size:
                 log('({}) Missing expected result file {}; this could mean no results were found or that a '
-                    'helper program failed to run.', (genome_name, f))
+                    'helper program failed to run.', (genome.name, f))
                 results_complete = False
         # (7) Report success, update progress
         current_progress[param['annotator_key']] = PROGRESS_COMPLETE
-        write_metaerg_progress(genome_name, current_progress)
+        write_metaerg_progress(genome.name, current_progress)
         positive_count = 0
         if results_complete:
-            positive_count = param['read'](genome_name, contig_dict, db_connection, result_files)
-        log('({}) {} complete. Found {}.', (genome_name, param['purpose'], positive_count))
+            positive_count = param['read'](genome, contig_dict, db_connection, result_files)
+        log('({}) {} complete. Found {}.', (genome.name, param['purpose'], positive_count))
         return 0
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator

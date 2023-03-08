@@ -10,8 +10,8 @@ from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
 
 
-def _run_programs(genome_name, contig_dict, db_connection, result_files):
-    cds_aa_file = context.spawn_file('cds.faa', genome_name)
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     if context.CPUS_PER_GENOME > 1:
         split_fasta_files = fasta.write_features_to_fasta(db_connection, 'aa', cds_aa_file, targets=('CDS',),
@@ -33,7 +33,7 @@ def _run_programs(genome_name, contig_dict, db_connection, result_files):
         context.run_external(f'rpsblast -db {cdd_database} -query {cds_aa_file} -out {result_files[0]} -outfmt 6 -evalue 1e-7')
 
 
-def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     # load cdd index
     cdd = {}
     cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
@@ -42,7 +42,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             words = line.strip().split("\t")
             cdd[int(words[0])] = DBentry(domain='cdd', accession=words[1], gene=words[2], descr=words[3],
                                          length=int(words[4]))
-    context.log(f'({genome_name}) Parsed {len(cdd)} entries from conserved domain database.')
+    context.log(f'({genome.name}) Parsed {len(cdd)} entries from conserved domain database.')
     # parse cdd results
     cdd_result_count = 0
     subsystem_result_count = 0
@@ -67,7 +67,7 @@ def _read_results(genome_name, contig_dict, db_connection, result_files) -> int:
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
             sqlite.update_feature_in_db(db_connection, feature)
-    context.log(f'({genome_name}) Found {subsystem_result_count} matches to subsystems.')
+    context.log(f'({genome.name}) Found {subsystem_result_count} matches to subsystems.')
     return cdd_result_count
 
 

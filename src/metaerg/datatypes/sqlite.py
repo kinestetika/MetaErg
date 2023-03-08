@@ -3,10 +3,11 @@ from metaerg.datatypes.functional_genes import FunctionalGene
 from metaerg.datatypes.blast import DBentry, BlastHit, BlastResult
 
 
-FEATURE_FIELDS = tuple('id genome contig start end strand type inference subsystems descr taxon notes ' \
-                    'aa_seq nt_seq antismash signal_peptide tmh tmh_topology blast cdd hmm'.split())
+#FEATURE_FIELDS = tuple('id genome contig start end strand type inference subsystems descr taxon notes ' \
+#                    'aa_seq nt_seq antismash signal_peptide tmh tmh_topology blast cdd hmm'.split())
+
 RNA_TARGETS = set("rRNA tRNA tmRNA ncRNA retrotransposon".split())
-SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE features(
+SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     id TEXT,
     genome TEXT,
     contig TEXT,
@@ -29,7 +30,7 @@ SQLITE_CREATE_TABLE_SYNTAX = '''CREATE TABLE features(
     cdd TEXT,
     hmm TEXT
 )'''
-SQLITE_UPDATE_SYNTAX = '''UPDATE features SET
+SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     id = ?,
     genome = ?,
     contig = ?,
@@ -121,22 +122,144 @@ class Feature:
     def length_aa(self):
         return (self.end - self.start) // 3
 
+SQLITE_CREATE_GENOME_TABLE_SYNTAX = '''CREATE TABLE genomes(
+    name TEXT,
+    input_fasta_file TEXT,
+    size INT,
+    number_of_contigs INT,
+    fraction_gc FLOAT,
+    n50_contig_length INT,
+    number_of_features INT,
+    number_of_proteins INT,
+    number_of_ribosomal_rna INT,
+    number_of_transfer_rna INT,
+    number_of_noncoding_rna INT,
+    number_of_retrotransposons INT,
+    number_of_crispr_repeats INT,
+    number_of_other_repeats INT,
+    fraction_coding FLOAT,
+    fraction_repeats FLOAT,
+    genetic_code INT,
+    mean_protein_length FLOAT,
+    top_taxon TEXT,
+    fraction_classified FLOAT,
+    fraction_classified_to_top_taxon FLOAT,
+    codon_usage_bias FLOAT,
+    doubling_time FLOAT,
+    subsystems TEXT,
+    subsystem_summary TEXT
+)'''
+SQLITE_UPDATE_GENOME_SYNTAX = '''UPDATE genomes SET
+    name = ?,
+    input_fasta_file = ?,
+    size = ?,
+    number_of_contigs = ?,
+    fraction_gc = ?,
+    n50_contig_length = ?,
+    number_of_features = ?,
+    number_of_proteins = ?,
+    number_of_ribosomal_rna = ?,
+    number_of_transfer_rna = ?,
+    number_of_noncoding_rna = ?,
+    number_of_retrotransposons = ?,
+    number_of_crispr_repeats = ?,
+    number_of_other_repeats = ?,
+    fraction_coding = ?,
+    fraction_repeats = ?,
+    genetic_code = ?,
+    mean_protein_length = ?,
+    top_taxon = ?,
+    fraction_classified = ?,
+    fraction_classified_to_top_taxon = ?,
+    codon_usage_bias = ?,
+    doubling_time = ?,
+    subsystems = ?,
+    subsystem_summary = ?
+WHERE rowid = ?'''
+
+
+class Genome:
+    def __init__(self, rowid=0, name='', input_fasta_file='', size=0, number_of_contigs=0, fraction_gc=0.0, n50_contig_length=0,
+                 number_of_features=0, number_of_proteins=0, number_of_ribosomal_rna=0, number_of_transfer_rna=0,
+                 number_of_noncoding_rna=0, number_of_retrotransposons=0, number_of_crispr_repeats=0,
+                 number_of_other_repeats=0, fraction_coding=0.0, fraction_repeats=0.0, genetic_code=0,
+                 mean_protein_length=0, top_taxon='', fraction_classified=0.0, fraction_classified_to_top_taxon=0.0,
+                 codon_usage_bias=0.0, doubling_time=0.0, subsystems=None, subsystem_summary=None):
+        self.rowid = rowid
+        self.name = name
+        self.input_fasta_file = input_fasta_file
+        self.size = size
+        self.number_of_contigs = number_of_contigs
+        self.fraction_gc = fraction_gc
+        self.n50_contig_length = n50_contig_length
+        self.number_of_features = number_of_features
+        self.number_of_proteins = number_of_proteins
+        self.number_of_ribosomal_rna = number_of_ribosomal_rna
+        self.number_of_transfer_rna = number_of_transfer_rna
+        self.number_of_noncoding_rna = number_of_noncoding_rna
+        self.number_of_retrotransposons = number_of_retrotransposons
+        self.number_of_crispr_repeats = number_of_crispr_repeats
+        self.number_of_other_repeats = number_of_other_repeats
+        self.fraction_coding = fraction_coding
+        self.fraction_repeats = fraction_repeats
+        self.genetic_code = genetic_code
+        self.mean_protein_length = mean_protein_length
+        self.top_taxon = top_taxon
+        self.fraction_classified = fraction_classified
+        self.fraction_classified_to_top_taxon = fraction_classified_to_top_taxon
+        self.codon_usage_bias = codon_usage_bias
+        self.doubling_time = doubling_time
+        self.subsystems = eval(subsystems) if subsystems else {}
+        self.subsystem_summary = eval(subsystem_summary) if subsystem_summary else {}
+
+
+    def __iter__(self):
+        for k, v in self.__dict__.items():
+            if k == 'rowid':
+                continue
+            yield k, v
+
+    def __repr__(self):
+        return '{}({})'.format(type(self).__name__, ', '.join(f'{k}={v!r}' for k, v in self))
+
+    def __str__(self):
+        return '{}:\n{}'.format(type(self).__name__, '\n'.join(f'  {k:26}: {v}' for k, v in self))
+
+    def __len__(self):
+        return len(self.__dict__.items())
+
+
 def feature_factory(cursor, row) -> Feature:
     fields = [column[0] for column in cursor.description]
     if len(fields) < 10:
         return fields[0]
     return Feature(**{key: value for key, value in zip(fields, row)})
 
-def connect_to_db(sql_db_file):
+def genome_factory(cursor, row) -> Genome:
+    fields = [column[0] for column in cursor.description]
+    if len(fields) < 10:
+        return fields[0]
+    return Genome(**{key: value for key, value in zip(fields, row)})
+
+
+def connect_to_db(sql_db_file, target='Features'):
     connection = sql.connect(sql_db_file)
-    connection.row_factory = feature_factory
+    if 'Features' == target:
+        connection.row_factory = feature_factory
+    elif 'Genomes' == target:
+        connection.row_factory = genome_factory
     return connection
 
-def create_db(sql_db_file):
+
+def create_db(sql_db_file, target='Features'):
     sql_db_file.unlink(missing_ok=True)
     connection = sql.connect(sql_db_file)
     cursor = connection.cursor()
-    cursor.execute(SQLITE_CREATE_TABLE_SYNTAX)
+    if 'Features' == target:
+        cursor.execute(SQLITE_CREATE_FEATURE_TABLE_SYNTAX)
+    elif 'Genomes' == target:
+        cursor.execute(SQLITE_CREATE_GENOME_TABLE_SYNTAX)
+
 
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
@@ -144,20 +267,28 @@ def add_new_feature_to_db(sql_connection, feature: Feature):
     cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?)', feature_as_tuple)
     sql_connection.commit()
 
+def add_new_genome_to_db(sql_connection, genome: Genome):
+    genome_as_tuple = tuple(str(v) for k, v in genome)
+    cursor = sql_connection.cursor()
+    cursor.execute('INSERT INTO genomes VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?, )', genome_as_tuple)
+    sql_connection.commit()
+
+
 def update_feature_in_db(sql_connection, feature: Feature):
     cursor = sql_connection.cursor()
     feature_as_list = list(str(v) for k, v in feature)
     feature_as_list.append(feature.rowid)
-    cursor.execute(SQLITE_UPDATE_SYNTAX, tuple(feature_as_list))
+    cursor.execute(SQLITE_UPDATE_FEATURE_SYNTAX, tuple(feature_as_list))
     sql_connection.commit()
 
-#def update_feature_id_in_db(sql_connection, feature: Feature):
-#    cursor = sql_connection.cursor()
-#    cursor.execute('UPDATE features SET id = ? WHERE genome = ? AND contig = ? AND start = ? AND end = ? AND '
-#                   'strand = ? AND type = ? AND inference = ?',
-#                   (feature.id, feature.genome, feature.contig, feature.start, feature.end, feature.strand,
-#                    feature.type, feature.inference))
-#    sql_connection.commit()
+
+def update_genome_in_db(sql_connection, genome: Genome):
+    cursor = sql_connection.cursor()
+    genome_as_list = list(str(v) for k, v in genome)
+    genome_as_list.append(genome.rowid)
+    cursor.execute(SQLITE_UPDATE_FEATURE_SYNTAX, tuple(genome_as_list))
+    sql_connection.commit()
+
 
 def drop_feature(sql_connection, feature: Feature):
     cursor = sql_connection.cursor()
@@ -176,6 +307,12 @@ def read_feature_by_id(sql_connection, feature_id) -> Feature:
     cursor = sql_connection.cursor()
     result = cursor.execute('SELECT rowid, * FROM features WHERE id = ?', (feature_id,))
     return result.fetchone()
+
+def read_genome_by_id(sql_connection, genome_name) -> Genome:
+    cursor = sql_connection.cursor()
+    result = cursor.execute('SELECT rowid, * FROM genomes WHERE name = ?', (genome_name,))
+    return result.fetchone()
+
 
 def read_all_features(sql_connection, contig='', type=None, location=None, additional_sql=None):
     cursor = sql_connection.cursor()
@@ -208,3 +345,7 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
         return cursor.execute('SELECT rowid, * FROM features ORDER BY contig, start')
     #for columns in result.fetchall():
     #    yield Feature(*columns)
+
+def read_all_genomes(sql_connection, sql_where=''):
+    cursor = sql_connection.cursor()
+    return cursor.execute('SELECT rowid, * FROM genomes ' + sql_where + ' ORDER BY name')
