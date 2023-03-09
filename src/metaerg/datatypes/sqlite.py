@@ -129,6 +129,8 @@ SQLITE_CREATE_GENOME_TABLE_SYNTAX = '''CREATE TABLE genomes(
     number_of_contigs INT,
     fraction_gc FLOAT,
     n50_contig_length INT,
+    fraction_complete FLOAT,
+    fraction_contaminated FLOAT,    
     number_of_features INT,
     number_of_proteins INT,
     number_of_ribosomal_rna INT,
@@ -156,6 +158,8 @@ SQLITE_UPDATE_GENOME_SYNTAX = '''UPDATE genomes SET
     number_of_contigs = ?,
     fraction_gc = ?,
     n50_contig_length = ?,
+    fraction_complete = ?,
+    fraction_contaminated = ?
     number_of_features = ?,
     number_of_proteins = ?,
     number_of_ribosomal_rna = ?,
@@ -257,12 +261,14 @@ class Genome:
             if 'subsystem' in k:
                 continue
             k = k.replace('_', ' ')
-            if isinstance(k, int):
+            if 'fraction' in k:
+                property_list[k.replace('fraction', '%')] = f'{v:.1%}'
+            elif isinstance(v, int):
                 property_list[k] = f'{v:,}'
-            elif isinstance(k, float):
+            elif isinstance(v, float):
                 property_list[k] = f'{v:.2f}'
             else:
-                property_list[k] = f'{v!r}'
+                property_list[k] = v
         return property_list
 
     def __len__(self):
@@ -309,7 +315,7 @@ def add_new_feature_to_db(sql_connection, feature: Feature):
 def add_new_genome_to_db(sql_connection, genome: Genome):
     genome_as_tuple = tuple(str(v) for k, v in genome)
     cursor = sql_connection.cursor()
-    cursor.execute('INSERT INTO genomes VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?, )', genome_as_tuple)
+    cursor.execute('INSERT INTO genomes VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?, ?, ?)', genome_as_tuple)
     sql_connection.commit()
 
 

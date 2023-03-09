@@ -18,7 +18,7 @@ def write_genomes_to_xls(db_connection):
         e_sheet = e_workbook.active
         row = 1
         e_sheet.cell(row=row, column=1).value = 'genome properties'
-        for k, v in pretty_properties.itemes():
+        for k, v in pretty_properties.items():
             if 'top taxon' == k:
                 continue
             e_sheet.cell(row=row, column=2).value = k

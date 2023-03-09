@@ -15,12 +15,12 @@ BASE_DIR = Path()
 TEMP_DIR = Path()
 HTML_DIR = Path()
 DATABASE_DIR = Path()
-CHECKM_DIR = Path()
-GTDBTK_DIR = Path()
-GENOME_NAME_MAPPING_FILE = ''
+CHECKM_DIR:None | Path = None
+GTDBTK_DIR:None | Path = None
+GENOME_NAME_MAPPING_FILE:None | Path = None
 CONTIG_FILES = []
 GENOME_NAMES = []
-LOG_FILE = ''
+LOG_FILE:None | Path = None
 
 MULTI_MODE = False
 RENAME_CONTIGS = False
@@ -36,6 +36,7 @@ FORCE_ANNOTATOR = 2
 ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
                      'aragorn': RUN_ANNOTATOR,
                      'cdd': RUN_ANNOTATOR,
+                     'checkm': RUN_ANNOTATOR,
                      'cmscan': RUN_ANNOTATOR,
                      'diamond_and_blastn': RUN_ANNOTATOR,
                      'hmm': RUN_ANNOTATOR,
@@ -116,6 +117,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return
     else: # we're going to annotate genomes...
+        current_dir = Path(os.getcwd())
         # (1) collect contig files
         if ',' in contig_file:
             for f in contig_file.split(','):
@@ -143,9 +145,18 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             exit(1)
         # (2) manage file structure / folders
         TEMP_DIR = BASE_DIR / 'temp'
+        TEMP_DIR.mkdir(exist_ok=True)
+        if checkm_dir:
+            if Path(checkm_dir).is_absolute():
+                CHECKM_DIR = Path(checkm_dir)
+            else:
+                CHECKM_DIR = current_dir / checkm_dir
+        if gtdbtk_dir:
+            if Path(gtdbtk_dir).is_absolute():
+                CHECKM_DIR = Path(gtdbtk_dir)
+            else:
+                GTDBTK_DIR = current_dir / gtdbtk_dir
         os.chdir(TEMP_DIR)
-        CHECKM_DIR = Path(checkm_dir).absolute()
-        GTDBTK_DIR = Path(gtdbtk_dir).absolute()
         GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
         HTML_DIR = BASE_DIR / 'html'
         for folder in (TEMP_DIR, HTML_DIR):
@@ -264,7 +275,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
                   f'{CPUS_PER_GENOME} threads per genome.')
 
-def spawn_file(program_name, genome_id, base_dir = None) -> Path:
+def spawn_file(program_name, genome_id, base_dir = None, extension='') -> Path:
     """computes a Path genome_id.program_name or, if multimode==True, program_name/genome_id"""
     target_dir = Path(base_dir) if base_dir else TEMP_DIR
     if MULTI_MODE:
@@ -276,7 +287,7 @@ def spawn_file(program_name, genome_id, base_dir = None) -> Path:
                 dir.mkdir(exist_ok=True)
             else:
                 raise Exception("Use force to overwrite existing results")
-        return dir / genome_id
+        return dir / f'{genome_id}.{extension}' if extension else dir / genome_id
     else:
         file = target_dir / f'{genome_id}.{program_name}'
         if file.exists() and file.is_dir():
@@ -418,7 +429,7 @@ def register_annotator(define_annotator):
         positive_count = 0
         if results_complete:
             positive_count = param['read'](genome, contig_dict, db_connection, result_files)
-        log('({}) {} complete. Found {}.', (genome.name, param['purpose'], positive_count))
+        log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
         return 0
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator

@@ -10,9 +10,7 @@ from metaerg.datatypes import functional_genes
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Should execute the helper programs to complete the analysis"""
-    gbk_file = context.spawn_file('gbk', genome.name)
-    if context.MULTI_MODE:
-        gbk_file = Path(gbk_file.parent, gbk_file.name + '.gbk')
+    gbk_file = context.spawn_file('gbk', genome.name, extension='gbk')
     with open(gbk_file, 'w') as handle:
         gbk.gbk_write_genome(handle, contig_dict, db_connection)
     shutil.rmtree(result_files[0])
@@ -59,11 +57,11 @@ def run_and_read_antismash():
 
 
 @context.register_html_writer
-def write_html(genome_name, db_connection, genome_properties:dict, dir):
+def write_html(genome, db_connection, dir):
     """need to copy the antismash result dir to the metaerg html dir."""
     dir.mkdir(exist_ok=True, parents=True)
-    antismash_result_dir = context.spawn_file('antismash', genome_name)
-    antismash_html_parent = Path(dir, genome_name, 'antismash')
+    antismash_result_dir = context.spawn_file('antismash', genome.name)
+    antismash_html_parent = Path(dir, genome.name, 'antismash')
     if antismash_html_parent.exists():
         shutil.rmtree(antismash_html_parent)
     if antismash_result_dir.exists():

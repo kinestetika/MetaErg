@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.27"
+VERSION = "2.3.29"
 
 
 def parse_arguments():
@@ -111,10 +111,10 @@ def annotate_genome(genome_name, input_fasta_file: Path):
 
     # (4) save results
     context.log(f'({genome_name}) Now writing annotations to .fasta, .gbk...')
-    faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR)
-    rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR)
-    gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR)
-    fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR)
+    faa_file = context.spawn_file("faa", genome_name, context.BASE_DIR, extension='faa')
+    rna_file = context.spawn_file("rna.fna", genome_name, context.BASE_DIR, extension='fna')
+    gbk_file = context.spawn_file("gbk", genome_name, context.BASE_DIR, extension='gbk')
+    fna_file = context.spawn_file("fna", genome_name, context.BASE_DIR, extension='fna')
     fasta.write_features_to_fasta(feature_db_connection, 'aa', faa_file, targets=('CDS',))
     fasta.write_features_to_fasta(feature_db_connection, 'nt', rna_file, targets=('rRNA tRNA tmRNA ncRNA retrotransposon'.split()))
     fasta.write_contigs_to_fasta(contig_dict, fna_file, feature_db_connection)
@@ -123,7 +123,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     feature_count = sqlite.count_features(feature_db_connection)
     if feature_count < 1e6:
         context.log(f'({genome_name}) Writing {feature_count} annotations to .feather format...')
-        feather_file = context.spawn_file("annotations.feather", genome_name, context.BASE_DIR)
+        feather_file = context.spawn_file("annotations.feather", genome_name, context.BASE_DIR, extension='pyarrow')
         rows = []
         for feature in sqlite.read_all_features(feature_db_connection):
             rows.append({k: str(v) for k, v in feature})

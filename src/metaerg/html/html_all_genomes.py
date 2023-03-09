@@ -1,44 +1,16 @@
-import ast
-import re
 from pathlib import Path
 
-from metaerg import context
-from metaerg.datatypes import fasta
+from metaerg.datatypes import sqlite
 
 def write_html(db_connection, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, 'index.html')
     with open(file, 'w') as handle:
-        handle.write(make_html())
+        handle.write(make_html(db_connection))
 
 
-def make_html() -> str:
+def make_html(db_connection) -> str:
     """Injects the content into the html base, returns the html."""
-    genome_list = []
-    with open(context.GENOME_NAME_MAPPING_FILE) as handle:
-        for line in handle:
-            genome_list.append(line.split())
-
-    checkm_results = {}
-    checkm_result_file = Path(context.CHECKM_DIR, 'storage', 'bin_stats_ext.tsv')
-    if checkm_result_file.exists():
-        with open(checkm_result_file) as handle:
-            for line in handle:
-                words = line.split('\t')
-                checkm_results[words[0]] = ast.literal_eval(words[1])
-
-    gtdbtk_results = {}
-    for file in (Path(context.GTDBTK_DIR, 'gtdbtk.ar53.summary.tsv'),
-                 Path(context.GTDBTK_DIR, 'gtdbtk.bac120.summary.tsv')):
-        if file.exists():
-            with open(file) as handle:
-                for line in handle:
-                    if line.startswith("user_genome\t"):
-                        continue
-                    words = line.split("\t")
-                    words[1] = re.sub('[a-z]__', ' ', words[1])
-                    gtdbtk_results[words[0]] = words[1]
-
     html = _make_html_template()
     left_aligned = 'file name classification'
     headers = ''
@@ -51,54 +23,19 @@ def make_html() -> str:
 
     colors = 'id=cr id=cr id=co id=cb id=cg'.split()
     genomes_html = ''
-    for new_name, old_name, contig_file in genome_list:
-        with fasta.FastaParser(contig_file) as fasta_reader:
-            contigs = [c for c in fasta_reader]
-        contigs.sort(key=lambda c: len(c['seq']), reverse=True)
-        genome_size = sum(len(c['seq']) for c in contigs) / 1e6
-        N50 = 0
-        for c in contigs:
-            N50 += len(c)
-            if N50 >= genome_size / 2:
-                N50 = len(c)
-                break
-        completeness = 0
-        contamination = 0
-        completeness_as_str = ''
-        contamination_as_str = ''
-        code = ''
-        gtdbtk_classification = ''
-        try:
-            checkm_result = checkm_results[old_name]
-            if not checkm_result:
-                checkm_result = checkm_results[new_name]
-            if checkm_result:
-                completeness = float(checkm_result["Completeness"])
-                contamination = float(checkm_result["Contamination"])
-                completeness_as_str = f'{completeness:.1f}'
-                contamination_as_str = f'{contamination:.1f}'
-                code = int(checkm_result["Translation table"])
-        except KeyError:
-            pass
-        try:
-            gtdbtk_classification = gtdbtk_results[old_name]
-            if not gtdbtk_classification:
-                gtdbtk_classification = gtdbtk_results[new_name]
-        except KeyError:
-            pass
-        link_target = Path(new_name, 'index.html')
-        new_name = f'<a href="{link_target}">{new_name}</a>'
-        genomes_html += '<tr>\n<td>{}</td><td>{}</td><td>{:.1f}</td><td>{}</td><td>{}</td><td {}>{}</td>' \
-                        '<td {}>{}</td><td>{}</td>\n</tr>'.format(old_name,
-                                                                       new_name,
-                                                                       genome_size,
-                                                                       N50,
-                                                                       code,
-                                                                       colors[int(max((completeness-76)/5,0))],
-                                                                       completeness_as_str,
-                                                                       colors[int(max((24-contamination)/5, 0))],
-                                                                       contamination_as_str,
-                                                                       gtdbtk_classification)
+    for genome in sqlite.read_all_genomes(db_connection):
+        name_html = f'<a href="{Path(genome.name, "index.html")}">{genome.name}</a>'
+        genomes_html += '<tr>\n<td>{}</td><td>{}</td><td>{:.1f}</td><td>{:,}</td><td>{}</td><td {}>{:.1f}</td>' \
+                        '<td {}>{:.1f}</td><td>{}</td>\n</tr>'.format(genome.input_fasta_file,
+                                                                       name_html,
+                                                                       genome.size / 1000000,
+                                                                       genome.n50_contig_length,
+                                                                       genome.genetic_code,
+                                                                       colors[int(max((genome.fraction_complete*100-76)/5,0))],
+                                                                       genome.fraction_complete * 100,
+                                                                       colors[int(max((24-genome.fraction_contaminated*100)/5, 0))],
+                                                                       genome.fraction_contaminated * 100,
+                                                                       genome.top_taxon)
     html = html.replace('GENOMES', genomes_html)
     return html
 

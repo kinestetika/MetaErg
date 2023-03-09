@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from metaerg import context
-from metaerg.datatypes.genome_properties import GENOME_PROPERTY_FORMATS
 
 @context.register_html_writer
 def write_html(genome, db_connection, dir):
@@ -17,7 +16,7 @@ def make_html(genome) -> str:
     html = html.replace('GENOME_NAME', genome.name)
     # genome properties
 
-    html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{v}</td></tr>\n' for k,v in genome.to_dict_pretty.items())))
+    html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{v}</td></tr>\n' for k,v in genome.to_dict_pretty().items())))
     # subsystem_summary
     sssummary = genome.subsystem_summary
     html = html.replace('CONTENT_SUBSYSTEM_SUMMARY', ''.join((f'<tr><td>{k}</td><td><a href="#{k}">{v:{"," if isinstance(v, int) else ".1%"}}</a></td></tr>\n'

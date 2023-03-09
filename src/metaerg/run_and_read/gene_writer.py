@@ -1,10 +1,8 @@
-import pandas as pd
-
 from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
-def _run_programs(genome, contig_dict, feature_data: pd.DataFrame, result_files):
+def _run_programs(genome, contig_dict, db_connection, result_files):
     pass
 
 
