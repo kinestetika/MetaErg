@@ -16,15 +16,15 @@ def make_html(genome) -> str:
     html = _make_html_template()
     html = html.replace('GENOME_NAME', genome.name)
     # genome properties
-    html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{genome_properties[k]:{GENOME_PROPERTY_FORMATS[k]}}</td></tr>\n'
-                                                       for k in GENOME_PROPERTY_FORMATS.keys())))
+
+    html = html.replace('CONTENT_PROPERTIES', ''.join((f'<tr><td>{k}</td><td>{v}</td></tr>\n' for k,v in genome.to_dict_pretty.items())))
     # subsystem_summary
-    sssummary = genome_properties['subsystem_summary']
+    sssummary = genome.subsystem_summary
     html = html.replace('CONTENT_SUBSYSTEM_SUMMARY', ''.join((f'<tr><td>{k}</td><td><a href="#{k}">{v:{"," if isinstance(v, int) else ".1%"}}</a></td></tr>\n'
                                                              for k, v in sssummary.items() if (isinstance(v, float) and v>=0.5) or isinstance(v, int) and v>0)))
     # subsystem_data
     subsystem_html = ''
-    subsystem_data = genome_properties['subsystems']
+    subsystem_data = genome.subsystems
     for subsystem, subsystem_genes in subsystem_data.items():
         subsystem_html += f'<a id="{subsystem}"><b id=f>{subsystem}</b></a>'
         if 'Secondary-metabolites' == subsystem:

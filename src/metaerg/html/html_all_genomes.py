@@ -5,7 +5,7 @@ from pathlib import Path
 from metaerg import context
 from metaerg.datatypes import fasta
 
-def write_html(dir):
+def write_html(db_connection, dir):
     dir.mkdir(exist_ok=True, parents=True)
     file = Path(dir, 'index.html')
     with open(file, 'w') as handle:

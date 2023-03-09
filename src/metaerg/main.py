@@ -17,7 +17,7 @@ from metaerg import registry
 from metaerg.datatypes import functional_genes
 from metaerg.datatypes import fasta
 from metaerg.datatypes import gbk
-from metaerg.datatypes.genome_properties import compute_genome_properties, write_genome_properties_to_xls
+from metaerg.datatypes.excel import write_genomes_to_xls
 from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
@@ -139,10 +139,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     current_progress['visualization'] = context.PROGRESS_COMPLETE
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
-    genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
-    genome_db_connection = sqlite.connect_to_db(genome_db_file)
-    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, genome=genome) this needs thought
-    return genome_properties
+    return genome
 
 
 def main():
@@ -174,8 +171,10 @@ def main():
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
+        genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
+        sqlite.create_db(genome_db_file, target='Genomes')
+        genome_db_connection = sqlite.connect_to_db(genome_db_file, target='Genomes')
         functional_genes.init_functional_gene_config()
-        annotation_summaries = {}
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
@@ -183,18 +182,19 @@ def main():
                     outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
             for genome_name, future in outcomes.items():
                 try:
-                    annotation_summaries[genome_name] = future.result()
+                    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, genome=future.result())
                 except Exception:
                     context.log(f'({genome_name}) Error while processing:')
                     raise
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                annotation_summaries[genome_name] = annotate_genome(genome_name, contig_file)
+                sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
+                                            genome=annotate_genome(genome_name, contig_file))
         tmhmm.cleanup(context.TEMP_DIR)
-        context.log('Now writing all-genomes overview html...')
-        html_all_genomes.write_html(context.HTML_DIR)
-        context.log('Now writing excel files with functional genes per genome...')
-        write_genome_properties_to_xls(annotation_summaries)
+        context.log('Now writing all-genomes overview to html...')
+        html_all_genomes.write_html(genome_db_connection, context.HTML_DIR)
+        context.log('Now writing all-genomes overview to excel...')
+        write_genomes_to_xls(genome_db_connection)
         context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

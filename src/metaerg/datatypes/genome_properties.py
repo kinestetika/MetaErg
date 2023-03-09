@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 from collections import Counter
 
@@ -7,7 +6,6 @@ from openpyxl.styles import Font
 
 from metaerg import context
 from metaerg.datatypes import sqlite
-from metaerg.datatypes.fasta import load_contigs
 from metaerg.datatypes import functional_genes
 from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
 
@@ -112,90 +110,5 @@ def compute_genome_properties(genome_name: str, input_fasta_file: Path, contig_d
         subsystem_completeness = functional_genes.get_subsystem_completeness(subsystem, subsystem_genes)
         properties['subsystem_summary'][subsystem] = subsystem_completeness
     return properties
-
-
-def write_genome_properties_to_xls(genome_property_dict: dict):
-    excel_file = context.BASE_DIR / 'genome_properties.xls'
-    if not genome_property_dict:
-        db_files = [context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
-                         for genome_name in context.GENOME_NAMES]
-        fna_files = [context.spawn_file("fna", genome_name, context.BASE_DIR)
-                     for genome_name in context.GENOME_NAMES]
-        genome_name_mappings = {}
-        with open(context.GENOME_NAME_MAPPING_FILE) as name_mappings:
-            for line in name_mappings:
-                w = line.split()
-                genome_name_mappings[w[0]] = Path(w[2])
-        genome_property_dict = {}
-        for db_file, contig_file in zip(db_files, fna_files):
-            genome_name = contig_file.stem
-            contig_dict = load_contigs(genome_name, contig_file, delimiter='xxxx')
-            db_connection = sqlite.connect_to_db(db_file)
-            genome_property_dict[genome_name] = compute_genome_properties(genome_name,
-                                                                          genome_name_mappings.get(genome_name, 'unknown'),
-                                                                          contig_dict, db_connection)
-
-    e_workbook = openpyxl.Workbook()
-    e_column = 3
-    black = Font(color="000000")
-    grey = Font(color="AAAAAA")
-    green = Font(color="009900")
-    rows_for_taxon = max(len(gp['classification (top taxon)'].split('; ')) for gp in genome_property_dict.values())
-    for genome_name, genome_properties in genome_property_dict.items():
-        e_sheet = e_workbook.active
-        row = 1
-        e_sheet.cell(row=row, column=1).value = 'genome properties'
-        for k in GENOME_PROPERTY_FORMATS.keys():
-            if 'subsystems' == k or 'classification (top taxon)' == k:
-                continue
-            e_sheet.cell(row=row, column=2).value = k
-            value = genome_properties[k]
-            if '%' in GENOME_PROPERTY_FORMATS[k]:
-                value *= 100
-            if m := re.search(r'\d', GENOME_PROPERTY_FORMATS[k]):
-                value = round(value, int(m.group(0)))
-            e_sheet.cell(row=row, column=e_column).value = value
-            row += 1
-
-        e_sheet.cell(row=row, column=1).value = 'classification (top taxon)'
-        for k, w in zip('kingdom phylum class order family genus species rank rank rank rank'.split(),
-                        genome_properties['classification (top taxon)'].split('; ')):
-            e_sheet.cell(row=row, column=2).value = k
-            e_sheet.cell(row=row, column=e_column).value = w
-            row += 1
-        row += max(0, rows_for_taxon - len(genome_properties['classification (top taxon)'].split('; ')))
-
-        e_sheet.cell(row=row, column=1).value = 'physiology summary'
-        for subsystem, value in genome_properties['subsystem_summary'].items():
-            if isinstance(value, float):
-                value *= 100
-                value = round(value, 0)
-                if value >= 80:
-                    color = green
-                elif value < 51:
-                    color = grey
-                else:
-                    color = black
-                subsystem += ' (% complete)'
-            else:
-                if value > 0:
-                    color = green
-                else:
-                    color = grey
-                subsystem += ' (# genes)'
-            e_sheet.cell(row=row, column=2).value = subsystem
-            if color is not grey:
-                e_sheet.cell(row=row, column=e_column).value = value
-            e_sheet.cell(row=row, column=e_column).font = color
-            row += 1
-
-        for subsystem, genes in genome_properties['subsystems'].items():
-            e_sheet.cell(row=row, column=1).value = subsystem
-            for gene, feature_ids in genes.items():
-                e_sheet.cell(row=row, column=2).value = gene
-                e_sheet.cell(row=row, column=e_column).value = ', '.join(feature_ids)
-                row += 1
-        e_column += 1
-    e_workbook.save(excel_file)
 
 

@@ -178,13 +178,37 @@ SQLITE_UPDATE_GENOME_SYNTAX = '''UPDATE genomes SET
 WHERE rowid = ?'''
 
 
+GENOME_FORMATS = {'genome name': '<',
+                  'input fasta file': '<',
+                  '# contigs': ',',
+                  'size': ',',
+                  '% GC': '.2%',
+                  'N50 contig length': ',',
+                  '# proteins': ',',
+                  '% coding': '.1%',
+                  'mean protein length (aa)': '.0f',
+                  '# ribosomal RNA': ',',
+                  '# transfer RNA': ',',
+                  '# non-coding RNA': ',',
+                  '# retrotransposons': ',',
+                  '# CRISPR repeats': ',',
+                  '# other repeats': ',',
+                  '# total features': ',',
+                  '% repeats': '.1%',
+                  'classification (top taxon)': '<',
+                  '% of CDS classified to top taxon': '.1%',
+                  '% of CDS that could be classified': '.1%',
+                  'codon usage bias': '.3f',
+                  'doubling_time (days)': '.1f'
+                   }
 class Genome:
-    def __init__(self, rowid=0, name='', input_fasta_file='', size=0, number_of_contigs=0, fraction_gc=0.0, n50_contig_length=0,
-                 number_of_features=0, number_of_proteins=0, number_of_ribosomal_rna=0, number_of_transfer_rna=0,
-                 number_of_noncoding_rna=0, number_of_retrotransposons=0, number_of_crispr_repeats=0,
-                 number_of_other_repeats=0, fraction_coding=0.0, fraction_repeats=0.0, genetic_code=0,
-                 mean_protein_length=0, top_taxon='', fraction_classified=0.0, fraction_classified_to_top_taxon=0.0,
-                 codon_usage_bias=0.0, doubling_time=0.0, subsystems=None, subsystem_summary=None):
+    def __init__(self, rowid=0, name='', input_fasta_file='', size=0, number_of_contigs=0, fraction_gc=0.0,
+                 n50_contig_length=0, fraction_complete=0.0, fraction_contaminated=0.0, number_of_features=0,
+                 number_of_proteins=0, number_of_ribosomal_rna=0, number_of_transfer_rna=0, number_of_noncoding_rna=0,
+                 number_of_retrotransposons=0, number_of_crispr_repeats=0, number_of_other_repeats=0,
+                 fraction_coding=0.0, fraction_repeats=0.0, genetic_code=0, mean_protein_length=0, top_taxon='',
+                 fraction_classified=0.0, fraction_classified_to_top_taxon=0.0, codon_usage_bias=0.0, doubling_time=0.0,
+                 subsystems=None, subsystem_summary=None):
         self.rowid = rowid
         self.name = name
         self.input_fasta_file = input_fasta_file
@@ -192,6 +216,8 @@ class Genome:
         self.number_of_contigs = number_of_contigs
         self.fraction_gc = fraction_gc
         self.n50_contig_length = n50_contig_length
+        self.fraction_complete = fraction_complete
+        self.fraction_contaminated = fraction_contaminated
         self.number_of_features = number_of_features
         self.number_of_proteins = number_of_proteins
         self.number_of_ribosomal_rna = number_of_ribosomal_rna
@@ -225,6 +251,20 @@ class Genome:
     def __str__(self):
         return '{}:\n{}'.format(type(self).__name__, '\n'.join(f'  {k:26}: {v}' for k, v in self))
 
+    def to_dict_pretty(self) -> dict[str, str]:
+        property_list = {}
+        for k, v in self:
+            if 'subsystem' in k:
+                continue
+            k = k.replace('_', ' ')
+            if isinstance(k, int):
+                property_list[k] = f'{v:,}'
+            elif isinstance(k, float):
+                property_list[k] = f'{v:.2f}'
+            else:
+                property_list[k] = f'{v!r}'
+        return property_list
+
     def __len__(self):
         return len(self.__dict__.items())
 
@@ -249,7 +289,6 @@ def connect_to_db(sql_db_file, target='Features'):
     elif 'Genomes' == target:
         connection.row_factory = genome_factory
     return connection
-
 
 def create_db(sql_db_file, target='Features'):
     sql_db_file.unlink(missing_ok=True)
