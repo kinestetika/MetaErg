@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.31--"
+VERSION = "2.3.32"
 
 
 def parse_arguments():
@@ -72,7 +72,7 @@ def parse_arguments():
 def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'Started annotation of {genome_name}...')
     current_progress = context.parse_metaerg_progress(genome_name)
-    if context.ANNOTATOR_STATUS['visualization'] != context.UPDATE_ANNOTATOR and \
+    if context.ANNOTATOR_STATUS['visualization'] != context.FORCE_ANNOTATOR and \
             current_progress.get('visualization', 0) == context.PROGRESS_COMPLETE:
         context.log(f'({genome_name}) already completed!')
         return
@@ -182,7 +182,9 @@ def main():
                     outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
             for genome_name, future in outcomes.items():
                 try:
-                    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, genome=future.result())
+                    genome = genome=future.result()
+                    if genome:
+                        sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, )
                 except Exception:
                     context.log(f'({genome_name}) Error while processing:')
                     raise

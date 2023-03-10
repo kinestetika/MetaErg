@@ -100,6 +100,8 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         log(f'Ready to install helper programs at {BIN_DIR} with {PATH_TO_SIGNALP}, {PATH_TO_TMHMM}.')
         return
 
+    if not database_dir:
+        raise Exception("No database dir provided or database dir is not a dir.")
     DATABASE_DIR = Path(database_dir).absolute()
     if not DATABASE_DIR.is_dir():
         raise Exception("No database dir provided or database dir is not a dir.")
@@ -171,17 +173,21 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         if update_annotations:
             for k in ANNOTATOR_STATUS.keys():
                 ANNOTATOR_STATUS[k] = UPDATE_ANNOTATOR
+            ANNOTATOR_STATUS['visualization'] = FORCE_ANNOTATOR
         if force:
             # force implies update for other annotators
             for k in ANNOTATOR_STATUS.keys():
                 ANNOTATOR_STATUS[k] = UPDATE_ANNOTATOR
             if force == 'all':
+                log(f'Force set to all. Will rerun all helper programs.')
                 for k in ANNOTATOR_STATUS.keys():
                     ANNOTATOR_STATUS[k] = FORCE_ANNOTATOR
             else:
                 for step in force.split(','):
                     try:
                         ANNOTATOR_STATUS[step] = FORCE_ANNOTATOR
+                        ANNOTATOR_STATUS['visualization'] = FORCE_ANNOTATOR
+                        log(f'Rerunning "{step}" forced.')
                     except KeyError:
                         log(f'FATAL: Unknown annotation step "{step}". Valid steps are {", ".join(ANNOTATOR_STATUS.keys())}')
                         exit()
