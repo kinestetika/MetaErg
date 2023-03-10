@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.32"
+VERSION = "2.3.33"
 
 
 def parse_arguments():
@@ -184,7 +184,7 @@ def main():
                 try:
                     genome = genome=future.result()
                     if genome:
-                        sqlite.add_new_genome_to_db(sql_connection=genome_db_connection, )
+                        sqlite.add_new_genome_to_db(genome_db_connection, genome)
                 except Exception:
                     context.log(f'({genome_name}) Error while processing:')
                     raise
