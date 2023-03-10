@@ -7,27 +7,15 @@ from metaerg.datatypes import sqlite
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
-    genetic_code_file = context.spawn_file('genetic_code', genome.name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
     if not context.TRANSLATION_TABLE:
         context.run_external(f'prodigal -p meta -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
     else:
-        for table in context.TRANSLATION_TABLE:
-            context.run_external(f'prodigal -g {table} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
-            count = 0
-            total_length = 0
-            with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
-                for seq_rec in fasta_reader:
-                    count += 1
-                    total_length += len(seq_rec['seq'])
-            mean = total_length / count
-            if mean > 200:
-                context.log(f'({genome.name}) Acceptable coding sequence prediction with translation table {table}, mean length {mean:.1f} aa.')
-                with open(genetic_code_file, 'w') as handle:
-                    handle.write(table)
-                break
-            else:
-                context.log(f'({genome.name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
+        # prodigal should have taken care of the genetic code...
+        if not genome.genetic_code:
+            raise(f'({genome.name}) No genetic code selected for prodigal to run, aborting!')
+        context.run_external(
+            f'prodigal -g {genome.genetic_code} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
@@ -92,8 +80,6 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 feature.notes = 'partial protein'
             sqlite.add_new_feature_to_db(db_connection, feature)
             count += 1
-        genetic_code_file = context.spawn_file('genetic_code', genome.name)
-        genome.genetic_code = int(genetic_code_file.read_text())
 
         context.log(f'({genome.name}) Dropped {dropped_repeat_count}/{repeat_count_before_arbitration} repeats and'
                     f' rejected {rejected_cds_count} CDS during arbitration of prodigal results.')

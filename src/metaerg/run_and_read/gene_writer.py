@@ -26,6 +26,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             genome.number_of_ribosomal_rna += 1
         elif feature.type == 'tRNA':
             genome.number_of_transfer_rna += 1
+        elif feature.type == 'tmRNA':
+            genome.number_of_transfer_messenger_rna += 1
         elif feature.type == 'ncRNA':
             genome.number_of_noncoding_rna += 1
         elif feature.type == 'retrotransposon':

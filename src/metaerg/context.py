@@ -429,7 +429,7 @@ def register_annotator(define_annotator):
         positive_count = 0
         if results_complete:
             positive_count = param['read'](genome, contig_dict, db_connection, result_files)
-        log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
+        log('({}) {} complete. Found {}.', (genome.name, param['purpose'], positive_count))
         return 0
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator

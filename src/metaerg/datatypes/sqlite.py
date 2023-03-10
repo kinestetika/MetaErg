@@ -135,6 +135,7 @@ SQLITE_CREATE_GENOME_TABLE_SYNTAX = '''CREATE TABLE genomes(
     number_of_proteins INT,
     number_of_ribosomal_rna INT,
     number_of_transfer_rna INT,
+    number_of_transfer_messenger_rna INT,
     number_of_noncoding_rna INT,
     number_of_retrotransposons INT,
     number_of_crispr_repeats INT,
@@ -164,6 +165,7 @@ SQLITE_UPDATE_GENOME_SYNTAX = '''UPDATE genomes SET
     number_of_proteins = ?,
     number_of_ribosomal_rna = ?,
     number_of_transfer_rna = ?,
+    number_of_transfer_messenger_rna = ?,
     number_of_noncoding_rna = ?,
     number_of_retrotransposons = ?,
     number_of_crispr_repeats = ?,
@@ -193,6 +195,7 @@ GENOME_FORMATS = {'genome name': '<',
                   'mean protein length (aa)': '.0f',
                   '# ribosomal RNA': ',',
                   '# transfer RNA': ',',
+                  '# transfer-messenger RNA'
                   '# non-coding RNA': ',',
                   '# retrotransposons': ',',
                   '# CRISPR repeats': ',',
@@ -208,10 +211,11 @@ GENOME_FORMATS = {'genome name': '<',
 class Genome:
     def __init__(self, rowid=0, name='', input_fasta_file='', size=0, number_of_contigs=0, fraction_gc=0.0,
                  n50_contig_length=0, fraction_complete=0.0, fraction_contaminated=0.0, number_of_features=0,
-                 number_of_proteins=0, number_of_ribosomal_rna=0, number_of_transfer_rna=0, number_of_noncoding_rna=0,
-                 number_of_retrotransposons=0, number_of_crispr_repeats=0, number_of_other_repeats=0,
-                 fraction_coding=0.0, fraction_repeats=0.0, genetic_code=0, mean_protein_length=0, top_taxon='',
-                 fraction_classified=0.0, fraction_classified_to_top_taxon=0.0, codon_usage_bias=0.0, doubling_time=0.0,
+                 number_of_proteins=0, number_of_ribosomal_rna=0, number_of_transfer_rna=0,
+                 number_of_transfer_messenger_rna=0, number_of_noncoding_rna=0, number_of_retrotransposons=0,
+                 number_of_crispr_repeats=0, number_of_other_repeats=0, fraction_coding=0.0, fraction_repeats=0.0,
+                 genetic_code=0, mean_protein_length=0, top_taxon='', fraction_classified=0.0,
+                 fraction_classified_to_top_taxon=0.0, codon_usage_bias=0.0, doubling_time=0.0,
                  subsystems=None, subsystem_summary=None):
         self.rowid = rowid
         self.name = name
@@ -226,6 +230,7 @@ class Genome:
         self.number_of_proteins = number_of_proteins
         self.number_of_ribosomal_rna = number_of_ribosomal_rna
         self.number_of_transfer_rna = number_of_transfer_rna
+        self.number_of_transfer_messenger_rna = number_of_transfer_messenger_rna
         self.number_of_noncoding_rna = number_of_noncoding_rna
         self.number_of_retrotransposons = number_of_retrotransposons
         self.number_of_crispr_repeats = number_of_crispr_repeats
@@ -315,7 +320,7 @@ def add_new_feature_to_db(sql_connection, feature: Feature):
 def add_new_genome_to_db(sql_connection, genome: Genome):
     genome_as_tuple = tuple(str(v) for k, v in genome)
     cursor = sql_connection.cursor()
-    cursor.execute('INSERT INTO genomes VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?, ?, ?)', genome_as_tuple)
+    cursor.execute('INSERT INTO genomes VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?)', genome_as_tuple)
     sql_connection.commit()
 
 
