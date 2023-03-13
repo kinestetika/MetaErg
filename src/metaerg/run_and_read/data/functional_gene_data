@@ -722,167 +722,101 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 
 >Crispr-Cas systems, CAS-I
 # see https://www.nature.com/articles/nature21059
-DEDDh 3-5 exonuclease domain family DEDDh
-PD-DExK Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
-PrimPol Uncharacterized protein COG4951
-RT Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
-cas1 CRISPR/Cas system-associated protein Cas1
-cas2 CRISPR/Cas system-associated protein Cas2
-cas3 CRISPR/Cas system-associated protein Cas3
-cas3HD CRISPR/Cas system-associated protein Cas3-prime-prime
-cas4 CRISPR/Cas system-associated protein Cas4
-cas6 Class 1 CRISPR-associated endoribonuclease Cas6
-casR CRISPR/Cas system-associated transcriptional regulator CasRa
-csx15 CRISPR/Cas system-associated protein Csx15
-csx16 CRISPR/Cas system-associated protein Csx16
-csx18 csx18 (cls000006)
-csx20 csx20 (cls000023)
-csx3 CRISPR/Cas system-associated protein Csx3
-
->Crispr-Cas systems, CAS-I-A
-cas5a cas5a (mkCas0161)
-cas8a1 CRISPR/Cas system-associated protein Csa8a1
-cas8a2 CRISPR/Cas system-associated protein Csa8a2
-cas8a3 cas8a3 (cls000290)
-cas8a4 cas8a4 (cls000706)
-cas8a5 cas8a5 (cls000809)
-cas8a6 cas8a6 (cls000881)
-cas8a7 cas8a7 (cls000157)
-cas8a8 cas8a8 (mkCas0180)
-csa3 csa3 (cls000179)
-csa5gr11 CRISPR/Cas system-associated protein Csa5
-
->Crispr-Cas systems, CAS-I-B
-cas11b cas11b (mkCas0150)
-cas7b CRISPR/Cas system-associated RAMP superfamily protein Cas7
-cas8b1 CRISPR/Cas system-associated protein Cas8b1
-cas8b10 cas8b10 (mkCas0151)
-cas8b2 CRISPR/Cas system-associated protein Cas8b2
-cas8b3 CRISPR/Cas system-associated protein Cas8b3
-cas8b4 CRISPR/Cas system-associated protein Cas8b4
-cas8b5 cas8b5 (mkCas0131)
-cas8b6 cas8b6 (mkCas0111)
-cas8b7 cas8b7 (mkCas0158)
-cas8b8 cas8b8 (cls000685)
-cas8b9 cas8b9 (mkCas0203)
-
->Crispr-Cas systems, CAS-I-C
-cas7 CRISPR/Cas system-associated RAMP superfamily protein Cas7
-cas8c CRISPR/Cas system-associated protein Cas8c
-
->Crispr-Cas systems, CAS-I-D
-cas10d CRISPR/Cas system-associated protein Cas10d
-cas11d cas11d (mkCas0094)
-csc1gr5 CRISPR/Cas system-associated protein Csc1
-csc2gr7 CRISPR/Cas system-associated protein Csc2
-
->Crispr-Cas systems, CAS-I-E
-cas5 CRISPR/Cas system-associated RAMP superfamily protein Cas5
-cas6e CRISPR/Cas system-associated RAMP superfamily protein Cas6e
-cas8e CRISPR/Cas system-associated protein Cas8e
-cse2gr11 CRISPR/Cas system-associated protein Cse2
-
->Crispr-Cas systems, CAS-I-F
-cas3f CRISPR/Cas system-associated protein Cas3f/Cas2
-cas5f CRISPR/Cas system-associated RAMP superfamily protein Csy2/Cas5f
-cas6f CRISPR/Cas system-associated RAMP superfamily protein Cas6f
-cas7f CRISPR/Cas system-associated RAMP superfamily protein Csy3/Cas7f
-cas8f CRISPR/Cas system-associated protein Csy1/Cas8f
-
->Crispr-Cas systems, CAS-I-U
-cas5u CRISPR/Cas system-associated protein Csb2/Cas5u
-cas8u1 CRISPR/Cas system-associated protein Csx17/Cas8u1
-cas8u2 CRISPR/Cas system-associated protein Csx14/Cas8u2
-csb1gr7 CRISPR-associated protein GSU0053 (Cas_GSU0053)
-csb2gr5 csb2gr5 (cls000315)
-csb3 CRISPR/Cas system-associated RAMP superfamily protein Csb3
-
->Crispr-Cas systems, CAS-II
-cas1 CRISPR/Cas system-associated protein Cas1
-cas2 CRISPR/Cas system-associated protein Cas2
-cas4 CRISPR/Cas system-associated protein Cas4
-
->Crispr-Cas systems, CAS-II-A
-cas9 CRISPR/Cas system-associated protein Cas9
-csn2 CRISPR/Cas system-associated protein Csn2
-
->Crispr-Cas systems, CAS-II-B
-cas9 CRISPR/Cas system-associated protein Cas9
-
->Crispr-Cas systems, CAS-II-C
-cas9 CRISPR/Cas system-associated protein Cas9
-
->Crispr-Cas systems, CAS-III
-PD-DExK Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
-PrimPol Uncharacterized protein COG4951
-RT Reverse transcriptase (RNA-dependent DNA polymerase)
-WYL Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
-cas1 CRISPR/Cas system-associated protein Cas1
-cas10 CRISPR/Cas system-associated protein Cas10
-cas2 CRISPR/Cas system-associated protein Cas2
-cas6 Class 1 CRISPR-associated endoribonuclease Cas6
-csx1 CRISPR/Cas system-associated protein Csx1
-csx15 CRISPR/Cas system-associated protein Csx15
-csx16 CRISPR/Cas system-associated protein Csx16
-csx18 csx18 (cls000006)
-csx20 csx20 (cls000023)
-csx3 CRISPR/Cas system-associated protein Csx3
-
->Crispr-Cas systems, CAS-III-A
-csm2gr11 CRISPR/Cas system-associated protein Csm2
-csm3gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm3gr7
-csm4gr5 CRISPR/Cas system-associated RAMP superfamily protein Csm4gr5
-csm5gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm5gr7
-csm6 CRISPR/Cas system-associated protein Csm6
-csx21 csx21 (mkCas0076)
-csx22 csx22 (mkCas0064)
-
->Crispr-Cas systems, CAS-III-B
-cmr3gr5 CRISPR/Cas system-associated RAMP superfamily protein Cmr3gr5
-cmr4gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr4gr7
-cmr5gr11 CRISPR/Cas system-associated protein Cmr5gr11
-cmr6gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr6gr7
-cmr7 cmr7 (mkCas0152)
-cmr8gr7 cmr8gr7 (mkCas0143)
-
->Crispr-Cas systems, CAS-III-C
-cmr1gr7 CRISPR/Cas system-associated RAMP superfamily protein Cmr1gr7
-
->Crispr-Cas systems, CAS-III-D
-csm3gr7 CRISPR/Cas system-associated RAMP superfamily protein Csm3gr7
-csx10gr5 CRISPR/Cas system-associated RAMP superfamily protein Csx10gr5
-csx19 csx19 (cls000059)
-csx23 csx23 (mkCas0160)
-csx24 csx24 (mkCas0135)
-csx25 csx25 (mkCas0197)
-csx26 csx26 (mkCas0156)
-
->Crispr-Cas systems, CAS-IV-A
-DinG CRISPR/Cas system-associated DinG family helicase Csf4
-csf1gr8 CRISPR/Cas system-associated protein Csf1gr8
-csf2gr7 CRISPR/Cas system-associated RAMP superfamily protein Csf2gr7
-csf3gr5 CRISPR/Cas system-associated RAMP superfamily protein Csf3gr5
-csf4gr11 csf4gr11 (mkCas0072)
-csf5gr6 csf5gr6 (mkCas0159)
-
->Crispr-Cas systems, CAS-V
-cas1 CRISPR/Cas system-associated protein Cas1
-cas4 CRISPR/Cas system-associated protein Cas4
-
->Crispr-Cas systems, CAS-V-A
-cpf1 cpf1 (mkCas0192)
-
->Crispr-Cas systems, CAS-V-B
-c2c1 (c2c1)
-
->Crispr-Cas systems, CAS-VI-A
-c2c2 (c2c2)
-
->Crispr-Cas systems, CAS-VI-C
-c2c3 (c2c3)
-
->Crispr-Cas systems, undefined
+DEDDh CAS-I 3-5 exonuclease domain family DEDDh
+PD-DExK CAS-I/III Predicted nuclease of restriction endonuclease-like (RecB) superfamily,  DUF1016 family
+PrimPol CAS-I/III Uncharacterized protein COG4951
+RT CAS-I/III Reverse transcriptase (RNA-dependent DNA polymerase)
+WYL CAS-I/III Predicted DNA-binding transcriptional regulator YafY, contains an HTH and WYL domains
+cas1 CAS-I/II/III/V CRISPR/Cas system-associated protein Cas1
+cas2 CAS-I/II/III CRISPR/Cas system-associated protein Cas2
+cas3 CAS-I CRISPR/Cas system-associated protein Cas3
+cas3HD CAS-I CRISPR/Cas system-associated protein Cas3-prime-prime
+cas4 CAS-I/II/V CRISPR/Cas system-associated protein Cas4
+cas6 CAS-I/III Class 1 CRISPR-associated endoribonuclease Cas6
+casR CAS-I CRISPR/Cas system-associated transcriptional regulator CasRa
+csx15 CAS-I/III CRISPR/Cas system-associated protein Csx15
+csx16 CAS-I/III CRISPR/Cas system-associated protein Csx16
+csx18 CAS-I/III csx18 (cls000006)
+csx20 CAS-I/III csx20 (cls000023)
+csx3 CAS-I/III CRISPR/Cas system-associated protein Csx3
+cas5a CAS-I-A cas5a (mkCas0161)
+cas8a1 CAS-I-A CRISPR/Cas system-associated protein Csa8a1
+cas8a2 CAS-I-A CRISPR/Cas system-associated protein Csa8a2
+cas8a3 CAS-I-A cas8a3 (cls000290)
+cas8a4 CAS-I-A cas8a4 (cls000706)
+cas8a5 CAS-I-A cas8a5 (cls000809)
+cas8a6 CAS-I-A cas8a6 (cls000881)
+cas8a7 CAS-I-A cas8a7 (cls000157)
+cas8a8 CAS-I-A cas8a8 (mkCas0180)
+csa3 CAS-I-A csa3 (cls000179)
+csa5gr11 CAS-I-A CRISPR/Cas system-associated protein Csa5
+cas11b CAS-I-B cas11b (mkCas0150)
+cas7b CAS-I-B CRISPR/Cas system-associated RAMP superfamily protein Cas7
+cas8b1 CAS-I-B CRISPR/Cas system-associated protein Cas8b1
+cas8b10 CAS-I-B cas8b10 (mkCas0151)
+cas8b2 CAS-I-B CRISPR/Cas system-associated protein Cas8b2
+cas8b3 CAS-I-B CRISPR/Cas system-associated protein Cas8b3
+cas8b4 CAS-I-B CRISPR/Cas system-associated protein Cas8b4
+cas8b5 CAS-I-B cas8b5 (mkCas0131)
+cas8b6 CAS-I-B cas8b6 (mkCas0111)
+cas8b7 CAS-I-B cas8b7 (mkCas0158)
+cas8b8 CAS-I-B cas8b8 (cls000685)
+cas8b9 CAS-I-B cas8b9 (mkCas0203)
+cas7 CAS-I-C CRISPR/Cas system-associated RAMP superfamily protein Cas7
+cas8c CAS-I-C CRISPR/Cas system-associated protein Cas8c
+cas10d CAS-I-D CRISPR/Cas system-associated protein Cas10d
+cas11d CAS-I-D cas11d (mkCas0094)
+csc1gr5 CAS-I-D CRISPR/Cas system-associated protein Csc1
+csc2gr7 CAS-I-D CRISPR/Cas system-associated protein Csc2
+cas5 CAS-I-E CRISPR/Cas system-associated RAMP superfamily protein Cas5
+cas6e CAS-I-E CRISPR/Cas system-associated RAMP superfamily protein Cas6e
+cas8e CAS-I-E CRISPR/Cas system-associated protein Cas8e
+cse2gr11 CAS-I-E CRISPR/Cas system-associated protein Cse2
+cas3f CAS-I-F CRISPR/Cas system-associated protein Cas3f/Cas2
+cas5f CAS-I-F CRISPR/Cas system-associated RAMP superfamily protein Csy2/Cas5f
+cas6f CAS-I-F CRISPR/Cas system-associated RAMP superfamily protein Cas6f
+cas7f CAS-I-F CRISPR/Cas system-associated RAMP superfamily protein Csy3/Cas7f
+cas8f CAS-I-F CRISPR/Cas system-associated protein Csy1/Cas8f
+cas5u CAS-I-U CRISPR/Cas system-associated protein Csb2/Cas5u
+cas8u1 CAS-I-U CRISPR/Cas system-associated protein Csx17/Cas8u1
+cas8u2 CAS-I-U CRISPR/Cas system-associated protein Csx14/Cas8u2
+csb1gr7 CAS-I-U CRISPR-associated protein GSU0053 (Cas_GSU0053)
+csb2gr5 CAS-I-U csb2gr5 (cls000315)
+csb3 CAS-I-U CRISPR/Cas system-associated RAMP superfamily protein Csb3
+cas9 CAS-II-A/B/C CRISPR/Cas system-associated protein Cas9
+csn2 CAS-II-A CRISPR/Cas system-associated protein Csn2
+cas10 CAS-III CRISPR/Cas system-associated protein Cas10
+csx1 CAS-III CRISPR/Cas system-associated protein Csx1
+csm2gr11 CAS-III-A CRISPR/Cas system-associated protein Csm2
+csm3gr7 CAS-III-A/D CRISPR/Cas system-associated RAMP superfamily protein Csm3gr7
+csm4gr5 CAS-III-A CRISPR/Cas system-associated RAMP superfamily protein Csm4gr5
+csm5gr7 CAS-III-A CRISPR/Cas system-associated RAMP superfamily protein Csm5gr7
+csm6 CAS-III-A CRISPR/Cas system-associated protein Csm6
+csx21 CAS-III-A csx21 (mkCas0076)
+csx22 CAS-III-A csx22 (mkCas0064)
+cmr3gr5 CAS-III-B CRISPR/Cas system-associated RAMP superfamily protein Cmr3gr5
+cmr4gr7 CAS-III-B CRISPR/Cas system-associated RAMP superfamily protein Cmr4gr7
+cmr5gr11 CAS-III-B CRISPR/Cas system-associated protein Cmr5gr11
+cmr6gr7 CAS-III-B CRISPR/Cas system-associated RAMP superfamily protein Cmr6gr7
+cmr7 CAS-III-B cmr7 (mkCas0152)
+cmr8gr7 CAS-III-B cmr8gr7 (mkCas0143)
+cmr1gr7 CAS-III-C CRISPR/Cas system-associated RAMP superfamily protein Cmr1gr7
+csx10gr5 CAS-III-D CRISPR/Cas system-associated RAMP superfamily protein Csx10gr5
+csx19 CAS-III-D csx19 (cls000059)
+csx23 CAS-III-D csx23 (mkCas0160)
+csx24 CAS-III-D csx24 (mkCas0135)
+csx25 CAS-III-D csx25 (mkCas0197)
+csx26 CAS-III-D csx26 (mkCas0156)
+DinG CAS-IV-A CRISPR/Cas system-associated DinG family helicase Csf4
+csf1gr8 CAS-IV-A CRISPR/Cas system-associated protein Csf1gr8
+csf2gr7 CAS-IV-A CRISPR/Cas system-associated RAMP superfamily protein Csf2gr7
+csf3gr5 CAS-IV-A CRISPR/Cas system-associated RAMP superfamily protein Csf3gr5
+csf4gr11 CAS-IV-A csf4gr11 (mkCas0072)
+csf5gr6 CAS-IV-A csf5gr6 (mkCas0159)
+cpf1 CAS-V-A cpf1 (mkCas0192)
+c2c1 CAS-V-B (c2c1)
+c2c2 CAS-VI-A (c2c2)
+c2c3 CAS-VI-C(c2c3)
 Cas9_archaeal cas9_archaeal
 CasX casX
 CasY casY
