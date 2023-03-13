@@ -115,6 +115,7 @@ YOu can use the following arguments when running metaerg:
                                             anchors).
                         trf                 Call tandem repeats.
                           
+
 --translation_table     Translation table(s) to be used when calling open reading frames with 
                         prodigal. Default: 11,25. If the mean ORF length is less than 200 amino-
                         acids, metaerg will rerun prodigal with the next translation table in the
@@ -135,7 +136,10 @@ YOu can use the following arguments when running metaerg:
                         C - build CDD
                         S - build/update community contributed HMM databases
                         A - build antismash database
-
+--checkm_dir            If you have previously used checkm or checkm2 to determine the quality of
+                        the MAGs/bins, you can specify the dir with the checkm or checkm2 results 
+                        here, and metaerg will integrate the estimated completeness and
+                        contamination into its output.
 --gtdbtk_dir            Use this argument with --create_database to point metaerg to the gtdbtk
                         database. It needs this to build its prokaryote blast database.
 --install_deps          Use this argument to install all helper programs on your system. You need
