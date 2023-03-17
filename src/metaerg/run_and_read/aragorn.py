@@ -35,7 +35,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
                 return
             else:
                 context.log(f'({genome.name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
-    raise(f'({genome.name}) Aborting - no suitable genetic code found in {context.TRANSLATION_TABLE}, see https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi')
+    raise(context.FatalException('No suitable genetic code found, aborting!'))
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:

@@ -13,7 +13,8 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     gbk_file = context.spawn_file('gbk', genome.name, extension='gbk')
     with open(gbk_file, 'w') as handle:
         gbk.gbk_write_genome(handle, contig_dict, db_connection)
-    shutil.rmtree(result_files[0])
+    if result_files[0].exists():
+        shutil.rmtree(result_files[0])
     context.run_external(f'antismash --genefinding-tool none --output-dir {result_files[0]} {gbk_file}')
 
 

@@ -412,6 +412,11 @@ def register_annotator(define_annotator):
             if all_programs_in_path:
                 try:
                     param['run'](genome, contig_dict, db_connection, result_files)
+                except FatalException as e:
+                    log('({}) Error while running {}: {}', (genome.name, param['purpose'],
+                                                            "".join(traceback.format_exception(e))))
+                    raise(Exception('({}) Error while running {}: {}', (genome.name, param['purpose'],
+                                                            "".join(traceback.format_exception(e)))))
                 except Exception as e:
                     log('({}) Error while running {}: {}', (genome.name, param['purpose'],
                                                             "".join(traceback.format_exception(e))))
@@ -451,3 +456,6 @@ def register_database_installer(database_installer):
     registry.DATABASE_INSTALLER_REGISTRY.append(database_installer)
     # print(len(registry.DATABASE_INSTALLER_REGISTRY))
     return database_installer
+
+class FatalException(Exception):
+    pass

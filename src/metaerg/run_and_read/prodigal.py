@@ -13,7 +13,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     else:
         # prodigal should have taken care of the genetic code...
         if not genome.genetic_code:
-            raise(f'({genome.name}) No genetic code selected for prodigal to run, aborting!')
+            raise(context.FatalException('No available genetic code for prodigal to predict protein-coding genes, aborting!'))
         context.run_external(
             f'prodigal -g {genome.genetic_code} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
 

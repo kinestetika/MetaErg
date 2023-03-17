@@ -133,7 +133,7 @@ def aggregate(db_connection):
 def get_subsystem_completeness(subsystem_name: str, genes: dict):
     denominator = 0
     positions_found = set()
-    total_positions = 0
+    relevant_feature_ids = set()  # this is for "unsorted" systems - we only want to count each feature once
     for gene_def in GENES:
         if gene_def.subsystem == subsystem_name:
             for d in gene_def.pathway_positions:
@@ -145,6 +145,7 @@ def get_subsystem_completeness(subsystem_name: str, genes: dict):
                     for p in gene_def.pathway_positions:
                         positions_found.add(p)
                 else:
-                    total_positions += 1
-    return len(positions_found) / denominator if denominator > 0 else total_positions
+                    for feature_id in genes[gene_def.gene]:
+                        relevant_feature_ids.add(feature_id)
+    return len(positions_found) / denominator if denominator > 0 else len(relevant_feature_ids)
 

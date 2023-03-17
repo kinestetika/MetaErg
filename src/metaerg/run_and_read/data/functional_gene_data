@@ -638,6 +638,8 @@ COG5524|NF038020|cd14965|cd15028 Bacteriorhodopsin and similar
 15 COG2142|PRK09488|TIGR02968 Succinate dehydrogenase (respiratory complex II), hydrophobic anchor subunit SdhD
 16 COG0114|PLN00134|PRK00485|PRK12425|PRK15389|PRK15390|PRK15391|PRK15392|PTZ00226|cd01362|TIGR00979 Fumarate hydratase
 17 PLN00106|PLN00112|PLN00135|PRK05086|PRK05442|PRK06223|PRK14025|PTZ00117|PTZ00325 Malate dehydrogenase
+18 TIGR01346|COG2224|PLN02892|PRK06498|PRK15063 Isocitrate Lyase AceA
+19 COG2225|TIGR01344|PLN02626|PRK02999|PRK08951|PRK09255|TIGR01345 Malate synthase AceB
 
 >Metabolism, Pyruvate Fermentation
 COG0039|COG1052|NF033901|PLN00105|PLN02602|PRK11197 Lactate dehydrogenase
@@ -1005,3 +1007,144 @@ COG0007|COG1648|PRK10637|TIGR01469|TIGR01470|cd11642 Uroporphyrinogen-III methyl
 16 COG2087|cd00544|pfam02283 Adenosyl cobinamide kinase/adenosyl cobinamide phosphate guanylyltransferase CobU
 16 PRK00105|pfam02277|TIGR03160|TIGR04385|cd02439 Nicotinate-nucleotide--dimethylbenzimidazole phosphoribosyltransferase CobT
 17 COG0368|PRK00235|TIGR00317|cl00415|pfam02654 Cobalamin synthase CobS
+
+>Cell Envelope, Peptidoglycan
+1 COG1181 D-alanine-D-alanine ligase DdlA
+2 TIGR00492 Alanine racemase Alr
+3 TIGR01072|COG0766 UDP-N-acetylglucosamine enolpyruvyl transferase MurA
+4 TIGR00179|PRK00046|PRK13906|PRK13904|PRK13903|PRK13905 UDP-N-acetylmuramate dehydrogenase MurB
+5 TIGR01082|COG0773|PRK00421 UDP-N-acetylmuramate--L-alanine ligase MurC
+6 TIGR01087|COG0771|PRK00141|PRK00683|PRK04690|PRK04663|PRK04308|PRK03815|PRK03806|PRK03803|PRK03369|PRK02705|PRK02472|PRK02006|PRK01390|PRK01368|PRK01438|PRK01710 UDP-N-acetylmuramoyl-L-alanine--D-glutamate ligase MurD
+7 TIGR01085|COG0769|PRK00139 UDP-N-acetylmuramoylalanyl-D-glutamate--2,6-diaminopimelate ligase MurE
+8 TIGR01143|COG0770 UDP-N-acetylmuramyl pentapeptide synthase MurF
+9 TIGR01133|PRK00726 undecaprenyldiphospho-muramoylpentapeptide beta-N- acetylglucosaminyltransferase MurG
+10 TIGR00274|COG2103|PRK05441 N-acetylmuramic acid 6-phosphate (MurNAc-6-P) etherase MurQ
+11 TIGR00445|PRK14654|PRK14655|PRK00108 Phospho-N-acetylmuramoyl-pentapeptide-transferase MraY
+12 TIGR01695|COG0728 Peptidoglycan biosynthesis protein MviN/MurJ
+pfam02388 Peptidoglycan pentaglycine glycine transferase FemAB
+
+>Cell Envelope, Outer Membrane Porins
+COG3203 Outer membrane porin OmpC
+PRK10002 Outer membrane porin OmpF
+COG3659|COG3746|NF033922|NF033923 Opr family porins OprB/P etc.
+NF033921 SomA family porins
+cd00342|cd01345 Outer-membrane porins
+
+>Metabolism, Aminoacid Biosynthesis
+#From pyruvate to alanine
+1 PLN02231|PRK09221|cd06451|PLN02368 Alanine transaminase
+# From oxaloacetate to aspartate
+2 PTZ00376|PRK12403|PRK08593|PRK06541|PRK06917|PRK07483|PRK08117|PRK08360|PRK08361|COG0436|PRK05764|PRK05942|PRK06082 Aspartate aminotransferase AspB
+# From aspartate to alanine
+2 PRK09275|TIGR03801 Aspartate transaminase/aspartate 4-decarboxylase
+# From aspartate to asparagine
+3 PLN02549|TIGR01536|TIGR03104 Asparagine synthase (glutamine-hydrolyzing)
+3 cd00645|pfam03590 Asparagine synthetase (aspartate-ammonia ligase)
+3 PRK11096|COG0252|COG4448 L-asparaginase II AnsA/AnsB/AspQ
+# From 2-oxoglutarate to glutamate and glutamine
+5 COG0067|COG0069|COG0070|PRK11750 Glutamate synthase GltB
+5 COG0493|PRK06567|PRK12770|PRK12779|PRK12810 NADPH-dependent glutamate synthase GltD
+5 TIGR01316 Glutamate synthase (NADPH) GltA
+5 COG0334|COG2902|PLN02477|PTZ00324|PTZ00079|PRK14031|PRK14030|PRK09414 Glutamate dehydrogenase GdhA/Leucine dehydrogenase
+6 TIGR00653|PRK09469|COG0174|COG3968|pfam00120|pfam03951|pfam12437|pfam16952|pfam18318 Glutamine synthetase GlnA
+# From phosphoglycerate to serine
+7 COG0111|PRK11790|PRK13581|TIGR01327|cd00611 Phosphoglycerate dehydrogenase SerA and related
+8 COG1932|PRK12462|TIGR01364|TIGR01365|TIGR01366 Phosphoserine aminotransferase SerC
+9 TIGR00338|COG0560|PLN02954|PRK11133|PRK13463|PRK13582 Phosphoserine phosphatase SerB
+# From serine to cysteine and selenocysteine
+10 COG1045|PRK11132|TIGR01172 Serine acetyltransferase CysE
+11 COG0031|PLN00011|PLN02556|PLN02565|PLN03013|PRK06084|PRK06702|PRK08248|PRK10717|PRK11761|TIGR01136|TIGR01137|TIGR01138|TIGR01139 Cysteine synthase CysK/M and related
+12 PRK04311|pfam12390 Selenocysteine synthase
+# From serine to glycine (and vice versa)
+13 COG0112|PRK00011|cd00378 Glycine/serine hydroxymethyltransferase GlyA
+# From glycine to threonine (and vice versa)
+14 COG2008|PLN02721|PRK10534|cd06502 Threonine aldolase
+# From pyruvate to valine and isoleucine via 2-oxo-isovalerate
+15 cl39075|TIGR00118|PRK08979|PRK09107|PRK08978|PRK08527|PRK08617|PRK08322|PRK08155|PRK08178|PRK07979|PRK07710|PRK07789|PRK07586|PRK07282|PRK07418|PRK06965|PRK06882|PRK06725|PRK06456|PRK06466|COG0028|PLN02470|PRK05858|PRK06048|PRK06112|PRK06276 Acetolactate synthase, large subunit IlvB
+16 COG0440|PRK11895|TIGR00119 Acetolactate synthase, small/regulatory subunit IlvH
+17 COG3978|PRK11152|pfam01842 Acetolactate synthase small subunit with ACT domain IlvM
+18 pfam01450|cl29486|TIGR00465|COG0059 Ketol-acid reductoisomerase IlvC
+19 COG0129|TIGR00110 Dihydroxyacid dehydratase IlvD/phosphogluconate dehydratase
+20 COG0115|TIGR01122|TIGR01123 Branched-chain amino acid aminotransferase IlvE/4-amino-4-deoxychorismate lyase
+20 PRK09440 Valine-pyruvate transaminase AvtA
+# From 2-oxo-isovalerate to leucine
+21 COG0119|TIGR00970|TIGR00973|TIGR02090 Isopropylmalate/homocitrate/citramalate synthases LeuA
+22 COG0065|PRK00402|PRK05478|PRK12466|TIGR00170|TIGR02083|TIGR02086 Homoaconitase/3-isopropylmalate dehydratase large subunit LeuC
+23 COG0066|PRK00439|PRK01641|TIGR00171|TIGR02084|TIGR02087|PRK14025|TIGR00169|TIGR02088 3-isopropylmalate dehydratase small subunit LeuD
+24 TIGR02088|TIGR00169|COG0473|PLN02329|PRK14025|PRK00772|PRK03437|pfam00180 Isocitrate/isopropylmalate dehydrogenase LeuB
+# From aspartate to aspartate semialdehyde
+25 COG0527|cd04234 Aspartokinase LysC
+26 COG0136|PRK05671|PRK06598|PRK06728|PRK08664|PRK14874|TIGR00978|TIGR01296|TIGR01745 Aspartate-semialdehyde dehydrogenase Asd
+# From aspartate semialdehyde to homoserine
+27 COG0460|COG4091|PRK09466|PRK09436|PRK08374|PRK06813|PRK06392|PRK06349|PRK06270|PLN02700 Homoserine dehydrogenase MetL/ThrA
+# From homoserine to threonine
+28 COG0083|cd05153|TIGR00938|TIGR00191|PTZ00299|PRK05231|PRK01212|PLN02451 Homoserine kinase ThrB
+29 COG0498|TIGR00260|PRK09225|PRK08329|PRK08197|PRK07591|PRK07409|PRK06721|PRK06450|PRK06381|PRK06352|PRK06260|PLN02569|PRK05638 Threonine synthase ThrC
+30 COG2008|PLN02721|PRK10534|cd06502 Threonine aldolase
+# From aspartate semialdehyde to lysine
+31 COG0329|TIGR00674 4-hydroxy-tetrahydrodipicolinate synthase DapA
+32 COG0289|TIGR00036|TIGR02130|pfam01113|pfam05173 4-hydroxy-tetrahydrodipicolinate reductase DapB
+33 COG2171|PRK11830|TIGR00965|TIGR03532|TIGR03535|TIGR03536 Tetrahydrodipicolinate N-succinyltransferase DapD
+34 TIGR03539|TIGR03538|TIGR03537|PRK07777 Succinyldiaminopimelate transaminase DapC/ArgD
+35 TIGR01910|TIGR01900|TIGR01246|PRK06837 Succinyl-diaminopimelate desuccinylase DapE/ArgE
+33 34 35 TIGR03540|TIGR03542|PRK09276|PRK09148|PRK08636|PRK07865|PRK07681|PRK07590|PRK06290|PRK07366 LL-diaminopimelate aminotransferase
+36 TIGR00652|COG0253|PLN02536|PRK00450|PRK13577|pfam01678 Diaminopimelate epimerase DapF
+33 34 35 36 TIGR01921|pfam16654 Diaminopimelate dehydrogenase Dapdh
+37 COG0019|TIGR01048|PLN02537|PRK08961|PRK11165 Diaminopimelate decarboxylase LysA
+# From oxoglutarate to lysine (fungal, rare bacteria)
+31 TIGR02144 Lysine biosynthesis protein LysX
+32 COG0548|TIGR00761 Acetylglutamate kinase ArgB/LysZ
+33 COG0002|cl40723 N-acetyl-gamma-glutamylphosphate reductase ArgC/LysY
+34 COG4992|TIGR00707|PRK05093|PRK01278|PRK02936|PRK03244|PRK03715|PRK04013|PRK04612 Acetylornithine/succinylornithine transaminase ArgD/LysJ
+35 COG0624|PRK06837|TIGR01892|TIGR01910 Acetylornithine deacetylase/Succinyl-diaminopimelate desuccinylase ArgE/LysK and related,
+36 TIGR01206|PRK04443|PRK14058|cd13946|cl11748 Lysine/ornithine hydrolase LysW
+# From homoserine to methionine
+37 TIGR01001|PRK05368|PRK08775|pfam04204|PRK00175 Homoserine O-succinyltransferase MetA/O-acetyltransferase MetX
+38 TIGR01137|COG0626|PRK08574|PRK08249|PRK08045|PRK07811|PRK07269|PRK07049|PRK05939|PRK06176 Cystathionine beta/gamma-lyase/synthase MetB/C
+39 TIGR02082|COG0620|COG0646|COG1410|TIGR01371|PRK09490|PRK09121|PRK06233|PRK06052|PRK04326|PRK00957|PRK01207|pfam02965 Methionine synthase MetE/H
+# From glutamate to arginine (includes urea cycle)
+40 TIGR01890|PRK05279|COG5630|COG1246|COG1364|pfam04768 N-acetylglutamate synthase ArgA/J
+41 TIGR00761|PRK04531|PRK00942|PLN02512|COG0548|CHL00202 Acetylglutamate kinase ArgB
+42 TIGR01851|TIGR01850|PRK00436|COG0002|cl40723 N-acetyl-gamma-glutamylphosphate reductase ArgC
+# (see 34 for ArgD)
+# (see 35 for ArgE)
+43 TIGR01368|CHL00197|pfam00988|cl03056 Carbamoyl-phosphate synthase arginine-specific small subunit
+44 TIGR01369|PRK05294|PLN02735|pfam02787|pfam02786|cl29395 Carbamoyl-phosphate synthase large subunit
+45 COG0078 Ornithine carbamoyltransferase ArgF
+46 COG0137|PLN00200|PRK00509|PRK04527|PRK05370|PRK13820|TIGR00032|cd01999 Argininosuccinate synthase ArgG
+47 pfam14698|cd01359|TIGR00838|PRK12308|PRK06705|PRK06389|PRK04833|PRK02186|PRK00855|COG0165|PLN02646 Argininosuccinate lyase ArgH
+TIGR01227|COG0010|PLN02615|TIGR01229|TIGR01230|cd09015|pfam00491|pfam12640 arginase/formimidoylglutamase/agmatinase SpeB/RocF and related
+# From ribose-phosphate to histidine
+48 pfam01634|TIGR00070|PRK13584|PRK13583|PRK01686|COG0040|PRK00489 ATP phosphoribosyltransferase HisG
+49 COG0140|PRK00400|PRK02759|TIGR03188|cd11534|pfam01503 Phosphoribosyl-ATP pyrophosphohydrolase HisE/I
+50 COG0106|TIGR00007|TIGR01919|TIGR00734|TIGR02129|cd04723|cd04732|pfam00977 Phosphoribosylformimino-5-aminoimidazole carboxamide ribotide isomerase HisA/F
+51 COG0107|PRK01033|PRK02083 Imidazole glycerol-phosphate synthase subunit HisF
+52 PRK14004|PRK13181|PRK13170|PRK13152|PRK13146|PRK13142|COG0118|PRK13141|PRK13143 Imidazole glycerol-phosphate synthase subunit HisH
+53 COG0131|COG0241|PRK00951|PRK05446 Imidazoleglycerol-phosphate dehydratase HisB
+54 COG0079|TIGR01141 Histidinol-phosphate aminotransferase HisC or cobyric acid decarboxylase
+55 COG0141|cd06572|pfam00815|PRK00877|TIGR00069 Histidinol dehydrogenase HisD
+# From erythrose-phosphate or fructose-phosphate to prepyhenate via chorismate, shikimate
+56 PRK08673|TIGR01361|TIGR01358|PRK13398|PRK13397|PRK13396|PRK12595|PRK12756 3-deoxy-7-phosphoheptulonate synthase
+57 pfam01959|pfam01761|cl00640|TIGR01357|PRK14021|PRK13951|PRK06203|PRK02290|PRK00002}PLN02834|COG1465 3-dehydroquinate synthase AroB
+58 COG0710|COG0757|cd00466|cd00502|pfam01487|cl00505|TIGR01093|TIGR01088|PRK13576|PRK13015|PRK13575|PRK09310|PRK02412|PLN02520|PRK01261|PRK05395 3-dehydroquinate dehydratase AroD/E/Q
+59 PLN02520|PRK12548|PRK12749|PRK14027|TIGR00507 Shikimate dehydrogenase AroE
+60 COG0703|COG1685|cd00464|TIGR01920|PRK14021|PRK13949|PRK13951|PRK13948|PRK13946|PRK13947|PRK05057|PRK01123|PRK03731|PRK00625|PLN02199|PRK00131 Shikimate kinase AroK/L
+61 COG0082|PLN02754|PRK05382|PRK12463|TIGR00033|cd07304|pfam01264 Chorismate synthase AroC
+62 PRK11199|PRK10622|PRK09269|PRK08055|PRK09239|PRK07857|PRK06443|PRK07248|COG1605|COG4401|PLN02344|PRK06285|PRK12595|TIGR01791|TIGR01795|TIGR01796|TIGR01802|TIGR01805|TIGR01806|TIGR01808|cd02185|pfam07736|pfam01817|cl10037 Chorismate mutase AroAH/TyrA
+# From prephenate to phenylalanine
+63 COG0077|PRK10622|PRK11898|PRK11899|cd13532|cd13630|cd13631|cd13632|cd13633|pfam00800 Prephenate dehydratase PheA
+# (final step is a transaminase)
+# From prephenate to tyrosine
+64 COG0287 Prephenate dehydrogenase TyrA
+# (final step is a transaminase)
+#From chorismate to tryptophan
+65 COG0147|TIGR00564|TIGR01815|TIGR01820|PRK06404|PLN02335|PLN02445|PRK05940|PRK13574|PRK13572|PRK13573|PRK13571|PRK13570|PRK13569|PRK13567|PRK13566|PRK13564|PRK13565 Anthranilate/para-aminobenzoate synthase component I TrpE
+66 CHL00101|PRK05670|PRK05637|PRK08857|PRK07765|PRK06895|PRK07649	PRK07649 Anthranilate synthase component II
+67 COG0547|PRK09522|TIGR01245 Anthranilate phosphoribosyltransferase TrpD
+68 COG0135|PRK09427|TIGR01919|COG0134|PRK00278 Phosphoribosylanthranilate isomerase TrpF/Indole-3-glycerol phosphate synthase TrpC
+69 CHL00200|COG0159|PRK13111|PRK13125|TIGR00262 Tryptophan synthase subunit TrpA
+70 COG0133|COG1350|PRK12391|TIGR00263 Tryptophan synthase subunit TrpB
+# From glutamate to proline
+COG0263|TIGR01027|TIGR01092|cd04242|cd04256|PRK13402|PTZ00489 Glutamate 5-kinase ProB
+COG0014|TIGR01092|cd04256|PRK00197|TIGR00407 Gamma-glutamyl phosphate reductase ProA
+
