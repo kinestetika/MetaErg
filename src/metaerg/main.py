@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.37"
+VERSION = "2.3.38"
 
 
 def parse_arguments():
@@ -77,9 +77,9 @@ def annotate_genome(genome_name, input_fasta_file: Path):
         context.log(f'({genome_name}) already completed!')
         return
     # (1) prepare feature sqlite3 database
-    feature_db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
-    sqlite.create_db(feature_db_file)
-    feature_db_connection = sqlite.connect_to_db(feature_db_file)
+    #feature_db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
+    #sqlite.create_db(feature_db_file)
+    feature_db_connection = sqlite.create_db(target='Features')
     # (2) load sequence data
     contig_dict = fasta.load_contigs(genome_name, input_fasta_file, delimiter=context.DELIMITER,
                                      min_contig_length=context.MIN_CONTIG_LENGTH, rename_contigs=context.RENAME_CONTIGS)
@@ -134,11 +134,16 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     context.log(f'({genome_name}) Now writing final result as .html for visualization...')
     for html_writer in registry.HTML_WRITER_REGISTRY:
         html_writer(genome, feature_db_connection, context.HTML_DIR)
-    # (5) update progress
+    # (6) update progress
     current_progress = context.parse_metaerg_progress(genome_name)
     current_progress['visualization'] = context.PROGRESS_COMPLETE
     context.write_metaerg_progress(genome_name, current_progress)
     context.log(f'({genome_name}) Completed html visualization.')
+    # (7) save feature sqlite database
+    feature_db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
+    feature_db_file.unlink(missing_ok=True)
+    sqlite.write_db(feature_db_connection, feature_db_file)
+    feature_db_connection.close()
     return genome
 
 
@@ -171,10 +176,10 @@ def main():
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
-        genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
-        sqlite.create_db(genome_db_file, target='Genomes')
-        genome_db_connection = sqlite.connect_to_db(genome_db_file, target='Genomes')
-        functional_genes.init_functional_gene_config()
+        # sqlite.create_db(genome_db_file, target='Genomes')
+        genome_db_connection = sqlite.create_db(target='Genomes')
+        for preloader in registry.DB_PRELOADER_REGISTRY:
+            preloader()
         if context.PARALLEL_ANNOTATIONS > 1:
             outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
@@ -193,10 +198,17 @@ def main():
                 sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
                                             genome=annotate_genome(genome_name, contig_file))
         tmhmm.cleanup(context.TEMP_DIR)
+
         context.log('Now writing all-genomes overview to html...')
         html_all_genomes.write_html(genome_db_connection, context.HTML_DIR)
+
+        context.log('Now writing all-genomes overview to sqlite...')
+        genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
+        genome_db_file.unlink(missing_ok=True)
+        sqlite.write_db(genome_db_connection, genome_db_file)
         context.log('Now writing all-genomes overview to excel...')
         write_genomes_to_xls(genome_db_connection)
+        genome_db_connection.close()
         context.log(f'Done. Thank you for using metaerg.py {VERSION}')
 
 

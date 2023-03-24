@@ -366,6 +366,13 @@ def write_metaerg_progress(genome_name, new_progress):
 def register_annotator(define_annotator):
     param = define_annotator()
 
+    # If a database index needs to be loaded, that is done at the start6, to prevent it loading over and over by
+    # each thread.
+    try:
+        registry.DB_PRELOADER_REGISTRY.append(param['preload_db'])
+    except KeyError:
+        pass
+
     def annotator(genome, contig_dict, db_connection) -> int:
         """Runs programs and reads results."""
         # (1) Read metaerg progress file, update progress and log the start of the analysis

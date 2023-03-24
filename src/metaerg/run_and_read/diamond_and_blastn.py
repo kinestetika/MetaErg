@@ -30,6 +30,8 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
                         'regulatory transcript mRNA gap assembly_gap source misc_feature variation misc_structure ' \
                         'transcript 3\'UTR 5\'UTR intron signal_peptide_region_of_CDS sequence_alteration'.split()
 
+TAXONOMY = {'p': {}, 'e': {}, 'v': {}}
+DESCRIPTIONS = {'p': {}, 'e': {}, 'v': {}}
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     rna_nt_file = context.spawn_file('rna.fna', genome.name)
@@ -48,29 +50,6 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
-    # (1) load databse descriptions
-    db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
-    descriptions = {'p': {}, 'e': {}, 'v': {}}
-    entries_without_descr = 0
-    with open(db_descr) as descr_handle:
-        for line in descr_handle:
-            words = line.split('\t')
-            descriptions[words[0]][int(words[1])] = words[2].strip()
-            if not descriptions[words[0]][int(words[1])]:
-                entries_without_descr += 1
-    context.log(f'({genome.name}) Parsed ({len(descriptions["p"])}, {len(descriptions["e"])}, {len(descriptions["v"])})'
-                f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. Empty'
-                f' descriptions: {entries_without_descr}.')
-    # (2) load database taxonomy
-    db_taxonomy = Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)
-    taxonomy = {'p': {}, 'e': {}, 'v': {}}
-    with open(db_taxonomy) as taxon_handle:
-        for line in taxon_handle:
-            words = line.split('\t')
-            taxonomy[words[0]][int(words[1])] = words[2].strip().replace('~', '; ')
-    context.log(f'({genome.name}) Parsed ({len(taxonomy["p"])}, {len(taxonomy["e"])}, {len(taxonomy["v"])}) '
-                f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
-    # (3) parse diamond blast results
     taxon_counts = Counter()
     def process_blast_result(blast_result: BlastResult):
         feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
@@ -85,7 +64,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
     def dbentry_from_string(db_id: str) -> DBentry:
         w = db_id.split('~')
-        return DBentry(domain=w[0], taxon=taxonomy[w[0]][int(w[1])], descr=descriptions[w[0]][int(w[2])],
+        return DBentry(domain=w[0], taxon=TAXONOMY[w[0]][int(w[1])], descr=DESCRIPTIONS[w[0]][int(w[2])],
                        accession=w[3], gene=w[4], length=int(w[5]), pos=int(w[6]))
 
     blast_result_count = 0
@@ -99,7 +78,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for blast_result in handle:
             blast_result_count += 1
             process_blast_result(blast_result)
-    # (4) update genome
+    # (2) update genome
     genome.fraction_classified = taxon_counts.total() / (genome.number_of_features - genome.number_of_crispr_repeats -
                                                          genome.number_of_other_repeats - genome.number_of_retrotransposons)
     for k, v in taxon_counts.most_common(1):
@@ -108,6 +87,30 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         break
 
     return blast_result_count
+
+
+def preload_db():
+    context.log('Parsing blast database indexes...')
+    # (1) load databse descriptions
+    db_descr = Path(context.DATABASE_DIR, DB_DESCRIPTIONS_FILENAME)
+    entries_without_descr = 0
+    with open(db_descr) as descr_handle:
+        for line in descr_handle:
+            words = line.split('\t')
+            DESCRIPTIONS[words[0]][int(words[1])] = words[2].strip()
+            if not DESCRIPTIONS[words[0]][int(words[1])]:
+                entries_without_descr += 1
+    context.log(f'Parsed ({len(DESCRIPTIONS["p"])}, {len(DESCRIPTIONS["e"])}, {len(DESCRIPTIONS["v"])})'
+                f' gene descriptions from db for (prokaryotes, eukaryotes and viruses) respectively. Empty'
+                f' descriptions: {entries_without_descr}.')
+    # (2) load database taxonomy
+    db_taxonomy = Path(context.DATABASE_DIR, DB_TAXONOMY_FILENAME)
+    with open(db_taxonomy) as taxon_handle:
+        for line in taxon_handle:
+            words = line.split('\t')
+            TAXONOMY[words[0]][int(words[1])] = words[2].strip().replace('~', '; ')
+    context.log(f'Parsed ({len(TAXONOMY["p"])}, {len(TAXONOMY["e"])}, {len(TAXONOMY["v"])}) '
+                f'taxa from db for (prokaryotes, eukaryotes and viruses) respectively.')
 
 
 @context.register_annotator
@@ -122,7 +125,8 @@ def run_and_read_diamond_blastn():
                            Path(DB_TAXONOMY_FILENAME)),
              'result_files': ('diamond',),
              'run': _run_programs,
-             'read': _read_results})
+             'read': _read_results,
+             'preload_db': preload_db})
 
 
 def init_pristine_db_dir(dir) -> tuple[Path, Path, Path, Path]:

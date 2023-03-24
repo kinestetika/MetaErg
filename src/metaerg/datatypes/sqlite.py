@@ -293,22 +293,33 @@ def genome_factory(cursor, row) -> Genome:
     return Genome(**{key: value for key, value in zip(fields, row)})
 
 
-def connect_to_db(sql_db_file, target='Features'):
-    connection = sql.connect(sql_db_file)
-    if 'Features' == target:
-        connection.row_factory = feature_factory
-    elif 'Genomes' == target:
-        connection.row_factory = genome_factory
-    return connection
+# def connect_to_db(sql_db_file, target='Features'):
+#     connection = sql.connect(sql_db_file)
+#     if 'Features' == target:
+#         connection.row_factory = feature_factory
+#     elif 'Genomes' == target:
+#         connection.row_factory = genome_factory
+#     return connection
 
-def create_db(sql_db_file, target='Features'):
-    sql_db_file.unlink(missing_ok=True)
-    connection = sql.connect(sql_db_file)
+def create_db(target='Features'):
+    #sql_db_file.unlink(missing_ok=True)
+    connection = sql.connect(':memory:')  # sql_db_file
     cursor = connection.cursor()
     if 'Features' == target:
         cursor.execute(SQLITE_CREATE_FEATURE_TABLE_SYNTAX)
+        connection.row_factory = feature_factory
     elif 'Genomes' == target:
         cursor.execute(SQLITE_CREATE_GENOME_TABLE_SYNTAX)
+        connection.row_factory = genome_factory
+    return connection
+
+
+def write_db(sql_connection, db_file):
+    db_file.unlink(missing_ok=True)
+    db_write_connection = sql.connect(db_file)
+    with db_write_connection:
+        sql_connection.backup(db_write_connection)
+    db_write_connection.close()
 
 
 def add_new_feature_to_db(sql_connection, feature: Feature):

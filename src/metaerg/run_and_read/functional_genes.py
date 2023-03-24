@@ -91,7 +91,9 @@ def run_and_read_canthyd():
              'databases': (Path('hmm', 'functional_genes.hmm'),),
              'result_files': ('hmm',),
              'run': _run_programs,
-             'read': _read_results})
+             'read': _read_results,
+             'preload_db': functional_genes.init_functional_gene_config})
+
 
 FUNCTIONAL_GENE_URLS = ('https://zenodo.org/record/6365663/files/carbon.cycle.sub.hmm',
                         'https://zenodo.org/record/6365663/files/c1.cycle.sub.hmm',

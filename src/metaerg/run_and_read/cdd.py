@@ -10,6 +10,8 @@ from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
 
 
+CDD = {}
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
@@ -34,20 +36,10 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
-    # load cdd index
-    cdd = {}
-    cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
-    with open(cdd_index) as db_handle:
-        for line in db_handle:
-            words = line.strip().split("\t")
-            cdd[int(words[0])] = DBentry(domain='cdd', accession=words[1], gene=words[2], descr=words[3],
-                                         length=int(words[4]))
-    context.log(f'({genome.name}) Parsed {len(cdd)} entries from conserved domain database.')
-    # parse cdd results
     cdd_result_count = 0
     subsystem_result_count = 0
     def get_cdd_db_entry(id: str) -> DBentry:
-        return cdd[int(id[4:])]
+        return CDD[int(id[4:])]
 
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
@@ -71,6 +63,16 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     return cdd_result_count
 
 
+def preload_db():
+    cdd_index = Path(context.DATABASE_DIR, 'cdd', 'cddid.tbl')
+    with open(cdd_index) as db_handle:
+        for line in db_handle:
+            words = line.strip().split("\t")
+            CDD[int(words[0])] = DBentry(domain='cdd', accession=words[1], gene=words[2], descr=words[3],
+                                         length=int(words[4]))
+    context.log(f'Parsed {len(CDD)} entries from conserved domain database.')
+
+
 @context.register_annotator
 def run_and_read_cdd():
     return ({'pipeline_position': 71,
@@ -80,7 +82,8 @@ def run_and_read_cdd():
              'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd.pal')),
              'result_files': ('cdd',),
              'run': _run_programs,
-             'read': _read_results})
+             'read': _read_results,
+             'preload_db': preload_db})
 
 
 @context.register_database_installer
