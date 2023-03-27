@@ -196,7 +196,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             ANNOTATOR_STATUS['repeat_masker'] = SKIP_ANNOTATOR
         for skipped_step in skip_step.split(','):
             try:
-                ANNOTATOR_STATUS['skipped_step'] = SKIP_ANNOTATOR
+                ANNOTATOR_STATUS[skipped_step] = SKIP_ANNOTATOR
             except KeyError:
                 log(f'FATAL: Unknown annotation step "{skipped_step}". Valid steps are {", ".join(ANNOTATOR_STATUS.keys())}')
                 exit()
