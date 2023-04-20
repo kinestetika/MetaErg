@@ -9,33 +9,35 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
     fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                       mask_targets=fasta.ALL_MASK_TARGETS)
-    genetic_code_file = context.spawn_file('genetic_code', genome.name)
-
     if not context.TRANSLATION_TABLE:
+        set_translation_table(genome, 0, 0)
         context.run_external(f'aragorn -l -m -t -gcstd {fasta_file} -w -o {result_files[0]}')
-        with open(genetic_code_file, 'w') as handle:
-            handle.write('0')
     else:
         ## need to determine a suitable genetic code... for that we use prodigal
-        for table in context.TRANSLATION_TABLE:
-            context.run_external(f'prodigal -g {table} -m -f gff -q -i {fasta_file} -a {result_files[0]}')
+        mean_protein_length_of_default_code = 0
+        for table_id in context.TRANSLATION_TABLE:
+            context.run_external(f'prodigal -g {table_id} -m -f gff -q -i {fasta_file} -a {result_files[0]}')
             count = 0
             total_length = 0
             with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
                 for seq_rec in fasta_reader:
                     count += 1
                     total_length += len(seq_rec['seq'])
-            mean = total_length / count
-            if mean > 200:
-                context.log(f'({genome.name}) Acceptable coding sequence prediction with translation table {table}, mean length {mean:.1f} aa.')
-                with open(genetic_code_file, 'w') as handle:
-                    handle.write(str(table))
-                genome.genetic_code = table
+            if not count:
+                context.log(f'({genome.name}) No proteins found with translation table {table_id}.')
+                continue
+            mean_protein_length = total_length / count
+            if not mean_protein_length_of_default_code:
+                mean_protein_length_of_default_code = mean_protein_length
+            if mean_protein_length > 200:
+                set_translation_table(genome, table_id, mean_protein_length)
                 context.run_external(f'aragorn -l -t -gc{genome.genetic_code} {fasta_file} -w -o {result_files[0]}')
                 return
             else:
-                context.log(f'({genome.name}) Coding sequence prediction with translation table {table} failed, mean length {mean:.1f} aa.')
-    raise(context.FatalException('No suitable genetic code found, aborting!'))
+                context.log(f'({genome.name}) Coding sequence prediction with translation table {table_id} failed, mean length {mean_protein_length:.1f} aa.')
+        # if no suitable code was found, we default to the first value in context.TRANSLATION_TABLE
+        set_translation_table(genome, context.TRANSLATION_TABLE[0], mean_protein_length_of_default_code)
+        context.run_external(f'aragorn -l -t -gc{genome.genetic_code} {fasta_file} -w -o {result_files[0]}')
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
@@ -82,6 +84,15 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     genetic_code_file = context.spawn_file('genetic_code', genome.name)
     genome.genetic_code = int(genetic_code_file.read_text())
     return count
+
+
+def set_translation_table(genome, table_id, mean_protein_length):
+    context.log(
+        f'({genome.name}) Coding sequence prediction with translation table {table_id}, mean length {mean_protein_length:.1f} aa.')
+    genetic_code_file = context.spawn_file('genetic_code', genome.name)
+    with open(genetic_code_file, 'w') as handle:
+        handle.write(str(table_id))
+    genome.genetic_code = table_id
 
 
 @context.register_annotator
