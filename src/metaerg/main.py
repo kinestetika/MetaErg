@@ -56,6 +56,7 @@ def parse_arguments():
                                                            '(helper programs). Dependencies will be installed here.')
     parser.add_argument('--path_to_signalp', default='', help='Path to signalp-6.0g.fast.tar.gz.')
     parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
+    parser.add_argument('--path_to_antismash_db', default='', help='Path to antismash databases.')
     parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
                                                      'everything, or antismash, aragorn, cdd, cmscan, diamond_and_blastn, hmm, '
                                                      'ltr_harvest, minced, prodigal, signalp, repeat_masker, tmhmm, trf, '
@@ -180,7 +181,7 @@ def main():
         context.log('If you would like to annotate secondary metabolite genes, make sure antismash databases are installed.')
         #metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
-        install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
+        install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM, context.PATH_TO_ANTISMASH_DB)
     else:
         # sqlite.create_db(genome_db_file, target='Genomes')
         genome_db_connection = sqlite.create_db(target='Genomes')

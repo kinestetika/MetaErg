@@ -1,10 +1,9 @@
 from pathlib import Path
-from virtualenv import cli_run
 import os
 from shutil import which
 
 
-def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path):
+def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path, path_to_antismash_db: Path):
     # check for required programs
     success = True
     for cmd in 'git make gcc tar wget perl sed'.split():
@@ -21,18 +20,18 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     # >source /home/my_name/bin/metaerg/bin/profile
     # (if that is the path to your installation)
     profile = f'''
-    export BIOINF_PREFIX={bin_dir}
-    PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
-    PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
-    PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
-    PATH=$BIOINF_PREFIX/repeatscout:$PATH
-    PATH=$BIOINF_PREFIX/repeatmasker:$PATH
-    PATH=$BIOINF_PREFIX/minced:$PATH
-    PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
-    PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
-    PATH=$BIOINF_PREFIX:$PATH
-    export PATH
-    '''
+    # export BIOINF_PREFIX={bin_dir}
+    # PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
+    # PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
+    # PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
+    # PATH=$BIOINF_PREFIX/repeatscout:$PATH
+    # PATH=$BIOINF_PREFIX/repeatmasker:$PATH
+    # PATH=$BIOINF_PREFIX/minced:$PATH
+    # PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
+    # PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
+    # PATH=$BIOINF_PREFIX:$PATH
+    # export PATH
+    # '''
     profile_file = bin_dir / 'profile'
     with open(profile_file, "w") as profile_handle:
         profile_handle.write(profile)
@@ -171,14 +170,25 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
         os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
         os.system('rm tmhmm-2.0c.Linux.tar.gz')
         os.system('ln -s tmhmm-2.0c tmhmm')
-    # (signalp) 6g
+    # (signalp) 6.0g
     if path_to_signalp:
         model_dir = Path(
-            which('python')).parent.parent / 'lib' / 'python3.10' / 'site-packages' / 'signalp' / 'model_weights'
+            which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
         print(f'signalp models will be installed at {model_dir}')
         os.chdir(bin_dir)
         os.system(f'cp {path_to_signalp} .')
         os.system(f'tar -xf {path_to_signalp.name}')
         os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
         os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
-        os.system(f'rm -rf {path_to_signalp.name}')
+        os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
+
+    #(antismash)
+    antismash_database_python_dir = Path(
+        which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
+    os.chdir(bin_dir)
+    os.system('wget https://dl.secondarymetabolites.org/releases/7.0.0/antismash-7.0.0.tar.gz')
+    os.system('tar -xf antismash-7.0.0.tar.gz')
+    os.system(f'{Path(which("python")).parent / "pip"} install --upgrade ./antismash-7.0.0')
+    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0')
+    os.system(f'rm -rf {antismash_database_python_dir}')
+    os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')

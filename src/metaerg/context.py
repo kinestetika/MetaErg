@@ -67,6 +67,7 @@ PREFIX = 'g'
 BIN_DIR =''
 PATH_TO_SIGNALP = None
 PATH_TO_TMHMM = None
+PATH_TO_ANTISMASH_DB = None
 
 PROGRESS_STARTED = 'started'
 PROGRESS_COMPLETE = 'complete'
@@ -74,12 +75,12 @@ PROGRESS_COMPLETE = 'complete'
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
          install_deps, path_to_signalp, path_to_tmhmm, update_annotations, output_dir, log_topics='',
-         contig_mode = False, skip_step=''):
+         contig_mode = False, skip_step='', path_to_antismash_db=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
            CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
            DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM, ANNOTATOR_STATUS, \
-           DATABASE_FORCE
+           DATABASE_FORCE, PATH_TO_ANTISMASH_DB
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
     LOG_FILE = Path('log.txt').absolute()
@@ -96,11 +97,16 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             PATH_TO_TMHMM = Path(path_to_tmhmm).absolute()
         else:
             log('Warning: path to tmhmm tarbal not provided or wrong; tmhmm will not be installed.')
-        log(f'Ready to install helper programs at {BIN_DIR} with {PATH_TO_SIGNALP}, {PATH_TO_TMHMM}.')
+        if path_to_antismash_db and Path(path_to_antismash_db).is_dir():
+            PATH_TO_ANTISMASH_DB = Path(path_to_antismash_db).absolute()
+        else:
+            log('Warning: path to antismash database is missing or nor a dir.')
+        log(f'Ready to install helper programs at {BIN_DIR} with {PATH_TO_SIGNALP}, {PATH_TO_TMHMM}, {PATH_TO_ANTISMASH_DB}.')
         return
 
     if not database_dir:
-        raise Exception("No database dir provided or database dir is not a dir.")
+        log("No database dir provided or database dir is not a dir. Use -h for help.")
+        exit(1)
     DATABASE_DIR = Path(database_dir).absolute()
     if download_database:
         METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
