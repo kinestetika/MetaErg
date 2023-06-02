@@ -1,4 +1,4 @@
-## metaerg.py, version 2.3.39
+## metaerg.py, version 2.3.40
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -6,11 +6,11 @@ are in common formats such as .gff, .gbk, .fasta and .html with predicted genes,
 classifications.
 
 You can interact with a sample visualization [here](https://htmlpreview.github.io/?https://github.com/kinestetika/MetaErg/blob/master/visualization/index.html) and [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kinestetika/MetaErg/master/visualization/index_of_features.html). These visualizations show the annotation of a cyanobacterial genome, Candidatus Phormidium alkaliphilum.
-Unfortunately the interacive search box does not work with the github html visualization, so you need to download the html \
+Unfortunately the interactive search box does not work with the github html visualization, so you need to download the html \
 files to your computer (i.e. using "git clone ..."), to try out the interactive part.
 
 Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
-dependencies. This new python version 2.3 overcomes some of those issues. Also, the annotation pipeline has further 
+dependencies. This python version 2.3 overcomes some of those issues. Also, the annotation pipeline has further 
 evolved and has become more refined.
 
 By building its blast database off gtdbtk and transferring functional annotations from the NCBI, metaerg.py
@@ -27,7 +27,7 @@ The Metaerg 2.3 pipeline ...
 * predicts tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html), version 4.0.9.
 * predicts other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/), version 1.0.5, and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/), version 4.1.5.
 * predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal), version 2.6.3.
-* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of 62,296 bacterial, 3,406 archaeal 11,569 viral and 139 eukaryotic genomes.
+* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
 * annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php), versions 2.0c and 6.0g.
