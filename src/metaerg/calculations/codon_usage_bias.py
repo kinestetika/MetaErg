@@ -231,7 +231,7 @@ def download_training_data(training_data: list[CUBData], destination_dir: Path):
         if not fna_file.exists():
             targets.append((extension, fna_file))
         if targets:
-            ncbi_ftp.fetch(accession, targets)
+            ncbi_ftp.fetch(accession, targets, context.TEMP_DIR)
             sleep(2)
 
 

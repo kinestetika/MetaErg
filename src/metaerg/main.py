@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.39"
+VERSION = "2.3.40"
 
 
 def parse_arguments():
@@ -61,7 +61,7 @@ def parse_arguments():
                                                      'ltr_harvest, minced, prodigal, signalp, repeat_masker, tmhmm, trf, '
                                                      'separated by commas (,) to redo specific steps')
     parser.add_argument('--update_annotations', default=False, action='store_true', help="Do not run any helper programs, only "
-                                                                                "update annotations woth results from previous runs.")
+                                                                                "update annotations with results from previous runs.")
     parser.add_argument('--skip_step', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
                                                         "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
                                                         "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
@@ -74,7 +74,7 @@ def annotate_genome(genome_name, input_fasta_file: Path):
     current_progress = context.parse_metaerg_progress(genome_name)
     if context.ANNOTATOR_STATUS['visualization'] != context.FORCE_ANNOTATOR and \
             current_progress.get('visualization', 0) == context.PROGRESS_COMPLETE:
-        context.log(f'({genome_name}) already completed!')
+        context.log(f'({genome_name}) already completed! Use --update_annotations to re-annotate.')
         return
     # (1) prepare feature sqlite3 database
     #feature_db_file = context.spawn_file('annotations.sqlite', genome_name, context.BASE_DIR)
@@ -155,13 +155,18 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     elif context.METAERG_MODE == context.METAERG_MODE_DOWNLOAD_DATABASE:
-        context.log('Downloading premade databases from https://object-arbutus.cloud.computecanada.ca...')
-        database_tarbal_file = context.DATABASE_DIR / 'metaerg_db_207_v2.tar.gz'
-        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
+        # upload instructions:
+        # (1) >source [credentials file]
+        # (2) >swift upload test_container -S 1073741824 large_file
+        context.log('Downloading premade databases, version 2_3.40_gtdb_214, from https://object-arbutus.cloud.computecanada.ca...')
+        database_tarbal_file = context.DATABASE_DIR / 'metaerg_2_3.40_gtdb_214.tar,gz'  # 'metaerg_db_207_v2.tar.gz'
+        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2_3.40_gtdb_214.tar,gz',
                          database_tarbal_file)
+        #context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
+        #                 database_tarbal_file)
         md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
         print(md5sum)
-        if '48ffe7150711dd6f982e1f3d759e4ff9' == md5sum:
+        if '76273d10e4e002445d802fe605821a06' == md5sum:  # '48ffe7150711dd6f982e1f3d759e4ff9' == md5sum:
             context.log(f'checksum {md5sum} as expected.')
         else:
             raise Exception('Downloaded database has incorrect checksum - download failed. Aborting...')
@@ -172,7 +177,8 @@ def main():
         context.DATABASE_TASKS = 'SA'
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
-        metaerg.run_and_read.antismash.format_antismash_databases()
+        context.log('If you would like to annotate secondary metabolite genes, make sure antismash databases are installed.')
+        #metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR, context.PATH_TO_SIGNALP, context.PATH_TO_TMHMM)
     else:
@@ -187,16 +193,16 @@ def main():
                     outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
             for genome_name, future in outcomes.items():
                 try:
-                    genome = genome=future.result()
-                    if genome:
+                    if genome := future.result():
                         sqlite.add_new_genome_to_db(genome_db_connection, genome)
                 except Exception:
                     context.log(f'({genome_name}) Error while processing:')
                     raise
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
-                                            genome=annotate_genome(genome_name, contig_file))
+                if genome := annotate_genome(genome_name, contig_file):
+                    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
+                                                genome=genome)
         tmhmm.cleanup(context.TEMP_DIR)
 
         context.log('Now writing all-genomes overview to html...')

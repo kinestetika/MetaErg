@@ -65,7 +65,7 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     os.system('mv gt-1.6.2-Linux_x86_64-64bit-barebone genometools')
     os.system('ln -sf genometools/bin/gt .')
     os.system('rm gt-1.6.2-Linux_x86_64-64bit-barebone.tar.gz')
-    # (tandem-repeat-finder) trf 4.09 https://tandem.bu.edu/trf/trf.html
+    # (tandem-repeat-finder) trf 4.09 https://github.com/Benson-Genomics-Lab/TRF
     os.system('wget -q https://github.com/Benson-Genomics-Lab/TRF/releases/download/v4.09.1/trf409.linux64')
     os.system('chmod a+x trf409.linux64')
     os.system('ln -sf trf409.linux64 trf')
@@ -86,34 +86,35 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     os.system('ln -sf nseg-1.0.1/nseg nseg')
     os.system('ln -sf nseg-1.0.1/nmerge nmerge')
     os.system('rm v1.0.1.tar.gz')
-    # (rmblast) rmblastn 2.11.0 http://www.repeatmasker.org/RMBlast.html
+    # (rmblast) rmblastn 2.14.0 https://www.repeatmasker.org/rmblast/
     # (rmblast is needed by repeatmasker)
-    os.system('wget -q http://www.repeatmasker.org/rmblast-2.11.0+-x64-linux.tar.gz')
-    os.system('tar -xf rmblast-2.11.0+-x64-linux.tar.gz')
-    os.system('ln -sf rmblast-2.11.0 rmblast')
-    os.system('rm rmblast-2.11.0+-x64-linux.tar.gz')
-    # (RepeatMasker) RepeatMasker 4.1.3 http://www.repeatmasker.org/RepeatMasker/
-    os.system('wget -q http://www.repeatmasker.org/RepeatMasker/RepeatMasker-4.1.3.tar.gz')
-    os.system('tar -xf RepeatMasker-4.1.3.tar.gz')
+    os.system('wget -q https://www.repeatmasker.org/rmblast/rmblast-2.14.0+-x64-linux.tar.gz')
+    os.system('tar -xf rmblast-2.14.0+-x64-linux.tar.gz')
+    os.system('mv rmblast-2.14.0 rmblast')
+    os.system('rm rmblast-2.14.0+-x64-linux.tar.gz')
+    # (RepeatMasker) RepeatMasker 4.1.5 http://www.repeatmasker.org/RepeatMasker/
+    os.system('wget -q http://www.repeatmasker.org/RepeatMasker/RepeatMasker-4.1.5.tar.gz')
+    os.system('tar -xf RepeatMasker-4.1.5.tar.gz')
     os.system('mv RepeatMasker repeatmasker')
     os.chdir("repeatmasker")
     os.system(f'perl ./configure -default_search_engine rmblast -libdir {bin_dir / "repeatmasker" / "Libraries"} '
               f'-rmblast_dir {bin_dir / "rmblast" / "bin"} -trf_prgm {bin_dir / "trf"}')
     os.chdir(bin_dir)
-    os.system('rm RepeatMasker-4.1.3.tar.gz')
+    os.system('rm RepeatMasker-4.1.5.tar.gz')
     # (prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal
     os.system('wget -q https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux')
     os.system('chmod a+x prodigal.linux')
     os.system('ln -sf prodigal.linux prodigal')
     # (diamond) diamond 2.0.15 https://github.com/bbuchfink/diamond
+    # (later versions do not work with antismash)
     os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz')
     os.system('tar -xf diamond-linux64.tar.gz')
     os.system('rm diamond-linux64.tar.gz')
-    # (ncbi-blast) blastn 2.13.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
-    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.13.0+-x64-linux.tar.gz')
-    os.system('tar -xf ncbi-blast-2.13.0+-x64-linux.tar.gz')
-    os.system('mv ncbi-blast-2.13.0+ ncbi-blast')
-    os.system('rm ncbi-blast-2.13.0+-x64-linux.tar.gz')
+    # (ncbi-blast) blastn 2.14.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.14.0+-x64-linux.tar.gz')
+    os.system('tar -xf ncbi-blast-2.14.0+-x64-linux.tar.gz')
+    os.system('mv ncbi-blast-2.14.0+ ncbi-blast')
+    os.system('rm ncbi-blast-2.14.0+-x64-linux.tar.gz')
     # (hmmer-3) hmmsearch 3.3.2 http://hmmer.org
     os.system('wget -q http://eddylab.org/software/hmmer/hmmer-3.3.2.tar.gz')
     os.system('tar -xf hmmer-3.3.2.tar.gz')
@@ -145,8 +146,8 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     os.chdir(bin_dir)
     os.system('ln -s hmmer-2.3.2 hmmer2')
     os.system('rm hmmer-2.3.2.tar.gz')
-    #(muscle) muscle 3.8.31 https://drive5.com/muscle
-    #(required by antismash)
+    #(muscle) muscle 5.1 https://drive5.com/muscle
+    #(no longher required by antismash, version 7 and up)
     os.chdir(bin_dir)
     os.system('wget -q https://drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz')
     os.system('tar -xf muscle3.8.31_i86linux64.tar.gz')
@@ -170,7 +171,7 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
         os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
         os.system('rm tmhmm-2.0c.Linux.tar.gz')
         os.system('ln -s tmhmm-2.0c tmhmm')
-    # (signalp)
+    # (signalp) 6g
     if path_to_signalp:
         model_dir = Path(
             which('python')).parent.parent / 'lib' / 'python3.10' / 'site-packages' / 'signalp' / 'model_weights'
@@ -181,20 +182,3 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
         os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
         os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
         os.system(f'rm -rf {path_to_signalp.name}')
-    # (antismash) https://antismash.secondarymetabolites.org
-    os.chdir(bin_dir)
-    antismash_bin =  bin_dir / 'antismash-env' / 'bin'
-    antismash_wrapper = bin_dir / 'antismash'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "antismash"} "$@"\n')
-    os.system('chmod a+x antismash')
-    antismash_wrapper = bin_dir / 'download-antismash-databases'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
-    os.system('chmod a+x download-antismash-databases')
-    cli_run(["antismash-env"])  # !python -m virtualenv antismash-env
-    os.chdir("antismash-env")
-    os.system('wget -q https://dl.secondarymetabolites.org/releases/6.1.1/antismash-6.1.1.tar.gz')
-    os.system('tar -xf antismash-6.1.1.tar.gz')
-    os.system('rm antismash-6.1.1.tar.gz')
-    os.system('./bin/pip install --upgrade ./antismash-6.1.1')

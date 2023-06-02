@@ -80,7 +80,6 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
            CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
            DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, PATH_TO_TMHMM, ANNOTATOR_STATUS, \
            DATABASE_FORCE
-
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
     LOG_FILE = Path('log.txt').absolute()
@@ -103,12 +102,13 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     if not database_dir:
         raise Exception("No database dir provided or database dir is not a dir.")
     DATABASE_DIR = Path(database_dir).absolute()
-    if not DATABASE_DIR.is_dir():
-        raise Exception("No database dir provided or database dir is not a dir.")
     if download_database:
         METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
+        DATABASE_DIR.mkdir(exist_ok=True)
         log(f'Ready to download databases.')
         return
+    if not DATABASE_DIR.is_dir():
+        raise Exception("No database dir provided or database dir is not a dir.")
     elif create_database:
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
         if create_database == 'all':
@@ -116,6 +116,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         else:
             DATABASE_TASKS = create_database
         DATABASE_FORCE = True if force else False
+        GTDBTK_DIR = Path(gtdbtk_dir)
         log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return
     else: # we're going to annotate genomes...
@@ -155,7 +156,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                 CHECKM_DIR = current_dir / checkm_dir
         if gtdbtk_dir:
             if Path(gtdbtk_dir).is_absolute():
-                CHECKM_DIR = Path(gtdbtk_dir)
+                GTDBTK_DIR = Path(gtdbtk_dir)
             else:
                 GTDBTK_DIR = current_dir / gtdbtk_dir
         os.chdir(TEMP_DIR)

@@ -5,6 +5,7 @@ from collections import Counter
 from os import chdir
 from ftplib import FTP
 from pathlib import Path
+import zlib
 
 from Bio import SeqIO
 from Bio.SeqRecord import SeqRecord
@@ -404,13 +405,13 @@ def install_prokaryote_database():
                         targets.append(('_protein.faa.gz', future_faa_file))
                     if not future_rna_file.exists():
                         targets.append(('_rna_from_genomic.fna.gz', future_rna_file))
-                    success = ncbi_ftp.fetch(accession, targets)
-                    if success[0]:
+                    success = ncbi_ftp.fetch(accession, targets, context.TEMP_DIR)
+                    if success is not None and len(success) and success[0]:
                         download_status += '*'
                         success_count += 1
                         taxon['in_local_cache'] = True
                         genomes_in_cache_count += 1
-                    if success[1]:
+                    if success is not None and len(success) > 1 and success[1]:
                         download_status += '*'
                     if not download_status:
                         continue
@@ -429,20 +430,25 @@ def install_prokaryote_database():
             for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):
                 if not input.exists():
                     continue
-                with fasta.FastaParser(input, cleanup_seq=False) as reader, open(output, 'a') as writer:
-                    gene_counter = 0
-                    for f in reader:
-                        if m:= RNA_DESCR_RE.search(f.descr):
-                            descr = m.group(1)
-                        elif m:= AA_DESCR_RE.search(f.descr):
-                            descr = f.descr[0:m.start()].strip()
-                            descr = descr.replace('MULTISPECIES: ', '')
-                        descr_id = update_db_descriptions_get_db_id(descr, descr_dict, descr_handle, kingdom)
-                        f.id = '{}~{}~{}~{}~{}~{}~{}'.format(kingdom, taxon['id'], descr_id, f.id.replace('~', '-'),
-                                                             '', len(f), gene_counter)
-                        f.descr = descr
-                        gene_counter += 1
-                        fasta.write_fasta(writer, f)
+                try:
+                    with fasta.FastaParser(input, cleanup_seq=True) as reader, open(output, 'a') as writer:
+                        gene_counter = 0
+                        for f in reader:
+                            if m:= RNA_DESCR_RE.search(f['descr']):
+                                descr = m.group(1)
+                            elif m:= AA_DESCR_RE.search(f['descr']):
+                                descr = f['descr'][0:m.start()].strip()
+                                descr = descr.replace('MULTISPECIES: ', '')
+                            descr_id = update_db_descriptions_get_db_id(descr, descr_dict, descr_handle, kingdom)
+                            f['id'] = '{}~{}~{}~{}~{}~{}~{}'.format(kingdom, taxon['id'], descr_id, f['id'].replace('~', '-'),
+                                                                 '', len(f['seq']), gene_counter)
+                            f['descr'] = descr
+                            gene_counter += 1
+                            fasta.write_fasta(writer, f)
+                except zlib.error:
+                    context.log(f'Error parsing {input}, aborted midway, only part of the genes could be used.')
+                    pass
+
 
     context.log(f'downloaded {int(success_count)} new genomes. Total prok genomes in cache: {genomes_in_cache_count}.')
     # (4) save taxonomy (includes status)
@@ -469,7 +475,7 @@ def format_blast_databases():
 
     for filename in DB_PROTEINS_FILENAME, DB_RNA_FILENAME, DB_DESCRIPTIONS_FILENAME, DB_TAXONOMY_FILENAME:
         with open(Path(context.DATABASE_DIR, filename), mode="wb") as destination:
-            for dir in PROK_DB_DIR, EUK_DB_DIR, VIR_DB_DIR:
+            for dir in EUK_DB_DIR, VIR_DB_DIR, PROK_DB_DIR:
                 src_file = Path(dir, filename)
                 if src_file.exists():
                     with open(src_file, mode="rb") as source:
