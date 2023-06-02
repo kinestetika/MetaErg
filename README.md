@@ -20,21 +20,21 @@ conserved domain database and RPSBlast to assign genes to subsystems for effecti
 work in progress, and can be expanded and customized as needed.
 
 The Metaerg 2.3 pipeline ...
-* predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced).
-* predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/).
-* predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM.
-* predicts retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest.
-* predicts tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html).
-* predicts other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/) and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/).
-* predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal).
-* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and a database of 62,296 bacterial, 3,406 archaeal 11,569 viral and 139 eukaryotic genomes.
-* annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/) and NCBI's Conserved Domain Database (CDD).
-* annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases).
-* annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php).
-* assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org) and commmunity contributed HMM profiles (see below).
+* predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced), version 0.4.2.
+* predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/), version 1.2.41.
+* predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM, version 1.1.4.
+* predicts retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest, genometools version 1.6.2.
+* predicts tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html), version 4.0.9.
+* predicts other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/), version 1.0.5, and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/), version 4.1.5.
+* predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal), version 2.6.3.
+* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of 62,296 bacterial, 3,406 archaeal 11,569 viral and 139 eukaryotic genomes.
+* annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
+* annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
+* annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php), versions 2.0c and 6.0g.
+* assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
-* saves annotations as a fasta-amino-acid file, a genbank file, as a sqlite database and in [Apache Feather format](https://arrow.apache.org/docs/python/feather.html) for effective exploration, statistics and visualization with python or R.
+* saves annotations as a fasta-amino-acid file, a genbank file, and as a sqlite database for effective exploration, statistics and visualization with python or R.
 * saves an overview of all annotated genomes' properties and functions as an excel file. 
 * enables the user to add custom HMMs and expand the set of functional genes as needed.
 
