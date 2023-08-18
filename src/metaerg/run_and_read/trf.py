@@ -31,7 +31,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                      start = start,
                                      end = end,
                                      strand = 1,
-                                     type = 'repeat',
+                                     type = 'repeat_unit',
                                      inference = 'tandem-repeat-finder',
                                      nt_seq = seq,
                                      notes = f'period size {words[2]}; copies {words[3]}')

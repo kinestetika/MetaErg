@@ -34,6 +34,7 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
 TAXONOMY = {'p': {}, 'e': {}, 'v': {}}
 DESCRIPTIONS = {'p': {}, 'e': {}, 'v': {}}
 
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     rna_nt_file = context.spawn_file('rna.fna', genome.name)
     blastn_result_file = context.spawn_file('blastn', genome.name)
@@ -406,12 +407,12 @@ def install_prokaryote_database():
                     if not future_rna_file.exists():
                         targets.append(('_rna_from_genomic.fna.gz', future_rna_file))
                     success = ncbi_ftp.fetch(accession, targets, context.TEMP_DIR)
-                    if success is not None and len(success) and success[0]:
+                    if success is not None and future_faa_file in success.keys() and success[future_faa_file]:
                         download_status += '*'
                         success_count += 1
                         taxon['in_local_cache'] = True
                         genomes_in_cache_count += 1
-                    if success is not None and len(success) > 1 and success[1]:
+                    if success is not None and future_rna_file in success.keys() and success[future_rna_file]:
                         download_status += '*'
                     if not download_status:
                         continue

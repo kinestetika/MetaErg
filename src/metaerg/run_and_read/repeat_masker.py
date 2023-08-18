@@ -66,7 +66,7 @@ def words2feature(words: list[str], contig, genome_name:str) -> sqlite.Feature:
                           start = start,
                           end = end,
                           strand = strand,
-                          type = 'repeat',
+                          type = 'repeat_unit',
                           inference = 'repeatmasker',
                           nt_seq = seq)
 

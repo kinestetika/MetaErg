@@ -16,6 +16,7 @@ SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     strand INT,
     type TEXT,
     inference TEXT,
+    parent TEXT,
     subsystems TEXT,
     descr TEXT,
     taxon TEXT,
@@ -39,6 +40,7 @@ SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     strand = ?,
     type = ?,
     inference = ?,
+    parent = ?,
     subsystems = ?,
     descr = ?,
     taxon = ?,
@@ -65,6 +67,7 @@ class Feature:
                  strand: int = 0,
                  type: str = '',
                  inference: str = '',
+                 parent: str = '',
                  subsystems: str = '',
                  descr: str = '',
                  taxon: str = '',
@@ -87,6 +90,7 @@ class Feature:
         self.strand = strand
         self.type = type
         self.inference = inference
+        self.parent = parent
         self.subsystems = eval(subsystems) if subsystems else []
         self.descr = descr
         self.taxon = taxon

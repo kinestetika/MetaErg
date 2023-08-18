@@ -100,7 +100,7 @@ def make_html(genome, db_connection) -> str:
     previous_repeats = []
     prev_f = None
     for f in sqlite.read_all_features(db_connection):
-        if f.type in ('crispr_repeat', 'repeat') and (not len(previous_repeats) or (f and f.type == prev_f.type)):
+        if f.type in ('CRISPR', 'repeat_unit') and (not len(previous_repeats) or (f and f.type == prev_f.type)):
             previous_repeats.append(f)
         elif len(previous_repeats):
             format_hash = get_empty_format_dict()
@@ -110,7 +110,7 @@ def make_html(genome, db_connection) -> str:
             format_hash['length'] = previous_repeats[-1].end - previous_repeats[0].start
             previous_repeats.clear()
             table_body += format_hash_to_html(format_hash)
-            if f.type in ('crispr_repeat', 'repeat'):
+            if f.type in ('CRISPR', 'repeat_unit'):
                 previous_repeats.append(f)
             else:
                 format_hash = get_empty_format_dict()

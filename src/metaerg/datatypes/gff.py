@@ -1,8 +1,13 @@
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 import re
 import gzip
+
 from metaerg.datatypes import fasta
-from metaerg.datatypes.sqlite import Feature
+from metaerg.datatypes import sqlite
+
+
+GFF_ATTRIBUTES = ('id', 'parent', 'subsystems', 'descr', 'taxon', 'signal_peptide', 'tmh_topology')
+
 
 class GffParser:
     def __init__(self, path, contig_dict, target_feature_type_dict:dict=None, inference:str=None):
@@ -46,13 +51,23 @@ class GffParser:
                     if len(qualifiers) % 2 != 0:
                         qualifiers = qualifiers[:-1]  # this happens for example with prodigal, ending with ";"
                     qualifiers = {qualifiers[i].lower(): qualifiers[i + 1] for i in range(0, len(qualifiers), 2)}
-                    feature = Feature(contig=contig_name,
+                    feature = sqlite.Feature(contig=contig_name,
                                start=start,
                                end=end,
                                strand=strand,
                                type=self.target_feature_type_dict[feature_type],
                                inference=inference,
                                nt_seq=seq)
+                    if 'subsystems' in qualifiers.keys():
+                        feature.subsystems = qualifiers['subsystems']
+                    if 'descr' in qualifiers.keys():
+                        feature.subsystems = qualifiers['descr']
+                    if 'taxon' in qualifiers.keys():
+                        feature.subsystems = qualifiers['taxon']
+                    if 'signal_peptide' in qualifiers.keys():
+                        feature.subsystems = qualifiers['signal_peptide']
+                    if 'tmh_topology' in qualifiers.keys():
+                        feature.subsystems = qualifiers['tmh_topology']
                     yield feature
 
 
@@ -63,3 +78,26 @@ def parse_feature_qualifiers_from_gff(qualifier_str) -> {}:
         qal = qal[:-1]  # this happens for example with prodigal which has the qualifier column ending with ";"
     qal = {qal[i].lower(): qal[i + 1] for i in range(0, len(qal), 2)}
     return qal
+
+
+def gff_write_genome(writer, contig_dict: dict, db_connection):
+    for contig_id, contig in contig_dict.items():
+        for feature in sqlite.read_all_features(db_connection, contig=contig_id):
+            if feature.strand > 0:
+                strand = '+'
+            elif feature.strand < 0:
+                strand = '-'
+            else:
+                strand = '.'
+            attributes = ';'.join([f'{k.capitalize()}={quote(v)}' for k,v in feature if v and k in GFF_ATTRIBUTES])
+            attributes = 'ID' + attributes[2:]
+            writer.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(feature.contig,
+                                                                     feature.inference,
+                                                                     feature.type,
+                                                                     feature.start + 1,
+                                                                     feature.end + 1,
+                                                                     '.',  # score
+                                                                     strand,
+                                                                     '.',  # phase
+                                                                     attributes
+                                                                     ))

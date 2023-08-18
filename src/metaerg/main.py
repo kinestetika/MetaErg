@@ -22,7 +22,7 @@ from metaerg.html import html_all_genomes
 from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.41"
+VERSION = "2.3.42"
 
 
 def parse_arguments():

@@ -7,13 +7,12 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
     fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
-    context.run_external(f'minced -gffFull {fasta_file} {result_files[0]}')
+    context.run_external(f'CRISPRDetect -f {fasta_file} -o {result_files[0][:-4]} -array_quality_score_cutoff 3 -minimum_word_repeatation 3')
 
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""
-    with gff.GffParser(result_files[0], contig_dict, inference='minced',
-                       target_feature_type_dict={'repeat_unit': 'CRISPR'}) as gff_parser:
+    with gff.GffParser(result_files[0], contig_dict, inference='CRISPRDetect') as gff_parser:
         count = 0
         for feature in gff_parser:
             feature.genome = genome.name
@@ -23,12 +22,11 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
 
 @context.register_annotator
-def run_and_read_minced():
-    return ({'pipeline_position': 1,
-             'annotator_key': 'minced',
-             'purpose': 'CRISPR prediction with minced',
-             'programs': ('minced',),
-             'result_files': ("minced",),
+def run_and_read_crispr_detect():
+    return ({'pipeline_position': 2,
+             'annotator_key': 'crispr_detect',
+             'purpose': 'CRISPR prediction with CRISPRDetect',
+             'programs': ('CRISPRDetect',),
+             'result_files': ("crispr_detect.gff",),
              'run': _run_programs,
              'read': _read_results})
-

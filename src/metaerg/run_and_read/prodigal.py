@@ -46,13 +46,13 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
             # reconciliation with repeats
             overlapping_features = [f for f in sqlite.read_all_features(db_connection, contig=contig_id,
-                                    location=(start, end), type='rRNA tRNA tmRNA ncRNA crispr_repeat repeat retrotransposon'.split())]
+                                    location=(start, end), type='rRNA tRNA tmRNA ncRNA CRISPR repeat_unit retrotransposon'.split())]
 
             if len(overlapping_features):
                 overlap = 0
                 for f in overlapping_features:
                     overlap += min(f.end, end) - max(start, f.start)
-                non_repeat_features = [f for f in overlapping_features if f.type in 'rRNA tRNA tmRNA ncRNA crispr_repeat retrotransposon'.split()]
+                non_repeat_features = [f for f in overlapping_features if f.type in 'rRNA tRNA tmRNA ncRNA CRISPR retrotransposon'.split()]
                 if len(non_repeat_features):
                     rejected_cds_count += 1
                     continue

@@ -78,7 +78,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         if hit.hit_id in NON_CODING_RNA_TYPES.keys():
             f_type = NON_CODING_RNA_TYPES[hit.hit_id]
         elif hit.hit_id.startswith('CRISPR'):
-            f_type = 'crispr_repeat'
+            f_type = 'CRISPR'
         else:
             f_type = 'ncRNA'
         contig = contig_dict[hit.query_id]

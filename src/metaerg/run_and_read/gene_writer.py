@@ -33,10 +33,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         elif feature.type == 'retrotransposon':
             genome.number_of_retrotransposons += 1
             genome.fraction_repeats += feature.length_nt()
-        elif feature.type == 'crispr_repeat':
+        elif feature.type == 'CRISPR':
             genome.number_of_crispr_repeats += 1
             genome.fraction_repeats += feature.length_nt()
-        elif feature.type == 'repeat':
+        elif feature.type == 'repeat_unit':
             genome.number_of_other_repeats += 1
             genome.fraction_repeats += feature.length_nt()
 
