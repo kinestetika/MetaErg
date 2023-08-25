@@ -22,7 +22,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     return count
 
 
-@context.register_annotator
+#@context.register_annotator  # (to enable minced, uncomment and add to __init__
 def run_and_read_minced():
     return ({'pipeline_position': 1,
              'annotator_key': 'minced',

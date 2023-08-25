@@ -1,0 +1,114 @@
+import shutil
+import os
+from pathlib import Path
+
+from metaerg import context
+from metaerg.datatypes import gff
+from metaerg.datatypes import sqlite
+from metaerg.datatypes.functional_genes import FunctionalGene
+
+def _run_programs(genome, contig_dict, db_connection, result_files):
+    gff_file = context.spawn_file('gff', genome.name, extension='gff')
+    with open(gff_file, 'w') as handle:
+        gff.gff_write_genome(handle, contig_dict, db_connection)
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
+    padloc_database_path = context.DATABASE_DIR / 'padloc'
+    # crispr_detect_gff_path = context.spawn_file('crispr_detect.gff', genome.name)
+    result_files[0].mkdir(exist_ok=True, parents=True)
+    context.run_external(f'padloc --cpu {context.CPUS_PER_GENOME} --faa {cds_aa_file} --gff {gff_file} '
+                         f'--outdir {result_files[0]} --data {padloc_database_path} --force ')
+                         #f'--crispr {crispr_detect_gff_path}')
+
+
+def _read_results(genome, contig_dict, db_connection, result_files) -> int:
+    # read functions from padloc database
+    padloc_database_path = context.DATABASE_DIR / 'padloc'
+    database_data_file = padloc_database_path / 'hmm_meta.txt'
+    database_dict = {}
+    with open(database_data_file) as reader:
+        for line in reader:
+            words = line.split('\t')
+            database_dict[words[1]] = f'{words[1]} {words[2]}'
+    cds_aa_file = context.spawn_file('cds.faa', genome.name)
+    padloc_result_file = result_files[0] / (cds_aa_file.stem + '_padloc.gff')
+    padloc_features = []
+    padloc_feature_systems = {}
+    with gff.GffParser(padloc_result_file) as gff_parser:
+        for pf in gff_parser:
+            for f in sqlite.read_all_features(db_connection, additional_sql = f'start = {pf.start}'):
+                f.subsystems.append(FunctionalGene(f'Defense ({pf.type})', pf.id, 1))
+                padloc_features.append(f)
+
+                padloc_feature_systems[f] = pf.type  # we do not have easy access to the Functional Gene
+                break
+    # manage clusters
+    region_features = {}
+    padloc_features.sort(key=lambda x: (x.contig, padloc_feature_systems[x], x.start))
+    for i in range(1,len(padloc_features)):
+        f1 = padloc_features[i-1]
+        f2 = padloc_features[i]
+        if f1.contig != f2.contig or abs(f2.start - f1.start) > 5000 \
+                or padloc_feature_systems[f1] != padloc_feature_systems[f2]:
+            continue
+        if f1.parent and f2.parent:
+            if f1.parent == f2.parent:
+                if padloc_feature_systems[f2] not in region_features[f1.parent].descr:
+                    region_features[f1.parent].descr += f'; {padloc_feature_systems[f2]}'
+            else:
+                # merge
+                r1 = region_features[f1.parent]
+                r2 = region_features.pop(f2.parent)
+                if r2.descr not in r1.descr:
+                    r1.descr += f'; {r2.descr}'
+                for j in range(i+1):
+                    if padloc_features[j].parent == f2.parent:
+                        padloc_features[j].parent = f1.parent
+        elif f1.parent:
+            f2.parent = f1.parent
+            region_features[f1.parent].end = f2.end  # move region end up
+            if padloc_feature_systems[f2] not in region_features[f1.parent].descr:
+                region_features[f1.parent].descr += f'; {padloc_feature_systems[f2]}'
+        elif f2.parent:
+            f1.parent = f2.parent
+            region_features[f1.parent].start = max(f1.start - 1, 0)  # move region start up
+            if padloc_feature_systems[f1] not in region_features[f2.parent].descr:
+                region_features[f2.parent].descr += f'; {padloc_feature_systems[f1]}'
+        else:
+            region_feature = sqlite.Feature(genome=genome,
+                                            contig=f1.contig,
+                                            start=max(f1.start - 1, 0),
+                                            end=int(f2.end),
+                                            strand=1,
+                                            type='region',
+                                            inference='padloc',
+                                            descr=padloc_feature_systems[f1],
+                                            id=f'padloc_region_{max(f1.start - 1, 0)}')
+            f1.parent = region_feature.id
+            f2.parent = region_feature.id
+            region_features[region_feature.id] = region_feature
+        for f in padloc_features:
+            sqlite.update_feature_in_db(db_connection, f)
+        for f in region_features.values():
+            sqlite.update_feature_in_db(db_connection, f)
+    return len(padloc_features)
+
+
+@context.register_annotator
+def run_and_read_antismash():
+    return ({'pipeline_position': 92,
+             'annotator_key': 'padloc',
+             'purpose': 'prediction of microbial defense mechanisms',
+             'programs': ('padloc',),
+             'result_files': ('padloc',),
+             'run': _run_programs,
+             'read': _read_results})
+
+
+@context.register_database_installer
+def format_padloc_databases():
+    if 'D' not in context.DATABASE_TASKS:
+        return
+    padloc_database_path = context.DATABASE_DIR / 'padloc'
+    context.log(f'Installing padloc database at {padloc_database_path}')
+    padloc_database_path.mkdir(parents=True, exist_ok=True)
+    os.system(f'padloc --data {padloc_database_path} --db-update')

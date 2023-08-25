@@ -8,12 +8,23 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     j = 0
+    preliminary_id_mapping = {}
+    prelim_id = ''
     for feature in sqlite.read_all_features(db_connection):
+        # some features already got an id assigned, to keep track of gene clusters
+        if feature.parent:
+            try:
+                feature.parent = preliminary_id_mapping[feature.parent]
+            except KeyError:
+                context.log(f'WARNING: Unknown feature parent {feature.parent} reference for {feature.id}')
+        if feature.id:
+            prelim_id = feature.id
         if context.RENAME_CONTIGS:
             # contigs already contain genome name
             feature.id = context.DELIMITER.join((feature.contig, f'{j:05d}'))
         else:
             feature.id = context.DELIMITER.join((genome.name, feature.contig, f'{j:05d}'))
+        preliminary_id_mapping[prelim_id] = feature.id
         j += 1
         sqlite.update_feature_in_db(db_connection, feature)
         # update genome
@@ -42,7 +53,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
     genome.fraction_coding /= genome.size
     genome.fraction_repeats /= genome.size
-    genome.mean_protein_length /= genome.number_of_proteins
+    try:
+        genome.mean_protein_length /= genome.number_of_proteins
+    except ZeroDivisionError:
+        pass
     total_rna = genome.number_of_ribosomal_rna + genome.number_of_transfer_rna + genome.number_of_noncoding_rna
 
     cds_file = context.spawn_file('cds.faa', genome.name)

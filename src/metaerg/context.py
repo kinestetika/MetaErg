@@ -38,11 +38,12 @@ ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
                      'cdd': RUN_ANNOTATOR,
                      'checkm': RUN_ANNOTATOR,
                      'cmscan': RUN_ANNOTATOR,
+                     'crispr_detect': RUN_ANNOTATOR,
                      'diamond_and_blastn': RUN_ANNOTATOR,
                      'hmm': RUN_ANNOTATOR,
                      'write_genes': RUN_ANNOTATOR,
                      'ltr_harvest': RUN_ANNOTATOR,
-                     'minced': RUN_ANNOTATOR,
+                     'padloc': RUN_ANNOTATOR,
                      'prodigal': RUN_ANNOTATOR,
                      'signalp': RUN_ANNOTATOR,
                      'repeat_masker': RUN_ANNOTATOR,
@@ -118,7 +119,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     elif create_database:
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
         if create_database == 'all':
-            DATABASE_TASKS = 'PVEBRCSA'
+            DATABASE_TASKS = 'PVEBRCSAD'
         else:
             DATABASE_TASKS = create_database
         DATABASE_FORCE = True if force else False
@@ -294,18 +295,18 @@ def spawn_file(program_name, genome_id, base_dir = None, extension='') -> Path:
     if MULTI_MODE:
         dir = target_dir / program_name
         dir.mkdir(exist_ok=True)
-        if dir.is_file():
-            if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
-                dir.unlink()
-                dir.mkdir(exist_ok=True)
-            else:
-                raise Exception("Use force to overwrite existing results")
+        #if dir.is_file():
+            #if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
+            #    dir.unlink()
+            #    dir.mkdir(exist_ok=True)
+            #else:
+            #    raise Exception("Use force to overwrite existing results")
         return dir / f'{genome_id}.{extension}' if extension else dir / genome_id
     else:
         file = target_dir / f'{genome_id}.{program_name}'
-        if file.exists() and file.is_dir():
-            if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
-                shutil.rmtree(file)
+        #if file.exists() and file.is_dir():
+        #    if ANNOTATOR_STATUS[program_name] == FORCE_ANNOTATOR:
+        #        shutil.rmtree(file)
         return file
 
 
@@ -454,7 +455,7 @@ def register_annotator(define_annotator):
         positive_count = 0
         if results_complete:
             positive_count = param['read'](genome, contig_dict, db_connection, result_files)
-        log('({}) {} complete. Found {}.', (genome.name, param['purpose'], positive_count))
+        log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
         return 0
 
     registry.ANNOTATOR_REGISTRY[param['pipeline_position']] = annotator

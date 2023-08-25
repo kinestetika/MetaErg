@@ -10,7 +10,7 @@ GFF_ATTRIBUTES = ('id', 'parent', 'subsystems', 'descr', 'taxon', 'signal_peptid
 
 
 class GffParser:
-    def __init__(self, path, contig_dict, target_feature_type_dict:dict=None, inference:str=None):
+    def __init__(self, path, contig_dict:dict=None, target_feature_type_dict:dict=None, inference:str=None):
         self.path = path
         self.contig_dict = contig_dict
         self.target_feature_type_dict = target_feature_type_dict  # should be a dictionary to convert feature types
@@ -35,17 +35,21 @@ class GffParser:
                 case [contig_name, inference, feature_type, start, end, score, strand, frame, qualifiers]:
                     if self.target_feature_type_dict and feature_type not in self.target_feature_type_dict.keys():
                         continue
-                    try:
-                        contig = self.contig_dict[contig_name]
-                    except KeyError:
-                        continue
                     start = int(start) - 1
                     end = int(end)
                     strand = -1 if '-' == strand else 1
-                    seq = contig['seq'][start:end]
-                    if strand < 0:
-                        seq = fasta.reverse_complement(seq)
+                    seq = ''
+                    if self.contig_dict:
+                        try:
+                            contig = self.contig_dict[contig_name]
+                            seq = contig['seq'][start:end]
+                            if strand < 0:
+                                seq = fasta.reverse_complement(seq)
+                        except KeyError:
+                            continue
                     inference = self.inference if self.inference else inference
+                    if self.target_feature_type_dict:
+                        feature_type = self.target_feature_type_dict[feature_type]
                     qualifiers = re.split(r"[=;]", qualifiers)
                     qualifiers = [unquote(str) for str in qualifiers]
                     if len(qualifiers) % 2 != 0:
@@ -55,9 +59,15 @@ class GffParser:
                                start=start,
                                end=end,
                                strand=strand,
-                               type=self.target_feature_type_dict[feature_type],
+                               type=feature_type,
                                inference=inference,
                                nt_seq=seq)
+                    if 'name' in qualifiers.keys():
+                        feature.id = qualifiers['name']
+                    if 'id' in qualifiers.keys():
+                        feature.id = qualifiers['id']
+                    if 'parent' in qualifiers.keys():
+                        feature.parent.append(qualifiers['parent'])
                     if 'subsystems' in qualifiers.keys():
                         feature.subsystems = qualifiers['subsystems']
                     if 'descr' in qualifiers.keys():
@@ -89,15 +99,15 @@ def gff_write_genome(writer, contig_dict: dict, db_connection):
                 strand = '-'
             else:
                 strand = '.'
-            attributes = ';'.join([f'{k.capitalize()}={quote(v)}' for k,v in feature if v and k in GFF_ATTRIBUTES])
+            attributes = ';'.join([f'{k.capitalize()}={quote(str(v))}' for k, v in feature if v and k in GFF_ATTRIBUTES])
             attributes = 'ID' + attributes[2:]
-            writer.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}'.format(feature.contig,
-                                                                     feature.inference,
-                                                                     feature.type,
-                                                                     feature.start + 1,
-                                                                     feature.end + 1,
-                                                                     '.',  # score
-                                                                     strand,
-                                                                     '.',  # phase
-                                                                     attributes
-                                                                     ))
+            writer.write('{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\n'.format(feature.contig,
+                                                                       feature.inference,
+                                                                       feature.type,
+                                                                       feature.start + 1,
+                                                                       feature.end + 1,
+                                                                       '.',  # score
+                                                                       strand,
+                                                                       '.',  # phase
+                                                                       attributes
+                                                                       ))

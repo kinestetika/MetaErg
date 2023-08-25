@@ -6,12 +6,13 @@ from hashlib import md5
 
 import pandas as pd
 
-import metaerg.run_and_read.diamond_and_blastn
-import metaerg.run_and_read.functional_genes
-import metaerg.run_and_read.antismash
-from metaerg.datatypes import sqlite
 from metaerg.run_and_read import *
 from metaerg.html import *
+import metaerg.run_and_read.diamond_and_blastn
+#import metaerg.run_and_read.functional_genes
+#import metaerg.run_and_read.antismash
+from metaerg.run_and_read import tmhmm
+from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg import registry
 from metaerg.datatypes import functional_genes
@@ -19,7 +20,6 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import gbk
 from metaerg.datatypes.excel import write_genomes_to_xls
 from metaerg.html import html_all_genomes
-from metaerg.run_and_read import tmhmm
 from metaerg.installation import install_all_helper_programs
 
 VERSION = "2.3.42"
@@ -50,7 +50,7 @@ def parse_arguments():
                         help='Download ready-made metaerg database.')
     parser.add_argument('--create_database', default='', help='Create metaerg database from scratch (use "all", '
                                                                  'to create all components of the database.). Use '
-                                                                 'any combination of PVEBRCSA to only create specific '
+                                                                 'any combination of PVEBRCSAD to only create specific '
                                                                  'parts of the database (see README)')
     parser.add_argument('--install_deps', default='', help='Dir for installation of all dependencies '
                                                            '(helper programs). Dependencies will be installed here.')
@@ -59,12 +59,12 @@ def parse_arguments():
     parser.add_argument('--path_to_antismash_db', default='', help='Path to antismash databases.')
     parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
                                                      'everything, or antismash, aragorn, cdd, cmscan, diamond_and_blastn, hmm, '
-                                                     'ltr_harvest, minced, prodigal, signalp, repeat_masker, tmhmm, trf, '
+                                                     'ltr_harvest, crispr_detect, prodigal, signalp, repeat_masker, tmhmm, trf, '
                                                      'separated by commas (,) to redo specific steps')
     parser.add_argument('--update_annotations', default=False, action='store_true', help="Do not run any helper programs, only "
                                                                                 "update annotations with results from previous runs.")
     parser.add_argument('--skip_step', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
-                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, minced, prodigal, "
+                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, crispr_detect, prodigal, "
                                                         "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
 
     return parser.parse_args()

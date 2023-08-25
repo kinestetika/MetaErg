@@ -1,4 +1,3 @@
-import re
 from pathlib import Path
 
 from metaerg import context
@@ -124,9 +123,13 @@ def aggregate(db_connection):
     for gene_def in GENES:
         aggregated_subsystem_data[gene_def.subsystem][gene_def.gene] = []
     for feature in sqlite.read_all_features(db_connection):
-        for gene in feature.subsystems:
-            if gene.confidence > 0.25:
-                aggregated_subsystem_data[gene.subsystem][gene.gene].append(feature.id)
+        for subsystem in feature.subsystems:
+            if subsystem.confidence > 0.25:
+                if subsystem.subsystem not in aggregated_subsystem_data:
+                    aggregated_subsystem_data[subsystem.subsystem] = {}
+                if subsystem.gene not in aggregated_subsystem_data[subsystem.subsystem]:
+                    aggregated_subsystem_data[subsystem.subsystem][subsystem.gene] = []
+                aggregated_subsystem_data[subsystem.subsystem][subsystem.gene].append(feature.id)
     return aggregated_subsystem_data
 
 

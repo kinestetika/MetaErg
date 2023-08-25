@@ -107,7 +107,7 @@ def make_feature_html(f, top_taxon) -> str:
     f_as_dict = {k:v for k,v in f}
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f_as_dict[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'descr', 'taxon', 'notes',
-                               'antismash', 'signal_peptide', 'tmh', 'tmh_topology'))
+                               'signal_peptide', 'tmh', 'tmh_topology'))
     attribute_html += f'<tr><td id=al>subsystems</td><td id=al>{format_list_of_subsystem_genes(f.subsystems)}</td></tr>\n'
     attribute_html += f'<tr><td id=al>length</td><td id=al>{length} {length_unit}</td></tr>\n'
     attribute_html += '</table>\n'

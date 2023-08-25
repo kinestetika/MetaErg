@@ -1,4 +1,4 @@
-## metaerg.py, version 2.3.41
+## metaerg.py, version 2.3.42
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -20,7 +20,7 @@ conserved domain database and RPSBlast to assign genes to subsystems for effecti
 work in progress, and can be expanded and customized as needed.
 
 The Metaerg 2.3 pipeline ...
-* predicts CRISPR regions using [Minced](https://github.com/ctSkennerton/minced), version 0.4.2.
+* predicts CRISPR regions using [CRISPRDetect](https://github.com/davidchyou/CRISPRDetect_2.4), version 2.4.
 * predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/), version 1.2.41.
 * predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM, version 1.1.4.
 * predicts retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest, genometools version 1.6.2.
@@ -29,7 +29,7 @@ The Metaerg 2.3 pipeline ...
 * predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal), version 2.6.3.
 * annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
-* annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
+* annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
 * annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php), versions 2.0c and 6.0g.
 * assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
@@ -105,7 +105,7 @@ YOu can use the following arguments when running metaerg:
                         hmm                 Annotate gene functions according to metaergs built-in 
                                             scheme.
                         ltr_harvest         Call retrotransposons.
-                        minced              Call CRSIPR repeats.
+                        crispr_detect       Call CRSIPR repeats.
                         prodigal            Call open reading frames (genes encoding proteins). If
                                             you skip this step, no proteins will be annotated.
                         signalp             Annotate cellular location of proteins via signal
@@ -224,6 +224,7 @@ end                 the start position of the feature (exclusive)
 strand              the strand (0 or 1 for + or - respectively)
 type                the type of feature (for example CDS, rRNA, tRNA, ncRNA, retrotransposon)
 inference           the program used to infer the feature (for example prodigal for CDS)
+parent              the feature's parent (for example a CRISPR repeat has a repeat_region as a parent)
 subsystems          the subsystems (functional genes) the feauture is part of 
                     (for example "[ATP synthase|ATP synthase, subunit F0 B]")  
 descr               a succint description of the annotated function

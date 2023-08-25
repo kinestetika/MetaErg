@@ -23,7 +23,6 @@ SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     notes TEXT,
     aa_seq TEXT,
     nt_seq TEXT,
-    antismash TEXT,
     signal_peptide TEXT,
     tmh INT,
     tmh_topology TEXT,
@@ -47,7 +46,6 @@ SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     notes = ?,
     aa_seq = ?,
     nt_seq = ?,
-    antismash = ?,
     signal_peptide = ?,
     tmh = ?,
     tmh_topology = ?,
@@ -74,7 +72,6 @@ class Feature:
                  notes: str = '',
                  aa_seq: str = '',
                  nt_seq: str = '',
-                 antismash: str = '',
                  signal_peptide: str = '',
                  tmh: int = 0,
                  tmh_topology: str = '',
@@ -90,14 +87,13 @@ class Feature:
         self.strand = strand
         self.type = type
         self.inference = inference
-        self.parent = parent
+        self.parent = eval(parent) if parent else []
         self.subsystems = eval(subsystems) if subsystems else []
         self.descr = descr
         self.taxon = taxon
         self.notes = notes
         self.aa_seq = aa_seq
         self.nt_seq = nt_seq
-        self.antismash = antismash
         self.signal_peptide = signal_peptide
         self.tmh = tmh
         self.tmh_topology = tmh_topology
@@ -361,6 +357,7 @@ def drop_feature(sql_connection, feature: Feature):
                    (feature.rowid,))
     sql_connection.commit()
 
+
 def count_features(sql_connection):
     sql_connection.row_factory = None
     cursor = sql_connection.cursor()
@@ -368,10 +365,12 @@ def count_features(sql_connection):
     sql_connection.row_factory = feature_factory
     return total
 
+
 def read_feature_by_id(sql_connection, feature_id) -> Feature:
     cursor = sql_connection.cursor()
     result = cursor.execute('SELECT rowid, * FROM features WHERE id = ?', (feature_id,))
     return result.fetchone()
+
 
 def read_genome_by_id(sql_connection, genome_name) -> Genome:
     cursor = sql_connection.cursor()

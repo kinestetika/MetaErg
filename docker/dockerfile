@@ -22,7 +22,6 @@ RUN mkdir /bio/downloads
 RUN mkdir /bio/bin
 RUN mkdir /databases
 RUN mkdir /databases/antismash
-RUN mkdir /databases/metaerg
 RUN mkdir /data
 
 ENV PATH="/bio/bin/ncbi-blast/bin:$PATH"

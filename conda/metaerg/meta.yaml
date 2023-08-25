@@ -1,0 +1,56 @@
+{% set name = "MetaErg" %}
+{% set version = "2.3.41" %}
+{% set sha256 = "c6de429891342bfb35911b5a2a76151acc23b89e5f860318466616a5794929fc" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+build:
+  number: 0
+  noarch: python
+
+source:
+  url: https://files.pythonhosted.org/packages/01/d7/446934163408791fb609273fd607130bbecd078f34196b3e8648c3b11a3f/metaerg-2.3.41.tar.gz
+  sha256: {{ sha256 }}
+
+requirements:
+  build:
+    - python >=3.7
+    - pip
+  run:
+    - python >=3.11
+    - biopython
+    - ncbi-datasets-pylib
+    - pandas
+    - httpx
+    - h5py
+    - pyarrow
+    - openpyxl
+    - tqdm
+#    - minced >=0.4.2
+#    - aragorn >=1.2.41
+#    - infernal >=1.1.4
+#    - genometools
+#    - trf
+#    - repeatscout >=1.0.5
+#    - repeatmasker >=4.1.5
+#    - prodigal
+#    - diamond
+#    - antismash >=6.1.1
+
+test:
+  commands:
+    - metaerg -h
+
+about:
+  home: https://github.com/kinestetika/MetaErg
+  license: MIT
+  license_family: MIT
+  license_file: LICENSE.txt
+  summary: MetaErg - concise and complete annotations for prokaryote genomes 
+  description: |
+        MetaErg combines ncbi annotations and gtdg taxonomy with complete annotation of
+        repeats, RNA and protein coding genes.
+  dev_url: https://github.com/kinestetika/MetaErg
+  doc_url: https://github.com/kinestetika/MetaErg

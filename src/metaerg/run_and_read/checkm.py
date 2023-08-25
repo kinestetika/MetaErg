@@ -45,7 +45,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 def run_and_read_trf():
     return ({'pipeline_position': 131,
              'annotator_key': 'checkm',
-             'purpose': 'estimate genome completeness and contamination',
+             'purpose': 'estimation of genome completeness and contamination',
              'programs': (),
              'result_files': (),
              'run': _run_programs,

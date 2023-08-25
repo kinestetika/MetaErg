@@ -28,7 +28,7 @@ def get_empty_format_dict():
             'recall': '',
             'description': '',
             'taxon': '',
-            'ci': '', 'ca': '', 'cr': '', 'ct': ''}
+            'ci': '', 'ca': '', 'cr': '', 'ct': '', 'cc': ''}
 
 
 def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
@@ -44,7 +44,10 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
         format_hash['strand'] = "+" if f.strand > 0 else "-"
     else:
         format_hash['strand'] = ''
-    format_hash['length'] = len(f.aa_seq if 'CDS' == f.type else f.nt_seq)
+    if 'CDS' == f.type:
+        format_hash['length'] = f'{len(f.aa_seq):,} aa'
+    else:
+        format_hash['length'] = f'{f.end-f.start:,} nt'
     match f.tmh, f.signal_peptide, f.type:
         case [_, 'LIPO', _]:
             format_hash['destination'] = 'lipoprotein'
@@ -70,11 +73,13 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     top_taxon = top_taxon.split()
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(top_taxon)) / (len(taxon) + 1))]
+    if f.parent or 'region' == f.type:
+        format_hash['cc'] = ' id=cc'
 
 
 def format_hash_to_html(format_hash):
     return '''<tr>
-    <td id=al>{f_id}</td> <td>{strand}</td> <td>{length:,}</td> <td>{type}</td> <td>{destination}</td> 
+    <td id=al>{f_id}</td> <td{cc}>{strand}</td> <td>{length}</td> <td>{type}</td> <td>{destination}</td> 
     <td>{subsystem}</td> <td>{has_cdd}</td> <td{ci}>{ident}</td> <td{ca}>{align}</td> <td{cr}>{recall}</td> 
     <td id=al>{description}</td>
     <td{ct}>{taxon}</td>
@@ -98,29 +103,30 @@ def make_html(genome, db_connection) -> str:
     # table body
     table_body = ''
     previous_repeats = []
-    prev_f = None
+    repeat_types = set()
     for f in sqlite.read_all_features(db_connection):
-        if f.type in ('CRISPR', 'repeat_unit') and (not len(previous_repeats) or (f and f.type == prev_f.type)):
+        if f.type == 'CRISPR':
             previous_repeats.append(f)
-        elif len(previous_repeats):
-            format_hash = get_empty_format_dict()
-            format_hash['description'] = previous_repeats[0].id + ' ... ' + previous_repeats[-1].id
-            format_hash['type'] = f'[{len(previous_repeats)} {prev_f.type}s]' if len(previous_repeats) > 1 \
-                                  else prev_f.type
-            format_hash['length'] = previous_repeats[-1].end - previous_repeats[0].start
-            previous_repeats.clear()
-            table_body += format_hash_to_html(format_hash)
-            if f.type in ('CRISPR', 'repeat_unit'):
-                previous_repeats.append(f)
-            else:
-                format_hash = get_empty_format_dict()
-                format_feature(f, format_hash, genome.top_taxon, colors)
-                table_body += format_hash_to_html(format_hash)
+            repeat_types.add(f.type)
+        elif f.type == 'repeat_unit':
+            previous_repeats.append(f)
+            repeat_types.add('repeat')
+        elif f.type == 'binding_site':
+            previous_repeats.append(f)
+            repeat_types.add('spacer')
         else:
+            if previous_repeats:
+                format_hash = get_empty_format_dict()
+                format_hash['description'] = previous_repeats[0].id + ' ... ' + previous_repeats[-1].id
+                format_hash['type'] = f'{len(previous_repeats)} {", ".join(repeat_types)}(s)'
+                format_hash['length'] = f'{previous_repeats[-1].end - previous_repeats[0].start:,} nt'
+                previous_repeats.clear()
+                repeat_types.clear()
+                table_body += format_hash_to_html(format_hash)
+        if not f.type in ('repeat_region', 'spacer', 'binding_site', 'repeat_unit', 'CRISPR'):
             format_hash = get_empty_format_dict()
             format_feature(f, format_hash, genome.top_taxon, colors)
             table_body += format_hash_to_html(format_hash)
-        prev_f = f
     html = html.replace('TABLE_BODY', table_body)
     return html
 
@@ -174,6 +180,9 @@ $(document).ready( function () {
      }
   #al {
     text-align: left;
+      }
+  #cc {
+    background-color:#CCDDEE;
       }
 </style>
 

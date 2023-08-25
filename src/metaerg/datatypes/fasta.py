@@ -8,7 +8,7 @@ from metaerg.datatypes.functional_genes import format_list_of_subsystem_genes
 
 NON_IUPAC_RE_NT = re.compile(r'[^ACTGN]')
 NON_IUPAC_RE_AA = re.compile(r'[^RHKDESTNQCUGPAVILMFYW]')
-ALL_MASK_TARGETS = set('CDS rRNA tRNA tmRNA ncRNA repeat_unit CRISPR repeat_region region retrotransposon'.split())
+ALL_MASK_TARGETS = set('CDS rRNA tRNA tmRNA ncRNA repeat_unit CRISPR repeat_region binding_site region retrotransposon'.split())
 COMPLEMENT = {'A': 'T', 'C': 'G', 'G': 'C', 'T': 'A',}
 
 
