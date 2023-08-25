@@ -50,6 +50,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         if f1.contig != f2.contig or abs(f2.start - f1.start) > 5000 \
                 or padloc_feature_systems[f1] != padloc_feature_systems[f2]:
             continue
+
+
         if f1.parent and f2.parent:
             if f1.parent == f2.parent:
                 if padloc_feature_systems[f2] not in region_features[f1.parent].descr:

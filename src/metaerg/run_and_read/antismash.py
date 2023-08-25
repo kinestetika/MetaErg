@@ -38,7 +38,6 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         if not contig or not end:
             context.log('Warning: could not locate antimash results.')
             continue
-        region_id = f'antismash_region_{start}'
         region_feature = sqlite.Feature(genome=genome,
                                         contig=contig,
                                         start=max(int(start)-1, 0),
@@ -46,7 +45,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                         strand=1,
                                         type='region',
                                         inference='antismash',
-                                        id=region_id)
+                                        id=f'antismash_region_{start}')
         region_feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
         antismash_genes = []
         with gbk.GbkFeatureParser(f) as reader:
@@ -60,7 +59,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 antismash_gene_function = g.get('gene_functions', '')
                 antismash_gene_category = g.get('gene_kind', '')
                 if feature := sqlite.read_feature_by_id(db_connection, g['locus_tag']):
-                    feature.parent = region_id
+                    feature.parent.add(region_feature.id)
                     feature.notes += ' ' + ' '.join((region_feature.descr, antismash_gene_function,
                                                      antismash_gene_category))
                     feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
@@ -75,10 +74,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                                  strand=g['strand'],
                                                  type=g['type'],
                                                  inference='antismash',
-                                                 parent = region_id,
                                                  descr= ' '.join((region_feature.descr, antismash_gene_function,
                                                                   antismash_gene_category)),
                                                  aa_seq=g['translation'])
+                    new_feature.parent.add(region_feature.id)
                     #print('translation', new_feature.aa_seq)
                     new_feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
                     sqlite.add_new_feature_to_db(db_connection, new_feature)

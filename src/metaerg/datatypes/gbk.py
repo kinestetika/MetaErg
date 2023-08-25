@@ -30,7 +30,7 @@ def gbk_write_feature(writer, feature: sqlite.Feature):
                                                                       subsequent_indent = indent)))
 
     gbk_keys = {'locus_tag':  feature.id,
-                'parent':     feature.parent,
+                'parent':     "; ".join(feature.parent) if feature.parent else '',
                 'inference':  feature.inference,
                 'product':    feature.descr,
                 'taxonomy':   feature.taxon,

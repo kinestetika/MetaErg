@@ -67,7 +67,10 @@ class GffParser:
                     if 'id' in qualifiers.keys():
                         feature.id = qualifiers['id']
                     if 'parent' in qualifiers.keys():
-                        feature.parent.append(qualifiers['parent'])
+                        try:
+                            feature.parent = eval(qualifiers['parent']) if qualifiers['parent'] else set()
+                        except:
+                            feature.parent.add(qualifiers['parent'])
                     if 'subsystems' in qualifiers.keys():
                         feature.subsystems = qualifiers['subsystems']
                     if 'descr' in qualifiers.keys():

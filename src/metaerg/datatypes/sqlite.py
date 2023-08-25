@@ -87,7 +87,7 @@ class Feature:
         self.strand = strand
         self.type = type
         self.inference = inference
-        self.parent = eval(parent) if parent else []
+        self.parent = eval(parent) if parent else set()
         self.subsystems = eval(subsystems) if subsystems else []
         self.descr = descr
         self.taxon = taxon
