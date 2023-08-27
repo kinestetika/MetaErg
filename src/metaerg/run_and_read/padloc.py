@@ -22,13 +22,6 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     # read functions from padloc database
-    padloc_database_path = context.DATABASE_DIR / 'padloc'
-    database_data_file = padloc_database_path / 'hmm_meta.txt'
-    database_dict = {}
-    with open(database_data_file) as reader:
-        for line in reader:
-            words = line.split('\t')
-            database_dict[words[1]] = f'{words[1]} {words[2]}'
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     padloc_result_file = result_files[0] / (cds_aa_file.stem + '_padloc.gff')
     padloc_features = []
@@ -38,60 +31,55 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             for f in sqlite.read_all_features(db_connection, additional_sql = f'start = {pf.start}'):
                 f.subsystems.append(FunctionalGene(f'Defense ({pf.type})', pf.id, 1))
                 padloc_features.append(f)
-
                 padloc_feature_systems[f] = pf.type  # we do not have easy access to the Functional Gene
                 break
     # manage clusters
-    region_features = {}
+    region_features = []
+    current_region_feature = None
     padloc_features.sort(key=lambda x: (x.contig, padloc_feature_systems[x], x.start))
+    # first we simply create a region for cds that are close and have the same padloc "type"
     for i in range(1,len(padloc_features)):
         f1 = padloc_features[i-1]
         f2 = padloc_features[i]
         if f1.contig != f2.contig or abs(f2.start - f1.start) > 5000 \
                 or padloc_feature_systems[f1] != padloc_feature_systems[f2]:
+            current_region_feature = None
             continue
-
-
-        if f1.parent and f2.parent:
-            if f1.parent == f2.parent:
-                if padloc_feature_systems[f2] not in region_features[f1.parent].descr:
-                    region_features[f1.parent].descr += f'; {padloc_feature_systems[f2]}'
-            else:
-                # merge
-                r1 = region_features[f1.parent]
-                r2 = region_features.pop(f2.parent)
-                if r2.descr not in r1.descr:
-                    r1.descr += f'; {r2.descr}'
-                for j in range(i+1):
-                    if padloc_features[j].parent == f2.parent:
-                        padloc_features[j].parent = f1.parent
-        elif f1.parent:
-            f2.parent = f1.parent
-            region_features[f1.parent].end = f2.end  # move region end up
-            if padloc_feature_systems[f2] not in region_features[f1.parent].descr:
-                region_features[f1.parent].descr += f'; {padloc_feature_systems[f2]}'
-        elif f2.parent:
-            f1.parent = f2.parent
-            region_features[f1.parent].start = max(f1.start - 1, 0)  # move region start up
-            if padloc_feature_systems[f1] not in region_features[f2.parent].descr:
-                region_features[f2.parent].descr += f'; {padloc_feature_systems[f1]}'
+        if current_region_feature:
+            f2.parent.add(current_region_feature.id)
+            current_region_feature.end = min(int(f2.end)+1, contig_dict[f1.contig])
         else:
-            region_feature = sqlite.Feature(genome=genome,
-                                            contig=f1.contig,
-                                            start=max(f1.start - 1, 0),
-                                            end=int(f2.end),
-                                            strand=1,
-                                            type='region',
-                                            inference='padloc',
-                                            descr=padloc_feature_systems[f1],
-                                            id=f'padloc_region_{max(f1.start - 1, 0)}')
-            f1.parent = region_feature.id
-            f2.parent = region_feature.id
-            region_features[region_feature.id] = region_feature
+            current_region_feature = sqlite.Feature(genome=genome,
+                                                    contig=f1.contig,
+                                                    start=max(f1.start - 1, 0),
+                                                    end=min(int(f2.end)+1, contig_dict[f1.contig]),
+                                                    strand=1,
+                                                    type='region',
+                                                    inference='padloc',
+                                                    descr=padloc_feature_systems[f1],
+                                                    id=f'padloc_region_{max(f1.start - 1, 0)}')
+            f1.parent = current_region_feature.id
+            f2.parent = current_region_feature.id
+            region_features.append(current_region_feature)
+        # then we merge identical regions, while updating their type and children
+        removed_region_features = set()
+        for i in range(len(region_features)):
+            for j in range(i):
+                r1 = region_features[i]
+                r2 = region_features[j]
+                if r1.start == r2.start and r1.end == r2.end:
+                    r1.desc = f'{r1.desc}; {r2.desc}'
+                    removed_region_features.add(r2.id)
+                    for f in padloc_features:
+                        if r2.id in f.parent and f.start >= r1.start and f.end <= r1.end:
+                            f.parent.discard(r2.id)
+                            f.parent.add(r1.id)
+        # update features in db
         for f in padloc_features:
             sqlite.update_feature_in_db(db_connection, f)
-        for f in region_features.values():
-            sqlite.update_feature_in_db(db_connection, f)
+        for r in region_features:
+            if not r.id in removed_region_features:
+                sqlite.update_feature_in_db(db_connection, r)
     return len(padloc_features)
 
 
