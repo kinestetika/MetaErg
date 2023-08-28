@@ -293,13 +293,13 @@ def genome_factory(cursor, row) -> Genome:
     return Genome(**{key: value for key, value in zip(fields, row)})
 
 
-# def connect_to_db(sql_db_file, target='Features'):
-#     connection = sql.connect(sql_db_file)
-#     if 'Features' == target:
-#         connection.row_factory = feature_factory
-#     elif 'Genomes' == target:
-#         connection.row_factory = genome_factory
-#     return connection
+def connect_to_db(sql_db_file, target='Features'):
+    connection = sql.connect(sql_db_file)
+    if 'Features' == target:
+        connection.row_factory = feature_factory
+    elif 'Genomes' == target:
+        connection.row_factory = genome_factory
+    return connection
 
 def create_db(target='Features'):
     #sql_db_file.unlink(missing_ok=True)

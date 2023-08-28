@@ -58,8 +58,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                                     inference='padloc',
                                                     descr=padloc_feature_systems[f1],
                                                     id=f'padloc_region_{max(f1.start - 1, 0)}')
-            f1.parent = current_region_feature.id
-            f2.parent = current_region_feature.id
+            f1.parent.add(current_region_feature.id)
+            f2.parent.add(current_region_feature.id)
             region_features.append(current_region_feature)
         # then we merge identical regions, while updating their type and children
         removed_region_features = set()

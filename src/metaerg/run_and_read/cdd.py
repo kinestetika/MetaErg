@@ -8,9 +8,12 @@ from metaerg.datatypes import functional_genes
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
-
+from metaerg.calculations.cluster_database import get_match_key
 
 CDD = {}
+CDD_CLUSTERS = {}
+CLUSTER_MAX_CDD_HITS = 5
+CLUSTER_MIN_MATCH_SCORE = 0.2
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
@@ -38,8 +41,14 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     cdd_result_count = 0
     subsystem_result_count = 0
+    cdd_cluster_count = 0
     def get_cdd_db_entry(id: str) -> DBentry:
         return CDD[int(id[4:])]
+
+    previous_feature = None
+    current_region_feature = None
+    current_cluster_min_score = 0.0
+    current_cluster_max_score = 0.0
 
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
@@ -47,6 +56,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             if not feature:
                 raise Exception(f'Found results for unknown feature {cdd_result.query()}, '
                                 f'may need to rerun metaerg with --force')
+            # process the feature's cdd
             feature.cdd = cdd_result
             cdd_result_count += 1
             if new_matches := functional_genes.match(cdd_result):
@@ -58,8 +68,54 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
+            # cluster preprocessing
+            if previous_feature and feature.contig == previous_feature.contig:
+                # cluster main processing
+                match_score = 0
+                for cdd_hit_1 in feature.cdd[:CLUSTER_MAX_CDD_HITS]:
+                    for cdd_hit_2 in previous_feature[:CLUSTER_MAX_CDD_HITS]:
+                        match_score += CDD_CLUSTERS.get(get_match_key(cdd_hit_1, cdd_hit_2), 0)
+                match_score /= CLUSTER_MAX_CDD_HITS
+                if match_score > CLUSTER_MIN_MATCH_SCORE:
+                    if current_region_feature:
+                        feature.parent.add(current_region_feature.id)
+                        current_region_feature.end = min(int(feature.end) + 1, contig_dict[feature.contig])
+                        if match_score > current_cluster_max_score:
+                            current_cluster_max_score = match_score
+                        if match_score < current_cluster_min_score:
+                            current_cluster_min_score = match_score
+                    else:
+                        current_region_feature = sqlite.Feature(genome=genome,
+                                                                contig=feature.contig,
+                                                                start=max(previous_feature.start - 1, 0),
+                                                                end=min(int(feature.end) + 1, contig_dict[feature.contig]),
+                                                                strand=1,
+                                                                type='region',
+                                                                inference='padloc',
+                                                                descr=f'CDD-based cluster (score {match_score}-{match_score})',
+                                                                id=f'cdd_region_{max(previous_feature.start - 1, 0)}')
+                        sqlite.add_new_feature_to_db(db_connection, current_region_feature)
+                        previous_feature.parent.add(current_region_feature.id)
+                        sqlite.update_feature_in_db(db_connection, previous_feature)
+                        feature.parent.add(current_region_feature.id)
+                        cdd_cluster_count += 1
+                        current_cluster_min_score = match_score
+                        current_cluster_max_score = match_score
+                else:
+                    current_region_feature.descr = f'CDD-based cluster (score {current_cluster_min_score}-{current_cluster_max_score})',
+                    sqlite.update_feature_in_db(db_connection, current_region_feature)
+                    current_region_feature = None
+                    current_cluster_min_score = 0.0
+                    current_cluster_max_score = 0.0
+            # cluster post-processing...
+            previous_feature = feature
+            # write feature
             sqlite.update_feature_in_db(db_connection, feature)
-    context.log(f'({genome.name}) Found {subsystem_result_count} matches to subsystems.')
+    if current_region_feature:
+        current_region_feature.descr = f'CDD-based cluster (score {current_cluster_min_score}-{current_cluster_max_score})',
+        sqlite.update_feature_in_db(db_connection, current_region_feature)
+
+    context.log(f'({genome.name}) Found {subsystem_result_count} matches to subsystems, created {cdd_cluster_count} CDD clusters.')
     return cdd_result_count
 
 
@@ -71,6 +127,14 @@ def preload_db():
             CDD[int(words[0])] = DBentry(domain='cdd', accession=words[1], gene=words[2], descr=words[3],
                                          length=int(words[4]))
     context.log(f'Parsed {len(CDD)} entries from conserved domain database.')
+    cdd_cluster_db = Path(context.DATABASE_DIR, 'cdd', 'cddid.clusters')
+    if cdd_cluster_db.exists():
+        with open(cdd_cluster_db) as db_handle:
+            for line in db_handle:
+                words = line.split('\t')
+                CDD_CLUSTERS[words[0]] = float(words[1])
+    context.log(f'Parsed {len(CDD_CLUSTERS)} gene-context-associations for profiles.')
+
 
 
 @context.register_annotator
