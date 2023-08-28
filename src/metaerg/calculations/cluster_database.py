@@ -11,12 +11,22 @@ MIN_MATCH_SCORE = 0.33
 def compute_cluster_db(data_dir: Path, db_file: Path, data_file_extension: str = '.sqlite',
                        cluster_window_size: int = CLUSTER_WINDOW_SIZE, max_cdd_hits: int = MAX_CDD_HITS,
                        min_match_score:float = MIN_MATCH_SCORE):
-    # TODO: first load db ...
     if cluster_window_size < 2:
         raise Exception(f'{cluster_window_size} < 2, should be >=2')
-    contig_files = [f for f in sorted(data_dir.glob(f'*{data_file_extension}')) if f.is_file()]
+
     profile_counts = Counter()
     profile_match_counts = Counter()
+    # TODO: first load db ...
+    if db_file.exists():
+        with open(db_file) as prev_clustering_results:
+            for line in prev_clustering_results:
+                words = line.split('\t')
+                (accession1, accession2) = words[0].split(' ')
+                profile_counts[accession1] = int(words[3])
+                profile_counts[accession2] = int(words[4])
+                profile_match_counts[words[0]] = int(words[2])
+
+    contig_files = [f for f in sorted(data_dir.glob(f'*{data_file_extension}')) if f.is_file()]
     for data_db_file in contig_files:
         window = deque(maxlen=cluster_window_size)
         db_connection = sqlite.connect_to_db(data_db_file, target='Features')
