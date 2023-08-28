@@ -16,7 +16,6 @@ def compute_cluster_db(data_dir: Path, db_file: Path, data_file_extension: str =
 
     profile_counts = Counter()
     profile_match_counts = Counter()
-    # TODO: first load db ...
     if db_file.exists():
         with open(db_file) as prev_clustering_results:
             for line in prev_clustering_results:

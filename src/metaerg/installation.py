@@ -20,18 +20,21 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
     # >source /home/my_name/bin/metaerg/bin/profile
     # (if that is the path to your installation)
     profile = f'''
-    # export BIOINF_PREFIX={bin_dir}
-    # PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
-    # PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
-    # PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
-    # PATH=$BIOINF_PREFIX/repeatscout:$PATH
-    # PATH=$BIOINF_PREFIX/repeatmasker:$PATH
-    # PATH=$BIOINF_PREFIX/minced:$PATH
-    # PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
-    # PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
-    # PATH=$BIOINF_PREFIX:$PATH
-    # export PATH
-    # '''
+export BIOINF_PREFIX={bin_dir}
+PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
+PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
+PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
+PATH=$BIOINF_PREFIX/repeatscout:$PATH
+PATH=$BIOINF_PREFIX/repeatmasker:$PATH
+PATH=$BIOINF_PREFIX/minced:$PATH
+PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
+PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
+PATH=$BIOINF_PREFIX/emboss/bin:$PATH
+PATH=$BIOINF_PREFIX/vienna_rna/bin:$PATH
+PATH=$BIOINF_PREFIX/cd-hit:$PATH
+PATH=$BIOINF_PREFIX:$PATH
+export PATH
+'''
     profile_file = bin_dir / 'profile'
     with open(profile_file, "w") as profile_handle:
         profile_handle.write(profile)
@@ -41,14 +44,60 @@ def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tm
             os.environ["PATH"] += ':' + line.replace('PATH=$PATH:$BIOINF_PREFIX', str(bin_dir))
     print(os.environ["PATH"])
     os.chdir(bin_dir)
-    # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
-    os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
-    os.system('tar -xf 0.4.2.tar.gz')
-    os.chdir('minced-0.4.2')
+    # # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
+    # os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
+    # os.system('tar -xf 0.4.2.tar.gz')
+    # os.chdir('minced-0.4.2')
+    # os.system('make')
+    # os.chdir(bin_dir)
+    # os.system('mv minced-0.4.2 minced')
+    # os.system('rm 0.4.2.tar.gz')
+
+    # (crisprdetect) crisprdetect 2.4 https://github.com/davidchyou/CRISPRDetect_2.4/tree/master
+    # first we need emboss
+    os.system("wget -m 'ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz'")
+    os.system('mv emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz .')
+    os.system('rm -r emboss.open-bio.org')
+    os.system('tar -zxf emboss-latest.tar.gz')
+    os.system('rm emboss-latest.tar.gz')
+    os.chdir('EMBOSS-6.6.0/')
+    os.system(f'./configure --prefix={bin_dir / "emboss"}')
+    os.system('make')
+    os.system(f'make install')
+    os.chdir(bin_dir)
+    os.system('rm -r EMBOSS-6.6.0/')
+    # we also need the vienna RNA suite
+    os.system('wget https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_6_x/ViennaRNA-2.6.3.tar.gz')
+    os.system('tar -zxf ViennaRNA-2.6.3.tar.gz')
+    os.system('rm ViennaRNA-2.6.3.tar.gz')
+    os.chdir('ViennaRNA-2.6.3/')
+    os.system('./configure --prefix=/home/kinestetika/bin/vienna_rna --without-perl --without-python --without-rnaxplorer')
+    os.system('make')
+    os.system(f'make install')
+    os.chdir(bin_dir)
+    os.system('rm -rf ViennaRNA-2.6.3')
+    # we also need (cdhit) cd-hit 4.8.1 https://github.com/weizhongli/cdhit
+    os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
+    os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
+    os.chdir('cd-hit-v4.8.1-2019-0228')
     os.system('make')
     os.chdir(bin_dir)
-    os.system('mv minced-0.4.2 minced')
-    os.system('rm 0.4.2.tar.gz')
+    os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
+    os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
+    # finally: CRISPRDetect
+    os.system('git clone https://github.com/davidchyou/CRISPRDetect_2.4.git')
+    os.chdir('CRISPRDetect_2.4/')
+    os.system('unzip CRISPRDetect_2.4.zip')
+    os.system('rm CRISPRDetect_2.4.zip')
+    os.chdir(bin_dir)
+    os.system('mv CRISPRDetect_2.4/CRISPRDetect_2.4 CRISPRDetect')
+    os.system('rm -rf CRISPRDetect_2.4/')
+    os.system('mv CRISPRDetect/clustalw .')
+    os.system('chmod a+x clustalw')
+    os.system('chmod a+x CRISPRDetect/CRISPRDetect.pl')
+    # still need to make sure we install package perl-parallel-forkmanager with pacman
+
+    # (padloc)
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
     os.system('wget -q https://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c')
     os.system('gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.41.c')
