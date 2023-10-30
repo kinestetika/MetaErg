@@ -32,8 +32,10 @@ PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
 PATH=$BIOINF_PREFIX/emboss/bin:$PATH
 PATH=$BIOINF_PREFIX/vienna_rna/bin:$PATH
 PATH=$BIOINF_PREFIX/cd-hit:$PATH
-PATH=$BIOINF_PREFIX:$PATH
+PATH=$BIOINF_PREFIX/padloc/bin:$PATH
+PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 export PATH
+export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
     profile_file = bin_dir / 'profile'
     with open(profile_file, "w") as profile_handle:
@@ -96,8 +98,14 @@ export PATH
     os.system('chmod a+x clustalw')
     os.system('chmod a+x CRISPRDetect/CRISPRDetect.pl')
     # still need to make sure we install package perl-parallel-forkmanager with pacman
-
     # (padloc)
+    # still need to make sure we install package r with pacman
+    os.system('wget https://github.com/padlocbio/padloc/archive/refs/tags/v2.0.0.tar.gz')
+    os.system('tar zxf v2.0.0.tar.gz')
+    os.system('rm v2.0.0.tar.gz')
+    os.system('mv padloc-2.0.0/ padloc')
+    os.system('Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'/bio/bin/r\', repos=\'https://cran.rstudio.com\')"')
+    os.system('mkdir r')
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
     os.system('wget -q https://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c')
     os.system('gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.41.c')
