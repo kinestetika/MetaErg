@@ -14,7 +14,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         # some features already got an id assigned, to keep track of gene clusters
         if feature.parent:
             try:
-                feature.parent = preliminary_id_mapping[feature.parent]
+                new_parent_ids = set()
+                for p in feature.parent:
+                    new_parent_ids.add(preliminary_id_mapping[p])
+                feature.parent = new_parent_ids
             except KeyError:
                 context.log(f'WARNING: Unknown feature parent {feature.parent} reference for {feature.id}')
         if feature.id:

@@ -68,18 +68,17 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
-            # cluster preprocessing
+            # process the clustering
             if previous_feature and feature.contig == previous_feature.contig:
-                # cluster main processing
                 match_score = 0
-                for cdd_hit_1 in feature.cdd[:CLUSTER_MAX_CDD_HITS]:
-                    for cdd_hit_2 in previous_feature[:CLUSTER_MAX_CDD_HITS]:
+                for cdd_hit_1 in feature.cdd.hits[:CLUSTER_MAX_CDD_HITS]:
+                    for cdd_hit_2 in previous_feature.cdd.hits[:CLUSTER_MAX_CDD_HITS]:
                         match_score += CDD_CLUSTERS.get(get_match_key(cdd_hit_1, cdd_hit_2), 0)
                 match_score /= CLUSTER_MAX_CDD_HITS
                 if match_score > CLUSTER_MIN_MATCH_SCORE:
                     if current_region_feature:
                         feature.parent.add(current_region_feature.id)
-                        current_region_feature.end = min(int(feature.end) + 1, contig_dict[feature.contig])
+                        current_region_feature.end = min(int(feature.end) + 1, len(contig_dict[feature.contig]['seq']))
                         if match_score > current_cluster_max_score:
                             current_cluster_max_score = match_score
                         if match_score < current_cluster_min_score:
@@ -88,7 +87,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                         current_region_feature = sqlite.Feature(genome=genome,
                                                                 contig=feature.contig,
                                                                 start=max(previous_feature.start - 1, 0),
-                                                                end=min(int(feature.end) + 1, contig_dict[feature.contig]),
+                                                                end=min(int(feature.end) + 1, len(contig_dict[feature.contig]['seq'])),
                                                                 strand=1,
                                                                 type='region',
                                                                 inference='padloc',
@@ -101,7 +100,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                         cdd_cluster_count += 1
                         current_cluster_min_score = match_score
                         current_cluster_max_score = match_score
-                else:
+                elif current_region_feature:
                     current_region_feature.descr = f'CDD-based cluster (score {current_cluster_min_score}-{current_cluster_max_score})',
                     sqlite.update_feature_in_db(db_connection, current_region_feature)
                     current_region_feature = None

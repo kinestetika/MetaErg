@@ -58,14 +58,15 @@ def parse_arguments():
     parser.add_argument('--path_to_tmhmm', default='', help='Path to tmhmm-2.0c.Linux.tar.gz.')
     parser.add_argument('--path_to_antismash_db', default='', help='Path to antismash databases.')
     parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
-                                                     'everything, or antismash, aragorn, cdd, cmscan, diamond_and_blastn, hmm, '
-                                                     'ltr_harvest, crispr_detect, prodigal, signalp, repeat_masker, tmhmm, trf, '
-                                                     'separated by commas (,) to redo specific steps')
+                                                     'everything, or antismash, aragorn, cdd, cmscan, crispr_detect, '
+                                                     'diamond_and_blastn, hmm, ltr_harvest, padloc, prodigal, signalp, '
+                                                     'repeat_masker, tmhmm, trf, separated by commas (,) to redo specific steps')
     parser.add_argument('--update_annotations', default=False, action='store_true', help="Do not run any helper programs, only "
                                                                                 "update annotations with results from previous runs.")
     parser.add_argument('--skip_step', default='', help="Skip one or more annotation steps. Steps are: antismash, aragorn, "
-                                                        "cdd, cmscan, diamond_and_blastn, hmm, ltr_harvest, crispr_detect, prodigal, "
-                                                        "signalp, repeat_masker, tmhmm, trf, separated by commas (,)")
+                                                        "cdd, cmscan, crispr_detect, diamond_and_blastn, hmm, ltr_harvest, "
+                                                        "padloc, prodigal, signalp, repeat_masker, tmhmm, trf, "
+                                                        "separated by commas (,)")
 
     return parser.parse_args()
 

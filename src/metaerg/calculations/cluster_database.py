@@ -61,7 +61,7 @@ def compute_cluster_db(data_dir: Path, db_file: Path, data_file_extension: str =
 
 
 def get_match_key(cdd_hit_1: BlastHit, cdd_hit_2: BlastHit) -> str:
-    if cdd_hit_1.hit.accession == cdd_hit_2.hit.accession or cdd_hit_1 < cdd_hit_2:
+    if cdd_hit_1.hit.accession <= cdd_hit_2.hit.accession:
         return f'{cdd_hit_1.hit.accession} {cdd_hit_2.hit.accession}'
     else:
         return f'{cdd_hit_2.hit.accession} {cdd_hit_1.hit.accession}'

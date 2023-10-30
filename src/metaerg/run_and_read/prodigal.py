@@ -26,7 +26,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             nucl_seq_hash[seq_rec['id']] = seq_rec['seq']
     count = 0
     dropped_repeat_count = 0
-    repeat_count_before_arbitration = sum(1 for f in sqlite.read_all_features(db_connection, type='repeat'))
+    repeat_count_before_arbitration = sum(1 for f in sqlite.read_all_features(db_connection, type='repeat_unit'))
     with fasta.FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         rejected_cds_count = 0
         for seq_rec in fasta_reader:

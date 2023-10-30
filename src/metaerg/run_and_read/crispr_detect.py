@@ -4,17 +4,20 @@ from metaerg.datatypes import fasta, gff, sqlite
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Executes the helper programs to complete the analysis"""
+    result_files[0] = result_files[0].parent / (result_files[0].stem +'.gff')
+    result_file_without_extension = result_files[0].parent / result_files[0].stem
     fasta_file = context.spawn_file('masked', genome.name)
     fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
                                  mask_targets=fasta.ALL_MASK_TARGETS)
-    result_file_base_name = result_files[0].name[:-4]
-    context.run_external(f'CRISPRDetect.pl -f {fasta_file} -o {context.TEMP_DIR / result_file_base_name} -array_quality_score_cutoff 3 -minimum_word_repeatation 3')
+    #result_file_base_name = result_files[0].name[:-4]
+
+    context.run_external(f'CRISPRDetect.pl -f {fasta_file} -o {result_file_without_extension} '
+                         f'-array_quality_score_cutoff 3 -minimum_word_repeatation 3')
     # remove unneeded output
-    for file in context.TEMP_DIR.glob(f'{result_file_base_name}*'):
+    for file in result_files[0].parent.glob(f'{result_files[0].stem}*'):
         if not file.name.endswith('gff'):
             # context.log(f'removing {file}')
             file.unlink()
-
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""

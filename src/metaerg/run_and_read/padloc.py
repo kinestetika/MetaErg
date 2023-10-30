@@ -47,12 +47,12 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             continue
         if current_region_feature:
             f2.parent.add(current_region_feature.id)
-            current_region_feature.end = min(int(f2.end)+1, contig_dict[f1.contig])
+            current_region_feature.end = min(int(f2.end)+1, len(contig_dict[f1.contig]['seq']))
         else:
             current_region_feature = sqlite.Feature(genome=genome,
                                                     contig=f1.contig,
                                                     start=max(f1.start - 1, 0),
-                                                    end=min(int(f2.end)+1, contig_dict[f1.contig]),
+                                                    end=min(int(f2.end)+1, len(contig_dict[f1.contig]['seq'])),
                                                     strand=1,
                                                     type='region',
                                                     inference='padloc',
@@ -62,24 +62,24 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             f2.parent.add(current_region_feature.id)
             region_features.append(current_region_feature)
         # then we merge identical regions, while updating their type and children
-        removed_region_features = set()
-        for i in range(len(region_features)):
-            for j in range(i):
-                r1 = region_features[i]
-                r2 = region_features[j]
-                if r1.start == r2.start and r1.end == r2.end:
-                    r1.desc = f'{r1.desc}; {r2.desc}'
-                    removed_region_features.add(r2.id)
-                    for f in padloc_features:
-                        if r2.id in f.parent and f.start >= r1.start and f.end <= r1.end:
-                            f.parent.discard(r2.id)
-                            f.parent.add(r1.id)
-        # update features in db
-        for f in padloc_features:
-            sqlite.update_feature_in_db(db_connection, f)
-        for r in region_features:
-            if not r.id in removed_region_features:
-                sqlite.update_feature_in_db(db_connection, r)
+    removed_region_features = set()
+    for i in range(len(region_features)):
+        for j in range(i):
+            r1 = region_features[i]
+            r2 = region_features[j]
+            if r1.start == r2.start and r1.end == r2.end:
+                r1.descr = f'{r1.descr}; {r2.descr}'
+                removed_region_features.add(r2.id)
+                for f in padloc_features:
+                    if r2.id in f.parent and f.start >= r1.start and f.end <= r1.end:
+                        f.parent.discard(r2.id)
+                        f.parent.add(r1.id)
+    # update features in db
+    for f in padloc_features:
+        sqlite.update_feature_in_db(db_connection, f)
+    for r in region_features:
+        if not r.id in removed_region_features:
+            sqlite.update_feature_in_db(db_connection, r)
     return len(padloc_features)
 
 
