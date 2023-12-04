@@ -179,6 +179,7 @@ def main():
         context.DATABASE_TASKS = 'SA'
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
+        metaerg.run_and_read.padloc.format_padloc_databases()
         context.log('If you would like to annotate secondary metabolite genes, make sure antismash databases are installed.')
         #metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:

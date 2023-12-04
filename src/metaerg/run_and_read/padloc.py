@@ -24,6 +24,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     # read functions from padloc database
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     padloc_result_file = result_files[0] / (cds_aa_file.stem + '_padloc.gff')
+    if not padloc_result_file.exists() or not padloc_result_file.stat().st_size:
+        context.log('({}) Missing expected result file {}; This happens when padloc '
+                    'predicts no defenese genes.', (genome.name, padloc_result_file))
+        return 0
     padloc_features = []
     padloc_feature_systems = {}
     with gff.GffParser(padloc_result_file) as gff_parser:

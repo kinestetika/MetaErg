@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 from shutil import which
-
+from virtualenv import cli_run
 
 def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path, path_to_antismash_db: Path):
     # check for required programs
@@ -239,12 +239,23 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
         os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
 
     #(antismash)
-    antismash_database_python_dir = Path(
-        which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
+    # need to create antismash virtualenv here
     os.chdir(bin_dir)
+    cli_run(["antismash-env"])
+    os.chdir("antismash-env")
+    antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
     os.system('wget https://dl.secondarymetabolites.org/releases/7.0.0/antismash-7.0.0.tar.gz')
     os.system('tar -xf antismash-7.0.0.tar.gz')
-    os.system(f'{Path(which("python")).parent / "pip"} install --upgrade ./antismash-7.0.0')
-    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0')
+    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7.0.0')
+    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
     os.system(f'rm -rf {antismash_database_python_dir}')
     os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
+    antismash_bin =  bin_dir / 'antismash-env' / 'bin'
+    antismash_wrapper = bin_dir / 'antismash'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "antismash"} "$@"\n')
+    os.system('chmod a+x antismash')
+    antismash_wrapper = bin_dir / 'download-antismash-databases'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
+    os.system('chmod a+x download-antismash-databases')
