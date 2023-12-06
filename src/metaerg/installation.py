@@ -3,7 +3,7 @@ import os
 from shutil import which
 from virtualenv import cli_run
 
-def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_tmhmm: Path, path_to_antismash_db: Path):
+def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_antismash_db: Path):
     # check for required programs
     success = True
     for cmd in 'git make gcc tar wget perl sed'.split():
@@ -34,6 +34,8 @@ PATH=$BIOINF_PREFIX/vienna_rna/bin:$PATH
 PATH=$BIOINF_PREFIX/cd-hit:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
+PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
+
 export PATH
 export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
@@ -215,17 +217,17 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system('ln -sf FastTreeMP fasttree')
     os.system('ln -sf FastTreeMP FastTree')
     # (tmhmm) tmhmm 2.0c https://services.healthtech.dtu.dk/software.php
-    if path_to_tmhmm:
-        os.chdir(bin_dir)
-        os.system(f'cp {path_to_tmhmm} {bin_dir}')
-        os.system(f'tar -xf {path_to_tmhmm.name}')
-        perl_exec = which('perl')  # \/usr\/bin\/perl on archlinux
-        print(f'detected perl at {perl_exec}')
-        os.system(f'sed -i "s|/usr/local/bin/perl|{perl_exec}|g" tmhmm-2.0c/bin/tmhmm')
-        os.system(f'sed -i "s|/usr/local/bin/perl|{perl_exec}|g" tmhmm-2.0c/bin/tmhmmformat.pl')
-        os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
-        os.system('rm tmhmm-2.0c.Linux.tar.gz')
-        os.system('ln -s tmhmm-2.0c tmhmm')
+    # if path_to_tmhmm:
+    #     os.chdir(bin_dir)
+    #     os.system(f'cp {path_to_tmhmm} {bin_dir}')
+    #     os.system(f'tar -xf {path_to_tmhmm.name}')
+    #     perl_exec = which('perl')  # \/usr\/bin\/perl on archlinux
+    #     print(f'detected perl at {perl_exec}')
+    #     os.system(f'sed -i "s|/usr/local/bin/perl|{perl_exec}|g" tmhmm-2.0c/bin/tmhmm')
+    #     os.system(f'sed -i "s|/usr/local/bin/perl|{perl_exec}|g" tmhmm-2.0c/bin/tmhmmformat.pl')
+    #     os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
+    #     os.system('rm tmhmm-2.0c.Linux.tar.gz')
+    #     os.system('ln -s tmhmm-2.0c tmhmm')
     # (signalp) 6.0g
     if path_to_signalp:
         model_dir = Path(
@@ -237,7 +239,11 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
         os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
         os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
         os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
-
+    #(PureSeqTM) https://github.com/PureseqTM/pureseqTM_package
+    os.chdir(bin_dir)
+    os.system('git clone https://github.com/PureseqTM/PureseqTM_Package.git')
+    # The following line sets PureseqTM to run in fast mode. Results in fast mode are very close to slow mode.
+    os.system(f'sed -i "s|-K \$kill_tmp -H \$home|-K \$kill_tmp -H \$home -m 0|g" PureseqTM_Package/PureseqTM_proteome.sh')
     #(antismash)
     # need to create antismash virtualenv here
     os.chdir(bin_dir)

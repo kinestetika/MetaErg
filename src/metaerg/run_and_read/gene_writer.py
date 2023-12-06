@@ -5,6 +5,13 @@ from metaerg.datatypes import sqlite
 def _run_programs(genome, contig_dict, db_connection, result_files):
     pass
 
+def create_new_id(genome_name:str, contig_name:str, feature_number:int):
+    if context.RENAME_CONTIGS:
+        # contigs already contain genome name
+        return context.DELIMITER.join((contig_name, f'{feature_number:05d}'))
+    else:
+        return context.DELIMITER.join((genome_name, contig_name, f'{feature_number:05d}'))
+
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     j = 0
@@ -22,11 +29,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 context.log(f'WARNING: Unknown feature parent {feature.parent} reference for {feature.id}')
         if feature.id:
             prelim_id = feature.id
-        if context.RENAME_CONTIGS:
-            # contigs already contain genome name
-            feature.id = context.DELIMITER.join((feature.contig, f'{j:05d}'))
-        else:
-            feature.id = context.DELIMITER.join((genome.name, feature.contig, f'{j:05d}'))
+        feature.id = create_new_id(genome.name, feature.contig, j)
         preliminary_id_mapping[prelim_id] = feature.id
         j += 1
         sqlite.update_feature_in_db(db_connection, feature)

@@ -85,7 +85,6 @@ class GbkFeatureParser:
         current_contig_name = ''
         current_feature = {}
         current_k = ''
-        current_v = ''
         parsing_features = False
         while line := self.handle.readline():
             if line.startswith('ACCESSION'):
@@ -96,8 +95,8 @@ class GbkFeatureParser:
                 continue
             elif line.startswith('ORIGIN'):
                 if current_feature:
-                    if current_v:
-                        current_feature[current_k] = current_v.strip('"')
+                    current_k = ''
+                    #print(current_feature)
                     yield current_feature
                 parsing_features = False
                 continue
@@ -106,6 +105,7 @@ class GbkFeatureParser:
             line = line.strip('\n')
             if m := self.feature_re.match(line):
                 if current_feature:
+                    current_k = ''
                     yield current_feature
                 current_feature = {'contig': current_contig_name,
                                    'start': int(m.group(3))-1,
@@ -116,12 +116,12 @@ class GbkFeatureParser:
             elif current_feature:
                 line =line.strip()
                 if m := self.qualifier_re.fullmatch(line):
-                    if current_v:
-                        current_feature[current_k] = current_v.strip('"')
                     current_k = m.group(1)
-                    current_v = m.group(2)
-                else:
-                    current_v += f' {line}'
+                    current_feature[current_k] = m.group(2).strip('"')
+                elif current_k:
+                    if 'translation' != current_k.lower():
+                        current_feature[current_k] += ' '
+                    current_feature[current_k] += line.strip('"')
 
 
 def pad_seq(sequence):

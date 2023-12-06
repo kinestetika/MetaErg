@@ -378,7 +378,7 @@ def read_genome_by_id(sql_connection, genome_name) -> Genome:
     return result.fetchone()
 
 
-def read_all_features(sql_connection, contig='', type=None, location=None, additional_sql=None):
+def read_all_features(sql_connection, contig='', type=None, start=-1, end=-1, additional_sql=None):
     cursor = sql_connection.cursor()
 
     where_str = []
@@ -393,10 +393,16 @@ def read_all_features(sql_connection, contig='', type=None, location=None, addit
     if contig:
         where_str.append('contig = ?')
         fields.append(contig)
-    if location:
-        where_str.append('start < ? AND ? < end')
-        fields.append(location[1])
-        fields.append(location[0])
+    if start >= 0 and end >= 0:
+        where_str.append('start < ? AND end > ?')
+        fields.append(end)
+        fields.append(start)
+    elif start >= 0:
+        where_str.append('start >= ?')
+        fields.append(start)
+    elif end >= 0:
+        where_str.append('end >= ?')
+        fields.append(end)
     if additional_sql:
         where_str.append(additional_sql)
 

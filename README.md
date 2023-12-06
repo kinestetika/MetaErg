@@ -30,7 +30,7 @@ The Metaerg 2.3 pipeline ...
 * annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
-* annotates membrane amd translocated proteins using [TMHMM and SignalP](https://services.healthtech.dtu.dk/software.php), versions 2.0c and 6.0g.
+* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [SignalP](https://services.healthtech.dtu.dk/software.php) version 6.0g.
 * assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
@@ -111,7 +111,7 @@ YOu can use the following arguments when running metaerg:
                         signalp             Annotate cellular location of proteins via signal
                                             peptides.
                         repeat_masker       Call any repeat sequences.
-                        tmhmm               Annotate transmembrane helixes (membrane proteins and
+                        pureseqtm           Annotate transmembrane helixes (membrane proteins and
                                             anchors).
                         trf                 Call tandem repeats.
                           
@@ -136,6 +136,8 @@ YOu can use the following arguments when running metaerg:
                         C - build CDD
                         S - build/update community contributed HMM databases
                         A - build antismash database
+                        D - build padloc database
+
 --checkm_dir            If you have previously used checkm or checkm2 to determine the quality of
                         the MAGs/bins, you can specify the dir with the checkm or checkm2 results 
                         here, and metaerg will integrate the estimated completeness and
@@ -147,9 +149,7 @@ YOu can use the following arguments when running metaerg:
                         the programs installed.
 --path_to_signalp       Use with --install_deps to point metaerg to the location of the signalp
                         installation tarball (currently signalp-6.0g.fast.tar.gz)
---path_to_tmhmm         Use with --install_deps to point metaerg to the location of the tmhmm
-                        installation tarball (currently tmhmm-2.0c.Linux.tar.gz)
-                       
+
 ```
 
 ## Using the Docker Image
@@ -170,7 +170,7 @@ Or:
 ## Installation
 
 To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
-need to manually download signalp and tmhmm programs from [here](https://services.healthtech.dtu.dk/software.php). Then:
+need to manually download signalp from [here](https://services.healthtech.dtu.dk/software.php). Then:
 ```commandline
 >python -m virtualenv metaerg-env
 >source metaerg-env/bin/activate
@@ -234,7 +234,7 @@ seq                 the sequence of the feature (AA for CDS, otherwise NT)
 antismash           the function assigned by antismash, if any
 signal_peptide      the type of signal peptide found, if any.
 tmh                 the number of transmembrane helixes found
-tmh_topology        how the protein is oriented in the membrane, if tmh were found 
+tmh_topology        the locations of predicted transmembrane helixes in the protein sequence
 blast               the top ten blast hits
 cdd                 the top ten cdd hits
 hmm                 the top ten hits to the functional gene hmm database 
