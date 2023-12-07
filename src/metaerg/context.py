@@ -39,6 +39,7 @@ ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
                     'checkm': RUN_ANNOTATOR,
                     'cmscan': RUN_ANNOTATOR,
                     'crispr_detect': RUN_ANNOTATOR,
+                    'deepsig': RUN_ANNOTATOR,
                     'diamond_and_blastn': RUN_ANNOTATOR,
                     'hmm': RUN_ANNOTATOR,
                     'write_genes': RUN_ANNOTATOR,
@@ -46,7 +47,6 @@ ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
                     'padloc': RUN_ANNOTATOR,
                     'prodigal': RUN_ANNOTATOR,
                     'pureseqtm': RUN_ANNOTATOR,
-                    'signalp': RUN_ANNOTATOR,
                     'repeat_masker': RUN_ANNOTATOR,
                     'trf': RUN_ANNOTATOR,
                     'visualization': RUN_ANNOTATOR}
@@ -66,21 +66,18 @@ DATABASE_TASKS = 'all'
 DATABASE_FORCE = False
 PREFIX = 'g'
 BIN_DIR =''
-PATH_TO_SIGNALP = None
-PATH_TO_ANTISMASH_DB = None
 
 PROGRESS_STARTED = 'started'
 PROGRESS_COMPLETE = 'complete'
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, path_to_signalp, update_annotations, output_dir, log_topics='', contig_mode = False,
-         skip_step='', path_to_antismash_db=''):
+         install_deps, update_annotations, output_dir, log_topics='', contig_mode = False, skip_step=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
            CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
            DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, ANNOTATOR_STATUS, \
-           DATABASE_FORCE, PATH_TO_ANTISMASH_DB
+           DATABASE_FORCE
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
     LOG_FILE = Path('log.txt').absolute()
@@ -89,15 +86,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     if install_deps:
         METAERG_MODE = METAERG_MODE_INSTALL_DEPS
         BIN_DIR = Path(install_deps).absolute()
-        if path_to_signalp and Path(path_to_signalp).is_file():
-            PATH_TO_SIGNALP = Path(path_to_signalp).absolute()
-        else:
-            log('Warning: path to signalp tarbal not provided or wrong; signalp will not be installed.')
-        if path_to_antismash_db and Path(path_to_antismash_db).is_dir():
-            PATH_TO_ANTISMASH_DB = Path(path_to_antismash_db).absolute()
-        else:
-            log('Warning: path to antismash database is missing or nor a dir.')
-        log(f'Ready to install helper programs at {BIN_DIR} with {PATH_TO_SIGNALP}, {PATH_TO_ANTISMASH_DB}.')
+        log(f'Ready to install helper programs at {BIN_DIR}.')
         return
 
     if not database_dir:
@@ -187,13 +176,12 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     ANNOTATOR_STATUS[k] = FORCE_ANNOTATOR
             else:
                 for step in force.split(','):
-                    try:
-                        ANNOTATOR_STATUS[step] = FORCE_ANNOTATOR
-                        ANNOTATOR_STATUS['visualization'] = FORCE_ANNOTATOR
-                        log(f'Rerunning "{step}" forced.')
-                    except KeyError:
+                    if not step in ANNOTATOR_STATUS.keys():
                         log(f'FATAL: Unknown annotation step "{step}". Valid steps are {", ".join(ANNOTATOR_STATUS.keys())}')
                         exit()
+                    ANNOTATOR_STATUS[step] = FORCE_ANNOTATOR
+                    ANNOTATOR_STATUS['visualization'] = FORCE_ANNOTATOR
+                    log(f'Rerunning "{step}" forced.')
         if contig_mode:
             TRANSLATION_TABLE = []
             ANNOTATOR_STATUS['repeat_masker'] = SKIP_ANNOTATOR

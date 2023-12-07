@@ -74,13 +74,13 @@ class GffParser:
                     if 'subsystems' in qualifiers.keys():
                         feature.subsystems = qualifiers['subsystems']
                     if 'descr' in qualifiers.keys():
-                        feature.subsystems = qualifiers['descr']
+                        feature.descr = qualifiers['descr']
                     if 'taxon' in qualifiers.keys():
-                        feature.subsystems = qualifiers['taxon']
+                        feature.taxon = qualifiers['taxon']
                     if 'signal_peptide' in qualifiers.keys():
-                        feature.subsystems = qualifiers['signal_peptide']
+                        feature.signal_peptide = qualifiers['signal_peptide']
                     if 'tmh_topology' in qualifiers.keys():
-                        feature.subsystems = qualifiers['tmh_topology']
+                        feature.tmh_topology = qualifiers['tmh_topology']
                     yield feature
 
 

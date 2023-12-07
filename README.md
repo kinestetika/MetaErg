@@ -30,7 +30,7 @@ The Metaerg 2.3 pipeline ...
 * annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
-* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [SignalP](https://services.healthtech.dtu.dk/software.php) version 6.0h.
+* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [deepsig](https://github.com/BolognaBiocomp/deepsig).
 * assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
@@ -99,7 +99,9 @@ YOu can use the following arguments when running metaerg:
                         cdd                 Annotate gene functions according to NCBI's conserved
                                             domain database.
                         cmscan              Call RNA genes (such as rRNA genes).
-                        diamond_and_blastn  Annotate gene functions and classify genes 
+                        deepsig             Detect protein signal peptides for translocation across
+                                            the membrane.
+                        diamond_and_blastn  Annotate gene functions and classify genes
                                             taxonomically based on homology to genes of other
                                             organisms. 
                         hmm                 Annotate gene functions according to metaergs built-in 
@@ -112,8 +114,6 @@ YOu can use the following arguments when running metaerg:
                         pureseqtm           Annotate transmembrane helixes (membrane proteins and
                                             anchors).
                         repeat_masker       Call any repeat sequences.
-                        signalp             Annotate cellular location of proteins via signal
-                                            peptides.
                         trf                 Call tandem repeats.
                           
 
@@ -148,8 +148,6 @@ YOu can use the following arguments when running metaerg:
 --install_deps          Use this argument to install all helper programs on your system. You need
                         to follow this argument with an installation dir, where you want to have
                         the programs installed.
---path_to_signalp       Use with --install_deps to point metaerg to the location of the signalp
-                        installation tarball (currently signalp-6.0g.fast.tar.gz)
 
 ```
 
@@ -170,14 +168,12 @@ Or:
 
 ## Installation
 
-To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the commands below. FIRST, you 
-need to manually download signalp from [here](https://services.healthtech.dtu.dk/software.php). Then:
+To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the following commands:
 ```commandline
 >python -m virtualenv metaerg-env
 >source metaerg-env/bin/activate
 >pip install --upgrade metaerg
->metaerg --install_deps /path/to/bin_dir --database_dir /path/to/database_dir --path_to_signalp \
-    path/to/signalp.tar.gz --path_to_tmhmm path/to/tmhmm.tar.gz
+>metaerg --install_deps /path/to/bin_dir
 >source /path/to/bin_dir/profile
 >metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```

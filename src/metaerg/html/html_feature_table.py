@@ -49,14 +49,12 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     else:
         format_hash['length'] = f'{f.end-f.start:,} nt'
     match f.tmh, f.signal_peptide, f.type:
-        case [_, 'LIPO', _]:
-            format_hash['destination'] = 'lipoprotein'
         case [1, _, _]:
-            format_hash['destination'] = 'membrane anchor'
+            format_hash['destination'] = 'membrane anchored'
         case [tmh, _, _] if tmh > 1:
             format_hash['destination'] = 'membrane'
         case [_, sp, _] if len(sp):
-            format_hash['destination'] = 'envelope'
+            format_hash['destination'] = f'envelope ({sp})'
         case [_, _, 'CDS']:
             format_hash['destination'] = 'cytoplasm'
         case [*_]:

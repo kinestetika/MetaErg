@@ -3,7 +3,7 @@ import os
 from shutil import which
 from virtualenv import cli_run
 
-def install_all_helper_programs(bin_dir: Path, path_to_signalp: Path, path_to_antismash_db: Path):
+def install_all_helper_programs(bin_dir: Path):
     # check for required programs
     success = True
     for cmd in 'git make gcc tar wget perl sed'.split():
@@ -36,6 +36,7 @@ PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
 
+export DEEPSIG_ROOT=$BIOINF_PREFIX/python-env/deepsig
 export PATH
 export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
@@ -105,8 +106,8 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system('tar zxf v2.0.0.tar.gz')
     os.system('rm v2.0.0.tar.gz')
     os.system('mv padloc-2.0.0/ padloc')
-    os.system('Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'/bio/bin/r\', repos=\'https://cran.rstudio.com\')"')
     os.system('mkdir r')
+    os.system('Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'/bio/bin/r\', repos=\'https://cran.rstudio.com\')"')
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
     os.system('wget -q https://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c')
     os.system('gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.41.c')
@@ -228,19 +229,23 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     #     os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
     #     os.system('rm tmhmm-2.0c.Linux.tar.gz')
     #     os.system('ln -s tmhmm-2.0c tmhmm')
-    #(psort3) https://www.psort.org/downloads/index.html https://academic.oup.com/bioinformatics/article/26/13/1608/201357
 
+    #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
+    os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
+    os.chdir(Path(which('python')).parent.parent)
+    os.system('git clone git@github.com:BolognaBiocomp/deepsig.git')
     # (signalp) 6.0h
-    if path_to_signalp:
-        model_dir = Path(
-            which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
-        print(f'signalp models will be installed at {model_dir}')
-        os.chdir(bin_dir)
-        os.system(f'cp {path_to_signalp} .')
-        os.system(f'tar -xf {path_to_signalp.name}')
-        os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
-        os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
-        os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
+    # if path_to_signalp:
+    #     model_dir = Path(
+    #         which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
+    #     print(f'signalp models will be installed at {model_dir}')
+    #     os.chdir(bin_dir)
+    #     os.system(f'cp {path_to_signalp} .')
+    #     os.system(f'tar -xf {path_to_signalp.name}')
+    #     os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
+    #     os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
+    #     os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
+
     #(PureSeqTM) https://github.com/PureseqTM/pureseqTM_package
     os.chdir(bin_dir)
     os.system('git clone https://github.com/PureseqTM/PureseqTM_Package.git')
@@ -257,7 +262,6 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7.0.0')
     os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
     os.system(f'rm -rf {antismash_database_python_dir}')
-    os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
     antismash_bin =  bin_dir / 'antismash-env' / 'bin'
     antismash_wrapper = bin_dir / 'antismash'
     with open(antismash_wrapper, "w") as handle:
@@ -267,3 +271,5 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     with open(antismash_wrapper, "w") as handle:
         handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
     os.system('chmod a+x download-antismash-databases')
+
+    #os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
