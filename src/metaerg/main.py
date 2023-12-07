@@ -11,7 +11,7 @@ from metaerg.html import *
 import metaerg.run_and_read.diamond_and_blastn
 #import metaerg.run_and_read.functional_genes
 #import metaerg.run_and_read.antismash
-from metaerg.run_and_read import tmhmm
+#from metaerg.run_and_read import tmhmm
 from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg import registry

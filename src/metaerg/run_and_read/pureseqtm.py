@@ -1,8 +1,8 @@
 from pathlib import Path
-from datatypes.fasta import FastaParser
 
 from metaerg import context
 from metaerg.datatypes import sqlite
+from metaerg.datatypes.fasta import FastaParser
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
@@ -11,6 +11,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
+    x = 0
     with FastaParser(result_files[0], cleanup_seq=False) as fasta_reader:
         for orf in fasta_reader:
             tmh_list = []
@@ -29,13 +30,13 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             if current_tmh:
                 current_tmh['end'] = len(orf['seq']) - 1
                 tmh_list.append(current_tmh)
+            if len(tmh_list):
+                orf_feature = sqlite.read_feature_by_id(db_connection, orf['id'])
+                orf_feature.tmh = len(tmh_list)
+                orf_feature.tmh_topology = ','.join(f'{tmh["start"]}-{tmh["end"]}' for tmh in tmh_list)
+                sqlite.update_feature_in_db(db_connection, orf_feature)
                 count += 1
-        if tmh_list:
-            orf_feature = sqlite.read_feature_by_id(db_connection, orf['id'])
-            orf_feature.tmh = len(tmh_list)
-            orf_feature.tmh_topology = ','.join(f'{tmh["start"]}-{tmh["end"]}' for tmh in tmh_list)
-            sqlite.update_feature_in_db(db_connection, orf_feature)
-            count += 1
+    return count
 
 
 @context.register_annotator

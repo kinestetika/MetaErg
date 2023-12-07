@@ -30,7 +30,7 @@ The Metaerg 2.3 pipeline ...
 * annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
-* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [SignalP](https://services.healthtech.dtu.dk/software.php) version 6.0g.
+* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [SignalP](https://services.healthtech.dtu.dk/software.php) version 6.0h.
 * assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
@@ -106,13 +106,14 @@ YOu can use the following arguments when running metaerg:
                                             scheme.
                         ltr_harvest         Call retrotransposons.
                         crispr_detect       Call CRSIPR repeats.
+                        padloc              Annotate genes involved in cellular defense
                         prodigal            Call open reading frames (genes encoding proteins). If
                                             you skip this step, no proteins will be annotated.
-                        signalp             Annotate cellular location of proteins via signal
-                                            peptides.
-                        repeat_masker       Call any repeat sequences.
                         pureseqtm           Annotate transmembrane helixes (membrane proteins and
                                             anchors).
+                        repeat_masker       Call any repeat sequences.
+                        signalp             Annotate cellular location of proteins via signal
+                                            peptides.
                         trf                 Call tandem repeats.
                           
 

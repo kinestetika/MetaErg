@@ -228,7 +228,9 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     #     os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
     #     os.system('rm tmhmm-2.0c.Linux.tar.gz')
     #     os.system('ln -s tmhmm-2.0c tmhmm')
-    # (signalp) 6.0g
+    #(psort3) https://www.psort.org/downloads/index.html https://academic.oup.com/bioinformatics/article/26/13/1608/201357
+
+    # (signalp) 6.0h
     if path_to_signalp:
         model_dir = Path(
             which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
