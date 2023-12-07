@@ -4,6 +4,25 @@ from shutil import which
 from virtualenv import cli_run
 
 def install_all_helper_programs(bin_dir: Path):
+    check_installation_prereqs()
+    create_profile(bin_dir)
+    install_crisprdetect_plus_deps(bin_dir)
+    install_padloc(bin_dir)
+    install_aragorn(bin_dir)
+    install_infernal(bin_dir)
+    install_genometools(bin_dir)
+    install_trf(bin_dir)
+    install_repeatscout(bin_dir)
+    install_prodigal(bin_dir)
+    install_diamond(bin_dir)
+    install_ncbi_blast(bin_dir)
+    install_hmmer(bin_dir)
+    install_deepsig(bin_dir)
+    install_pureseqtm(bin_dir)
+    install_antismash(bin_dir)
+
+
+def check_installation_prereqs():
     # check for required programs
     success = True
     for cmd in 'git make gcc tar wget perl sed'.split():
@@ -12,9 +31,14 @@ def install_all_helper_programs(bin_dir: Path):
         else:
             print(f'{cmd}: not found. Please install first using your system\'s package manager.')
     if not success:
-        print('aborted installation of helper programs.')
+        print('Aborted installation of helper programs.')
         return
+    # untested prereqs:
+    # *r
+    # *perl-parallel-forkmanager
 
+
+def create_profile(bin_dir:Path):
     # Create the profile file.
     # To "activate" your metaerg installation, you will need to run, for example:
     # >source /home/my_name/bin/metaerg/bin/profile
@@ -35,9 +59,9 @@ PATH=$BIOINF_PREFIX/cd-hit:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
-
-export DEEPSIG_ROOT=$BIOINF_PREFIX/python-env/deepsig
+PATH=$BIOINF_PREFIX/:$PATH
 export PATH
+export DEEPSIG_ROOT=$BIOINF_PREFIX/python-env/deepsig
 export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
     profile_file = bin_dir / 'profile'
@@ -48,18 +72,12 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
         if line.startswith('PATH='):
             os.environ["PATH"] += ':' + line.replace('PATH=$PATH:$BIOINF_PREFIX', str(bin_dir))
     print(os.environ["PATH"])
-    os.chdir(bin_dir)
-    # # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
-    # os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
-    # os.system('tar -xf 0.4.2.tar.gz')
-    # os.chdir('minced-0.4.2')
-    # os.system('make')
-    # os.chdir(bin_dir)
-    # os.system('mv minced-0.4.2 minced')
-    # os.system('rm 0.4.2.tar.gz')
 
+
+def install_crisprdetect_plus_deps(bin_dir:Path):
     # (crisprdetect) crisprdetect 2.4 https://github.com/davidchyou/CRISPRDetect_2.4/tree/master
     # first we need emboss
+    os.chdir(bin_dir)
     os.system("wget -m 'ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz'")
     os.system('mv emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz .')
     os.system('rm -r emboss.open-bio.org')
@@ -71,16 +89,6 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system(f'make install')
     os.chdir(bin_dir)
     os.system('rm -r EMBOSS-6.6.0/')
-    # we also need the vienna RNA suite
-    #os.system('wget https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_6_x/ViennaRNA-2.6.3.tar.gz')
-    #os.system('tar -zxf ViennaRNA-2.6.3.tar.gz')
-    #os.system('rm ViennaRNA-2.6.3.tar.gz')
-    #os.chdir('ViennaRNA-2.6.3/')
-    #os.system('./configure --prefix=/home/kinestetika/bin/vienna_rna --without-perl --without-python --without-rnaxplorer')
-    #os.system('make')
-    #os.system(f'make install')
-    #os.chdir(bin_dir)
-    #os.system('rm -rf ViennaRNA-2.6.3')
     # we also need (cdhit) cd-hit 4.8.1 https://github.com/weizhongli/cdhit
     os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
     os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
@@ -98,43 +106,63 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system('chmod a+x seqret RNAfold water clustalw CRISPRDetect.pl')
     os.chdir(bin_dir)
     os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
-    #os.system('mv CRISPRDetect/clustalw .')
-    # still need to make sure we install package perl-parallel-forkmanager with pacman
+
+
+def install_padloc(bin_dir:Path):
     # (padloc)
-    # still need to make sure we install package r with pacman
+    os.chdir(bin_dir)
     os.system('wget https://github.com/padlocbio/padloc/archive/refs/tags/v2.0.0.tar.gz')
     os.system('tar zxf v2.0.0.tar.gz')
     os.system('rm v2.0.0.tar.gz')
     os.system('mv padloc-2.0.0/ padloc')
     os.system('mkdir r')
     os.system('Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'/bio/bin/r\', repos=\'https://cran.rstudio.com\')"')
+
+
+def install_aragorn(bin_dir:Path):
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
+    os.chdir(bin_dir)
     os.system('wget -q https://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c')
     os.system('gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.41.c')
     os.system('rm aragorn1.2.41.c')
+
+
+def install_infernal(bin_dir:Path):
     # (infernal) cmsearch 1.1.4 http://eddylab.org/infernal/
+    os.chdir(bin_dir)
     os.system('wget -q http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz')
     os.system('tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz')
     os.system('mv infernal-1.1.4-linux-intel-gcc infernal')
     os.system('rm infernal-1.1.4-linux-intel-gcc.tar.gz')
+
+
+def install_genometools(bin_dir:Path):
     # (genometools) gt 1.6.2 http://genometools.org/tools/gt_ltrharvest.html
+    os.chdir(bin_dir)
     os.system('wget -q http://genometools.org/pub/binary_distributions/gt-1.6.2-Linux_x86_64-64bit-barebone.tar.gz')
     os.system('tar -xf gt-1.6.2-Linux_x86_64-64bit-barebone.tar.gz')
     os.system('mv gt-1.6.2-Linux_x86_64-64bit-barebone genometools')
     os.system('ln -sf genometools/bin/gt .')
     os.system('rm gt-1.6.2-Linux_x86_64-64bit-barebone.tar.gz')
+
+
+def install_trf(bin_dir:Path):
     # (tandem-repeat-finder) trf 4.09 https://github.com/Benson-Genomics-Lab/TRF
+    os.chdir(bin_dir)
     os.system('wget -q https://github.com/Benson-Genomics-Lab/TRF/releases/download/v4.09.1/trf409.linux64')
     os.system('chmod a+x trf409.linux64')
     os.system('ln -sf trf409.linux64 trf')
+
+
+def install_repeatscout(bin_dir:Path):
     # (RepeatScout) RepeatScout 1.0.5 https://github.com/mmcco/RepeatScout
     os.system('git clone https://github.com/mmcco/RepeatScout.git')
     os.system('mv RepeatScout repeatscout')
     os.chdir("repeatscout")
     os.system('make')
     os.chdir(bin_dir)
-    #(nseg) nseg 1.0.1 https://github.com/jebrosen/nseg
-    #(nseg is needed by repeatscout/repeatmasker)
+    # (nseg) nseg 1.0.1 https://github.com/jebrosen/nseg
+    # (nseg is needed by repeatscout/repeatmasker)
     os.chdir(bin_dir)
     os.system('wget https://github.com/jebrosen/nseg/archive/refs/tags/v1.0.1.tar.gz')
     os.system('tar -xf v1.0.1.tar.gz')
@@ -159,21 +187,37 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
               f'-rmblast_dir {bin_dir / "rmblast" / "bin"} -trf_prgm {bin_dir / "trf"}')
     os.chdir(bin_dir)
     os.system('rm RepeatMasker-4.1.5.tar.gz')
+
+
+def install_prodigal(bin_dir:Path):
     # (prodigal) prodigal 2.6.3 https://github.com/hyattpd/Prodigal
+    os.chdir(bin_dir)
     os.system('wget -q https://github.com/hyattpd/Prodigal/releases/download/v2.6.3/prodigal.linux')
     os.system('chmod a+x prodigal.linux')
     os.system('ln -sf prodigal.linux prodigal')
+
+
+def install_diamond(bin_dir:Path):
     # (diamond) diamond 2.0.15 https://github.com/bbuchfink/diamond
     # (later versions do not work with antismash)
+    os.chdir(bin_dir)
     os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz')
     os.system('tar -xf diamond-linux64.tar.gz')
     os.system('rm diamond-linux64.tar.gz')
-    # (ncbi-blast) blastn 2.14.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
-    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.14.0+-x64-linux.tar.gz')
-    os.system('tar -xf ncbi-blast-2.14.0+-x64-linux.tar.gz')
-    os.system('mv ncbi-blast-2.14.0+ ncbi-blast')
-    os.system('rm ncbi-blast-2.14.0+-x64-linux.tar.gz')
+
+
+def install_ncbi_blast(bin_dir:Path):
+    # (ncbi-blast) blast 2.15.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+    os.chdir(bin_dir)
+    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.15.0+-x64-linux.tar.gz')
+    os.system('tar -xf ncbi-blast-2.15.0+-x64-linux.tar.gz')
+    os.system('mv ncbi-blast-2.15.0+ ncbi-blast')
+    os.system('rm ncbi-blast-2.15.0+-x64-linux.tar.gz')
+
+
+def install_hmmer(bin_dir:Path):
     # (hmmer-3) hmmsearch 3.3.2 http://hmmer.org
+    os.chdir(bin_dir)
     os.system('wget -q http://eddylab.org/software/hmmer/hmmer-3.3.2.tar.gz')
     os.system('tar -xf hmmer-3.3.2.tar.gz')
     os.chdir('hmmer-3.3.2')
@@ -184,8 +228,34 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.system('make install')
     os.chdir(bin_dir)
     os.system('ln -s hmmer-3.3.2 hmmer3')
+
+
+def install_deepsig(bin_dir:Path):
+    #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
+    os.chdir(bin_dir)
+    os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
+    os.chdir(Path(which('python')).parent.parent)
+    os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
+
+
+def install_pureseqtm(bin_dir: Path):
+    #(PureSeqTM) https://github.com/PureseqTM/pureseqTM_package
+    os.chdir(bin_dir)
+    os.system('git clone https://github.com/PureseqTM/PureseqTM_Package.git')
+    # The following line sets PureseqTM to run in fast mode. Results in fast mode are very close to slow mode.
+    os.system(f'sed -i "s|-K \$kill_tmp -H \$home|-K \$kill_tmp -H \$home -m 0|g" PureseqTM_Package/PureseqTM_proteome.sh')
+
+
+def install_antismash(bin_dir:Path):
+    #(fasttree) fasttree 2.1.11 https://microbesonline.org/fasttree
+    # (required by antismash)
+    os.system('wget -q https://microbesonline.org/fasttree/FastTreeMP')
+    os.system('chmod a+x FastTreeMP')
+    os.system('ln -sf FastTreeMP fasttree')
+    os.system('ln -sf FastTreeMP FastTree')
     # (hmmer-2) hmmsearch2 2.3.2 http://hmmer.org/
     # (required by antismash)
+    os.chdir(bin_dir)
     os.system('wget -q http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz')
     os.system('tar -xf hmmer-2.3.2.tar.gz')
     os.chdir('hmmer-2.3.2')
@@ -204,19 +274,73 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     os.chdir(bin_dir)
     os.system('ln -s hmmer-2.3.2 hmmer2')
     os.system('rm hmmer-2.3.2.tar.gz')
+    # (antismash)
+    # need to create antismash virtualenv here
+    os.chdir(bin_dir)
+    cli_run(["antismash-env"])
+    os.chdir("antismash-env")
+    antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
+    os.system('wget https://dl.secondarymetabolites.org/releases/7.0.0/antismash-7.0.0.tar.gz')
+    os.system('tar -xf antismash-7.0.0.tar.gz')
+    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7.0.0')
+    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
+    os.system(f'rm -rf {antismash_database_python_dir}')
+    antismash_bin =  bin_dir / 'antismash-env' / 'bin'
+    os.chdir(bin_dir)
+    antismash_wrapper = bin_dir / 'antismash'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "antismash"} "$@"\n')
+    os.system('chmod a+x antismash')
+    antismash_wrapper = bin_dir / 'download-antismash-databases'
+    with open(antismash_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
+    os.system('chmod a+x download-antismash-databases')
+
+    #os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
+
+
+# depreciated programs:
+
+    # # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
+    # os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
+    # os.system('tar -xf 0.4.2.tar.gz')
+    # os.chdir('minced-0.4.2')
+    # os.system('make')
+    # os.chdir(bin_dir)
+    # os.system('mv minced-0.4.2 minced')
+    # os.system('rm 0.4.2.tar.gz')
+
+    # we also need the vienna RNA suite
+    #os.system('wget https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_6_x/ViennaRNA-2.6.3.tar.gz')
+    #os.system('tar -zxf ViennaRNA-2.6.3.tar.gz')
+    #os.system('rm ViennaRNA-2.6.3.tar.gz')
+    #os.chdir('ViennaRNA-2.6.3/')
+    #os.system('./configure --prefix=/home/kinestetika/bin/vienna_rna --without-perl --without-python --without-rnaxplorer')
+    #os.system('make')
+    #os.system(f'make install')
+    #os.chdir(bin_dir)
+    #os.system('rm -rf ViennaRNA-2.6.3')
+
     #(muscle) muscle 5.1 https://drive5.com/muscle
     #(no longher required by antismash, version 7 and up)
-    os.chdir(bin_dir)
-    os.system('wget -q https://drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz')
-    os.system('tar -xf muscle3.8.31_i86linux64.tar.gz')
-    os.system('ln -sf muscle3.8.31_i86linux64 muscle')
-    os.system('rm muscle3.8.31_i86linux64.tar.gz')
-    #(fasttree) fasttree 2.1.11 https://microbesonline.org/fasttree
-    # (required by antismash)
-    os.system('wget -q https://microbesonline.org/fasttree/FastTreeMP')
-    os.system('chmod a+x FastTreeMP')
-    os.system('ln -sf FastTreeMP fasttree')
-    os.system('ln -sf FastTreeMP FastTree')
+    #os.chdir(bin_dir)
+    #os.system('wget -q https://drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz')
+    #os.system('tar -xf muscle3.8.31_i86linux64.tar.gz')
+    #os.system('ln -sf muscle3.8.31_i86linux64 muscle')
+    #os.system('rm muscle3.8.31_i86linux64.tar.gz')
+
+    # (signalp) 6.0h
+    # if path_to_signalp:
+    #     model_dir = Path(
+    #         which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
+    #     print(f'signalp models will be installed at {model_dir}')
+    #     os.chdir(bin_dir)
+    #     os.system(f'cp {path_to_signalp} .')
+    #     os.system(f'tar -xf {path_to_signalp.name}')
+    #     os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
+    #     os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
+    #     os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
+
     # (tmhmm) tmhmm 2.0c https://services.healthtech.dtu.dk/software.php
     # if path_to_tmhmm:
     #     os.chdir(bin_dir)
@@ -230,46 +354,3 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     #     os.system('rm tmhmm-2.0c.Linux.tar.gz')
     #     os.system('ln -s tmhmm-2.0c tmhmm')
 
-    #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
-    os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
-    os.chdir(Path(which('python')).parent.parent)
-    os.system('git clone git@github.com:BolognaBiocomp/deepsig.git')
-    # (signalp) 6.0h
-    # if path_to_signalp:
-    #     model_dir = Path(
-    #         which('python')).parent.parent / 'lib' / 'python3.11' / 'site-packages' / 'signalp' / 'model_weights'
-    #     print(f'signalp models will be installed at {model_dir}')
-    #     os.chdir(bin_dir)
-    #     os.system(f'cp {path_to_signalp} .')
-    #     os.system(f'tar -xf {path_to_signalp.name}')
-    #     os.system(f'{Path(which("python")).parent / "pip"} install signalp6_fast/signalp-6-package')
-    #     os.system(f'cp -r signalp6_fast/signalp-6-package/models/* {model_dir}')
-    #     os.system(f'rm -rf {path_to_signalp.name} signalp6_fast')
-
-    #(PureSeqTM) https://github.com/PureseqTM/pureseqTM_package
-    os.chdir(bin_dir)
-    os.system('git clone https://github.com/PureseqTM/PureseqTM_Package.git')
-    # The following line sets PureseqTM to run in fast mode. Results in fast mode are very close to slow mode.
-    os.system(f'sed -i "s|-K \$kill_tmp -H \$home|-K \$kill_tmp -H \$home -m 0|g" PureseqTM_Package/PureseqTM_proteome.sh')
-    #(antismash)
-    # need to create antismash virtualenv here
-    os.chdir(bin_dir)
-    cli_run(["antismash-env"])
-    os.chdir("antismash-env")
-    antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
-    os.system('wget https://dl.secondarymetabolites.org/releases/7.0.0/antismash-7.0.0.tar.gz')
-    os.system('tar -xf antismash-7.0.0.tar.gz')
-    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7.0.0')
-    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
-    os.system(f'rm -rf {antismash_database_python_dir}')
-    antismash_bin =  bin_dir / 'antismash-env' / 'bin'
-    antismash_wrapper = bin_dir / 'antismash'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "antismash"} "$@"\n')
-    os.system('chmod a+x antismash')
-    antismash_wrapper = bin_dir / 'download-antismash-databases'
-    with open(antismash_wrapper, "w") as handle:
-        handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
-    os.system('chmod a+x download-antismash-databases')
-
-    #os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
