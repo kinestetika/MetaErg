@@ -22,7 +22,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                     case [feature_id, _, 'Signal peptide', start, end, score, _, _, _]:
                         feature = sqlite.read_feature_by_id(db_connection, feature_id)
                         if not feature:
-                            raise Exception(f'({genome.name}) Found results for unknown feature {feature_id}, '
+                            raise Exception(f'({genome.name}) Found deepsig result for unknown feature {feature_id}, '
                                             f'may need to rerun metaerg with --force')
                         if feature.signal_peptide:
                             feature.signal_peptide += ','

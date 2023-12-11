@@ -27,7 +27,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 feature_id = words[0].split()[0]
                 feature = sqlite.read_feature_by_id(db_connection, feature_id)
                 if not feature:
-                    raise Exception(f'Found results for unknown feature {feature_id}, '
+                    raise Exception(f'Found signalp result for unknown feature {feature_id}, '
                                     f'may need to rerun metaerg with --force')
                 feature.signal_peptide = words[1]
                 sqlite.update_feature_in_db(db_connection, feature)

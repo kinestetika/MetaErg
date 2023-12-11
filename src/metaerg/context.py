@@ -63,9 +63,10 @@ METAERG_MODE_CREATE_DATABASE = 3
 METAERG_MODE_INSTALL_DEPS = 4
 METAERG_MODE = METAERG_MODE_RUN
 DATABASE_TASKS = 'all'
-DATABASE_FORCE = False
+FORCE_INSTALLATION_OF_DB = False
 PREFIX = 'g'
-BIN_DIR =''
+BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = ''
+WHICH_PROGRAMS_TO_INSTALL = ()
 
 PROGRESS_STARTED = 'started'
 PROGRESS_COMPLETE = 'complete'
@@ -76,8 +77,8 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
            CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
-           DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR, PATH_TO_SIGNALP, ANNOTATOR_STATUS, \
-           DATABASE_FORCE
+           DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, \
+           WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
     LOG_FILE = Path('log.txt').absolute()
@@ -85,8 +86,12 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
     if install_deps:
         METAERG_MODE = METAERG_MODE_INSTALL_DEPS
-        BIN_DIR = Path(install_deps).absolute()
-        log(f'Ready to install helper programs at {BIN_DIR}.')
+        instr = install_deps.split(',')
+        BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
+        if len(instr) > 1:
+            WHICH_PROGRAMS_TO_INSTALL = tuple(instr[1:])
+        log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
+            f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
         return
 
     if not database_dir:
@@ -106,7 +111,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             DATABASE_TASKS = 'PVEBRCSAD'
         else:
             DATABASE_TASKS = create_database
-        DATABASE_FORCE = True if force else False
+        FORCE_INSTALLATION_OF_DB = True if force else False
         GTDBTK_DIR = Path(gtdbtk_dir)
         log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return

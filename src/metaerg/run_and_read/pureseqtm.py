@@ -32,7 +32,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             if len(tmh_list):
                 feature = sqlite.read_feature_by_id(db_connection, orf['id'])
                 if not feature:
-                    raise Exception(f'({genome.name}) Found results for unknown feature {orf["id"]}, '
+                    raise Exception(f'({genome.name}) Found pureseqtm result for unknown feature {orf["id"]}, '
                                     f'may need to rerun metaerg with --force')
                 feature.tmh = len(tmh_list)
                 feature.tmh_topology = ','.join(f'{tmh["start"]}-{tmh["end"]}' for tmh in tmh_list)

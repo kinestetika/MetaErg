@@ -56,7 +56,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     def process_blast_result(blast_result: BlastResult):
         feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
         if not feature:
-            raise Exception(f'Found results for unknown feature {blast_result.query()}, '
+            raise Exception(f'Found diamond_and_blastn result for unknown feature {blast_result.query()}, '
                             f'may need to rerun metaerg with --force')
         feature.blast = blast_result
         feature.descr = blast_result.hits[0].hit.descr
@@ -160,7 +160,7 @@ def install_viral_database():
     context.log('Downloading viral refseq from the NCBI...')
     VIR_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'vir')
     VIR_DB_DIR.mkdir(exist_ok=True, parents=True)
-    if Path(VIR_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
+    if Path(VIR_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE_INSTALLATION_OF_DB:
         context.log(f'Keeping existing viral database in {VIR_DB_DIR}, use --force to overwrite.')
         return
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(VIR_DB_DIR)
@@ -213,7 +213,7 @@ def install_eukaryote_database():
     context.log('Downloading taxon-unique eukaryotic genomes using NCBI Datasets...')
     EUK_DB_DIR = Path(context.DATABASE_DIR, 'ncbi-cache', 'euk')
     EUK_DB_DIR.mkdir(exist_ok=True, parents=True)
-    if Path(EUK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
+    if Path(EUK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE_INSTALLATION_OF_DB:
         context.log(f'Keeping existing eukaryote database in {EUK_DB_DIR}, use --force to overwrite.')
         return
     fasta_protein_db, fasta_nt_db, descr_db, taxon_db = init_pristine_db_dir(EUK_DB_DIR)
@@ -364,7 +364,7 @@ def install_prokaryote_database():
     PROK_DB_DIR_FAA.mkdir(exist_ok=True)
     PROK_DB_DIR_FNA = Path(PROK_DB_DIR, 'fna')
     PROK_DB_DIR_FNA.mkdir(exist_ok=True)
-    if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.DATABASE_FORCE:
+    if Path(PROK_DB_DIR, DB_DESCRIPTIONS_FILENAME).exists() and not context.FORCE_INSTALLATION_OF_DB:
         context.log(f'Keeping existing prokaryote database in {PROK_DB_DIR}, use --force to overwrite.')
         return
     RNA_DESCR_RE = re.compile(r'\[product=(.+?)]')

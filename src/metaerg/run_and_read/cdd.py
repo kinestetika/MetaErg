@@ -54,7 +54,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for cdd_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, cdd_result.query())
             if not feature:
-                raise Exception(f'Found results for unknown feature {cdd_result.query()}, '
+                raise Exception(f'Found cdd result for unknown feature {cdd_result.query()}, '
                                 f'may need to rerun metaerg with --force')
             # process the feature's cdd
             feature.cdd = cdd_result
@@ -157,20 +157,20 @@ def install_cdd_database():
     context.log(f'Installing the conserved domain database to {cdd_dir}...')
     cdd_dir.mkdir(exist_ok=True, parents=True)
     cdd_index = cdd_dir / 'cddid.tbl'
-    if context.DATABASE_FORCE or (not cdd_index.exists() and not (cdd_dir / 'cddid.tbl.gz').exists()):
+    if context.FORCE_INSTALLATION_OF_DB or (not cdd_index.exists() and not (cdd_dir / 'cddid.tbl.gz').exists()):
         context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
-    if context.DATABASE_FORCE or not cdd_index.exists():
+    if context.FORCE_INSTALLATION_OF_DB or not cdd_index.exists():
         context.run_external(f'gunzip {cdd_index}.gz')
 
     temp_cdd_dir = context.DATABASE_DIR / 'cdd-temp'
     temp_cdd_dir.mkdir(exist_ok=True, parents=True)
-    if context.DATABASE_FORCE or (not (temp_cdd_dir / 'cdd.tar').exists() and not (temp_cdd_dir / 'cdd.tar.gz').exists()):
+    if context.FORCE_INSTALLATION_OF_DB or (not (temp_cdd_dir / 'cdd.tar').exists() and not (temp_cdd_dir / 'cdd.tar.gz').exists()):
         context.run_external(f'wget -P {temp_cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cdd.tar.gz')
-    if context.DATABASE_FORCE or not (temp_cdd_dir / 'Tigr.pn').exists():
+    if context.FORCE_INSTALLATION_OF_DB or not (temp_cdd_dir / 'Tigr.pn').exists():
         context.run_external(f'tar -xf {temp_cdd_dir / "cdd.tar.gz"} -C {temp_cdd_dir}')
     current_dir = os.getcwd()
     os.chdir(temp_cdd_dir)
-    if context.DATABASE_FORCE or not (cdd_dir / 'Cdd.pal').exists():
+    if context.FORCE_INSTALLATION_OF_DB or not (cdd_dir / 'Cdd.pal').exists():
         context.run_external(f'makeprofiledb -title CDD.v.3.12 -in {temp_cdd_dir / "Cdd.pn"} -out '
                              f'{cdd_dir / "Cdd"} -threshold 9.82 -scale 100.0 -dbtype rps '
                              f'-index true')

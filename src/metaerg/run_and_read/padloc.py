@@ -16,7 +16,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     # crispr_detect_gff_path = context.spawn_file('crispr_detect.gff', genome.name)
     result_files[0].mkdir(exist_ok=True, parents=True)
     context.run_external(f'padloc --cpu {context.CPUS_PER_GENOME} --faa {cds_aa_file} --gff {gff_file} '
-                         f'--outdir {result_files[0]} --data {padloc_database_path} --force ')
+                         f'--outdir {result_files[0]} --force ')
                          #f'--crispr {crispr_detect_gff_path}')
 
 
@@ -32,11 +32,18 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     padloc_feature_systems = {}
     with gff.GffParser(padloc_result_file) as gff_parser:
         for pf in gff_parser:
+            # padloc does not report the origal gene id, so we find the genes by their start position
+            found_feature = False
             for f in sqlite.read_all_features(db_connection, additional_sql = f'start = {pf.start}'):
                 f.subsystems.append(FunctionalGene(f'Defense ({pf.type})', pf.id, 1))
                 padloc_features.append(f)
                 padloc_feature_systems[f] = pf.type  # we do not have easy access to the Functional Gene
+                found_feature = True
                 break
+            if not found_feature:
+                raise Exception(f'Found padloc result for unknown feature at position {pf.start}, '
+                                f'may need to rerun metaerg with --force')
+
     # manage clusters
     region_features = []
     current_region_feature = None
@@ -91,7 +98,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 def run_and_read_antismash():
     return ({'pipeline_position': 92,
              'annotator_key': 'padloc',
-             'purpose': 'prediction of microbial defense mechanisms',
+             'purpose': 'prediction of antiviral defense mechanisms',
              'programs': ('padloc',),
              'result_files': ('padloc',),
              'run': _run_programs,

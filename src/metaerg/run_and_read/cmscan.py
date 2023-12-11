@@ -119,14 +119,14 @@ def install_cmscan_database():
     rfam_dir.mkdir(exist_ok=True, parents=True)
 
     rfam_file = Path(rfam_dir, 'Rfam.cm')
-    if context.DATABASE_FORCE or not rfam_file.exists() or not rfam_file.stat().st_size:
+    if context.FORCE_INSTALLATION_OF_DB or not rfam_file.exists() or not rfam_file.stat().st_size:
         context.log(f'Installing the RFAM database to {rfam_file}...')
         context.run_external(
             f'wget -P {rfam_dir} http://ftp.ebi.ac.uk/pub/databases/Rfam/CURRENT/Rfam.cm.gz')
         context.run_external(f'gunzip {rfam_file}.gz')
     else:
         context.log(f'Keeping existing conserved domain database in {rfam_file}, use --force to overwrite.')
-    if context.DATABASE_FORCE or not Path(context.DATABASE_DIR, "Rfam.cm.i1f").exists():
+    if context.FORCE_INSTALLATION_OF_DB or not Path(context.DATABASE_DIR, "Rfam.cm.i1f").exists():
         context.log(f'Running cmpress...')
         context.run_external(f'cmpress -F {rfam_file}')
     else:

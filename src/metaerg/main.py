@@ -52,8 +52,10 @@ def parse_arguments():
                                                                  'to create all components of the database.). Use '
                                                                  'any combination of PVEBRCSAD to only create specific '
                                                                  'parts of the database (see README)')
-    parser.add_argument('--install_deps', default='', help='Dir for installation of all dependencies '
-                                                           '(helper programs). Dependencies will be installed here.')
+    parser.add_argument('--install_deps', default='', help='Dir for installation of all required helper programs. Programs '
+                                                           'will be installed in the specified dir. Can optionally be '
+                                                           'followed by a comma and a list of programs to install,'
+                                                           'separated by commas.')
     parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
                                                      'everything, or antismash, aragorn, cdd, cmscan, crispr_detect, '
                                                      'diamond_and_blastn, hmm, ltr_harvest, padloc, prodigal, signalp, '
@@ -180,7 +182,7 @@ def main():
         context.log('If you would like to annotate secondary metabolite genes, make sure antismash databases are installed.')
         #metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
-        install_all_helper_programs(context.BIN_DIR)
+        install_all_helper_programs(context.BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, context.WHICH_PROGRAMS_TO_INSTALL)
     else:
         # sqlite.create_db(genome_db_file, target='Genomes')
         genome_db_connection = sqlite.create_db(target='Genomes')
@@ -195,15 +197,16 @@ def main():
                 try:
                     if genome := future.result():
                         sqlite.add_new_genome_to_db(genome_db_connection, genome)
-                except Exception:
-                    context.log(f'({genome_name}) Error while processing:')
-                    raise
+                except Exception as e:
+                    context.log(f'({genome_name}) {str(e)}')
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                if genome := annotate_genome(genome_name, contig_file):
-                    sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
-                                                genome=genome)
-        #tmhmm.cleanup(context.TEMP_DIR)
+                try:
+                    if genome := annotate_genome(genome_name, contig_file):
+                        sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
+                                                    genome=genome)
+                except Exception as e:
+                    context.log(f'({genome_name}) {str(e)}')
 
         context.log('Now writing all-genomes overview to html...')
         html_all_genomes.write_html(genome_db_connection, context.HTML_DIR)

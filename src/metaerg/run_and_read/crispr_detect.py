@@ -4,7 +4,6 @@ from metaerg.datatypes import fasta, gff, sqlite
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Executes the helper programs to complete the analysis"""
-    result_files[0] = result_files[0].parent / (result_files[0].stem +'.gff')
     result_file_without_extension = result_files[0].parent / result_files[0].stem
     fasta_file = context.spawn_file('masked', genome.name)
     fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
@@ -18,6 +17,11 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
         if not file.name.endswith('gff'):
             # context.log(f'removing {file}')
             file.unlink()
+        else:
+            file.chmod(0o666)  # crisprdetect for some reason makes results files executable - set permission to r/w
+    if result_files[0].suffix != '.gff':
+        (result_files[0].parent / (result_files[0].stem + '.gff')).rename(result_files[0].parent / result_files[0].stem)
+
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""

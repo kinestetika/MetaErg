@@ -37,7 +37,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                     end = line.split()[-1]
                     break
         if not contig or not end:
-            context.log(f'({genome.name}) Warning: could not locate antimash results in {f}.')
+            context.log(f'({genome.name}) Warning: could not locate antismash results in {f}.')
             continue
         region_feature = sqlite.Feature(genome=genome,
                                         contig=contig,

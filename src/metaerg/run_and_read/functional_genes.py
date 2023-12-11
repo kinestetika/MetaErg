@@ -49,7 +49,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for blast_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
             if not feature:
-                raise Exception(f'Found results for unknown feature {blast_result.query()}, '
+                raise Exception(f'Found functional gene result for unknown feature {blast_result.query()}, '
                                 f'may need to rerun metaerg with --force')
             blast_result.hits = blast_result.hits[:10]
             feature.hmm = blast_result
@@ -198,7 +198,7 @@ def install_functional_gene_databases():
         outcomes = []
         for url in FUNCTIONAL_GENE_URLS:
             destination_file = hmm_dir / Path(url).name
-            if context.DATABASE_FORCE or not destination_file.exists() or not destination_file.stat().st_size:
+            if context.FORCE_INSTALLATION_OF_DB or not destination_file.exists() or not destination_file.stat().st_size:
                 outcomes.append(executor.submit(context.download, url, destination_file))
         for future in futures.as_completed(outcomes):
             future.result()

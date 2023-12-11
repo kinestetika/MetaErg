@@ -26,7 +26,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 case [next_feature_name, _, orientation, _, _] if orientation in ('inside', 'outside'):
                     next_feature = sqlite.read_feature_by_id(db_connection, next_feature_name)
                     if not next_feature:
-                        raise Exception(f'Found results for unknown feature {next_feature_name}, '
+                        raise Exception(f'Found tmhmm result for unknown feature {next_feature_name}, '
                                         f'may need to rerun metaerg with --force')
                     if not current_feature or next_feature.id != current_feature.id:
                         if feature_tmh_count:

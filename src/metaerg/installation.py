@@ -3,23 +3,41 @@ import os
 from shutil import which
 from virtualenv import cli_run
 
-def install_all_helper_programs(bin_dir: Path):
+
+def install_all_helper_programs(bin_dir: Path, todo_list):
+
     check_installation_prereqs()
-    create_profile(bin_dir)
-    install_crisprdetect_plus_deps(bin_dir)
-    install_padloc(bin_dir)
-    install_aragorn(bin_dir)
-    install_infernal(bin_dir)
-    install_genometools(bin_dir)
-    install_trf(bin_dir)
-    install_repeatscout(bin_dir)
-    install_prodigal(bin_dir)
-    install_diamond(bin_dir)
-    install_ncbi_blast(bin_dir)
-    install_hmmer(bin_dir)
-    install_deepsig(bin_dir)
-    install_pureseqtm(bin_dir)
-    install_antismash(bin_dir)
+
+    if not todo_list or 'profile' in todo_list:
+        create_profile(bin_dir)
+    if not todo_list or 'crisprdetect' in todo_list:
+        install_crisprdetect_plus_deps(bin_dir)
+    if not todo_list or 'padloc' in todo_list:
+        install_padloc(bin_dir)
+    if not todo_list or 'aragorn' in todo_list:
+        install_aragorn(bin_dir)
+    if not todo_list or 'cmscan' in todo_list:
+        install_infernal(bin_dir)
+    if not todo_list or 'genometools' in todo_list:
+        install_genometools(bin_dir)
+    if not todo_list or 'trf' in todo_list:
+        install_trf(bin_dir)
+    if not todo_list or 'repeatscout' in todo_list:
+        install_repeatscout(bin_dir)
+    if not todo_list or 'prodigal' in todo_list:
+        install_prodigal(bin_dir)
+    if not todo_list or 'diamond' in todo_list:
+        install_diamond(bin_dir)
+    if not todo_list or 'ncbi_blast' in todo_list:
+        install_ncbi_blast(bin_dir)
+    if not todo_list or 'hmmer' in todo_list:
+        install_hmmer(bin_dir)
+    if not todo_list or 'deepsig' in todo_list:
+        install_deepsig(bin_dir)
+    if not todo_list or 'pureseqtm' in todo_list:
+        install_pureseqtm(bin_dir)
+    if not todo_list or 'antismash' in todo_list:
+        install_antismash(bin_dir)
 
 
 def check_installation_prereqs():
@@ -112,12 +130,16 @@ def install_padloc(bin_dir:Path):
     # (padloc)
     os.chdir(bin_dir)
     os.system('wget https://github.com/padlocbio/padloc/archive/refs/tags/v2.0.0.tar.gz')
-    os.system('tar zxf v2.0.0.tar.gz')
+    os.system('tar xf v2.0.0.tar.gz')
     os.system('rm v2.0.0.tar.gz')
+    os.system('rm -rf padloc')
     os.system('mv padloc-2.0.0/ padloc')
-    os.system('mkdir r')
-    os.system('Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'/bio/bin/r\', repos=\'https://cran.rstudio.com\')"')
+    r_dir = bin_dir / 'r'
+    r_dir.mkdir(exist_ok=True)
+    os.system(f'Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'{r_dir}\', repos=\'https://cran.rstudio.com\')"')
 
+# padloc --db-update
+# ln -s /bio/data/databases/metaerg/padloc /bio/data/metaerg-test-install/padloc/data
 
 def install_aragorn(bin_dir:Path):
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
@@ -176,11 +198,13 @@ def install_repeatscout(bin_dir:Path):
     # (rmblast is needed by repeatmasker)
     os.system('wget -q https://www.repeatmasker.org/rmblast/rmblast-2.14.0+-x64-linux.tar.gz')
     os.system('tar -xf rmblast-2.14.0+-x64-linux.tar.gz')
+    os.system('rm -rf rmblast')
     os.system('mv rmblast-2.14.0 rmblast')
     os.system('rm rmblast-2.14.0+-x64-linux.tar.gz')
     # (RepeatMasker) RepeatMasker 4.1.5 http://www.repeatmasker.org/RepeatMasker/
     os.system('wget -q http://www.repeatmasker.org/RepeatMasker/RepeatMasker-4.1.5.tar.gz')
     os.system('tar -xf RepeatMasker-4.1.5.tar.gz')
+    os.system('rm -rf repeatmasker')
     os.system('mv RepeatMasker repeatmasker')
     os.chdir("repeatmasker")
     os.system(f'perl ./configure -default_search_engine rmblast -libdir {bin_dir / "repeatmasker" / "Libraries"} '
@@ -211,6 +235,7 @@ def install_ncbi_blast(bin_dir:Path):
     os.chdir(bin_dir)
     os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.15.0+-x64-linux.tar.gz')
     os.system('tar -xf ncbi-blast-2.15.0+-x64-linux.tar.gz')
+    os.system('rm ncbi-blast')
     os.system('mv ncbi-blast-2.15.0+ ncbi-blast')
     os.system('rm ncbi-blast-2.15.0+-x64-linux.tar.gz')
 
@@ -257,6 +282,7 @@ def install_antismash(bin_dir:Path):
     # (required by antismash)
     os.chdir(bin_dir)
     os.system('wget -q http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz')
+    os.system('rm rf hmmer-2.3.2')
     os.system('tar -xf hmmer-2.3.2.tar.gz')
     os.chdir('hmmer-2.3.2')
     os.system('./configure')
