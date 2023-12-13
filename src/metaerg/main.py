@@ -22,7 +22,7 @@ from metaerg.datatypes.excel import write_genomes_to_xls
 from metaerg.html import html_all_genomes
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.3.42"
+VERSION = "2.4.0"
 
 
 def parse_arguments():
@@ -66,6 +66,8 @@ def parse_arguments():
                                                         "cdd, cmscan, crispr_detect, diamond_and_blastn, hmm, ltr_harvest, "
                                                         "padloc, prodigal, signalp, repeat_masker, pureseqtm, trf, "
                                                         "separated by commas (,)")
+    parser.add_argument('--padloc_database', default='', help="Path to where the padloc database is/will be.")
+    parser.add_argument('--antismash_database', default='', help="Path to where the antismash database is/will be.")
 
     return parser.parse_args()
 
@@ -175,14 +177,14 @@ def main():
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)
         # database_tarbal_file.unlink()
-        context.DATABASE_TASKS = 'SA'
+        context.DATABASE_TASKS = 'SADB'
         metaerg.run_and_read.diamond_and_blastn.compile_databases()
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
         metaerg.run_and_read.padloc.format_padloc_databases()
-        context.log('If you would like to annotate secondary metabolite genes, make sure antismash databases are installed.')
-        #metaerg.run_and_read.antismash.format_antismash_databases()
+        metaerg.run_and_read.antismash.format_antismash_databases()
     elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
-        install_all_helper_programs(context.BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, context.WHICH_PROGRAMS_TO_INSTALL)
+        install_all_helper_programs(context.BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, context.WHICH_PROGRAMS_TO_INSTALL,
+                                    context.PADLOC_DATABASE, context.ANTISMASH_DATABASE)
     else:
         # sqlite.create_db(genome_db_file, target='Genomes')
         genome_db_connection = sqlite.create_db(target='Genomes')

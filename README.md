@@ -1,4 +1,4 @@
-## metaerg.py, version 2.3.42
+## metaerg.py, version 2.4.0
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -10,7 +10,7 @@ Unfortunately the interactive search box does not work with the github html visu
 files to your computer (i.e. using "git clone ..."), to try out the interactive part.
 
 Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
-dependencies. This python version 2.3 overcomes some of those issues. Also, the annotation pipeline has further 
+dependencies. This python version 2.4 overcomes some of those issues. Also, the annotation pipeline has further
 evolved and has become more refined.
 
 By building its blast database off gtdbtk and transferring functional annotations from the NCBI, metaerg.py
@@ -19,7 +19,7 @@ more concise than the original version of metaerg and many other annotation tool
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
 work in progress, and can be expanded and customized as needed.
 
-The Metaerg 2.3 pipeline ...
+The Metaerg 2.4 pipeline ...
 * predicts CRISPR regions using [CRISPRDetect](https://github.com/davidchyou/CRISPRDetect_2.4), version 2.4.
 * predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/), version 1.2.41.
 * predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM, version 1.1.4.
@@ -30,8 +30,8 @@ The Metaerg 2.3 pipeline ...
 * annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
 * annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
 * annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
-* annotates membrane amd translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [deepsig](https://github.com/BolognaBiocomp/deepsig).
-* assigns genes to a [built-in set of functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
+* annotates membrane and translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [deepsig](https://github.com/BolognaBiocomp/deepsig).
+* assigns genes to a [built-in set of 1,001 functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
 * presents annotations in [datatables/jQuery](https://www.datatables.net/)-based intuititve, searchable, colorful HTML that can be explored in a web browser and copy/pasted into excel.
 * saves annotations as a fasta-amino-acid file, a genbank file, and as a sqlite database for effective exploration, statistics and visualization with python or R.
@@ -39,6 +39,13 @@ The Metaerg 2.3 pipeline ...
 * enables the user to add custom HMMs and expand the set of functional genes as needed.
 
 When using metaerg, please cite [Xiaoli Dong and Marc Strous (2019) Frontiers in Genetics](https://www.frontiersin.org/articles/10.3389/fgene.2019.00999/full)
+
+## Important changes in version 2.4
+* Minced, TMHMM and SignalP are no longer used as helper programs.
+* CRISPRDetect, padloc, PureseqTM and deepsig are used instead. Installation is straightforward. Either use the --install_deps option, run the commands in "installation.py" for a manual install or use Docker.
+* These changes reduce overall runtime.
+* Various small bugs and inconveniences were fixed .
+* If you have data previously annotated with metaerg, use --update_annotations to update.
 
 ## Usage:
 ```
@@ -51,7 +58,7 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 ```
 Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer.
 
-YOu can use the following arguments when running metaerg:
+You can use the following arguments when running metaerg:
 ```text
 --contig_file           A nucleotide fasta files with contigs to be annotated OR a dir containing
                         nucleotide fasta files.
@@ -148,6 +155,12 @@ YOu can use the following arguments when running metaerg:
 --install_deps          Use this argument to install all helper programs on your system. You need
                         to follow this argument with an installation dir, where you want to have
                         the programs installed.
+--padloc_database       Use optionally with --install_deps if you want this database to be in a
+                        non-default place/filesystem. Afterward, use --create_database D to
+                        actually download and install the padloc database.
+--antismash_database    Use optionally with --install_deps if you want this database to be in a
+                        non-default place/filesystem. Afterward, use --create_database A to
+                        actually download and install the antismash database.
 
 ```
 

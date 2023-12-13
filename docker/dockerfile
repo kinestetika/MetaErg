@@ -9,37 +9,46 @@
 # docker tag [container-id] kinestetika/metaerg
 # docker push kinestetika/metaerg
 
-
+# in case of problems with pacman installations, to troubleshoot run a container interactively: 
+# docker container run --network host -it archlinux:base-devel /bin/bash 
 FROM archlinux:base-devel
 MAINTAINER Marc Strous
 COPY mirrorlist /etc/pacman.d/
-#RUN pacman -Sy --noconfirm archlinux-keyring
-
+RUN pacman-key --init
+RUN pacman -Sy --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git wget python-pip jdk-openjdk
+RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv
+
 RUN mkdir /bio
 RUN mkdir /bio/downloads
 RUN mkdir /bio/bin
 RUN mkdir /databases
 RUN mkdir /databases/antismash
+RUN mkdir /databases/padloc
 RUN mkdir /data
 
-ENV PATH="/bio/bin/ncbi-blast/bin:$PATH"
 ENV PATH="/bio/bin/infernal/binaries:$PATH"
 ENV PATH="/bio/bin/hmmer2/src:$PATH"
-ENV PATH="/bio/bin/hmmer3/bin:$PATH"
-ENV PATH="/bio/bin/tmhmm/bin:$PATH"
 ENV PATH="/bio/bin/repeatscout:$PATH"
 ENV PATH="/bio/bin/repeatmasker:$PATH"
-ENV PATH="/bio/bin/genometools/bin:$PATH"
-ENV PATH="/bio/bin/minced:$PATH"
+ENV PATH="/bio/bin/hmmer3/bin:$PATH"
+ENV PATH="/bio/bin/ncbi-blast/bin:$PATH"
+ENV PATH="/bio/bin/emboss/bin:$PATH"
+ENV PATH="/bio/bin/cdhit:$PATH"
+ENV PATH="/bio/bin/padloc/bin:$PATH"
+ENV PATH="/bio/bin/CRISPRDetect/:$PATH"
+ENV PATH="/bio/bin/PureseqTM_Package:$PATH"
 ENV PATH="/bio/bin:$PATH"
-ENV PATH="/bio/bin/metaerg-env/bin:$PATH"
+
+ENV DEEPSIG_ROOT="/bio/bin/deepsig"
+ENV R_LIBS="/bio/bin/r"
 
 WORKDIR /bio/bin
-COPY signalp-6.0g.fast.tar.gz /bio/downloads
-COPY tmhmm-2.0c.Linux.tar.gz /bio/downloads
-COPY metaerg-2.3.40.tar.gz /bio/downloads
-RUN pip install --upgrade /bio/downloads/metaerg-2.3.40.tar.gz # metaerg
-RUN metaerg --install_deps /bio/bin --path_to_signalp /bio/downloads/signalp-6.0g.fast.tar.gz --path_to_tmhmm /bio/downloads/tmhmm-2.0c.Linux.tar.gz --path_to_antismash_db /databases/antismash
+COPY metaerg-2.4.0.tar.gz /bio/downloads
+
+RUN python -m virtualenv python-env
+ENV PATH="/bio/bin/python-env/bin:$PATH"
+RUN pip install --upgrade /bio/downloads/metaerg-2.4.0.tar.gz
+RUN metaerg --install_deps /bio/bin --padloc_database /databases/padloc --antismash_database /databases/antismash
+RUN ln -s /databases/antismash/ /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
 RUN rm -r /bio/downloads

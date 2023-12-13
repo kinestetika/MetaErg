@@ -134,7 +134,7 @@ def write_html(genome, db_connection, dir):
 def format_antismash_databases():
     if 'A' not in context.DATABASE_TASKS:
         return
-    antismash_database_path = context.DATABASE_DIR / 'antismash'
-    context.log(f'Installing antismash database at {antismash_database_path}')
-    antismash_database_path.mkdir(parents=True, exist_ok=True)
-    os.system(f'download-antismash-databases --database-dir {antismash_database_path}')
+    context.log(f'Installing antismash database...')
+    os.system(f'download-antismash-databases')
+    # the following is done while installing the program 'antismash' in installation.py:
+    #os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')

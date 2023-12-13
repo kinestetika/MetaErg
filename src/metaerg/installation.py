@@ -4,7 +4,7 @@ from shutil import which
 from virtualenv import cli_run
 
 
-def install_all_helper_programs(bin_dir: Path, todo_list):
+def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=Path(), antismash_database_dir=Path()):
 
     check_installation_prereqs()
 
@@ -13,7 +13,7 @@ def install_all_helper_programs(bin_dir: Path, todo_list):
     if not todo_list or 'crisprdetect' in todo_list:
         install_crisprdetect_plus_deps(bin_dir)
     if not todo_list or 'padloc' in todo_list:
-        install_padloc(bin_dir)
+        install_padloc(bin_dir, padloc_database_dir)
     if not todo_list or 'aragorn' in todo_list:
         install_aragorn(bin_dir)
     if not todo_list or 'cmscan' in todo_list:
@@ -37,7 +37,7 @@ def install_all_helper_programs(bin_dir: Path, todo_list):
     if not todo_list or 'pureseqtm' in todo_list:
         install_pureseqtm(bin_dir)
     if not todo_list or 'antismash' in todo_list:
-        install_antismash(bin_dir)
+        install_antismash(bin_dir, antismash_database_dir)
 
 
 def check_installation_prereqs():
@@ -65,21 +65,18 @@ def create_profile(bin_dir:Path):
 export BIOINF_PREFIX={bin_dir}
 PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
 PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
-PATH=$BIOINF_PREFIX/tmhmm/bin:$PATH
 PATH=$BIOINF_PREFIX/repeatscout:$PATH
 PATH=$BIOINF_PREFIX/repeatmasker:$PATH
-PATH=$BIOINF_PREFIX/minced:$PATH
 PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
 PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
 PATH=$BIOINF_PREFIX/emboss/bin:$PATH
-PATH=$BIOINF_PREFIX/vienna_rna/bin:$PATH
 PATH=$BIOINF_PREFIX/cd-hit:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
 PATH=$BIOINF_PREFIX/:$PATH
 export PATH
-export DEEPSIG_ROOT=$BIOINF_PREFIX/python-env/deepsig
+export DEEPSIG_ROOT=$BIOINF_PREFIX/deepsig
 export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
     profile_file = bin_dir / 'profile'
@@ -126,7 +123,7 @@ def install_crisprdetect_plus_deps(bin_dir:Path):
     os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
 
 
-def install_padloc(bin_dir:Path):
+def install_padloc(bin_dir:Path, padloc_database_dir:Path):
     # (padloc)
     os.chdir(bin_dir)
     os.system('wget https://github.com/padlocbio/padloc/archive/refs/tags/v2.0.0.tar.gz')
@@ -137,6 +134,9 @@ def install_padloc(bin_dir:Path):
     r_dir = bin_dir / 'r'
     r_dir.mkdir(exist_ok=True)
     os.system(f'Rscript -e "install.packages(c(\'stringi\',\'tidyverse\',\'yaml\',\'getopt\'), \'{r_dir}\', repos=\'https://cran.rstudio.com\')"')
+    if padloc_database_dir:
+        padloc_database_dir.mkdir(exist_ok=True, parents=True)
+        os.system(f'ln -s {padloc_database_dir} {Path("padloc") / "data"}')
 
 # padloc --db-update
 # ln -s /bio/data/databases/metaerg/padloc /bio/data/metaerg-test-install/padloc/data
@@ -259,7 +259,6 @@ def install_deepsig(bin_dir:Path):
     #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
     os.chdir(bin_dir)
     os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
-    os.chdir(Path(which('python')).parent.parent)
     os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
 
 
@@ -271,13 +270,14 @@ def install_pureseqtm(bin_dir: Path):
     os.system(f'sed -i "s|-K \$kill_tmp -H \$home|-K \$kill_tmp -H \$home -m 0|g" PureseqTM_Package/PureseqTM_proteome.sh')
 
 
-def install_antismash(bin_dir:Path):
+def install_antismash(bin_dir:Path, antismash_database_dir:Path):
     #(fasttree) fasttree 2.1.11 https://microbesonline.org/fasttree
     # (required by antismash)
     os.system('wget -q https://microbesonline.org/fasttree/FastTreeMP')
     os.system('chmod a+x FastTreeMP')
     os.system('ln -sf FastTreeMP fasttree')
     os.system('ln -sf FastTreeMP FastTree')
+
     # (hmmer-2) hmmsearch2 2.3.2 http://hmmer.org/
     # (required by antismash)
     os.chdir(bin_dir)
@@ -300,9 +300,10 @@ def install_antismash(bin_dir:Path):
     os.chdir(bin_dir)
     os.system('ln -s hmmer-2.3.2 hmmer2')
     os.system('rm hmmer-2.3.2.tar.gz')
+
     # (antismash)
-    # need to create antismash virtualenv here
     os.chdir(bin_dir)
+    # need to create antismash virtualenv here
     cli_run(["antismash-env"])
     os.chdir("antismash-env")
     antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
@@ -312,6 +313,7 @@ def install_antismash(bin_dir:Path):
     os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
     os.system(f'rm -rf {antismash_database_python_dir}')
     antismash_bin =  bin_dir / 'antismash-env' / 'bin'
+
     os.chdir(bin_dir)
     antismash_wrapper = bin_dir / 'antismash'
     with open(antismash_wrapper, "w") as handle:
@@ -322,7 +324,10 @@ def install_antismash(bin_dir:Path):
         handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
     os.system('chmod a+x download-antismash-databases')
 
-    #os.system(f'ln -s {path_to_antismash_db} {antismash_database_python_dir}')
+    if antismash_database_dir:
+        antismash_database_dir.mkdir(exist_ok=True, parents=True)
+        os.system(f'ln -s {antismash_database_dir} {antismash_database_python_dir}')
+
 
 
 # depreciated programs:

@@ -67,18 +67,22 @@ FORCE_INSTALLATION_OF_DB = False
 PREFIX = 'g'
 BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = ''
 WHICH_PROGRAMS_TO_INSTALL = ()
+ANTISMASH_DATABASE = ''
+PADLOC_DATABASE = ''
 
 PROGRESS_STARTED = 'started'
 PROGRESS_COMPLETE = 'complete'
 
+
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, update_annotations, output_dir, log_topics='', contig_mode = False, skip_step=''):
+         install_deps, update_annotations, output_dir, log_topics='', contig_mode = False, skip_step='',
+         padloc_database='', antismash_database=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
            CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
            DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, \
-           WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB
+           WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB, ANTISMASH_DATABASE, PADLOC_DATABASE
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
     LOG_FILE = Path('log.txt').absolute()
@@ -90,6 +94,14 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
         if len(instr) > 1:
             WHICH_PROGRAMS_TO_INSTALL = tuple(instr[1:])
+        if padloc_database:
+            PADLOC_DATABASE = Path(padloc_database).absolute()
+        else:
+            log('Warning: no location of padloc database provided.')
+        if antismash_database:
+            ANTISMASH_DATABASE = Path(padloc_database).absolute()
+        else:
+            log('Warning: no location of antismash database provided.')
         log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
             f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
         return
