@@ -61,6 +61,7 @@ def create_profile(bin_dir:Path):
     # To "activate" your metaerg installation, you will need to run, for example:
     # >source /home/my_name/bin/metaerg/bin/profile
     # (if that is the path to your installation)
+    # PATH=$BIOINF_PREFIX/cd-hit:$PATH
     profile = f'''
 export BIOINF_PREFIX={bin_dir}
 PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
@@ -70,7 +71,6 @@ PATH=$BIOINF_PREFIX/repeatmasker:$PATH
 PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
 PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
 PATH=$BIOINF_PREFIX/emboss/bin:$PATH
-PATH=$BIOINF_PREFIX/cd-hit:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
@@ -99,26 +99,25 @@ def install_crisprdetect_plus_deps(bin_dir:Path):
     os.system('tar -zxf emboss-latest.tar.gz')
     os.system('rm emboss-latest.tar.gz')
     os.chdir('EMBOSS-6.6.0/')
-    os.system(f'./configure --prefix={bin_dir / "emboss"}')
+    os.system(f'./configure --without-x --prefix={bin_dir / "emboss"}')
     os.system('make')
     os.system(f'make install')
     os.chdir(bin_dir)
-    os.system('rm -r EMBOSS-6.6.0/')
+    os.system('rm -rf EMBOSS-6.6.0/')
     # we also need (cdhit) cd-hit 4.8.1 https://github.com/weizhongli/cdhit
-    os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
-    os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
-    os.chdir('cd-hit-v4.8.1-2019-0228')
-    os.system('make')
-    os.chdir(bin_dir)
-    os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
-    os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
-    # finally: CRISPRDetect
+    #os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
+    #os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
+    #os.chdir('cd-hit-v4.8.1-2019-0228')
+    #os.system('make')
+    #os.chdir(bin_dir)
+    #os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
+    #os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
     os.system('git clone https://github.com/davidchyou/CRISPRDetect_2.4.git')
     os.chdir('CRISPRDetect_2.4/')
     os.system('unzip CRISPRDetect_2.4.zip')
     os.system('rm CRISPRDetect_2.4.zip')
     os.system('mv CRISPRDetect_2.4/* .')
-    os.system('chmod a+x seqret RNAfold water clustalw CRISPRDetect.pl')
+    os.system('chmod a+x seqret RNAfold water clustalw cd-hit-est CRISPRDetect.pl')
     os.chdir(bin_dir)
     os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
 
