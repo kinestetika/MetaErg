@@ -4,7 +4,7 @@ from shutil import which
 from virtualenv import cli_run
 
 
-def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=Path(), antismash_database_dir=Path()):
+def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir='', antismash_database_dir=''):
 
     check_installation_prereqs()
 
@@ -114,7 +114,7 @@ def install_crisprdetect_plus_deps(bin_dir:Path):
     os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
 
 
-def install_padloc(bin_dir:Path, padloc_database_dir:Path):
+def install_padloc(bin_dir:Path, padloc_database_dir):
     # (padloc)
     os.chdir(bin_dir)
     os.system('wget https://github.com/padlocbio/padloc/archive/refs/tags/v2.0.0.tar.gz')
@@ -260,7 +260,7 @@ def install_pureseqtm(bin_dir: Path):
     os.system(f'sed -i "s|-K \$kill_tmp -H \$home|-K \$kill_tmp -H \$home -m 0|g" PureseqTM_Package/PureseqTM_proteome.sh')
 
 
-def install_antismash(bin_dir:Path, antismash_database_dir:Path):
+def install_antismash(bin_dir:Path, antismash_database_dir):
     #(fasttree) fasttree 2.1.11 https://microbesonline.org/fasttree
     # (required by antismash)
     os.system('wget -q https://microbesonline.org/fasttree/FastTreeMP')
