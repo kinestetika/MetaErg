@@ -22,8 +22,6 @@ from metaerg.datatypes.excel import write_genomes_to_xls
 from metaerg.html import html_all_genomes
 from metaerg.installation import install_all_helper_programs
 
-VERSION = "2.4.0"
-
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description='metaerg.py. (C) Marc Strous, Xiaoli Dong 2019, 2022')
@@ -151,7 +149,6 @@ def annotate_genome(genome_name, input_fasta_file: Path):
 
 
 def main():
-    print(f'This is metaerg.py {VERSION}')
     context.init(**parse_arguments().__dict__)
     if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
         context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.DATABASE_TASKS}; ')
@@ -220,7 +217,7 @@ def main():
         context.log('Now writing all-genomes overview to excel...')
         write_genomes_to_xls(genome_db_connection)
         genome_db_connection.close()
-        context.log(f'Done. Thank you for using metaerg.py {VERSION}')
+        context.log(f'Done. Thank you for using metaerg.py {context.VERSION}')
 
 
 if __name__ == "__main__":

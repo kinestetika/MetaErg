@@ -17,7 +17,7 @@ COPY mirrorlist /etc/pacman.d/
 RUN pacman-key --init
 RUN pacman -Sy --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv
+RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv unzip
 
 RUN mkdir /bio
 RUN mkdir /bio/downloads

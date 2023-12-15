@@ -104,14 +104,6 @@ def install_crisprdetect_plus_deps(bin_dir:Path):
     os.system(f'make install')
     os.chdir(bin_dir)
     os.system('rm -rf EMBOSS-6.6.0/')
-    # we also need (cdhit) cd-hit 4.8.1 https://github.com/weizhongli/cdhit
-    #os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
-    #os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
-    #os.chdir('cd-hit-v4.8.1-2019-0228')
-    #os.system('make')
-    #os.chdir(bin_dir)
-    #os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
-    #os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
     os.system('git clone https://github.com/davidchyou/CRISPRDetect_2.4.git')
     os.chdir('CRISPRDetect_2.4/')
     os.system('unzip CRISPRDetect_2.4.zip')
@@ -221,10 +213,9 @@ def install_prodigal(bin_dir:Path):
 
 
 def install_diamond(bin_dir:Path):
-    # (diamond) diamond 2.0.15 https://github.com/bbuchfink/diamond
-    # (later versions do not work with antismash)
+    # (diamond) diamond 2.1.8 https://github.com/bbuchfink/diamond
     os.chdir(bin_dir)
-    os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.0.15/diamond-linux64.tar.gz')
+    os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.1.8/diamond-linux64.tar.gz')
     os.system('tar -xf diamond-linux64.tar.gz')
     os.system('rm diamond-linux64.tar.gz')
 
@@ -306,12 +297,16 @@ def install_antismash(bin_dir:Path, antismash_database_dir:Path):
     cli_run(["antismash-env"])
     os.chdir("antismash-env")
     antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
-    os.system('wget https://dl.secondarymetabolites.org/releases/7.0.0/antismash-7.0.0.tar.gz')
-    os.system('tar -xf antismash-7.0.0.tar.gz')
-    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7.0.0')
-    os.system('rm -rf antismash-7.0.0.tar.gz antismash-7.0.0') # may need to remove: antismash-6.1.1
-    os.system(f'rm -rf {antismash_database_python_dir}')
+    os.system('wget https://github.com/antismash/antismash/archive/refs/tags/7-1-0-1.tar.gz')
+    os.system('tar xf 7-1-0-1.tar.gz')
+    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7-1-0-1/')
+    os.system('rm -rf 7-1-0-1.tar.gz antismash-7-1-0-1/') # may need to remove: antismash-6.1.1
     antismash_bin =  bin_dir / 'antismash-env' / 'bin'
+
+    if antismash_database_dir:
+        antismash_database_dir.mkdir(exist_ok=True, parents=True)
+        os.system(f'rm -r {antismash_database_python_dir}')
+        os.system(f'ln -s {antismash_database_dir} {antismash_database_python_dir}')
 
     os.chdir(bin_dir)
     antismash_wrapper = bin_dir / 'antismash'
@@ -323,13 +318,18 @@ def install_antismash(bin_dir:Path, antismash_database_dir:Path):
         handle.write(f'#!/bin/sh\n{antismash_bin / "python"} {antismash_bin / "download-antismash-databases"} "$@"\n')
     os.system('chmod a+x download-antismash-databases')
 
-    if antismash_database_dir:
-        antismash_database_dir.mkdir(exist_ok=True, parents=True)
-        os.system(f'ln -s {antismash_database_dir} {antismash_database_python_dir}')
-
 
 
 # depreciated programs:
+
+    # we also need (cdhit) cd-hit 4.8.1 https://github.com/weizhongli/cdhit
+    #os.system('wget https://github.com/weizhongli/cdhit/releases/download/V4.8.1/cd-hit-v4.8.1-2019-0228.tar.gz')
+    #os.system('tar -xf cd-hit-v4.8.1-2019-0228.tar.gz')
+    #os.chdir('cd-hit-v4.8.1-2019-0228')
+    #os.system('make')
+    #os.chdir(bin_dir)
+    #os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
+    #os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
 
     # # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
     # os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')

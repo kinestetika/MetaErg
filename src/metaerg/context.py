@@ -6,10 +6,14 @@ import os
 import traceback
 from multiprocessing import cpu_count
 from pathlib import Path
+from time import sleep
 
 import httpx
 
 from metaerg import registry
+
+
+VERSION = "2.4.0"
 
 BASE_DIR = Path()
 TEMP_DIR = Path()
@@ -85,13 +89,15 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
            WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB, ANTISMASH_DATABASE, PADLOC_DATABASE
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
-    LOG_FILE = Path('log.txt').absolute()
-    log('Initializing execution environment with command line arguments...')
 
     if install_deps:
         METAERG_MODE = METAERG_MODE_INSTALL_DEPS
         instr = install_deps.split(',')
         BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
+        LOG_FILE = (BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS / 'log.txt').absolute()
+        log(f'This is metaerg.py {VERSION}')
+        log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
+            f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
         if len(instr) > 1:
             WHICH_PROGRAMS_TO_INSTALL = tuple(instr[1:])
         if padloc_database:
@@ -99,25 +105,33 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         else:
             log('Warning: no location of padloc database provided.')
         if antismash_database:
-            ANTISMASH_DATABASE = Path(padloc_database).absolute()
+            ANTISMASH_DATABASE = Path(antismash_database).absolute()
         else:
             log('Warning: no location of antismash database provided.')
-        log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
-            f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
+        log('IMPORTANt NOTE: Before proceeding, make sure you have installed the following via your system\'s package '
+            'manager (e.g. apt): git wget python-pip python-virtualenv jdk-openjdk unzip perl-parallel-forkmanager r')
+        sleep(3)
         return
 
     if not database_dir:
-        log("No database dir provided or database dir is not a dir. Use -h for help.")
+        print("No database dir provided or database dir is not a dir. Use -h for help.")
         exit(1)
+
     DATABASE_DIR = Path(database_dir).absolute()
     if download_database:
+        LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
+        log(f'This is metaerg.py {VERSION}')
         METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
         DATABASE_DIR.mkdir(exist_ok=True)
         log(f'Ready to download databases.')
         return
+
     if not DATABASE_DIR.is_dir():
-        raise Exception("No database dir provided or database dir is not a dir.")
+        print("Database dir provided is not a dir.")
+        exit(1)
     elif create_database:
+        LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
+        log(f'This is metaerg.py {VERSION}')
         METAERG_MODE = METAERG_MODE_CREATE_DATABASE
         if create_database == 'all':
             DATABASE_TASKS = 'PVEBRCSAD'
@@ -128,32 +142,45 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return
     else: # we're going to annotate genomes...
-        current_dir = Path(os.getcwd())
         # (1) collect contig files
+        prelim_contig_files = []
         if ',' in contig_file:
             for f in contig_file.split(','):
                 f = Path(f).absolute()
                 if not f.exists():
                     log(f'Did not find contig file "{f}"')
                     continue
-                CONTIG_FILES.append(f)
+                prelim_contig_files.append(f)
         else:
             contig_file = Path(contig_file).absolute()
             if contig_file.is_dir():
                 FILE_EXTENSION = file_extension
-                CONTIG_FILES = [f.absolute() for f in sorted(contig_file.glob(f'*{FILE_EXTENSION}')) if f.is_file()]
+                prelim_contig_files = [f.absolute() for f in sorted(contig_file.glob(f'*{FILE_EXTENSION}')) if f.is_file()]
             else:
                 if contig_file.exists():
-                    CONTIG_FILES = [contig_file]
-        if len(CONTIG_FILES):
+                    prelim_contig_files = [contig_file]
+
+        if len(prelim_contig_files):
             if output_dir:
                 BASE_DIR = Path(output_dir).absolute()
                 BASE_DIR.mkdir(parents=True, exist_ok=True)
             else:
-                BASE_DIR = CONTIG_FILES[0].parent
-        else:
+                BASE_DIR = prelim_contig_files[0].parent
+
+        # Now we are ready to create the log file and start logging
+        LOG_FILE = (BASE_DIR / 'log.txt').absolute()
+        log(f'This is metaerg.py {VERSION}')
+
+        for f in prelim_contig_files:
+            if f.exists():
+                CONTIG_FILES.append(f)
+            else:
+                log(f'Skipping missing contig file "{f}"...')
+
+        if not len(CONTIG_FILES):
             log(f'No contig files to annotate, did you type the correct file or file extension?')
             exit(1)
+
         # (2) manage file structure / folders
         TEMP_DIR = BASE_DIR / 'temp'
         TEMP_DIR.mkdir(exist_ok=True)
@@ -161,20 +188,20 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
             if Path(checkm_dir).is_absolute():
                 CHECKM_DIR = Path(checkm_dir)
             else:
-                CHECKM_DIR = current_dir / checkm_dir
+                CHECKM_DIR = Path.cwd() / checkm_dir
         if gtdbtk_dir:
             if Path(gtdbtk_dir).is_absolute():
                 GTDBTK_DIR = Path(gtdbtk_dir)
             else:
-                GTDBTK_DIR = current_dir / gtdbtk_dir
+                GTDBTK_DIR = Path.cwd() / gtdbtk_dir
         os.chdir(TEMP_DIR)
         GENOME_NAME_MAPPING_FILE = TEMP_DIR / 'genome.name.mapping.txt'
         HTML_DIR = BASE_DIR / 'html'
         for folder in (TEMP_DIR, HTML_DIR):
             if folder.exists():
-                print(f'Warning: may overwrite existing files in {folder}...')
+                log(f'Warning: may overwrite existing files in {folder}...')
                 if folder.is_file():
-                    print(f'Expected dir at {folder}, found regular file, crash! Delete this file first')
+                    log(f'Expected dir at {folder}, found regular file, crash! Delete this file first')
                     exit(1)
             else:
                 folder.mkdir()
@@ -288,6 +315,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
         log(f'Ready to annotate {len(CONTIG_FILES)} genomes in dir "{BASE_DIR}" with '
                   f'{CPUS_PER_GENOME} threads per genome.')
+
 
 def spawn_file(program_name, genome_id, base_dir = None, extension='') -> Path:
     """computes a Path genome_id.program_name or, if multimode==True, program_name/genome_id"""
