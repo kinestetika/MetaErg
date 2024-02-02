@@ -61,11 +61,12 @@ PARALLEL_ANNOTATIONS = 0
 START_TIME = 0
 LOG_TOPICS = set()
 FILE_EXTENSION = ''
-METAERG_MODE_RUN = 1
-METAERG_MODE_DOWNLOAD_DATABASE = 2
-METAERG_MODE_CREATE_DATABASE = 3
-METAERG_MODE_INSTALL_DEPS = 4
-METAERG_MODE = METAERG_MODE_RUN
+DO_CLUSTER_GENOMES = False
+METAERG_ACTION_RUN = 1
+METAERG_ACTION_DOWNLOAD_DATABASE = 2
+METAERG_ACTION_CREATE_DATABASE = 3
+METAERG_ACTION_INSTALL_DEPS = 4
+METAERG_ACTION = METAERG_ACTION_RUN
 DATABASE_TASKS = 'all'
 FORCE_INSTALLATION_OF_DB = False
 PREFIX = 'g'
@@ -80,18 +81,19 @@ PROGRESS_COMPLETE = 'complete'
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, update_annotations, output_dir, log_topics='', contig_mode = False, skip_step='',
+         install_deps, update_annotations, output_dir, log_topics='', mode = 'genome', skip_step='',
          padloc_database='', antismash_database=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
-           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_MODE, GENOME_NAMES, CONTIG_FILES,\
+           CPUS_AVAILABLE, START_TIME, LOG_TOPICS, PARALLEL_ANNOTATIONS, METAERG_ACTION, GENOME_NAMES, CONTIG_FILES,\
            DELIMITER, LOG_FILE, DATABASE_TASKS, PREFIX, BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, \
-           WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB, ANTISMASH_DATABASE, PADLOC_DATABASE
+           WHICH_PROGRAMS_TO_INSTALL,ANNOTATOR_STATUS, FORCE_INSTALLATION_OF_DB, ANTISMASH_DATABASE, PADLOC_DATABASE, \
+           DO_CLUSTER_GENOMES
     START_TIME = time.monotonic()
     LOG_TOPICS = set(log_topics.split())
 
     if install_deps:
-        METAERG_MODE = METAERG_MODE_INSTALL_DEPS
+        METAERG_ACTION = METAERG_ACTION_INSTALL_DEPS
         instr = install_deps.split(',')
         BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
         LOG_FILE = (BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS / 'log.txt').absolute()
@@ -121,7 +123,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     if download_database:
         LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
         log(f'This is metaerg.py {VERSION}')
-        METAERG_MODE = METAERG_MODE_DOWNLOAD_DATABASE
+        METAERG_ACTION = METAERG_ACTION_DOWNLOAD_DATABASE
         DATABASE_DIR.mkdir(exist_ok=True)
         log(f'Ready to download databases.')
         return
@@ -132,7 +134,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     elif create_database:
         LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
         log(f'This is metaerg.py {VERSION}')
-        METAERG_MODE = METAERG_MODE_CREATE_DATABASE
+        METAERG_ACTION = METAERG_ACTION_CREATE_DATABASE
         if create_database == 'all':
             DATABASE_TASKS = 'PVEBRCSAD'
         else:
@@ -205,6 +207,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     exit(1)
             else:
                 folder.mkdir()
+
         # (3) manage annotator status
         if update_annotations:
             for k in ANNOTATOR_STATUS.keys():
@@ -226,9 +229,15 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
                     ANNOTATOR_STATUS[step] = FORCE_ANNOTATOR
                     ANNOTATOR_STATUS['visualization'] = FORCE_ANNOTATOR
                     log(f'Rerunning "{step}" forced.')
-        if contig_mode:
+        if 'contig' == mode:
             TRANSLATION_TABLE = []
             ANNOTATOR_STATUS['repeat_masker'] = SKIP_ANNOTATOR
+        elif 'cluster' == mode:
+            if len(CONTIG_FILES) < 2:
+                log('Attempt to set mode to "clade" but fewer than 2 genomes provided. Aborting.')
+                exit(1)
+            DO_CLUSTER_GENOMES = True
+
         for skipped_step in skip_step.split(','):
             try:
                 ANNOTATOR_STATUS[skipped_step] = SKIP_ANNOTATOR

@@ -172,18 +172,22 @@ def compute_codon_usage_bias_for_genome(genome_id, db_connection) -> CUBData:
                                additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')]
     if len(cub_ribosomal):
         codon_usage_bias = median(cub_ribosomal)
-        # consistency in codon usage bias
+        # calculate and store codon usage bias for all proteins
+        for cds in sqlite.read_all_features(db_connection, type='CDS'):
+            cds.codon_bias = compute_codon_usage_bias_for_feature(cds, background_frequencies)
+            sqlite.update_feature_in_db(db_connection, cds)
+        # collect some additional data for reporting:
+        # (a) consistency in codon usage bias
         background_frequencies = compute_codon_frequencies_for_feature_data(db_connection,
                                  additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')
         consistency = mean([compute_codon_usage_bias_for_feature(rp, background_frequencies)
                                for rp in sqlite.read_all_features(db_connection, type='CDS',
                                additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')])
-        # codon pair bias
+        # (b) codon pair bias
         codon_pair_scores = compute_codon_pair_scores_for_feature_data(genome_id, db_connection, additional_sql='end - start >= 240')
-        # codon_pair_bias = sum(codon_pair_scores.values()) / (len(codon_pair_scores) - 1)
         codon_pair_bias = median([compute_codon_pair_bias_for_cds(rp, codon_pair_scores)
                                   for rp in sqlite.read_all_features(type='CDS', additional_sql='end - start >= 240 AND subsystems LIKE "%ribosomal protein%"')])
-        # keep track of # too short proteins filtered out and ribosomal proteins
+        # (c) keep track of # too short proteins filtered out and ribosomal proteins
         filtered_out = sum(1 for feature in sqlite.read_all_features(db_connection, type='CDS', additional_sql='end - start < 240'))
         return CUBData(genome_id, len(cub_ribosomal), codon_usage_bias, consistency, codon_pair_bias, filtered_out, 0)
     else:

@@ -28,7 +28,9 @@ SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     tmh_topology TEXT,
     blast TEXT,
     cdd TEXT,
-    hmm TEXT
+    hmm TEXT,
+    codon_bias FLOAT,
+    selective_pressure_ratio FLOAT
 )'''
 SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     id = ?,
@@ -51,7 +53,9 @@ SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     tmh_topology = ?,
     blast = ?,
     cdd = ?,
-    hmm = ? 
+    hmm = ?,
+    codon_bias = ?,
+    selective_pressure_ratio = ?
 WHERE rowid = ?'''
 
 class Feature:
@@ -77,7 +81,9 @@ class Feature:
                  tmh_topology: str = '',
                  blast: str = '',
                  cdd: str = '',
-                 hmm: str = ''):
+                 hmm: str = '',
+                 codon_bias: float = 0.0,
+                 selective_pressure_ratio: float = 0.0):
         self.rowid = rowid
         self.id = id
         self.genome = genome
@@ -100,6 +106,8 @@ class Feature:
         self.blast = eval(blast) if blast else None
         self.cdd = eval(cdd) if cdd else None
         self.hmm = eval(hmm) if hmm else None
+        self.codon_bias = codon_bias
+        self.selective_pressure_ratio = selective_pressure_ratio
 
     def __iter__(self):
         for k, v in self.__dict__.items():
@@ -325,7 +333,7 @@ def write_db(sql_connection, db_file):
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
     cursor = sql_connection.cursor()
-    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?)', feature_as_tuple)
+    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?)', feature_as_tuple)
     sql_connection.commit()
 
 def add_new_genome_to_db(sql_connection, genome: Genome):

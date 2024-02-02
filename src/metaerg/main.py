@@ -12,14 +12,15 @@ import metaerg.run_and_read.diamond_and_blastn
 #import metaerg.run_and_read.functional_genes
 #import metaerg.run_and_read.antismash
 #from metaerg.run_and_read import tmhmm
-from metaerg.datatypes import sqlite
 from metaerg import context
 from metaerg import registry
 from metaerg.datatypes import functional_genes
+from metaerg.datatypes import sqlite
 from metaerg.datatypes import fasta
 from metaerg.datatypes import gbk
 from metaerg.datatypes.excel import write_genomes_to_xls
 from metaerg.html import html_all_genomes
+from metaerg.run_and_read import comparative_genomics
 from metaerg.installation import install_all_helper_programs
 
 
@@ -29,8 +30,11 @@ def parse_arguments():
                                               'contains multiple fasta nucleotide files.')
     parser.add_argument('--database_dir', help='Dir that contains the annotation databases.')
     parser.add_argument('--output_dir', default='', help='Dir that will contain the annotation results.')
-    parser.add_argument('--contig_mode', default=False,  action="store_true",
-                        help='Annotate contigs individually instead of assuming they are part of a genome, MAG or bin.')
+    parser.add_argument('--mode', default='genome', help='Choose "contig" to annotate contigs individually instead of '
+                                                         'assuming they are part of a genome, MAG or bin. Choose '
+                                                         '"clade" to annotate a clade of related genomes/MAGs. Choose '
+                                                         '"genome" to annotate genomes/MAGs, one per file. Default: '
+                                                         '"genome".')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization and presentation of results.')
     parser.add_argument('--rename_genomes', default=False,  action="store_true",
@@ -150,11 +154,11 @@ def annotate_genome(genome_name, input_fasta_file: Path):
 
 def main():
     context.init(**parse_arguments().__dict__)
-    if context.METAERG_MODE == context.METAERG_MODE_CREATE_DATABASE:
+    if context.METAERG_ACTION == context.METAERG_ACTION_CREATE_DATABASE:
         context.log(f'Creating/installing/downloading metaerg databases. Tasks: {context.DATABASE_TASKS}; ')
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
-    elif context.METAERG_MODE == context.METAERG_MODE_DOWNLOAD_DATABASE:
+    elif context.METAERG_ACTION == context.METAERG_ACTION_DOWNLOAD_DATABASE:
         # upload instructions:
         # (1) >source [credentials file]
         # (2) >swift upload test_container -S 1073741824 large_file
@@ -179,11 +183,10 @@ def main():
         metaerg.run_and_read.functional_genes.install_functional_gene_databases()
         metaerg.run_and_read.padloc.format_padloc_databases()
         metaerg.run_and_read.antismash.format_antismash_databases()
-    elif context.METAERG_MODE == context.METAERG_MODE_INSTALL_DEPS:
+    elif context.METAERG_ACTION == context.METAERG_ACTION_INSTALL_DEPS:
         install_all_helper_programs(context.BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS, context.WHICH_PROGRAMS_TO_INSTALL,
                                     context.PADLOC_DATABASE, context.ANTISMASH_DATABASE)
     else:
-        # sqlite.create_db(genome_db_file, target='Genomes')
         genome_db_connection = sqlite.create_db(target='Genomes')
         for preloader in registry.DB_PRELOADER_REGISTRY:
             preloader()
@@ -206,6 +209,8 @@ def main():
                                                     genome=genome)
                 except Exception as e:
                     context.log(f'({genome_name}) {str(e)}')
+        if context.DO_CLUSTER_GENOMES:
+            comparative_genomics.run()
 
         context.log('Now writing all-genomes overview to html...')
         html_all_genomes.write_html(genome_db_connection, context.HTML_DIR)

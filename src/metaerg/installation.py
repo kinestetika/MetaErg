@@ -74,6 +74,7 @@ PATH=$BIOINF_PREFIX/emboss/bin:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
 PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
+PATH=$BIOINF_PREFIX/mmseqs/bin/:$PATH
 PATH=$BIOINF_PREFIX/:$PATH
 export PATH
 export DEEPSIG_ROOT=$BIOINF_PREFIX/deepsig
@@ -250,6 +251,12 @@ def install_deepsig(bin_dir:Path):
     os.chdir(bin_dir)
     os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
     os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
+
+
+def install_mmseqs(bin_dir: Path):
+    os.chdir(bin_dir)
+    os.system('wget https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz')
+    os.system('tar xvfz mmseqs-linux-avx2.tar.gz')
 
 
 def install_pureseqtm(bin_dir: Path):
