@@ -83,6 +83,8 @@ class Feature:
                  cdd: str = '',
                  hmm: str = '',
                  codon_bias: float = 0.0,
+                 homologue_id: str = '',
+                 representation: float = 0.0,
                  selective_pressure_ratio: float = 0.0):
         self.rowid = rowid
         self.id = id
@@ -107,6 +109,8 @@ class Feature:
         self.cdd = eval(cdd) if cdd else None
         self.hmm = eval(hmm) if hmm else None
         self.codon_bias = codon_bias
+        self.homologue_id = homologue_id
+        self.representation = representation
         self.selective_pressure_ratio = selective_pressure_ratio
 
     def __iter__(self):

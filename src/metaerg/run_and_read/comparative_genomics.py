@@ -3,6 +3,7 @@ from collections import Counter
 from metaerg.datatypes.blast import TabularBlastParser
 from metaerg import context
 from metaerg.datatypes.fasta import FastaParser, write_fasta
+from  metaerg.datatypes.sqlite import connect_to_db, read_feature_by_id, update_feature_in_db
 
 
 def _run_programs():
@@ -211,14 +212,35 @@ def run():
             fraction_id=0.5)
 
     # 1 create a tsv with cluster info
-    for cluster_fasta_file in fasta_custered_dir.glob('.faa'):
-        cluster_id = cluster_fasta_file.stem
-        annotation = ''
-        with FastaParser(cluster_fasta_file, cleanup_seq=False) as fasta_reader:
-            for seq in fasta_reader:
-                if '(CENTER)' in seq['id']:
-                    annotation = seq['descr'][11:]
+    with open(fasta_custered_dir / 'homologues.tsv') as tsv_writer:
+        tsv_writer.write('cluster id\tannotation\trepresentation\tcount' + '\t'.join(taxa) + '\t' + '\t'.join(taxa) + '\n')
+        for cluster_fasta_file in fasta_custered_dir.glob('.faa'):
+            cluster_id = cluster_fasta_file.stem
+            annotation = ''
+            seq_hash = {}
+            taxa_represented = set()
+            total = 0
+            with FastaParser(cluster_fasta_file, cleanup_seq=False) as fasta_reader:
+                for seq in fasta_reader:
+                    (taxon, feature_id) = seq['id'].split('~')
+                    try:
+                        seq_hash[taxon].append(feature_id)
+                    except KeyError:
+                        seq_hash[taxon] = [feature_id]
+                    taxa_represented.add(taxon)
+                    total += 1
+                    if '(CENTER)' in seq['desrc']:
+                        annotation = seq['descr'][11:]
+            tsv_writer.write(f'{cluster_id}\t{annotation}\t{len(taxa_represented)}\t{total}\t' +
+                              '\t'.join([str(len(seq_hash.get(t, []))) for t in taxa]) +
+                              '\t'.join([','.join(seq_hash.get(t, [])) for t in taxa]) + '\n')
+            # 2 for each gene, store "prevalence" in SQL and cluster id
+            for taxon, feature_id_list in seq_hash.items():
+                db_file = context.BASE_DIR / 'annotations.sqlite' / cluster_id
+                for feature_id in feature_id_list:
+                    db_connection = connect_to_db(db_file)
+                    feature = read_feature_by_id(db_connection, feature_id)
+                    feature.
+                    update_feature_in_db(db_connection, feature_id)
 
-
-    # 2 for each gene, store "prevalence" in SQL and cluster id
     # 3 determine contextual links between orthologues (from 2)
