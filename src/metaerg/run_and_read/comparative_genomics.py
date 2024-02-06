@@ -199,10 +199,10 @@ def run():
     context.log('Mode "Clade": Clustering homologous genes across genomes...')
     input_dir = context.BASE_DIR / 'faa'
     comparative_genomics_dir = context.BASE_DIR / 'clade'
-    merged_fasta_file = comparative_genomics_dir / 'all_cds_from_all_genomes'
+    merged_fasta_file = comparative_genomics_dir / 'all_cds_from_all_genomes_coded'
     taxa_by_orf_id = []
     taxa = sorted([f. name for f in input_dir.glob('*')])
-    fasta_custered_dir = comparative_genomics_dir / 'clusters'
+    fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
     merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
                                merged_fasta_file=merged_fasta_file)
     cluster(taxa_by_orf_id=taxa_by_orf_id,
@@ -212,7 +212,7 @@ def run():
             fraction_id=0.5)
 
     # 1 create a tsv with cluster info
-    with open(fasta_custered_dir / 'homologues.tsv') as tsv_writer:
+    with open(fasta_custered_dir / 'homologues.tsv', 'w') as tsv_writer:
         tsv_writer.write('cluster id\tannotation\trepresentation\tcount' + '\t'.join(taxa) + '\t' + '\t'.join(taxa) + '\n')
         for cluster_fasta_file in fasta_custered_dir.glob('.faa'):
             cluster_id = cluster_fasta_file.stem
@@ -230,7 +230,7 @@ def run():
                     taxa_represented.add(taxon)
                     total += 1
                     if '(CENTER)' in seq['desrc']:
-                        annotation = seq['descr'][11:]
+                        annotation = seq['descr'][9:]
             tsv_writer.write(f'{cluster_id}\t{annotation}\t{len(taxa_represented)}\t{total}\t' +
                               '\t'.join([str(len(seq_hash.get(t, []))) for t in taxa]) +
                               '\t'.join([','.join(seq_hash.get(t, [])) for t in taxa]) + '\n')
