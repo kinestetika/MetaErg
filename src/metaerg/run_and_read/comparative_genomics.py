@@ -1,9 +1,9 @@
 from pathlib import Path
-from collections import Counter
+from collections import deque, Counter
 from metaerg.datatypes.blast import TabularBlastParser
 from metaerg import context
 from metaerg.datatypes.fasta import FastaParser, write_fasta
-from  metaerg.datatypes.sqlite import connect_to_db, read_feature_by_id, update_feature_in_db
+from  metaerg.datatypes.sqlite import connect_to_db, read_feature_by_id, update_feature_in_db, read_all_features
 
 
 def _run_programs():
@@ -141,7 +141,7 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
                     seq_id2cluster_rejected[seq_id] = cluster
                 cluster.id = f'rejected_{rejected_cluster_count}'
             else:
-                cluster.id = cluster_count
+                cluster.id = cluster_count + 1  # we do  not want a cluster with id zero
                 cluster_count += 1
                 percent_id += cluster.fraction_id
                 for seq_id in cluster.seq_ids:
@@ -195,7 +195,7 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
     context.log(f'wrote {i} seqs to files in {fasta_output_dir}')
 
 
-def run():
+def run(cluster_window_size = 4):
     context.log('Mode "Clade": Clustering homologous genes across genomes...')
     input_dir = context.BASE_DIR / 'faa'
     comparative_genomics_dir = context.BASE_DIR / 'clade'
@@ -211,7 +211,8 @@ def run():
             fasta_output_dir=fasta_custered_dir,
             fraction_id=0.5)
 
-    # 1 create a tsv with cluster info
+    # [1] create a tsv with cluster info
+    cluster_size_hash = {}
     with open(fasta_custered_dir / 'homologues.tsv', 'w') as tsv_writer:
         tsv_writer.write('cluster id\tannotation\trepresentation\tcount' + '\t'.join(taxa) + '\t' + '\t'.join(taxa) + '\n')
         for cluster_fasta_file in fasta_custered_dir.glob('.faa'):
@@ -223,10 +224,11 @@ def run():
             with FastaParser(cluster_fasta_file, cleanup_seq=False) as fasta_reader:
                 for seq in fasta_reader:
                     (taxon, feature_id) = seq['id'].split('~')
+                    is_paralogue = '(PARALOGUE)' in seq['descr']
                     try:
-                        seq_hash[taxon].append(feature_id)
+                        seq_hash[taxon].append((feature_id, is_paralogue))
                     except KeyError:
-                        seq_hash[taxon] = [feature_id]
+                        seq_hash[taxon] = [(feature_id, is_paralogue)]
                     taxa_represented.add(taxon)
                     total += 1
                     if '(CENTER)' in seq['desrc']:
@@ -234,13 +236,46 @@ def run():
             tsv_writer.write(f'{cluster_id}\t{annotation}\t{len(taxa_represented)}\t{total}\t' +
                               '\t'.join([str(len(seq_hash.get(t, []))) for t in taxa]) +
                               '\t'.join([','.join(seq_hash.get(t, [])) for t in taxa]) + '\n')
-            # 2 for each gene, store "prevalence" in SQL and cluster id
+            # [2] for each gene, store "prevalence" in SQL and cluster id
             for taxon, feature_id_list in seq_hash.items():
-                db_file = context.BASE_DIR / 'annotations.sqlite' / cluster_id
-                for feature_id in feature_id_list:
+                db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
+                for feature_id, is_paralogue in feature_id_list:
                     db_connection = connect_to_db(db_file)
                     feature = read_feature_by_id(db_connection, feature_id)
-                    feature.
+                    feature.homologous_group_feature_is_paralogue = is_paralogue
+                    feature.homologous_group_id = int(cluster_id)
+                    feature.homologous_group_taxon_representation = len(taxa_represented) / len(taxa)
+                    feature.homologous_group_member_count = total
                     update_feature_in_db(db_connection, feature_id)
+            cluster_size_hash[cluster_id] = total
 
     # 3 determine contextual links between orthologues (from 2)
+    profile_match_counts = Counter()
+    for taxon in taxa:
+        window = deque(maxlen=cluster_window_size)
+        db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
+        db_connection = connect_to_db(db_file, target='Features')
+        previous_contig = None
+        for feature in read_all_features(db_connection, type=('CDS', 'ncRNA')):
+            # make sure subsequent features are actually found together
+            if previous_contig and feature.contig != previous_contig:
+                window.clear()
+            if not feature.homologous_group_id:
+                continue
+            # here comes the logic
+            profiles_done = set()  # we only want to create a match for each cluster once
+            for other_feature in window:
+                if not other_feature.homologous_group_id:
+                    continue
+                profile_match_counts
+            for cdd_hit_1 in feature.cdd[:max_cdd_hits]:  # a list of blast hits with a DBEntry in the 'hit' field
+
+                for other_feature in window:
+                    for cdd_hit_2 in other_feature.cdd[:max_cdd_hits]:
+                        if cdd_hit_2.hit.accession in profiles_done:
+                            continue
+                        profile_match_counts.update((get_match_key(cdd_hit_1, cdd_hit_2),))
+                        profiles_done.add(cdd_hit_2.hit.accession)
+            # post-processing...
+            previous_contig = feature.contig
+            window.append(feature)

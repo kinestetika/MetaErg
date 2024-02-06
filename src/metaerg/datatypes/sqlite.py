@@ -30,7 +30,11 @@ SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     cdd TEXT,
     hmm TEXT,
     codon_bias FLOAT,
-    selective_pressure_ratio FLOAT
+    selective_pressure_ratio FLOAT,
+    homologous_group_id INT,
+    homologous_group_member_count INT,
+    homologous_group_taxon_representation FLOAT,
+    homologous_group_feature_is_paralogue BOOL
 )'''
 SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     id = ?,
@@ -55,8 +59,13 @@ SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     cdd = ?,
     hmm = ?,
     codon_bias = ?,
-    selective_pressure_ratio = ?
+    selective_pressure_ratio = ?,
+    homologous_group_id = ?,
+    homologous_group_member_count = ?,
+    homologous_group_taxon_representation = ?,
+    homologous_group_feature_is_paralogue = ?
 WHERE rowid = ?'''
+
 
 class Feature:
     def __init__(self,
@@ -85,7 +94,11 @@ class Feature:
                  codon_bias: float = 0.0,
                  homologue_id: str = '',
                  representation: float = 0.0,
-                 selective_pressure_ratio: float = 0.0):
+                 selective_pressure_ratio: float = 0.0,
+                 homologous_group_id: int = 0,
+                 homologous_group_member_count: int = 0,
+                 homologous_group_taxon_representation: float = 0.0,
+                 homologous_group_feature_is_paralogue: bool = False):
         self.rowid = rowid
         self.id = id
         self.genome = genome
@@ -112,6 +125,11 @@ class Feature:
         self.homologue_id = homologue_id
         self.representation = representation
         self.selective_pressure_ratio = selective_pressure_ratio
+        self.homologous_group_id = homologous_group_id
+        self.homologous_group_member_count = homologous_group_member_count
+        self.homologous_group_taxon_representation = homologous_group_taxon_representation
+        self.homologous_group_feature_is_paralogue = homologous_group_feature_is_paralogue
+
 
     def __iter__(self):
         for k, v in self.__dict__.items():
@@ -337,7 +355,7 @@ def write_db(sql_connection, db_file):
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
     cursor = sql_connection.cursor()
-    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?)', feature_as_tuple)
+    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?)', feature_as_tuple)
     sql_connection.commit()
 
 def add_new_genome_to_db(sql_connection, genome: Genome):
