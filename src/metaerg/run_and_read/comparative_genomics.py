@@ -195,28 +195,13 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
     context.log(f'wrote {i} seqs to files in {fasta_output_dir}')
 
 
-def run(cluster_window_size = 4):
-    context.log('Mode "Clade": Clustering homologous genes across genomes...')
-    input_dir = context.BASE_DIR / 'faa'
-    comparative_genomics_dir = context.BASE_DIR / 'clade'
-    merged_fasta_file = comparative_genomics_dir / 'all_cds_from_all_genomes_coded'
-    taxa_by_orf_id = []
-    taxa = sorted([f. name for f in input_dir.glob('*')])
-    fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
-    merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
-                               merged_fasta_file=merged_fasta_file)
-    cluster(taxa_by_orf_id=taxa_by_orf_id,
-            input_fasta_file=merged_fasta_file,
-            tmp_dir=comparative_genomics_dir / 'tmp',
-            fasta_output_dir=fasta_custered_dir,
-            fraction_id=0.5)
-
+def parse_clusters(fasta_custered_dir: Path):
     # [1] create a tsv with cluster info
     cluster_size_hash = {}
     with open(fasta_custered_dir / 'homologues.tsv', 'w') as tsv_writer:
         tsv_writer.write('cluster id\tannotation\trepresentation\tcount' + '\t'.join(taxa) + '\t' + '\t'.join(taxa) + '\n')
-        for cluster_fasta_file in fasta_custered_dir.glob('.faa'):
-            cluster_id = cluster_fasta_file.stem
+        for cluster_fasta_file in sorted(fasta_custered_dir.glob('.faa')):
+            cluster_id = int(cluster_fasta_file.stem)
             annotation = ''
             seq_hash = {}
             taxa_represented = set()
@@ -236,6 +221,24 @@ def run(cluster_window_size = 4):
             tsv_writer.write(f'{cluster_id}\t{annotation}\t{len(taxa_represented)}\t{total}\t' +
                               '\t'.join([str(len(seq_hash.get(t, []))) for t in taxa]) +
                               '\t'.join([','.join(seq_hash.get(t, [])) for t in taxa]) + '\n')
+
+
+def run(cluster_window_size = 4):
+    context.log('Mode "Clade": Clustering homologous genes across genomes...')
+    input_dir = context.BASE_DIR / 'faa'
+    comparative_genomics_dir = context.BASE_DIR / 'clade'
+    merged_fasta_file = comparative_genomics_dir / 'all_cds_from_all_genomes_coded'
+    taxa_by_orf_id = []
+    taxa = sorted([f. name for f in input_dir.glob('*')])
+    fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
+    merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
+                               merged_fasta_file=merged_fasta_file)
+    cluster(taxa_by_orf_id=taxa_by_orf_id,
+            input_fasta_file=merged_fasta_file,
+            tmp_dir=comparative_genomics_dir / 'tmp',
+            fasta_output_dir=fasta_custered_dir,
+            fraction_id=0.5)
+
             # [2] for each gene, store "prevalence" in SQL and cluster id
             for taxon, feature_id_list in seq_hash.items():
                 db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
@@ -263,19 +266,19 @@ def run(cluster_window_size = 4):
             if not feature.homologous_group_id:
                 continue
             # here comes the logic
-            profiles_done = set()  # we only want to create a match for each cluster once
             for other_feature in window:
-                if not other_feature.homologous_group_id:
+                if (not other_feature.homologous_group_id or
+                        other_feature.homologous_group_id == feature.homologous_group_id):
                     continue
-                profile_match_counts
-            for cdd_hit_1 in feature.cdd[:max_cdd_hits]:  # a list of blast hits with a DBEntry in the 'hit' field
-
-                for other_feature in window:
-                    for cdd_hit_2 in other_feature.cdd[:max_cdd_hits]:
-                        if cdd_hit_2.hit.accession in profiles_done:
-                            continue
-                        profile_match_counts.update((get_match_key(cdd_hit_1, cdd_hit_2),))
-                        profiles_done.add(cdd_hit_2.hit.accession)
+                profile_match_counts.update(make_match_key(feature.homologous_group_id,
+                                                           other_feature.homologous_group_id))
             # post-processing...
             previous_contig = feature.contig
             window.append(feature)
+
+
+def make_match_key(id1: int, id2: int):
+    if id1 > id2:
+        return f'{id1}_{id2}'
+    else:
+        return f'{id2}_{id1}'
