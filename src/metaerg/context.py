@@ -232,11 +232,13 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         if 'contig' == mode:
             TRANSLATION_TABLE = []
             ANNOTATOR_STATUS['repeat_masker'] = SKIP_ANNOTATOR
-        elif 'cluster' == mode:
+            log('Mode set to "contigs" - will not run repeat masker')
+        elif 'comparative_genomics' == mode:
             if len(CONTIG_FILES) < 2:
-                log('Attempt to set mode to "clade" but fewer than 2 genomes provided. Aborting.')
+                log('Attempt to set mode to "comparative_genomics" but fewer than 2 genomes provided. Aborting.')
                 exit(1)
             DO_CLUSTER_GENOMES = True
+            log('Mode set to "comparative_genomics"')
 
         for skipped_step in skip_step.split(','):
             try:

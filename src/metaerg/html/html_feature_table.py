@@ -28,6 +28,7 @@ def get_empty_format_dict():
             'recall': '',
             'description': '',
             'taxon': '',
+            'is_part_of_cog': '',
             'ci': '', 'ca': '', 'cr': '', 'ct': '', 'cc': ''}
 
 
@@ -71,13 +72,14 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     top_taxon = top_taxon.split()
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(top_taxon)) / (len(taxon) + 1))]
+    format_hash['is_part_of_cog'] = 'al_bold' if f.homologous_group_id > 0 else 'al'
     if f.parent or 'region' == f.type:
         format_hash['cc'] = ' id=cc'
 
 
 def format_hash_to_html(format_hash):
     return '''<tr>
-    <td id=al>{f_id}</td> <td{cc}>{strand}</td> <td>{length}</td> <td>{type}</td> <td>{destination}</td> 
+    <td id={is_part_of_cog}>{f_id}</td> <td{cc}>{strand}</td> <td>{length}</td> <td>{type}</td> <td>{destination}</td> 
     <td>{subsystem}</td> <td>{has_cdd}</td> <td{ci}>{ident}</td> <td{ca}>{align}</td> <td{cr}>{recall}</td> 
     <td id=al>{description}</td>
     <td{ct}>{taxon}</td>
@@ -118,6 +120,7 @@ def make_html(genome, db_connection) -> str:
                 format_hash['description'] = previous_repeats[0].id + ' ... ' + previous_repeats[-1].id
                 format_hash['type'] = f'{len(previous_repeats)} {", ".join(repeat_types)}(s)'
                 format_hash['length'] = f'{previous_repeats[-1].end - previous_repeats[0].start:,} nt'
+                format_hash['cc'] = ' id=cc' if len(previous_repeats[-1].parent) else ''
                 previous_repeats.clear()
                 repeat_types.clear()
                 table_body += format_hash_to_html(format_hash)
@@ -178,6 +181,10 @@ $(document).ready( function () {
      }
   #al {
     text-align: left;
+      }
+  #al_bold {
+    text-align:  left;
+    font-weight: bold;
       }
   #cc {
     background-color:#CCDDEE;

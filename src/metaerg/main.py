@@ -32,8 +32,8 @@ def parse_arguments():
     parser.add_argument('--output_dir', default='', help='Dir that will contain the annotation results.')
     parser.add_argument('--mode', default='genome', help='Choose "contig" to annotate contigs individually instead of '
                                                          'assuming they are part of a genome, MAG or bin. Choose '
-                                                         '"clade" to annotate a clade of related genomes/MAGs. Choose '
-                                                         '"genome" to annotate genomes/MAGs, one per file. Default: '
+                                                         '"comparative_genomics" to annotate a clade of related genomes/MAGs.'
+                                                         ' Choose "genome" to annotate genomes/MAGs, one per file. Default: '
                                                          '"genome".')
     parser.add_argument('--rename_contigs', default=False,  action="store_true",
                         help='Renaming contigs can improve visualization and presentation of results.')
@@ -190,15 +190,16 @@ def main():
         genome_db_connection = sqlite.create_db(target='Genomes')
         for preloader in registry.DB_PRELOADER_REGISTRY:
             preloader()
+        genome_dict = {}
         if context.PARALLEL_ANNOTATIONS > 1:
-            outcomes = {}
             with futures.ProcessPoolExecutor(max_workers=context.PARALLEL_ANNOTATIONS) as executor:
                 for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
-                    outcomes[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
-            for genome_name, future in outcomes.items():
+                    genome_dict[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
+            for genome_name, future in genome_dict.items():
                 try:
                     if genome := future.result():
                         sqlite.add_new_genome_to_db(genome_db_connection, genome)
+                    genome_dict[genome_name] = genome
                 except Exception as e:
                     context.log(f'({genome_name}) {str(e)}')
         else:
@@ -207,10 +208,11 @@ def main():
                     if genome := annotate_genome(genome_name, contig_file):
                         sqlite.add_new_genome_to_db(sql_connection=genome_db_connection,
                                                     genome=genome)
+                        genome_dict[genome_name] = genome
                 except Exception as e:
                     context.log(f'({genome_name}) {str(e)}')
         if context.DO_CLUSTER_GENOMES:
-            comparative_genomics.run()
+            comparative_genomics.run(genome_dict)
 
         context.log('Now writing all-genomes overview to html...')
         html_all_genomes.write_html(genome_db_connection, context.HTML_DIR)

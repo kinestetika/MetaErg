@@ -1,9 +1,12 @@
+import re
 from pathlib import Path
 from collections import deque, Counter
 from metaerg.datatypes.blast import TabularBlastParser
 from metaerg import context
 from metaerg.datatypes.fasta import FastaParser, write_fasta
-from  metaerg.datatypes.sqlite import connect_to_db, read_feature_by_id, update_feature_in_db, read_all_features
+from  metaerg.datatypes import sqlite
+from metaerg import registry
+from metaerg.html import html_feature_table, html_feature_details
 
 
 def _run_programs():
@@ -12,14 +15,16 @@ def _run_programs():
 
 
 def merge_and_code_fasta_input(mag_faa_dir: Path, mag_faa_file_extension: str, delimiter: str, taxa_by_orf_id: list,
-                               merged_fasta_file: Path):
+                               merged_fasta_file: Path) -> list:
     context.log(f'Now merging and coding fasta input as {merged_fasta_file}..')
-    unique_ids = set()
+    taxa = list()
+    file_count = 0
+    orf_count = 0
     with open(merged_fasta_file, 'w') as writer:
-        file_count = 0
-        orf_count = 0
         for file in sorted(mag_faa_dir.glob(f'*{mag_faa_file_extension}')):
+            unique_ids = set()
             fasta_file = mag_faa_dir / file.name
+            taxa.append(file.stem)
             with FastaParser(fasta_file, cleanup_seq=False) as fasta_reader:
                 for orf in fasta_reader:
                     if orf['id'] in unique_ids:
@@ -38,7 +43,7 @@ def merge_and_code_fasta_input(mag_faa_dir: Path, mag_faa_file_extension: str, d
             file_count += 1
     context.log(f'Merging and coding fasta input complete; recoded and wrote {len(taxa_by_orf_id)} proteins to fasta, '
         f'{file_count} unique taxa.')
-
+    return taxa
 
 
 class Cluster:
@@ -100,6 +105,7 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
             min_taxa_represented:float=3, min_fraction_of_genes_per_taxon:float=0.1,
             include_paralogues_in_fasta_output=True):
     unique_taxa = {taxon for taxon in taxa_by_orf_id}
+    context.log('Now clustering CDS genes...')
     context.log(f'Detected {len(unique_taxa)} unique taxa.')
     # prep files
     tmp_dir.mkdir(exist_ok=True)
@@ -109,13 +115,14 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
     cluster_file_blast = input_fasta_file.parent / f'{input_fasta_file.stem}.clustering.blast'
     input_fasta_db = input_fasta_file.parent / (input_fasta_file.stem + '.mmseqdb')
     # run programs
-    context.run_external(f'mmseqs createdb {input_fasta_file} {input_fasta_db}')
-    context.run_external(f'mmseqs cluster -c {fraction_overlap} --cov-mode 0 --min-seq-id {fraction_id} '
+    mmseqs_path = ''#'/bio/bin/mmseqs/bin/'  # for testing
+    context.run_external(f'{mmseqs_path}mmseqs createdb {input_fasta_file} {input_fasta_db}')
+    context.run_external(f'{mmseqs_path}mmseqs cluster -c {fraction_overlap} --cov-mode 0 --min-seq-id {fraction_id} '
                  f'{input_fasta_db} {cluster_file_base} {tmp_dir}')
-    context.run_external(f'mmseqs createtsv {input_fasta_db} {input_fasta_db} {cluster_file_base} {cluster_file_tsv}')
-    context.run_external(f'mmseqs align {input_fasta_db} {input_fasta_db} {cluster_file_base} '
+    context.run_external(f'{mmseqs_path}mmseqs createtsv {input_fasta_db} {input_fasta_db} {cluster_file_base} {cluster_file_tsv}')
+    context.run_external(f'{mmseqs_path}mmseqs align {input_fasta_db} {input_fasta_db} {cluster_file_base} '
                  f'{cluster_file_align} -a')
-    context.run_external(f'mmseqs convertalis {input_fasta_db} {input_fasta_db} {cluster_file_align} '
+    context.run_external(f'{mmseqs_path}mmseqs convertalis {input_fasta_db} {input_fasta_db} {cluster_file_align} '
                  f'{cluster_file_blast}')
     # parse results
     blast_scores = {}
@@ -195,90 +202,275 @@ def cluster(taxa_by_orf_id: list, input_fasta_file:Path, tmp_dir: Path, fasta_ou
     context.log(f'wrote {i} seqs to files in {fasta_output_dir}')
 
 
-def parse_clusters(fasta_custered_dir: Path):
-    # [1] create a tsv with cluster info
-    cluster_size_hash = {}
-    with open(fasta_custered_dir / 'homologues.tsv', 'w') as tsv_writer:
-        tsv_writer.write('cluster id\tannotation\trepresentation\tcount' + '\t'.join(taxa) + '\t' + '\t'.join(taxa) + '\n')
-        for cluster_fasta_file in sorted(fasta_custered_dir.glob('.faa')):
-            cluster_id = int(cluster_fasta_file.stem)
-            annotation = ''
-            seq_hash = {}
-            taxa_represented = set()
-            total = 0
-            with FastaParser(cluster_fasta_file, cleanup_seq=False) as fasta_reader:
-                for seq in fasta_reader:
-                    (taxon, feature_id) = seq['id'].split('~')
-                    is_paralogue = '(PARALOGUE)' in seq['descr']
-                    try:
-                        seq_hash[taxon].append((feature_id, is_paralogue))
-                    except KeyError:
-                        seq_hash[taxon] = [(feature_id, is_paralogue)]
-                    taxa_represented.add(taxon)
-                    total += 1
-                    if '(CENTER)' in seq['desrc']:
-                        annotation = seq['descr'][9:]
-            tsv_writer.write(f'{cluster_id}\t{annotation}\t{len(taxa_represented)}\t{total}\t' +
-                              '\t'.join([str(len(seq_hash.get(t, []))) for t in taxa]) +
-                              '\t'.join([','.join(seq_hash.get(t, [])) for t in taxa]) + '\n')
+def parse_clusters(fasta_custered_dir: Path) -> dict:
+    context.log(f"Now parsing clusters of homologous genes from dir '{fasta_custered_dir}'...")
+    cluster_hash = {}
+    taxonomy_pattern = re.compile(r'\s\(.*?\)$')
+    for cluster_fasta_file in sorted(fasta_custered_dir.glob('*.faa')):
+        cluster = {'id':         int(cluster_fasta_file.stem),
+                   'annotation': '',
+                   'members': [],  # list of tuples (id, taxon, is_paralogue]
+                   'taxa': set(),
+                   'links': []  # links to other clusters based on gene-context, list of tuples (other cluster, score)
+                   }
+        with FastaParser(cluster_fasta_file, cleanup_seq=False) as fasta_reader:
+            for seq in fasta_reader:
+                (taxon, feature_id) = seq['id'].split('~')
+                is_paralogue = '(PARALOGUE)' in seq['descr']
+                cluster['members'].append((feature_id, taxon, is_paralogue))
+                cluster['taxa'].add(taxon)
+                if '(CENTER)' in seq['descr']:
+                    cluster['annotation'] = seq['descr'][9:]
+                cluster['annotation'] = re.sub(taxonomy_pattern, '', cluster['annotation'])
+        cluster_hash[cluster['id']] = cluster
+    context.log(f"Parsed {len(cluster_hash)} clusters of homologous genes.")
+    return cluster_hash
 
 
-def run(cluster_window_size = 4):
-    context.log('Mode "Clade": Clustering homologous genes across genomes...')
+def write_overview_tsv_file(dir: Path, cluster_hash: dict, all_taxa: list):
+    context.log("Now writing homology overview info to files 'homologues.tsv'...")
+    # each cluster on one line, we write id<tab>annotation<tab>#taxa<tab>#seqs
+    # <tab>gene-context associations to other clusters with scores
+    # then (separated by <tab>) for each taxon the number of reps,
+    # then (separated by <tab>) for each taxon the ids of all reps (separated by commas)
+    with open(dir / 'homologues.tsv', 'w') as tsv_writer:
+        tsv_writer.write('cluster id\tannotation\trepresentation\tcount\tlinks\t' + '\t'.join(all_taxa) + '\t' + '\t'.join(all_taxa) + '\n')
+        for cluster_id in sorted(cluster_hash.keys()):  # otherwise we get 1, 10, 100, etc...
+            cluster = cluster_hash[cluster_id]
+            tsv_writer.write(f'{cluster["id"]}\t{cluster["annotation"]}\t{len(cluster["taxa"])}\t{len(cluster["members"])}\t' +
+                              ', '.join([f'{l[0]["id"]}({l[1]:.0%})' for l in cluster["links"]]) + '\t' +
+                              '\t'.join([str(sum([1 for m in cluster['members'] if m[1] == t])) for t in all_taxa]) + '\t' +
+                              '\t'.join([','.join([m[0] for m in cluster['members'] if m[1] == t]) for t in all_taxa]) + '\n')
+
+
+
+def write_homologue_info_to_sql(cluster_hash: dict, all_taxa: list):
+    context.log("Now writing info about homology to each genome's feature database...")
+    for i, taxon in zip(range(len(all_taxa)), all_taxa):
+        targets = []
+        for c in cluster_hash.values():  # round up all the features for a given taxon
+            targets.extend([(m[0], m[1], m[2], c) for m in c['members'] if m[1] == taxon])
+        context.log(f'Processing ({i+1}/{len(all_taxa)}) taxa: "{taxon}" has {len(targets)} genes with homologues in other species.')
+        db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
+        db_connection = sqlite.connect_to_db(db_file)
+        for feature_id, taxon, is_paralogue, cluster in targets:
+            feature = sqlite.read_feature_by_id(db_connection, feature_id)
+            feature.homologous_group_feature_is_paralogue = is_paralogue
+            feature.homologous_group_id = int(cluster['id'])
+            feature.homologous_group_taxon_representation = len(cluster['taxa']) / len(all_taxa)
+            feature.homologous_group_member_count = len(cluster['members'])
+            sqlite.update_feature_in_db(db_connection, feature)
+
+
+def analyse_gene_context(cluster_hash, all_taxa: list, window_size: int = 4, min_match_score: float = 0.5) -> dict:
+    context.log("Now analysing gene context to identify homologous genes frequently found together...")
+    context.log(f"Working with window size {window_size} and requiring {min_match_score:.1%} of pairs of homologous genes to be found close to each other.")
+    profile_match_counts = Counter()
+    for i, taxon in zip(range(len(all_taxa)), all_taxa):
+        context.log(f'Processing ({i+1}/{len(all_taxa)}) taxa: "{taxon}"')
+        window = deque(maxlen=window_size)
+        db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
+        db_connection = sqlite.connect_to_db(db_file, target='Features')
+        previous_contig = None
+        for feature in sqlite.read_all_features(db_connection, type=('CDS')):
+            # make sure subsequent features are actually on the same contig
+            if previous_contig and feature.contig != previous_contig:
+                window.clear()
+            elif not feature.homologous_group_id:
+                previous_contig = feature.contig
+                window.append(feature)
+                continue
+            # here comes the logic
+            for other_feature in window:
+                if not other_feature.homologous_group_id or \
+                        other_feature.homologous_group_id == feature.homologous_group_id:
+                    continue
+                profile_match_counts.update([make_match_key(feature.homologous_group_id,
+                                                           other_feature.homologous_group_id)])
+            # post-processing...
+            previous_contig = feature.contig
+            window.append(feature)
+    # aggregate and update clusters
+    cluster_context_links = dict()
+    for match, match_count in profile_match_counts.most_common():
+        (cluster_id_1, cluster_id_2) = match.split()
+        cluster_id_1 = int(cluster_id_1)
+        cluster_id_2 = int(cluster_id_2)
+        match_score = match_count / min(len(cluster_hash[cluster_id_1]['members']),
+                                        len(cluster_hash[cluster_id_2]['members']))
+        if match_score > min_match_score:
+            cluster_context_links[match] = match_score
+            cluster_hash[cluster_id_1]['links'].append((cluster_hash[cluster_id_2], match_score))
+            cluster_hash[cluster_id_2]['links'].append((cluster_hash[cluster_id_1], match_score))
+    context.log(f'Identified {len(cluster_context_links)}/{len(profile_match_counts)} gene-context associations '
+                f'stronger than {min_match_score:.2}')
+    return cluster_context_links
+
+
+def write_gene_context_clustering_to_sql(cluster_context_links: dict, all_taxa: list, window_size: int = 4):
+    context.log("Now writing info about gene context to each genome's feature database...")
+    for taxon in all_taxa:
+        db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
+        db_connection = sqlite.connect_to_db(db_file)
+        window = deque(maxlen=window_size)
+        current_region_feature = None
+        region_count = 1
+        for feature in sqlite.read_all_features(db_connection, type=('CDS')):
+            if not len(window):
+                window.append(feature)
+                continue
+            if feature.contig != window[-1].contig:
+                current_region_feature = None
+                window.clear()
+                window.append(feature)
+                continue
+            earliest_linked_feature = None
+            for other_feature in window:
+                if cluster_context_links.get(make_match_key(feature.homologous_group_id,
+                                                        other_feature.homologous_group_id), 0):
+                    earliest_linked_feature = other_feature
+                    break
+            if earliest_linked_feature:
+                # update or create feature for region
+                if not current_region_feature:
+                    current_region_feature = sqlite.Feature(genome=feature.genome,
+                                                            contig=feature.contig,
+                                                            start=max(earliest_linked_feature.start - 1, 0),
+                                                            end=feature.end+1,
+                                                            strand=1,
+                                                            type='region',
+                                                            inference='metaerg',
+                                                            descr=f'gene cluster based on homology',
+                                                            id=f'region_{region_count}')
+                    sqlite.add_new_feature_to_db(db_connection, current_region_feature)
+                    earliest_linked_feature.parent.add(current_region_feature.id)
+                    sqlite.update_feature_in_db(db_connection, earliest_linked_feature)
+                    region_count += 1
+                else:
+                    current_region_feature.end = feature.end + 1
+                    sqlite.update_feature_in_db(db_connection, current_region_feature)
+                    feature.parent.add(current_region_feature.id)
+                    sqlite.update_feature_in_db(db_connection, feature)
+            else:
+                if current_region_feature:  # end of a region - need to now assign all genes within its range...
+                    for f in sqlite.read_all_features(db_connection, contig=feature.contig,
+                                                      start=current_region_feature.start, end=current_region_feature.end):
+                        if f.type != 'region':
+                            f.parent.add(current_region_feature.id)
+                            sqlite.update_feature_in_db(db_connection, f)
+                current_region_feature = None
+            window.append(feature)
+        context.log(f"Wrote {region_count} homology-informed sequence regions to sql for '{taxon}'")
+
+
+def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float = 0.5):
+    context.log('Mode "comparative_genomics": Clustering and analysing homologous genes across genomes...')
+    # prep/clear dirs
     input_dir = context.BASE_DIR / 'faa'
-    comparative_genomics_dir = context.BASE_DIR / 'clade'
-    merged_fasta_file = comparative_genomics_dir / 'all_cds_from_all_genomes_coded'
-    taxa_by_orf_id = []
-    taxa = sorted([f. name for f in input_dir.glob('*')])
+    comparative_genomics_dir = context.BASE_DIR / 'comparative_genomics'
+    comparative_genomics_dir.mkdir(exist_ok=True)
+    for f in comparative_genomics_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    db_dir = comparative_genomics_dir / 'mmseqs_db'
+    db_dir.mkdir(exist_ok=True)
+    for f in db_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    merged_fasta_file = db_dir / 'all_cds_from_all_genomes_coded.faa'
     fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
-    merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
-                               merged_fasta_file=merged_fasta_file)
+    fasta_custered_dir.mkdir(exist_ok=True)
+    for f in fasta_custered_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+
+    taxa_by_orf_id = []
+    taxa = merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
+                                      merged_fasta_file=merged_fasta_file)
     cluster(taxa_by_orf_id=taxa_by_orf_id,
             input_fasta_file=merged_fasta_file,
             tmp_dir=comparative_genomics_dir / 'tmp',
             fasta_output_dir=fasta_custered_dir,
             fraction_id=0.5)
-
-            # [2] for each gene, store "prevalence" in SQL and cluster id
-            for taxon, feature_id_list in seq_hash.items():
-                db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
-                for feature_id, is_paralogue in feature_id_list:
-                    db_connection = connect_to_db(db_file)
-                    feature = read_feature_by_id(db_connection, feature_id)
-                    feature.homologous_group_feature_is_paralogue = is_paralogue
-                    feature.homologous_group_id = int(cluster_id)
-                    feature.homologous_group_taxon_representation = len(taxa_represented) / len(taxa)
-                    feature.homologous_group_member_count = total
-                    update_feature_in_db(db_connection, feature_id)
-            cluster_size_hash[cluster_id] = total
-
-    # 3 determine contextual links between orthologues (from 2)
-    profile_match_counts = Counter()
-    for taxon in taxa:
-        window = deque(maxlen=cluster_window_size)
-        db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
-        db_connection = connect_to_db(db_file, target='Features')
-        previous_contig = None
-        for feature in read_all_features(db_connection, type=('CDS', 'ncRNA')):
-            # make sure subsequent features are actually found together
-            if previous_contig and feature.contig != previous_contig:
-                window.clear()
-            if not feature.homologous_group_id:
-                continue
-            # here comes the logic
-            for other_feature in window:
-                if (not other_feature.homologous_group_id or
-                        other_feature.homologous_group_id == feature.homologous_group_id):
-                    continue
-                profile_match_counts.update(make_match_key(feature.homologous_group_id,
-                                                           other_feature.homologous_group_id))
-            # post-processing...
-            previous_contig = feature.contig
-            window.append(feature)
+    cluster_hash = parse_clusters(fasta_custered_dir)
+    write_homologue_info_to_sql(cluster_hash, taxa)
+    #print('\n'.join(sorted(cluster_hash.keys())))
+    cluster_context_links = analyse_gene_context(cluster_hash, taxa, cluster_window_size, min_match_score)
+    write_overview_tsv_file(comparative_genomics_dir, cluster_hash, taxa)
+    write_gene_context_clustering_to_sql(cluster_context_links, taxa, cluster_window_size)
+    context.log('Updating html visualizations for all genomes...')
+    for genome_name, genome in genome_dict.items():
+        context.log(f'({genome_name}) Now writing final result as .html for visualization...')
+        feature_db_connection = sqlite.connect_to_db(context.BASE_DIR / 'annotations.sqlite' / genome_name)
+        for html_writer in registry.HTML_WRITER_REGISTRY:
+            html_writer(genome, feature_db_connection, context.HTML_DIR)
 
 
 def make_match_key(id1: int, id2: int):
     if id1 > id2:
-        return f'{id1}_{id2}'
+        return f'{id1} {id2}'
     else:
-        return f'{id2}_{id1}'
+        return f'{id2} {id1}'
+
+
+def main():
+    # for testing...
+    # may need to update mmseqs_path in 'cluster'
+    context.BASE_DIR = Path('/bio/fast/alkaline_origins/comparative_genomics_metaerg_test')
+    context.LOG_FILE = context.BASE_DIR / 'log_test_comparative_genomics'
+
+    context.log('Mode "Clade": Clustering and analysing homologous genes across genomes...')
+    # prep/clear dirs
+    input_dir = context.BASE_DIR / 'faa'
+    comparative_genomics_dir = context.BASE_DIR / 'comparative_genomics'
+    comparative_genomics_dir.mkdir(exist_ok=True)
+    #for f in comparative_genomics_dir.glob('*'):
+    #    if f.is_file():
+    #        f.unlink()
+    db_dir = comparative_genomics_dir / 'mmseqs_db'
+    db_dir.mkdir(exist_ok=True)
+    #for f in db_dir.glob('*'):
+    #    if f.is_file():
+    #        f.unlink()
+    merged_fasta_file = db_dir / 'all_cds_from_all_genomes_coded.faa'
+    fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
+    fasta_custered_dir.mkdir(exist_ok=True)
+    #for f in fasta_custered_dir.glob('*'):
+    #    if f.is_file():
+    #        f.unlink()
+    html_dir = comparative_genomics_dir / 'html'
+
+    taxa_by_orf_id = []
+    taxa = merge_and_code_fasta_input(input_dir, mag_faa_file_extension='', delimiter='~', taxa_by_orf_id=taxa_by_orf_id,
+                                      merged_fasta_file=merged_fasta_file)
+    #cluster(taxa_by_orf_id=taxa_by_orf_id,
+    #        input_fasta_file=merged_fasta_file,
+    #        tmp_dir=comparative_genomics_dir / 'tmp',
+    #        fasta_output_dir=fasta_custered_dir,
+    #        fraction_id=0.5)
+    cluster_hash = parse_clusters(fasta_custered_dir)
+    #write_homologue_info_to_sql(cluster_hash, taxa)
+    #print('\n'.join(sorted(cluster_hash.keys())))
+    cluster_context_links = analyse_gene_context(cluster_hash, taxa)
+    #write_overview_tsv_file(comparative_genomics_dir, cluster_hash, taxa)
+    taxa = taxa[:1]
+    write_gene_context_clustering_to_sql(cluster_context_links, taxa)
+    context.log('Updating html visualizations for all genomes...')
+    genome_db = sqlite.connect_to_db(context.BASE_DIR / 'genome_properties.sqlite', 'Genomes')
+
+
+
+    for taxon in taxa:
+        genome_name = taxon
+        print(genome_name)
+        genome = sqlite.read_genome_by_id(genome_db, genome_name)
+        print(genome)
+        context.log(f'({genome_name}) Now writing final result as .html for visualization...')
+        feature_db_connection = sqlite.connect_to_db(context.BASE_DIR / 'annotations.sqlite' / genome_name)
+        html_feature_table.write_html(genome, feature_db_connection, html_dir)
+        #html_feature_details.write_html(genome, feature_db_connection, html_dir)
+        break
+
+
+if __name__ == "__main__":
+    main()

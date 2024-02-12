@@ -102,8 +102,12 @@ class BlastResult:
                                                   self.hits[0].hit.descr)
 
 
+def keep_hit(hit):
+    return hit
+
+
 class TabularBlastParser:
-    def __init__(self, filename, mode, retrieve_db_entry):
+    def __init__(self, filename, mode, retrieve_db_entry=keep_hit):
         self.filename = filename
         self.mode = mode
         self.handle = None

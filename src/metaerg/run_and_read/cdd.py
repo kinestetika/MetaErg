@@ -68,7 +68,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
-            # process the clustering
+            # process the clustering - needs careful check
             if previous_feature and feature.contig == previous_feature.contig:
                 match_score = 0
                 for cdd_hit_1 in feature.cdd.hits[:CLUSTER_MAX_CDD_HITS]:
