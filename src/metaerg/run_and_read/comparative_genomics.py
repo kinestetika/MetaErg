@@ -309,13 +309,18 @@ def analyse_gene_context(cluster_hash, all_taxa: list, window_size: int = 4, min
 
 def write_gene_context_clustering_to_sql(cluster_context_links: dict, all_taxa: list, window_size: int = 4):
     context.log("Now writing info about gene context to each genome's feature database...")
+
     for taxon in all_taxa:
         db_file = context.BASE_DIR / 'annotations.sqlite' / taxon
         db_connection = sqlite.connect_to_db(db_file)
         window = deque(maxlen=window_size)
         current_region_feature = None
         region_count = 1
+        for feature in sqlite.read_all_features(db_connection, type=('region')):
+            sqlite.drop_feature(db_connection, feature)
+        existing_clusters = list()
         for feature in sqlite.read_all_features(db_connection, type=('CDS')):
+            print(f'@{feature.id}, HGID: {feature.homologous_group_id}')
             if not len(window):
                 window.append(feature)
                 continue
@@ -324,14 +329,25 @@ def write_gene_context_clustering_to_sql(cluster_context_links: dict, all_taxa: 
                 window.clear()
                 window.append(feature)
                 continue
-            earliest_linked_feature = None
-            for other_feature in window:
+            pos_of_earliest_linked_feature = -1
+            for pos in range(len(window)):
+                other_feature = window[pos]
                 if cluster_context_links.get(make_match_key(feature.homologous_group_id,
                                                         other_feature.homologous_group_id), 0):
-                    earliest_linked_feature = other_feature
+                    pos_of_earliest_linked_feature = pos
                     break
-            if earliest_linked_feature:
+            if pos_of_earliest_linked_feature >= 0:
+                newly_linked_feature = window[pos_of_earliest_linked_feature]
+                print(f'[{pos_of_earliest_linked_feature}] {window[pos_of_earliest_linked_feature]} ~ {feature.id}')
                 # update or create feature for region
+                existing_cluster_found = False
+                for existing_cluster in existing_clusters:
+                    if newly_linked_feature.id in existing_cluster.keys():
+                        existing_cluster[feature.id] = feature
+                        existing_cluster_found = True
+                        break
+                if not existing_cluster_found:
+                    new_cluster = {f.id: f }
                 if not current_region_feature:
                     current_region_feature = sqlite.Feature(genome=feature.genome,
                                                             contig=feature.contig,
@@ -342,17 +358,20 @@ def write_gene_context_clustering_to_sql(cluster_context_links: dict, all_taxa: 
                                                             inference='metaerg',
                                                             descr=f'gene cluster based on homology',
                                                             id=f'region_{region_count}')
+                    print(f'created region {current_region_feature.id}')
                     sqlite.add_new_feature_to_db(db_connection, current_region_feature)
                     earliest_linked_feature.parent.add(current_region_feature.id)
                     sqlite.update_feature_in_db(db_connection, earliest_linked_feature)
                     region_count += 1
                 else:
+                    print(f'extended region {current_region_feature.id}')
                     current_region_feature.end = feature.end + 1
                     sqlite.update_feature_in_db(db_connection, current_region_feature)
                     feature.parent.add(current_region_feature.id)
                     sqlite.update_feature_in_db(db_connection, feature)
             else:
                 if current_region_feature:  # end of a region - need to now assign all genes within its range...
+                    print(f'terminated region {current_region_feature.id}')
                     for f in sqlite.read_all_features(db_connection, contig=feature.contig,
                                                       start=current_region_feature.start, end=current_region_feature.end):
                         if f.type != 'region':
@@ -464,7 +483,6 @@ def main():
         genome_name = taxon
         print(genome_name)
         genome = sqlite.read_genome_by_id(genome_db, genome_name)
-        print(genome)
         context.log(f'({genome_name}) Now writing final result as .html for visualization...')
         feature_db_connection = sqlite.connect_to_db(context.BASE_DIR / 'annotations.sqlite' / genome_name)
         html_feature_table.write_html(genome, feature_db_connection, html_dir)
