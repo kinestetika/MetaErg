@@ -5,6 +5,8 @@ from metaerg.datatypes.functional_genes import format_list_of_subsystem_genes
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import taxon_at_genus
 
+CURRENT_REGION_ID = ''
+CURRENT_REGION_COLOR_DONGLE = True
 
 @context.register_html_writer
 def write_html(genome, db_connection, dir):
@@ -33,6 +35,7 @@ def get_empty_format_dict():
 
 
 def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
+    global CURRENT_REGION_ID, CURRENT_REGION_COLOR_DONGLE
     format_hash['f_id'] = f.id
     format_hash['taxon'] = taxon_at_genus(f.taxon)
     format_hash['type'] = f.type
@@ -73,8 +76,11 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(top_taxon)) / (len(taxon) + 1))]
     format_hash['is_part_of_cog'] = 'al_bold' if f.homologous_group_id > 0 else 'al'
-    if f.parent or 'region' == f.type:
-        format_hash['cc'] = ' id=cc'
+    if f.parent:
+        if f.parent != CURRENT_REGION_ID:
+            CURRENT_REGION_COLOR_DONGLE = not CURRENT_REGION_COLOR_DONGLE
+        CURRENT_REGION_ID = f.parent
+        format_hash['cc'] = ' id=cc1' if CURRENT_REGION_COLOR_DONGLE else ' id=cc2'
 
 
 def format_hash_to_html(format_hash):
@@ -105,6 +111,8 @@ def make_html(genome, db_connection) -> str:
     previous_repeats = []
     repeat_types = set()
     for f in sqlite.read_all_features(db_connection):
+        if f.type == 'region':
+            continue
         if f.type == 'CRISPR':
             previous_repeats.append(f)
             repeat_types.add(f.type)
@@ -120,7 +128,8 @@ def make_html(genome, db_connection) -> str:
                 format_hash['description'] = previous_repeats[0].id + ' ... ' + previous_repeats[-1].id
                 format_hash['type'] = f'{len(previous_repeats)} {", ".join(repeat_types)}(s)'
                 format_hash['length'] = f'{previous_repeats[-1].end - previous_repeats[0].start:,} nt'
-                format_hash['cc'] = ' id=cc' if len(previous_repeats[-1].parent) else ''
+                if previous_repeats[-1].parent:
+                    format_hash['cc'] = ' id=cc1' if CURRENT_REGION_COLOR_DONGLE else ' id=cc2'
                 previous_repeats.clear()
                 repeat_types.clear()
                 table_body += format_hash_to_html(format_hash)
@@ -186,8 +195,11 @@ $(document).ready( function () {
     text-align:  left;
     font-weight: bold;
       }
-  #cc {
+  #cc1 {
     background-color:#CCDDEE;
+      }
+  #cc2 {
+    background-color:#CCEEDD;
       }
 </style>
 

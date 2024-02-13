@@ -57,7 +57,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             current_region_feature = None
             continue
         if current_region_feature:
-            f2.parent.add(current_region_feature.id)
+            f2.parent = current_region_feature.id
             current_region_feature.end = min(int(f2.end)+1, len(contig_dict[f1.contig]['seq']))
         else:
             current_region_feature = sqlite.Feature(genome=genome,
@@ -69,8 +69,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                                     inference='padloc',
                                                     descr=padloc_feature_systems[f1],
                                                     id=f'padloc_region_{max(f1.start - 1, 0)}')
-            f1.parent.add(current_region_feature.id)
-            f2.parent.add(current_region_feature.id)
+            f1.parent = current_region_feature.id
+            f2.parent = current_region_feature.id
             region_features.append(current_region_feature)
         # then we merge identical regions, while updating their type and children
     removed_region_features = set()
@@ -82,9 +82,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 r1.descr = f'{r1.descr}; {r2.descr}'
                 removed_region_features.add(r2.id)
                 for f in padloc_features:
-                    if r2.id in f.parent and f.start >= r1.start and f.end <= r1.end:
-                        f.parent.discard(r2.id)
-                        f.parent.add(r1.id)
+                    if r2.id == f.parent and f.start >= r1.start and f.end <= r1.end:
+                        f.parent = r1.id
     # update features in db
     for f in padloc_features:
         sqlite.update_feature_in_db(db_connection, f)

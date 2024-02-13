@@ -45,11 +45,6 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     def get_cdd_db_entry(id: str) -> DBentry:
         return CDD[int(id[4:])]
 
-    previous_feature = None
-    current_region_feature = None
-    current_cluster_min_score = 0.0
-    current_cluster_max_score = 0.0
-
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, cdd_result.query())
@@ -68,53 +63,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:
                 feature.descr = feature.descr[:35] + '...'
-            # process the clustering - needs careful check
-            if previous_feature and feature.contig == previous_feature.contig:
-                match_score = 0
-                for cdd_hit_1 in feature.cdd.hits[:CLUSTER_MAX_CDD_HITS]:
-                    for cdd_hit_2 in previous_feature.cdd.hits[:CLUSTER_MAX_CDD_HITS]:
-                        match_score += CDD_CLUSTERS.get(get_match_key(cdd_hit_1, cdd_hit_2), 0)
-                match_score /= CLUSTER_MAX_CDD_HITS
-                if match_score > CLUSTER_MIN_MATCH_SCORE:
-                    if current_region_feature:
-                        feature.parent.add(current_region_feature.id)
-                        current_region_feature.end = min(int(feature.end) + 1, len(contig_dict[feature.contig]['seq']))
-                        if match_score > current_cluster_max_score:
-                            current_cluster_max_score = match_score
-                        if match_score < current_cluster_min_score:
-                            current_cluster_min_score = match_score
-                    else:
-                        current_region_feature = sqlite.Feature(genome=genome,
-                                                                contig=feature.contig,
-                                                                start=max(previous_feature.start - 1, 0),
-                                                                end=min(int(feature.end) + 1, len(contig_dict[feature.contig]['seq'])),
-                                                                strand=1,
-                                                                type='region',
-                                                                inference='padloc',
-                                                                descr=f'CDD-based cluster (score {match_score}-{match_score})',
-                                                                id=f'cdd_region_{max(previous_feature.start - 1, 0)}')
-                        sqlite.add_new_feature_to_db(db_connection, current_region_feature)
-                        previous_feature.parent.add(current_region_feature.id)
-                        sqlite.update_feature_in_db(db_connection, previous_feature)
-                        feature.parent.add(current_region_feature.id)
-                        cdd_cluster_count += 1
-                        current_cluster_min_score = match_score
-                        current_cluster_max_score = match_score
-                elif current_region_feature:
-                    current_region_feature.descr = f'CDD-based cluster (score {current_cluster_min_score}-{current_cluster_max_score})',
-                    sqlite.update_feature_in_db(db_connection, current_region_feature)
-                    current_region_feature = None
-                    current_cluster_min_score = 0.0
-                    current_cluster_max_score = 0.0
-            # cluster post-processing...
-            previous_feature = feature
             # write feature
             sqlite.update_feature_in_db(db_connection, feature)
-    if current_region_feature:
-        current_region_feature.descr = f'CDD-based cluster (score {current_cluster_min_score}-{current_cluster_max_score})',
-        sqlite.update_feature_in_db(db_connection, current_region_feature)
 
-    context.log(f'({genome.name}) Found {subsystem_result_count} matches to subsystems, created {cdd_cluster_count} CDD clusters.')
+    context.log(f'({genome.name}) Found {subsystem_result_count} matches to subsystems.')
     return cdd_result_count
 
 

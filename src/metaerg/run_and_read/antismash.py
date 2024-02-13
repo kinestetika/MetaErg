@@ -62,7 +62,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             antismash_gene_category = g.get('gene_kind', '')
             if feature := sqlite.read_feature_by_id(db_connection, g['locus_tag']):
                 # context.log(f'({genome.name}) Located feature {g["locus_tag"]}".')
-                feature.parent.add(region_feature.id)
+                feature.parent = region_feature.id
                 feature.notes += ' ' + ' '.join((region_feature.descr, antismash_gene_function,
                                                  antismash_gene_category))
                 feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
@@ -100,7 +100,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                              descr= ' '.join((region_feature.descr, antismash_gene_function,
                                                               antismash_gene_category)),
                                              aa_seq=g['translation'])
-                new_feature.parent.add(region_feature.id)
+                new_feature.parent = region_feature.id
                 new_feature.subsystems.append(functional_genes.SECONDARY_METABOLITE_GENE)
                 sqlite.add_new_feature_to_db(db_connection, new_feature)
             antismash_hit_count += 1
