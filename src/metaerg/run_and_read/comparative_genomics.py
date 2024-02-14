@@ -1,4 +1,5 @@
 import re
+from statistics import median, quantiles
 from pathlib import Path
 from collections import deque, Counter
 from metaerg.datatypes.blast import TabularBlastParser
@@ -267,10 +268,9 @@ def align_aa_clusters(fasta_custered_dir: Path, alignment_dir: Path):
         context.run_external(f'{famsa_path}famsa {f} {aligned_f}')
 
 
-def write_nt_alignments(cluster_hash: dict, all_taxa: list, aa_align_dir: Path, nt_fasta_dir: Path, nt_align_dir: Path,
-                        delimiter = '~'):
-    context.log(f"Aligning codons in nucleotide seqs to aa alignment in '{nt_align_dir}'...")
-    nt_align_dir.mkdir(exist_ok=True)
+def estimate_selection_pressure(cluster_hash: dict, aa_align_dir: Path, nt_fasta_dir: Path, delimiter = '~', minimum_mutations = 25):
+    context.log(f"Estimating selective pressure for each cluster (w = Ka/Ks)... ")
+    omega_distribution = []
     for cluster in cluster_hash.values():
         # read aa alignment
         aa_align_file = aa_align_dir / (str(cluster['id']) + '.faa')
@@ -284,26 +284,67 @@ def write_nt_alignments(cluster_hash: dict, all_taxa: list, aa_align_dir: Path, 
         with FastaParser(nt_file, cleanup_seq=False) as fasta_reader:
             for fasta_seq in fasta_reader:
                 nt_seq_hash[fasta_seq["id"]] = fasta_seq
-        #create and write nt alignment
-        nt_align_file = nt_align_dir / (str(cluster['id']) + '.fna')
-        with open(nt_align_file, 'w') as writer:
-            for id, taxon, is_paralogue in cluster['members']:
-                if is_paralogue:
+        # now analyze
+        synonymous_mutations = []  # ks
+        non_synonymous_mutations = []  # ka  w = ka / ks
+        for id1, taxon1, is_paralogue1 in cluster["members"]:
+            if is_paralogue1:
+                continue
+            seq_id1 = taxon1 + delimiter + id1
+            aa_seq1 = aa_seq_hash[seq_id1]['seq']
+            nt_seq1 = nt_seq_hash[seq_id1]['seq']
+            for id2, taxon2, is_paralogue2 in cluster["members"]:
+                if is_paralogue2:
                     continue
-                seq_id = taxon + delimiter + id
-                aa_seq = aa_seq_hash[seq_id]['seq']
-                nt_seq = nt_seq_hash[seq_id]['seq']
-                aa_seq_pos = 0
-                nt_seq_aligned = ''
-                for aligned_pos in range(len(aa_seq)):
-                    aa = aa_seq[aligned_pos]
-                    if aa == '-':
-                        nt_seq_aligned += '---'
-                    else:
-                        codon = nt_seq[aa_seq_pos * 3:aa_seq_pos * 3 + 3]
-                        nt_seq_aligned += codon
-                        aa_seq_pos += 1
-                write_fasta(writer, {'id':seq_id, 'descr':'', 'seq':nt_seq_aligned})
+                if id1 == id2:
+                    continue
+                seq_id2 = taxon2 + delimiter + id2
+                aa_seq2 = aa_seq_hash[seq_id2]['seq']
+                nt_seq2 = nt_seq_hash[seq_id2]['seq']
+                aa_seq_pos1 = 0
+                aa_seq_pos2 = 0
+                sm = 0
+                nsm = 0
+                for aligned_pos in range(len(aa_seq1)):
+                    aa1 = aa_seq1[aligned_pos]
+                    aa2 = aa_seq2[aligned_pos]
+                    if aa1 == '-' and aa2 == '-':
+                        pass
+                    elif aa1 == '-':
+                        aa_seq_pos2 += 1
+                        nsm += 1
+                    elif aa2 == '-':
+                        aa_seq_pos1 += 1
+                        nsm += 1
+                    else:  # no gaps
+                        codon1 = nt_seq1[aa_seq_pos1 * 3:aa_seq_pos1 * 3 + 3]
+                        codon2 = nt_seq2[aa_seq_pos2 * 3:aa_seq_pos2 * 3 + 3]
+                        if aa1 != aa2:
+                            nsm += 1
+                        elif codon1 != codon2:
+                            sm += 1
+                        aa_seq_pos1 += 1
+                        aa_seq_pos2 += 1
+                synonymous_mutations.append(sm)
+                non_synonymous_mutations.append(nsm)
+        smm = median(synonymous_mutations)
+        nsmm = median(non_synonymous_mutations)
+        if smm and smm + nsmm > minimum_mutations:
+            cluster['synonymous_mutations_median'] = smm
+            cluster['non_synonymous_mutations_median'] = nsmm
+            cluster['selection_omega'] = nsmm / smm
+            omega_distribution.append(nsmm / smm)
+    # aggregate
+    omega_quantiles = [round(q, 1) for q in quantiles(omega_distribution, n=10)]
+    for cluster in sorted([c for c in cluster_hash.values()], key=lambda i:i.get('selection_omega', 100)):
+        try:
+            for i, q in zip(range(len(omega_quantiles)), omega_quantiles):
+                if cluster['selection_omega'] < q:
+                    cluster['selection_omega_quantile'] = i
+                    break
+    #        print(f'{cluster["selection_omega"]}\t{len(cluster["taxa"])}\t{len(cluster["members"])}\t{cluster["annotation"]}')
+        except:
+            pass
 
 
 def write_overview_tsv_file(dir: Path, cluster_hash: dict, all_taxa: list):
@@ -313,10 +354,10 @@ def write_overview_tsv_file(dir: Path, cluster_hash: dict, all_taxa: list):
     # then (separated by <tab>) for each taxon the number of reps,
     # then (separated by <tab>) for each taxon the ids of all reps (separated by commas)
     with open(dir / 'homologues.tsv', 'w') as tsv_writer:
-        tsv_writer.write('cluster id\tannotation\trepresentation\tcount\tlinks\t' + '\t'.join(all_taxa) + '\t' + '\t'.join(all_taxa) + '\n')
+        tsv_writer.write('cluster id\tannotation\tselective pressure (w quantile)\trepresentation\tcount\tlinks\t' + '\t'.join(all_taxa) + '\t' + '\t'.join(all_taxa) + '\n')
         for cluster_id in sorted(cluster_hash.keys()):  # otherwise we get 1, 10, 100, etc...
             cluster = cluster_hash[cluster_id]
-            tsv_writer.write(f'{cluster["id"]}\t{cluster["annotation"]}\t{len(cluster["taxa"])}\t{len(cluster["members"])}\t' +
+            tsv_writer.write(f'{cluster["id"]}\t{cluster["annotation"]}\t{cluster.get("selection_omega_quantile", "")}\t{len(cluster["taxa"])}\t{len(cluster["members"])}\t' +
                               ', '.join([f'{l[0]["id"]}({l[1]:.0%})' for l in cluster["links"]]) + '\t' +
                               '\t'.join([str(sum([1 for m in cluster['members'] if m[1] == t])) for t in all_taxa]) + '\t' +
                               '\t'.join([','.join([m[0] for m in cluster['members'] if m[1] == t]) for t in all_taxa]) + '\n')
@@ -520,8 +561,6 @@ def main():
     html_dir = comparative_genomics_dir / 'html'
     nt_fasta_custered_dir = comparative_genomics_dir / 'clusters.fna'
     nt_fasta_custered_dir.mkdir(exist_ok=True)
-    nt_fasta_align_dir = comparative_genomics_dir / 'clusters.fna.align'
-    nt_fasta_align_dir.mkdir(exist_ok=True)
     #for f in fasta_custered_dir.glob('*'):
     #    if f.is_file():
     #        f.unlink()
@@ -539,11 +578,11 @@ def main():
     cluster_hash = parse_clusters(fasta_custered_dir)
     #align_aa_clusters(fasta_custered_dir, alignment_dir)
     #save_clusters_as_nt_fasta(cluster_hash, taxa, nt_fasta_custered_dir)
-    write_nt_alignments(cluster_hash, taxa, alignment_dir, nt_fasta_custered_dir, nt_fasta_align_dir)
+    estimate_selection_pressure(cluster_hash, alignment_dir, nt_fasta_custered_dir)
     #write_homologue_info_to_sql(cluster_hash, taxa)
     #print('\n'.join(sorted(cluster_hash.keys())))
-    #cluster_context_links = analyse_gene_context(cluster_hash, taxa)
-    #write_overview_tsv_file(comparative_genomics_dir, cluster_hash, taxa)
+    cluster_context_links = analyse_gene_context(cluster_hash, taxa)
+    write_overview_tsv_file(comparative_genomics_dir, cluster_hash, taxa)
     #taxa = taxa[:1]
     #write_gene_context_to_sql(cluster_context_links, taxa)
 
