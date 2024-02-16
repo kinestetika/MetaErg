@@ -49,6 +49,9 @@ The Metaerg 2.5 pipeline ...
 
 When using metaerg, please cite [Xiaoli Dong and Marc Strous (2019) Frontiers in Genetics](https://www.frontiersin.org/articles/10.3389/fgene.2019.00999/full)
 
+## Important changes in version 2.5
+* Comparative genomics mode was added. This depends on MMSeqs and Famsa. These programs are automatically installed by metaerg.
+
 ## Important changes in version 2.4
 * Minced, TMHMM and SignalP are no longer used as helper programs.
 * CRISPRDetect, padloc, PureseqTM and deepsig are used instead. Installation is straightforward. Either use the --install_deps option, run the commands in "installation.py" for a manual install or use Docker.
@@ -65,7 +68,8 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 >metaerg --contig_file dir-with-contig-files --database_dir /path/to/metaerg-databases/ \
 --file_extension .fa
 ```
-Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer.
+Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer. The comparative genomics analysis requires about
+20 min extra (in total) for a set of ~20 genomes.
 
 You can use the following arguments when running metaerg:
 ```text
