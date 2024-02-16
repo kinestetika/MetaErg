@@ -108,6 +108,11 @@ def make_feature_html(f, top_taxon) -> str:
     attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f_as_dict[k]}</td></tr>\n' for k in
                               ('start', 'end', 'strand', 'type', 'inference', 'descr', 'taxon', 'notes',
                                'signal_peptide', 'tmh', 'tmh_topology'))
+    if context.DO_CLUSTER_GENOMES:
+        attribute_html += ''.join(f'<tr><td id=al>{k}</td><td id=al>{f_as_dict[k]}</td></tr>\n' for k in
+                                  ('homologous_group_id', 'homologous_group_taxon_representation',
+                                   'homologous_group_feature_is_paralogue', 'homologous_group_selective_pressure_quantile',
+                                   'homologous_group_codon_usage_bias_quantile'))
     attribute_html += f'<tr><td id=al>subsystems</td><td id=al>{format_list_of_subsystem_genes(f.subsystems)}</td></tr>\n'
     attribute_html += f'<tr><td id=al>length</td><td id=al>{length} {length_unit}</td></tr>\n'
     attribute_html += '</table>\n'

@@ -117,6 +117,18 @@ def make_html(genome, db_connection) -> str:
     html = html.replace('GENOME_NAME', genome.name)
     colors = [' id=cr', ' id=cr', ' id=co', ' id=cb', ' id=cg']
 
+    if context.DO_CLUSTER_GENOMES:
+        html = html.replace('LEGEND', '''<p id=f>Legend:
+<b id=symbols><b id=cg>\u25A0</b></b> Fraction of taxa with this gene. 
+<b id=symbols><b id=sp>\u25CF</b></b> Purifying selection.
+<b id=symbols><b id=sd>\u25CF</b></b> Diversifying selection.
+<b id=symbols><b id=co>!</b></b> This is a paralogue.
+<b id=cblack>\u25BC</b> Estimated expression level.
+</p>
+''')
+    else:
+        html = html.replace('LEGEND','')
+
     # table header
     table_headers = ''
     for column in 'id strand length type location subsystem CDD ident align recall description taxon'.split():
@@ -170,13 +182,7 @@ def _make_html_template() -> str:
 </head>
 <body>
 
-<p id=f>Legend:
-<b id=symbols><b id=cg>\u25A0</b></b> Fraction of taxa with this gene. 
-<b id=symbols><b id=sp>\u25CF</b></b> Purifying selection.
-<b id=symbols><b id=sd>\u25CF</b></b> Purifying selection.
-<b id=symbols><b id=co>!</b></b> This is a paralogue.
-<b id=cblack>\u25BC</b> Estimated expression level.
-</p>
+LEGEND
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
