@@ -36,7 +36,27 @@ def get_empty_format_dict():
 
 def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     global CURRENT_REGION_ID, CURRENT_REGION_COLOR_DONGLE
-    format_hash['f_id'] = f.id
+    if f.homologous_group_id > 0:  # these ids start with 1
+        format_hash['is_part_of_cog'] = 'al_bold'
+        paralogue_warning = '!' if f.homologous_group_feature_is_paralogue else ''
+        expression_level = f'id =gl{str(f.homologous_group_codon_usage_bias_quantile)}'
+        representation_level = f'id =gl{str(int(f.homologous_group_taxon_representation*10-1))}'
+        if -1 < f.homologous_group_selective_pressure_quantile <= 1:
+            selection_type = ' id=sp>\u25CF'
+        elif f.homologous_group_selective_pressure_quantile >= 8:
+            selection_type = ' id=sd>\u25CF'
+        else:
+            selection_type = '>'
+        format_hash['f_id'] = f'{f.id}' \
+                              f'<b id=symbols>' \
+                                f'<b id=cg><b {representation_level}>\u25A0</b></b>' \
+                                f'<b id=co>{paralogue_warning}</b>' \
+                                f'<b{selection_type}</b>' \
+                              f'</b>' \
+                              f'<b id=cblack><b {expression_level}>\u25BC</b></b>'
+    else:
+        format_hash['is_part_of_cog'] = 'al'
+        format_hash['f_id'] = f.id
     format_hash['taxon'] = taxon_at_genus(f.taxon)
     format_hash['type'] = f.type
     if f.type in ('CDS', 'rRNA', 'ncRNA', 'retrotransposon'):
@@ -75,7 +95,6 @@ def format_feature(f: sqlite.Feature, format_hash, top_taxon, colors):
     top_taxon = top_taxon.split()
     taxon = f.taxon.split()
     format_hash['ct'] = colors[int(len(colors) * len(set(taxon) & set(top_taxon)) / (len(taxon) + 1))]
-    format_hash['is_part_of_cog'] = 'al_bold' if f.homologous_group_id > 0 else 'al'
     if f.parent:
         if f.parent != CURRENT_REGION_ID:
             CURRENT_REGION_COLOR_DONGLE = not CURRENT_REGION_COLOR_DONGLE
@@ -151,6 +170,14 @@ def _make_html_template() -> str:
 </head>
 <body>
 
+<p id=f>Legend:
+<b id=symbols><b id=cg>\u25A0</b></b> Fraction of taxa with this gene. 
+<b id=symbols><b id=sp>\u25CF</b></b> Purifying selection.
+<b id=symbols><b id=sd>\u25CF</b></b> Purifying selection.
+<b id=symbols><b id=co>!</b></b> This is a paralogue.
+<b id=cblack>\u25BC</b> Estimated expression level.
+</p>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
@@ -182,6 +209,9 @@ $(document).ready( function () {
   #cb {
     color: blue;
      }
+  #cblack {
+    color: black;
+     }
   #co {
     color: orange;
      }
@@ -201,6 +231,52 @@ $(document).ready( function () {
   #cc2 {
     background-color:#CCEEDD;
       }
+  #symbols {
+      font-size: 1.5em;
+      }
+  #gl-1 {
+    opacity: 0.0;
+      }
+  #gl0 {
+    opacity: 0.1;
+      }
+  #gl1 {
+    opacity: 0.2;
+      }
+  #gl2 {
+    opacity: 0.3;
+      }
+  #gl3 {
+    opacity: 0.4;
+      }
+  #gl4 {
+    opacity: 0.5;
+      }
+  #gl5 {
+    opacity: 0.6;
+      }
+  #gl6 {
+    opacity: 0.7;
+      }
+  #gl7 {
+    opacity: 0.8;
+      }
+  #gl8 {
+    opacity: 0.9;
+      }
+  #gl9 {
+    opacity: 1.0;
+      }
+  #gl9 {
+    opacity: 1.0;
+      }
+  #sp {
+    color: darkgoldenrod
+  }
+  #sd {
+    color: darkslateblue
+  }
+
 </style>
 
 <div id=f>

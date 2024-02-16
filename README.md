@@ -1,13 +1,22 @@
-## metaerg.py, version 2.4.0
+## metaerg.py, version 2.5.0
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
 are in common formats such as .gff, .gbk, .fasta and .html with predicted genes, their functions and taxonomic 
 classifications.
 
-You can interact with a sample visualization [here](https://htmlpreview.github.io/?https://github.com/kinestetika/MetaErg/blob/master/visualization/index.html) and [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/kinestetika/MetaErg/master/visualization/index_of_features.html). These visualizations show the annotation of a cyanobacterial genome, Candidatus Phormidium alkaliphilum.
-Unfortunately the interactive search box does not work with the github html visualization, so you need to download the html \
-files to your computer (i.e. using "git clone ..."), to try out the interactive part.
+Metaerg 2.5 can annotate a group of related genomes and apply a suite of comparative genomics analyses. To do this, put
+contig fasta nucleotide files, one for each genome in a folder and run metaerg with the option "--mode comparative_genomics".
+Annotations become much stronger, richer and easier to interpret when you follow this approach.
+This analysis proceeds as follows:
+* Homologous proteins are clustered using [mmseqs](https://github.com/soedinglab/MMseqs2) version 15-6f452 with --min-seq-id 0.5.
+* Orthologues and paralogues are called based on the distance to the center-protein.
+* Each cluster is aligned with [famsa](https://github.com/refresh-bio/FAMSA) version 2.2.2.
+* Based on protein and nucleotide sequences, median codon usage bias is calculated as a measure of expected expression level.
+* Based on aligned protein and nucleotide sequences, median omega = ka/ks is calculated to estimate whether the cluster is under purifying or diversifying selection.
+* Based on the co-location of orthologous genes in different genomes, gene clusters are predicted.
+* These results are written in various formats (see below) and visualized for each gene in the interactive gene table of each genome.
+* A table with all the properties of each cluster of homologous genes is written (including representation for each genome).
 
 Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
 dependencies. This python version 2.4 overcomes some of those issues. Also, the annotation pipeline has further
@@ -19,7 +28,7 @@ more concise than the original version of metaerg and many other annotation tool
 conserved domain database and RPSBlast to assign genes to subsystems for effective data exploration. Subsystems are a 
 work in progress, and can be expanded and customized as needed.
 
-The Metaerg 2.4 pipeline ...
+The Metaerg 2.5 pipeline ...
 * predicts CRISPR regions using [CRISPRDetect](https://github.com/davidchyou/CRISPRDetect_2.4), version 2.4.
 * predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/), version 1.2.41.
 * predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM, version 1.1.4.
@@ -88,10 +97,13 @@ You can use the following arguments when running metaerg:
                         Default: 0.
 --cpus                  Number of threads used for annotation. Default: threads available 
                         on the system / 2.
---contig_mode           Annotate contigs individually instead of assuming they are part of a 
-                        genome, MAG or bin. When using this option, metaerg will not run 
-                        repeatscout and will run prodigal in metagenome mode. Use the option 
+--mode                  Use "--mode contig" to annotate contigs individually instead of assuming they
+                        are part of a genome, MAG or bin. When using this option, metaerg will not
+                        run repeatscout and will run prodigal in metagenome mode. Use the option
                         --translation_table below to override using metagenome mode.
+                        Use "--mode comparative_genomics" to annotate a clade of related genomes/MAGs.
+                        Use "--mode genome" to annotate genomes/MAGs, one per file.
+                        Default: "genome".
 --force                 Overwrite previous results. By default, results of previous steps will be
                         kept. You need to specify which steps will be forced (see --skip for a list
                         of steps Use --force all to overwrite all previous results.

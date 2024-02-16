@@ -30,11 +30,12 @@ SQLITE_CREATE_FEATURE_TABLE_SYNTAX = '''CREATE TABLE features(
     cdd TEXT,
     hmm TEXT,
     codon_bias FLOAT,
-    selective_pressure_ratio FLOAT,
     homologous_group_id INT,
     homologous_group_member_count INT,
     homologous_group_taxon_representation FLOAT,
-    homologous_group_feature_is_paralogue BOOL
+    homologous_group_feature_is_paralogue BOOL,
+    homologous_group_selective_pressure_quantile INT,
+    homologous_group_codon_usage_bias_quantile INT
 )'''
 SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     id = ?,
@@ -59,11 +60,12 @@ SQLITE_UPDATE_FEATURE_SYNTAX = '''UPDATE features SET
     cdd = ?,
     hmm = ?,
     codon_bias = ?,
-    selective_pressure_ratio = ?,
     homologous_group_id = ?,
     homologous_group_member_count = ?,
     homologous_group_taxon_representation = ?,
-    homologous_group_feature_is_paralogue = ?
+    homologous_group_feature_is_paralogue = ?,
+    homologous_group_selective_pressure_quantile = ?,
+    homologous_group_codon_usage_bias_quantile = ?
 WHERE rowid = ?'''
 
 
@@ -92,11 +94,13 @@ class Feature:
                  cdd: str = '',
                  hmm: str = '',
                  codon_bias: float = 0.0,
-                 selective_pressure_ratio: float = 0.0,
                  homologous_group_id: int = 0,
                  homologous_group_member_count: int = 0,
                  homologous_group_taxon_representation: float = 0.0,
-                 homologous_group_feature_is_paralogue: bool = False):
+                 homologous_group_feature_is_paralogue: bool = False,
+                 homologous_group_selective_pressure_quantile: int = -1,  # 0 = purifying, 9 diversifying
+                 homologous_group_codon_usage_bias_quantile: int = -1,  # 0 = low, 9 = high expression
+                 ):
         self.rowid = rowid
         self.id = id
         self.genome = genome
@@ -120,11 +124,12 @@ class Feature:
         self.cdd = eval(cdd) if cdd else None
         self.hmm = eval(hmm) if hmm else None
         self.codon_bias = codon_bias
-        self.selective_pressure_ratio = selective_pressure_ratio
         self.homologous_group_id = homologous_group_id
         self.homologous_group_member_count = homologous_group_member_count
         self.homologous_group_taxon_representation = homologous_group_taxon_representation
-        self.homologous_group_feature_is_paralogue = homologous_group_feature_is_paralogue
+        self.homologous_group_feature_is_paralogue = eval(str(homologous_group_feature_is_paralogue))
+        self.homologous_group_selective_pressure_quantile = homologous_group_selective_pressure_quantile
+        self.homologous_group_codon_usage_bias_quantile = homologous_group_codon_usage_bias_quantile
 
 
     def __iter__(self):
@@ -351,7 +356,7 @@ def write_db(sql_connection, db_file):
 def add_new_feature_to_db(sql_connection, feature: Feature):
     feature_as_tuple = tuple(str(v) for k, v in feature)
     cursor = sql_connection.cursor()
-    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?)', feature_as_tuple)
+    cursor.execute('INSERT INTO features VALUES(?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?, ?,?,?,?)', feature_as_tuple)
     sql_connection.commit()
 
 def add_new_genome_to_db(sql_connection, genome: Genome):

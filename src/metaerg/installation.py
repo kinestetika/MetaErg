@@ -32,6 +32,10 @@ def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=''
         install_ncbi_blast(bin_dir)
     if not todo_list or 'hmmer' in todo_list:
         install_hmmer(bin_dir)
+    if not todo_list or 'mmseqs' in todo_list:
+        install_mmseqs(bin_dir)
+    if not todo_list or 'famsa' in todo_list:
+        install_famsa(bin_dir)
     if not todo_list or 'deepsig' in todo_list:
         install_deepsig(bin_dir)
     if not todo_list or 'pureseqtm' in todo_list:
@@ -257,6 +261,14 @@ def install_mmseqs(bin_dir: Path):
     os.chdir(bin_dir)
     os.system('wget https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz')
     os.system('tar xvfz mmseqs-linux-avx2.tar.gz')
+
+
+def install_famsa(bin_dir: Path):
+    os.chdir(bin_dir)
+    os.system('git clone https://github.com/refresh-bio/FAMSA')
+    os.chdir('FAMSA')
+    os.system('make')
+    os.system('mv famsa ..')
 
 
 def install_pureseqtm(bin_dir: Path):
