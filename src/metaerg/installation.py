@@ -140,7 +140,7 @@ def install_padloc(bin_dir:Path, padloc_database_dir):
 def install_aragorn(bin_dir:Path):
     # (aragorn) aragorn 1.2.41 https://www.ansikte.se/ARAGORN/Downloads/
     os.chdir(bin_dir)
-    os.system('wget -q https://www.ansikte.se/ARAGORN/Downloads/aragorn1.2.41.c')
+    os.system('wget -q http://www.trna.se/ARAGORN/Downloads/aragorn1.2.41.c')
     os.system('gcc -O3 -ffast-math -finline-functions -o aragorn aragorn1.2.41.c')
     os.system('rm aragorn1.2.41.c')
 

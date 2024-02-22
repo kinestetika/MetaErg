@@ -11,13 +11,14 @@
 
 # in case of problems with pacman installations, to troubleshoot run a container interactively: 
 # docker container run --network host -it archlinux:base-devel /bin/bash 
+
 FROM archlinux:base-devel
 MAINTAINER Marc Strous
 COPY mirrorlist /etc/pacman.d/
 RUN pacman-key --init
 RUN pacman -Sy --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv unzip
+RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv unzip perl-parallel-forkmanager r
 
 RUN mkdir /bio
 RUN mkdir /bio/downloads
@@ -38,17 +39,19 @@ ENV PATH="/bio/bin/cdhit:$PATH"
 ENV PATH="/bio/bin/padloc/bin:$PATH"
 ENV PATH="/bio/bin/CRISPRDetect/:$PATH"
 ENV PATH="/bio/bin/PureseqTM_Package:$PATH"
+ENV PATH="/bio/bin/mmseqs/bin:$PATH"
 ENV PATH="/bio/bin:$PATH"
 
 ENV DEEPSIG_ROOT="/bio/bin/deepsig"
 ENV R_LIBS="/bio/bin/r"
 
 WORKDIR /bio/bin
-COPY metaerg-2.4.0.tar.gz /bio/downloads
+COPY metaerg-2.5.1.tar.gz /bio/downloads
 
 RUN python -m virtualenv python-env
 ENV PATH="/bio/bin/python-env/bin:$PATH"
-RUN pip install --upgrade /bio/downloads/metaerg-2.4.0.tar.gz
+RUN pip install --upgrade /bio/downloads/metaerg-2.5.1.tar.gz
 RUN metaerg --install_deps /bio/bin --padloc_database /databases/padloc --antismash_database /databases/antismash
-RUN ln -s /databases/antismash/ /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
+#RUN rm -r /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
+#RUN ln -s /databases/antismash/ /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
 RUN rm -r /bio/downloads

@@ -18,13 +18,12 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     preliminary_id_mapping = {}
     prelim_id = ''
     for feature in sqlite.read_all_features(db_connection):
+        #if feature.type == 'repeat_region':
+        #    context.log(f"{feature.type}: {feature.id}")
         # some features already got an id assigned, to keep track of gene clusters
         if feature.parent:
             try:
-                new_parent_ids = set()
-                for p in feature.parent:
-                    new_parent_ids.add(preliminary_id_mapping[p])
-                feature.parent = new_parent_ids
+                feature.parent = preliminary_id_mapping[feature.parent]
             except KeyError:
                 context.log(f'WARNING: Unknown feature parent {feature.parent} reference for {feature.id}')
         if feature.id:

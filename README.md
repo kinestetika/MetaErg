@@ -1,4 +1,4 @@
-## metaerg.py, version 2.5.0
+## metaerg.py, version 2.5.1
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -11,9 +11,9 @@ Annotations become much stronger, richer and easier to interpret when you follow
 This analysis proceeds as follows:
 * Homologous proteins are clustered using [mmseqs](https://github.com/soedinglab/MMseqs2) version 15-6f452 with --min-seq-id 0.5.
 * Orthologues and paralogues are called based on the distance to the center-protein.
-* Each cluster is aligned with [famsa](https://github.com/refresh-bio/FAMSA) version 2.2.2.
-* Based on protein and nucleotide sequences, median codon usage bias is calculated as a measure of expected expression level.
-* Based on aligned protein and nucleotide sequences, median omega = ka/ks is calculated to estimate whether the cluster is under purifying or diversifying selection.
+* Each cluster of homologous proteins is aligned with [famsa](https://github.com/refresh-bio/FAMSA) version 2.2.2.
+* Median codon usage bias for each cluster of homologous proteins is calculated as a measure of expected expression level.
+* Median omega = ka/ks is calculated for each cluster to estimate whether the gene is under purifying or diversifying selection.
 * Based on the co-location of orthologous genes in different genomes, gene clusters are predicted.
 * These results are written in various formats (see below) and visualized for each gene in the interactive gene table of each genome.
 * A table with all the properties of each cluster of homologous genes is written (including representation for each genome).

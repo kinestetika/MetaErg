@@ -6,13 +6,18 @@ from metaerg.datatypes import sqlite
 
 
 def write_genomes_to_xls(db_connection):
+    try:
+        rows_for_taxon = max(len(g.top_taxon.split('; ')) for g in sqlite.read_all_genomes(db_connection))
+    except ValueError:
+        context.log('No genomes in database, rerun metaerg with --update_annotations.')
+        return
+
     excel_file = context.BASE_DIR / 'genome_properties.xls'
     e_workbook = openpyxl.Workbook()
     e_column = 3
     black = Font(color="000000")
     grey = Font(color="AAAAAA")
     green = Font(color="009900")
-    rows_for_taxon = max(len(g.top_taxon.split('; ')) for g in sqlite.read_all_genomes(db_connection))
     for genome in sqlite.read_all_genomes(db_connection):
         pretty_properties = genome.to_dict_pretty()
         e_sheet = e_workbook.active
