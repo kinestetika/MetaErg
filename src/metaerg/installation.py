@@ -252,6 +252,7 @@ def install_hmmer(bin_dir:Path):
 
 def install_deepsig(bin_dir:Path):
     #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
+    # when cuda and a gpu are in use, may need to: "pip install tensorrt" for this to work
     os.chdir(bin_dir)
     os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
     os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
