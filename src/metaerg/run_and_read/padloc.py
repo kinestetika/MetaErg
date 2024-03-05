@@ -108,6 +108,13 @@ def run_and_read_antismash():
 def format_padloc_databases():
     if 'D' not in context.DATABASE_TASKS:
         return
-    os.system(f'padloc --db-update')
+    context.log('Now installing padloc database...')
+    padloc_db = context.PADLOC_DATABASE if context.PADLOC_DATABASE else context.DATABASE_DIR / 'padloc'
+    if not padloc_db.exists():
+        context.log(f'Creating padloc database dir "{padloc_db}"')
+        padloc_db.mkdir()
+    else:
+        context.log(f'Found existing padloc database dir "{padloc_db}"')
+    context.run_external(f'padloc --db-update')
     # the following is done while installing the program 'padloc' in installation.py:
     # ln -s /bio/data/databases/metaerg/padloc /bio/data/metaerg-test-install/padloc/data

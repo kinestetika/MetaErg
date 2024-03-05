@@ -1,4 +1,4 @@
-## metaerg.py, version 2.5.1
+## metaerg.py, version 2.5.2
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -69,7 +69,7 @@ To annotate a set of genomes in a given dir (each file should contain the contig
 --file_extension .fa
 ```
 Metaerg needs ~40 min to annotate a 4 Mb genome on a desktop computer. The comparative genomics analysis requires about
-20 min extra (in total) for a set of ~20 genomes.
+20 min extra (in total) for a ls set of ~20 genomes.
 
 You can use the following arguments when running metaerg:
 ```text

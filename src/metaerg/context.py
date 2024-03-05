@@ -13,7 +13,7 @@ import httpx
 from metaerg import registry
 
 
-VERSION = "2.5.1"
+VERSION = "2.5.2"
 
 BASE_DIR = Path()
 TEMP_DIR = Path()
@@ -379,9 +379,13 @@ def run_external(exec, stdin=None, stdout=subprocess.DEVNULL, stderr=subprocess.
 
 def download(url: str, file: Path):
     log(f'Started downloading {url} to {file}...')
-    with httpx.stream('GET', url, timeout=6.1, follow_redirects=True) as data_stream, open(file, 'wb') as handle:
-        for data in data_stream.iter_bytes():
-            handle.write(data)
+    try:
+        with httpx.stream('GET', url, follow_redirects=True) as data_stream, open(file, 'wb') as handle:  # timeout=6.1,
+            for data in data_stream.iter_bytes():
+                handle.write(data)
+    except:
+        log('Download failed, please try again.')
+        exit(1)
 
 
 def sorted_annotators():
