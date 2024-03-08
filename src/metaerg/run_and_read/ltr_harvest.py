@@ -22,6 +22,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     with gff.GffParser(result_files[0], contig_dict, inference='ltr_harvest',
                        target_feature_type_dict={'repeat_region': 'retrotransposon'}) as parser:
         for feature in parser:
+            feature.descr = 'LTR retrotransposon'
             sqlite.add_new_feature_to_db(db_connection, feature)
             count += 1
     return count

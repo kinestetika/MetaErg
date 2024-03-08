@@ -237,7 +237,7 @@ GENOME_FORMATS = {'genome name': '<',
                   '% of CDS classified to top taxon': '.1%',
                   '% of CDS that could be classified': '.1%',
                   'codon usage bias': '.3f',
-                  'doubling_time (days)': '.1f'
+                  'doubling_time (hours)': '.1f'
                    }
 class Genome:
     def __init__(self, rowid=0, name='', input_fasta_file='', size=0, number_of_contigs=0, fraction_gc=0.0,
