@@ -4,6 +4,7 @@
 # }
 #
 # systemctl start docker.service
+# docker rm $(docker ps -a -q)
 # docker build -t metaerg --network host metaerg/
 # docker login
 # docker tag [container-id] kinestetika/metaerg
@@ -14,11 +15,11 @@
 
 FROM archlinux:base-devel
 MAINTAINER Marc Strous
-COPY mirrorlist /etc/pacman.d/
+#COPY mirrorlist /etc/pacman.d/
 RUN pacman-key --init
 RUN pacman -Sy --noconfirm archlinux-keyring
 RUN pacman -Syu --noconfirm
-RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv unzip perl-parallel-forkmanager r
+RUN pacman -S --noconfirm git wget python-pip jdk-openjdk python-virtualenv unzip perl-parallel-forkmanager r lesspipe
 
 RUN mkdir /bio
 RUN mkdir /bio/downloads
@@ -46,11 +47,11 @@ ENV DEEPSIG_ROOT="/bio/bin/deepsig"
 ENV R_LIBS="/bio/bin/r"
 
 WORKDIR /bio/bin
-COPY metaerg-2.5.1.tar.gz /bio/downloads
+COPY metaerg-2.5.3.tar.gz /bio/downloads
 
 RUN python -m virtualenv python-env
 ENV PATH="/bio/bin/python-env/bin:$PATH"
-RUN pip install --upgrade /bio/downloads/metaerg-2.5.1.tar.gz
+RUN pip install --upgrade /bio/downloads/metaerg-2.5.3.tar.gz
 RUN metaerg --install_deps /bio/bin --padloc_database /databases/padloc --antismash_database /databases/antismash
 #RUN rm -r /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
 #RUN ln -s /databases/antismash/ /bio/bin/antismash-env/lib/python3.11/site-packages/antismash/databases
