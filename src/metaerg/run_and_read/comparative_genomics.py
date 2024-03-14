@@ -9,10 +9,12 @@ from  metaerg.datatypes import sqlite
 from metaerg import registry
 from metaerg.html import html_feature_table, html_feature_details
 
+MMSEQS_PATH = ''
+FAMSA_PATH = ''
+
 
 def _run_programs():
     input_folder = context.BASE_DIR / 'faa'
-
 
 
 def merge_and_code_fasta_input(dir_with_fasta_seq_files: Path, file_extension: str, delimiter: str, seq_id_2_taxon: list,
@@ -99,8 +101,8 @@ class MMSeqsClusterParser:
 def cluster(seq_id_2_taxon: list, cluster_list: list,
             input_fasta_file:Path, tmp_dir: Path, fasta_output_dir: Path,
             fraction_id:float=0.5, fraction_overlap:float=0.8,
-            min_fraction_orthologues:float=0.0, min_fraction_of_taxa_represented:float=0.1,
-            min_taxa_represented:float=3, min_fraction_of_genes_per_taxon:float=0.1,
+            min_fraction_orthologues:float=0.0,
+            min_fraction_of_taxa_represented:float=0.1, min_taxa_represented:float=3,
             include_paralogues_in_fasta_output=True, file_extension:str='.faa'):
     unique_taxa = {taxon for taxon in seq_id_2_taxon}
     context.log(f'Now clustering sequences in {input_fasta_file}...')
@@ -124,14 +126,13 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
             file.unlink()
     i = 0
     # run programs
-    mmseqs_path = ''  #'/bio/bin/mmseqs/bin/'  # for testing
-    context.run_external(f'{mmseqs_path}mmseqs createdb {input_fasta_file} {input_fasta_db}')
-    context.run_external(f'{mmseqs_path}mmseqs cluster -c {fraction_overlap} --cov-mode 0 --min-seq-id {fraction_id} '
+    context.run_external(f'{MMSEQS_PATH}mmseqs createdb {input_fasta_file} {input_fasta_db}')
+    context.run_external(f'{MMSEQS_PATH}mmseqs cluster -c {fraction_overlap} --cov-mode 0 --min-seq-id {fraction_id} '
                  f'{input_fasta_db} {cluster_file_base} {tmp_dir}')
-    context.run_external(f'{mmseqs_path}mmseqs createtsv {input_fasta_db} {input_fasta_db} {cluster_file_base} {cluster_file_tsv}')
-    context.run_external(f'{mmseqs_path}mmseqs align {input_fasta_db} {input_fasta_db} {cluster_file_base} '
+    context.run_external(f'{MMSEQS_PATH}mmseqs createtsv {input_fasta_db} {input_fasta_db} {cluster_file_base} {cluster_file_tsv}')
+    context.run_external(f'{MMSEQS_PATH}mmseqs align {input_fasta_db} {input_fasta_db} {cluster_file_base} '
                  f'{cluster_file_align} -a')
-    context.run_external(f'{mmseqs_path}mmseqs convertalis {input_fasta_db} {input_fasta_db} {cluster_file_align} '
+    context.run_external(f'{MMSEQS_PATH}mmseqs convertalis {input_fasta_db} {input_fasta_db} {cluster_file_align} '
                  f'{cluster_file_blast}')
     # first parse fraction ids from blast result files
     blast_scores = {}
@@ -144,7 +145,10 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
     rejected_cluster_count = 0
     error_count = 0
     percent_id = 0
+    accepted_cluster_count = 0
+    sequences_clustered_count = 0
     taxon_representaton = Counter()
+    final_min_taxpon_threshold = max(min_taxa_represented, min_fraction_of_taxa_represented * len(unique_taxa))
     with MMSeqsClusterParser(cluster_file_tsv, seq_id_2_taxon, blast_scores) as reader:
         for cluster in reader:
             cluster.seq_type = file_extension
@@ -156,7 +160,7 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
             cluster.selection_omega = -1  # w = ka / ks (orthologous members only)
             cluster.selection_omega_quantile = -1  # quantile of median w, 0 = purifying, 9 = diversifying
             if cluster.fraction_orthologues < min_fraction_orthologues \
-                    or len(cluster.taxa) < max(min_taxa_represented, min_fraction_of_taxa_represented * len(unique_taxa))\
+                    or len(cluster.taxa) < final_min_taxpon_threshold\
                     or cluster.error:
                 error_count += cluster.error
                 for seq_id in cluster.seq_ids:
@@ -172,21 +176,24 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
                     coded_seq_id_2_cluster[seq_id] = cluster
                 taxon_representaton.update(cluster.taxa)
                 cluster.fasta_file = fasta_output_dir / f'{cluster.id}{file_extension}'
+                accepted_cluster_count += 1
+                sequences_clustered_count += len(cluster.seq_ids)
             cluster.taxa = set()  # reset taxa, recoded numbers will be replaced with original filenames
 
-    context.log(f'{len(coded_seq_id_2_cluster)}/{len(seq_id_2_taxon)} seqs clustered ({len(coded_seq_id_2_cluster) / len(seq_id_2_taxon):.1%}).')
-    context.log(f'Accepted {len(cluster_list)} clusters in total, rejected {rejected_cluster_count}, {error_count} due to errors.')
-    context.log(f'Average percent id among all clusters: {percent_id/len(cluster_list):.1%}')
+    context.log(f'Accepted {accepted_cluster_count} clusters in total, rejected {rejected_cluster_count} because <{final_min_taxpon_threshold} taxa represented or too many ({(1-min_fraction_orthologues):.1%}) paralogues, {error_count} due to lacking mmseqs alignments.')
+    context.log(f'Average percent id among all clusters: {percent_id/accepted_cluster_count:.1%}')
     # filter out taxa with poor representaton
-    poorly_represented_taxa = {t for t in unique_taxa if taxon_representaton[t] < min_fraction_of_genes_per_taxon * len(cluster_list)}
+    poorly_represented_taxa = {t for t in unique_taxa if taxon_representaton[t] < 0.2 * len(cluster_list)}
     for t in poorly_represented_taxa:
-        context.log(f'Rejected taxon {t}; represented in only {taxon_representaton[t]/len(cluster_list):.1%} of clusters.')
+        context.log(f'WARNING: taxon {t}; represented in only {taxon_representaton[t]/len(cluster_list):.1%} of clusters.')
 
     taxonomy_pattern = re.compile(r'\s\(Bacteria;.+?\)$|\s\(Archaea;.+?\)$|\s\(Viruses;.+?\)$|\s\(Eukaryota;.+?\)$') # |(\s\(Archaea;.+?\)$)|(\s\(Viruses;.+?\)$)
+    input_seq_count = 0
     with FastaParser(input_fasta_file, cleanup_seq=False) as fasta_reader:
         for seq in fasta_reader:
-            if seq_id_2_taxon[int(seq['id'])] in poorly_represented_taxa:
-                continue
+            input_seq_count += 1
+            #if seq_id_2_taxon[int(seq['id'])] in poorly_represented_taxa:
+            #    continue
             if int(seq['id']) in coded_seq_id_2_cluster.keys():
                 cluster = coded_seq_id_2_cluster[int(seq['id'])]
             elif int(seq['id']) in coded_seq_id_2_cluster_rejected.keys():
@@ -202,9 +209,10 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
                     try:
                         descr_space_index = seq['descr'].index(' ')
                         seq['id'] = seq['descr'][:descr_space_index]
-                        seq['descr'] = center_text + paralogue_text + seq['descr'][descr_space_index+1:]
+                        descr = seq['descr'][descr_space_index+1:]
+                        seq['descr'] = center_text + paralogue_text + descr
                         if is_center:
-                            cluster.annotation = seq['descr'][descr_space_index + 1:]
+                            cluster.annotation = descr
                             cluster.annotation = re.sub(taxonomy_pattern, '', cluster.annotation)
                     except ValueError:
                         seq['id'] = seq['descr']
@@ -221,11 +229,10 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
 def align_aa_clusters(cluster_list: list, alignment_dir: Path):
     context.log(f"Aligning clusters of homologous genes to '{alignment_dir}'...")
     alignment_dir.mkdir(exist_ok=True)
-    famsa_path = '' #'/bio/bin/'   # only for testing
     for cluster in cluster_list:
         if cluster.seq_type == '.faa':
             cluster.aligned_fasta_file = alignment_dir / cluster.fasta_file.name
-            context.run_external(f'{famsa_path}famsa {cluster.fasta_file} {cluster.aligned_fasta_file}')
+            context.run_external(f'{FAMSA_PATH}famsa {cluster.fasta_file} {cluster.aligned_fasta_file}', log_cmd=False)
 
 
 def save_clusters_as_nt_fasta_and_compute_codon_bias(cluster_list: list, all_taxa: list, nt_fasta_output_dir, delimiter='~'):
@@ -388,9 +395,10 @@ def write_overview_tsv_file(dir: Path, cluster_list: list, all_taxa: list):
     # then (separated by <tab>) for each taxon the number of reps,
     # then (separated by <tab>) for each taxon the ids of all reps (separated by commas)
     with open(dir / 'homologues.tsv', 'w') as tsv_writer:
-        tsv_writer.write('cluster id\tannotation\tlength\tselective pressure\tcodon bias\trepresentation\tcount\t% id\tlinks\t' + '\t'.join(all_taxa) + '\t' + '\t'.join(all_taxa) + '\n')
+        tsv_writer.write('cluster id\ttype\tannotation\tlength\tselective pressure (low = purifying)\tcodon bias\trepresentation\tcount\t% id\tlinks\t' + '\t'.join(all_taxa) + '\t' + '\t'.join(all_taxa) + '\n')
         for cluster in sorted(cluster_list, key=lambda c:len(c.taxa), reverse=True):  # sort by representation
             tsv_writer.write(f'{cluster.id}\t'
+                             f'{"CDS" if cluster.seq_type == ".faa" else "RNA"}\t'
                              f'{cluster.annotation}\t'
                              f'{sum(cluster.lengths)/len(cluster.lengths):.0f}\t'
                              f'{cluster.selection_omega_quantile if cluster.selection_omega_quantile >= 0 else ""}\t'
@@ -398,7 +406,7 @@ def write_overview_tsv_file(dir: Path, cluster_list: list, all_taxa: list):
                              f'{len(cluster.taxa)}\t'
                              f'{len(cluster.members)}\t'
                              f'{cluster.fraction_id*100:.1f}\t' +
-                              ', '.join([f'{l[0]["id"]}:{l[1]:.1f}' for l in cluster.links]) + '\t' +
+                              ', '.join([f'{l[0].id}:{l[1]:.1f}' for l in cluster.links]) + '\t' +
                               '\t'.join([str(sum([1 for m in cluster.members if m[1] == t])) for t in all_taxa]) + '\t' +
                               '\t'.join([','.join([m[0] for m in cluster.members if m[1] == t]) for t in all_taxa]) + '\n')
 
@@ -456,7 +464,7 @@ def analyse_gene_context(cluster_list, all_taxa: list, window_size: int = 4, min
         cluster_id_1 = int(cluster_id_1)
         cluster_id_2 = int(cluster_id_2)
         match_score = match_count / min(len(cluster_list[cluster_id_1].members),
-                                        len(cluster_list[cluster_id_2].memebers))
+                                        len(cluster_list[cluster_id_2].members))
         if match_score > min_match_score:
             cluster_context_links[match] = match_score
             cluster_list[cluster_id_1].links.append((cluster_list[cluster_id_2], match_score))
@@ -546,7 +554,7 @@ def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float 
         if f.is_file():
             f.unlink()
     cds_merged_fasta_file = db_dir / 'all_cds_from_all_genomes_coded.faa'
-    rna_merged_fasta_file = db_dir / 'all_rna_from_all_genomes_coded.faa'
+    rna_merged_fasta_file = db_dir / 'all_rna_from_all_genomes_coded.fna'
     cds_clusters_dir = comparative_genomics_dir / 'clusters.cds.faa'
     cds_clusters_dir.mkdir(exist_ok=True)
     for f in cds_clusters_dir.glob('*'):
@@ -562,7 +570,7 @@ def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float 
     for f in cds_clusters_alignment_dir.glob('*'):
         if f.is_file():
             f.unlink()
-    rna_clusters_dir = comparative_genomics_dir / 'clusters.rna.faa'
+    rna_clusters_dir = comparative_genomics_dir / 'clusters.rna.fna'
     rna_clusters_dir.mkdir(exist_ok=True)
     for f in rna_clusters_dir.glob('*'):
         if f.is_file():
@@ -578,12 +586,14 @@ def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float 
             input_fasta_file=cds_merged_fasta_file,
             tmp_dir=comparative_genomics_dir / 'tmp',
             fasta_output_dir=cds_clusters_dir,
-            fraction_id=0.5)
+            fraction_id=0.5,
+            file_extension = '.faa')
     cluster(seq_id_2_taxon=seq_id_2_taxon, cluster_list=cluster_list,
             input_fasta_file=rna_merged_fasta_file,
             tmp_dir=comparative_genomics_dir / 'tmp',
             fasta_output_dir=rna_clusters_dir,
-            fraction_id=0.5)
+            fraction_id=0.5,
+            file_extension='.fna')
     align_aa_clusters(cluster_list, cds_clusters_alignment_dir)
     save_clusters_as_nt_fasta_and_compute_codon_bias(cluster_list, taxa, cds_clusters_nt_dir)
     estimate_selection_pressure(cluster_list, cds_clusters_alignment_dir, cds_clusters_nt_dir)
@@ -608,60 +618,80 @@ def make_match_key(id1: int, id2: int):
 
 def main():
     # for testing...
-    # may need to update mmseqs_path in 'cluster'
+    global MMSEQS_PATH, FAMSA_PATH
+    MMSEQS_PATH = '/bio/bin/mmseqs/bin/'
+    FAMSA_PATH = '/bio/bin/'
+
     context.BASE_DIR = Path('/bio/fast/alkaline_origins/comparative_genomics_metaerg_test')
     context.LOG_FILE = context.BASE_DIR / 'log_test_comparative_genomics'
-
+    context.DO_CLUSTER_GENOMES = True
     context.log('Mode "Clade": Clustering and analysing homologous genes across genomes...')
+
     # prep/clear dirs
-    input_dir = context.BASE_DIR / 'faa'
+    cds_input_data_dir = context.BASE_DIR / 'faa'
+    rna_input_data_dir = context.BASE_DIR / 'rna.fna'
     comparative_genomics_dir = context.BASE_DIR / 'comparative_genomics'
     comparative_genomics_dir.mkdir(exist_ok=True)
-    #for f in comparative_genomics_dir.glob('*'):
-    #    if f.is_file():
-    #        f.unlink()
+    for f in comparative_genomics_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
     db_dir = comparative_genomics_dir / 'mmseqs_db'
     db_dir.mkdir(exist_ok=True)
-    #for f in db_dir.glob('*'):
-    #    if f.is_file():
-    #        f.unlink()
-    merged_fasta_file = db_dir / 'all_cds_from_all_genomes_coded.faa'
-    fasta_custered_dir = comparative_genomics_dir / 'clusters.faa'
-    fasta_custered_dir.mkdir(exist_ok=True)
-    #for f in fasta_custered_dir.glob('*'):
-    #    if f.is_file():
-    #        f.unlink()
-    html_dir = comparative_genomics_dir / 'html'
-    nt_fasta_custered_dir = comparative_genomics_dir / 'clusters.fna'
-    nt_fasta_custered_dir.mkdir(exist_ok=True)
-    #for f in fasta_custered_dir.glob('*'):
-    #    if f.is_file():
-    #        f.unlink()
-    html_dir = comparative_genomics_dir / 'html'
-    alignment_dir = comparative_genomics_dir / 'clusters.faa.align'
+    for f in db_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    cds_merged_fasta_file = db_dir / 'all_cds_from_all_genomes_coded.faa'
+    rna_merged_fasta_file = db_dir / 'all_rna_from_all_genomes_coded.fna'
+    cds_clusters_dir = comparative_genomics_dir / 'clusters.cds.faa'
+    cds_clusters_dir.mkdir(exist_ok=True)
+    for f in cds_clusters_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    cds_clusters_nt_dir = comparative_genomics_dir / 'clusters.cds.fna'
+    cds_clusters_nt_dir.mkdir(exist_ok=True)
+    for f in cds_clusters_nt_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    cds_clusters_alignment_dir = comparative_genomics_dir / 'clusters.cds.faa.align'
+    cds_clusters_alignment_dir.mkdir(exist_ok=True)
+    for f in cds_clusters_alignment_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
+    rna_clusters_dir = comparative_genomics_dir / 'clusters.rna.fna'
+    rna_clusters_dir.mkdir(exist_ok=True)
+    for f in rna_clusters_dir.glob('*'):
+        if f.is_file():
+            f.unlink()
 
-    taxa_by_orf_id = []
-    taxa = merge_and_code_fasta_input(input_dir, file_extension='', delimiter='~', seq_id_2_taxon=taxa_by_orf_id,
-                                      merged_fasta_file=merged_fasta_file)
-    #cluster(taxa_by_orf_id=taxa_by_orf_id,
-    #        input_fasta_file=merged_fasta_file,
-    #        tmp_dir=comparative_genomics_dir / 'tmp',
-    #        fasta_output_dir=fasta_custered_dir,
-    #        fraction_id=0.5)
-    #cluster_hash = parse_clusters(fasta_custered_dir)
-    #align_aa_clusters(fasta_custered_dir, alignment_dir)
-    #save_clusters_as_nt_fasta_and_compute_codon_bias(cluster_hash, taxa, nt_fasta_custered_dir)
-    #estimate_selection_pressure(cluster_hash, alignment_dir, nt_fasta_custered_dir)
-    #write_homologue_info_to_sql(cluster_hash, taxa)
-    #print('\n'.join(sorted(cluster_hash.keys())))
-    #cluster_context_links = analyse_gene_context(cluster_hash, taxa)
-    #write_overview_tsv_file(comparative_genomics_dir, cluster_hash, taxa)
-    #taxa = taxa[:1]
-    #write_gene_context_to_sql(cluster_context_links, taxa)
-
+    seq_id_2_taxon = []
+    cluster_list = []
+    taxa = merge_and_code_fasta_input(cds_input_data_dir, file_extension='', delimiter='~',
+                                      seq_id_2_taxon=seq_id_2_taxon, taxa=[], merged_fasta_file=cds_merged_fasta_file)
+    taxa = merge_and_code_fasta_input(rna_input_data_dir, file_extension='', delimiter='~',
+                                      seq_id_2_taxon=seq_id_2_taxon, taxa=taxa, merged_fasta_file=rna_merged_fasta_file)
+    cluster(seq_id_2_taxon=seq_id_2_taxon, cluster_list=cluster_list,
+            input_fasta_file=cds_merged_fasta_file,
+            tmp_dir=comparative_genomics_dir / 'tmp',
+            fasta_output_dir=cds_clusters_dir,
+            fraction_id=0.5,
+            file_extension='.faa')
+    cluster(seq_id_2_taxon=seq_id_2_taxon, cluster_list=cluster_list,
+            input_fasta_file=rna_merged_fasta_file,
+            tmp_dir=comparative_genomics_dir / 'tmp',
+            fasta_output_dir=rna_clusters_dir,
+            fraction_id=0.5,
+            file_extension='.fna')
+    align_aa_clusters(cluster_list, cds_clusters_alignment_dir)
+    save_clusters_as_nt_fasta_and_compute_codon_bias(cluster_list, taxa, cds_clusters_nt_dir)
+    estimate_selection_pressure(cluster_list, cds_clusters_alignment_dir, cds_clusters_nt_dir)
+    write_homologue_info_to_sql(cluster_list, taxa)
+    cluster_context_links = analyse_gene_context(cluster_list, taxa, window_size=4, min_match_score=0.5)
+    write_overview_tsv_file(comparative_genomics_dir, cluster_list, taxa)
+    write_remaining_results_to_sql(cluster_list, cluster_context_links, taxa, window_size=4)
 
     context.log('Updating html visualizations for all genomes...')
     genome_db = sqlite.connect_to_db(context.BASE_DIR / 'genome_properties.sqlite', 'Genomes')
+    html_dir = comparative_genomics_dir / 'html'
     for taxon in taxa:
         genome_name = taxon
         print(genome_name)

@@ -13,7 +13,7 @@ import httpx
 from metaerg import registry
 
 
-VERSION = "2.5.3"
+VERSION = "2.5.4"
 
 BASE_DIR = Path()
 TEMP_DIR = Path()

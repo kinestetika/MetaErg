@@ -1,4 +1,4 @@
-## metaerg.py, version 2.5.3
+## metaerg.py, version 2.5.4
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -9,7 +9,7 @@ Metaerg 2.5 can annotate a group of related genomes and apply a suite of compara
 contig fasta nucleotide files, one for each genome in a folder and run metaerg with the option "--mode comparative_genomics".
 Annotations become much stronger, richer and easier to interpret when you follow this approach.
 This analysis proceeds as follows:
-* Homologous proteins are clustered using [mmseqs](https://github.com/soedinglab/MMseqs2) version 15-6f452 with --min-seq-id 0.5.
+* Homologous proteins and RNA genes are clustered using [mmseqs](https://github.com/soedinglab/MMseqs2) version 15-6f452 with --min-seq-id 0.5.
 * Orthologues and paralogues are called based on the distance to the center-protein.
 * Each cluster of homologous proteins is aligned with [famsa](https://github.com/refresh-bio/FAMSA) version 2.2.2.
 * Median codon usage bias for each cluster of homologous proteins is calculated as a measure of expected expression level.
@@ -17,10 +17,6 @@ This analysis proceeds as follows:
 * Based on the co-location of orthologous genes in different genomes, gene clusters are predicted.
 * These results are written in various formats (see below) and visualized for each gene in the interactive gene table of each genome.
 * A table with all the properties of each cluster of homologous genes is written (including representation for each genome).
-
-Metaerg was originally developed in perl. It was relatively challenging to install and comes with complex database 
-dependencies. This python version 2.4 overcomes some of those issues. Also, the annotation pipeline has further
-evolved and has become more refined.
 
 By building its blast database off gtdbtk and transferring functional annotations from the NCBI, metaerg.py
 uses a controlled vocabulary for taxonomy and a relatively clean vocabulary for functions. This makes annotations much
@@ -187,6 +183,7 @@ the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Me
 
 ```commandline
 >singularity pull docker://kinestetika/metaerg
+>singularity build --sandbox /path/where/top/create/metaerg_latest.sif docker://kinestetika/metaerg:latest
 >singularity run ~/metaerg_latest.sif
 ```
 
