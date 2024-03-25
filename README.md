@@ -179,9 +179,8 @@ You can use the following arguments when running metaerg:
 ## Using the Docker Image
 Metaerg depends on many helper programs and may require some time and troubleshooting to install. To avoid these issues,
 use the [docker image](https://hub.docker.com/r/kinestetika/metaerg). Alternatively, use singularity or apptainer to run 
-the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md):
+the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md) and [lianchun yi]:
 
-commandline
 >singularity pull docker://kinestetika/metaerg
 >singularity build --sandbox /path/where/top/create/metaerg_latest.sif docker://kinestetika/metaerg:latest
 >singularity exec --bind <span style="background-color: #FFFF00">/path/to/metaerg_database</span>:/databases --bind <span style="background-color: #FFFF00">/path/to/fasta/files</span>:/data --writable /path/to/the/sandbox/dir
