@@ -188,8 +188,8 @@ the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Me
 metaerg --database_dir /databases --contig_file /data --file_extension .fna
 ```
 
-[!NOTE]
-The --bind instruction binds the dir "/path/to/metaerg_database" (which is on your real filesystem) to the dir "/databases" (which is inside your container). Same for the contig dir.
+>[!NOTE]
+>The --bind instruction binds the dir "/path/to/metaerg_database" (which is on your real filesystem) to the dir "/databases" (which is inside your container). Same for the contig dir.
 
 Or, using apptainer:
 ```commandline
