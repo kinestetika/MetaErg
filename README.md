@@ -183,7 +183,7 @@ the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Me
 
 >singularity pull docker://kinestetika/metaerg
 >singularity build --sandbox /path/where/top/create/metaerg_latest.sif docker://kinestetika/metaerg:latest
->singularity exec --bind <mark>/path/to/metaerg_database</mark>:/databases --bind <mark>/path/to/fasta/files</mark>:/data --writable /path/to/the/sandbox/dir
+>singularity exec --bind ==/path/to/metaerg_database==:/databases --bind <mark>/path/to/fasta/files</mark>:/data --writable /path/to/the/sandbox/dir
 metaerg --database_dir /databases --contig_file /data --file_extension .fna
 
 
