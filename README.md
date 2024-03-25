@@ -184,7 +184,8 @@ the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Me
 ```commandline
 >singularity pull docker://kinestetika/metaerg
 >singularity build --sandbox /path/where/top/create/metaerg_latest.sif docker://kinestetika/metaerg:latest
->singularity run ~/metaerg_latest.sif
+>singularity exec --bind <span style="background-color: #FFFF00">/path/to/metaerg_database</span>:/databases --bind <span style="background-color: #FFFF00">/path/to/fasta/files</span>:/data --writable /path/to/the/sandbox/dir
+metaerg --database_dir /databases --contig_file /data --file_extension .fna
 ```
 
 Or:
