@@ -181,13 +181,17 @@ Metaerg depends on many helper programs and may require some time and troublesho
 use the [docker image](https://hub.docker.com/r/kinestetika/metaerg). Alternatively, use singularity or apptainer to run 
 the docker image on a HPC, as explained by [jkzorz](https://github.com/jkzorz/Metagenomes_Illumina/blob/main/annotation.md) and [lianchun yi]:
 
+```commandline
 >singularity pull docker://kinestetika/metaerg
 >singularity build --sandbox /path/where/top/create/metaerg_latest.sif docker://kinestetika/metaerg:latest
->singularity exec --bind ==/path/to/metaerg_database==:/databases --bind <mark>/path/to/fasta/files</mark>:/data --writable /path/to/the/sandbox/dir
+>singularity exec --bind /path/to/metaerg_database:/databases --bind /path/to/fasta/files:/data --writable /path/to/the/sandbox/dir
 metaerg --database_dir /databases --contig_file /data --file_extension .fna
+```
 
+[!NOTE]
+The --bind instruction binds the dir "/path/to/metaerg_database" (which is on your real filesystem) to the dir "/databases" (which is inside your container). Same for the contig dir.
 
-Or:
+Or, using apptainer:
 ```commandline
 >apptainer build metaerg.sif docker://kinestetika/metaerg:latest
 ```
