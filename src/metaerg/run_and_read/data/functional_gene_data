@@ -441,8 +441,41 @@ A0A0A1DRF3|A0A0M4Q303|A0A126NXW7|B0ULZ7|E6VIG6|E6WMT2|F0QD97|F4CK12|F4CU20|F7ZB2
 2 A0A0H3GNX1|A0A1Y0HZR5|A8M8C4|D2PSR0|J7LAS1|L0JX22|Q1QHX1|A0A1W1I5Y1 nxrB; nitrate reductase / nitrite oxidoreductase, beta subunit (ec:1.7.5.1)
 
 >Nitrogen Cycle, Denitrification
-1 A0A0F6Z3B6|A0A0K0XU36|A7NPI4|C7RR96|R4YN15 Nitrite reductase (NO-forming) / hydroxylamine reductase NirS
-1 A0A075TX59|A0A0D5C031|A0A0D5L9A8|A0A0G3G6R0|A0A0K2GJ77|A0A0K2HAK1|A0A0S2TH06|A0A0X8K2L5|A0A128A0R2|A0A1Q1FME2|A0A1Q2TQW5|A0A1S6FCE7|A0A291G5N2|A3P6P0|D3P4B7|D8JSS7|E1VIX6|E1W6F5|E6SGG5|F4GPW7|K0IEZ7|Q47L45|S5TI99 Nitrite reductase (NO-forming) NirK
+1 NirK_Clade1a!NirK_outgroup Nitrite reductase NirK Clade 1a
+1 NirK_Clade1b!NirK_outgroup Nitrite reductase NirK Clade 1b
+1 NirK_Clade1c!NirK_outgroup Nitrite reductase NirK Clade 1c
+1 NirK_Clade1d!NirK_outgroup Nitrite reductase NirK Clade 1d
+1 NirK_Clade1e!NirK_outgroup Nitrite reductase NirK Clade 1e
+1 NirK_Clade1f!NirK_outgroup Nitrite reductase NirK Clade 1f
+1 NirK_Clade1g!NirK_outgroup Nitrite reductase NirK Clade 1g
+1 NirK_Clade2!NirK_outgroup Nitrite reductase NirK Clade 2
+1 NirK_Clade3!NirK_outgroup Nitrite reductase NirK Clade 3
+1 NirK_Clade4!NirK_outgroup Nitrite reductase NirK Clade 4
+1 NirK_Clade5!NirK_outgroup Nitrite reductase NirK Clade 5
+1 NirK_Clade6!NirK_outgroup Nitrite reductase NirK Clade 6
+1 NirK_Clade7!NirK_outgroup Nitrite reductase NirK Clade 7
+1 NirK_Clade8!NirK_outgroup Nitrite reductase NirK Clade 8
+1 NirK_Clade9!NirK_outgroup Nitrite reductase NirK Clade 9
+1 NirK_Clade10!NirK_outgroup Nitrite reductase NirK Clade 10
+1 NirK_Clade11!NirK_outgroup Nitrite reductase NirK Clade 11
+1 NirS_Clade1a!NirF|NirN cd1 nitrite reductase NirS Clade 1a
+1 NirS_Clade1b!NirF|NirN cd1 nitrite reductase NirS Clade 1b
+1 NirS_Clade1c!NirF|NirN cd1 nitrite reductase NirS Clade 1c
+1 NirS_Clade1d!NirF|NirN cd1 nitrite reductase NirS Clade 1d
+1 NirS_Clade1e!NirF|NirN cd1 nitrite reductase NirS Clade 1e
+1 NirS_Clade1f!NirF|NirN cd1 nitrite reductase NirS Clade 1f
+1 NirS_Clade1g!NirF|NirN cd1 nitrite reductase NirS Clade 1g
+1 NirS_Clade1h!NirF|NirN cd1 nitrite reductase NirS Clade 1h
+1 NirS_Clade1i!NirF|NirN cd1 nitrite reductase NirS Clade 1i
+1 NirS_Clade1j!NirF|NirN cd1 nitrite reductase NirS Clade 1j
+1 NirS_Clade1k!NirF|NirN cd1 nitrite reductase NirS Clade 1k
+1 NirS_Clade2!NirF|NirN cd1 nitrite reductase NirS Clade 2
+1 NirS_Clade3!NirF|NirN cd1 nitrite reductase NirS Clade 3
+1 NirS_Clade4!NirF|NirN cd1 nitrite reductase NirS Clade 4
+1 NirS_Clade5!NirF|NirN cd1 nitrite reductase NirS Clade 5
+1 NirS_ArchaealHalophiles!NirF|NirN cd1 nitrite reductase NirS Archaeal-type
+1 NirF cd1 nitrite reductase NirS, accessory protein NirF
+1 NirN cd1 nitrite reductase NirS accessory protein NirN
 2 hco_BNOR Heme-copper oxidase B1-family, cyt c dependent nitric oxide reductases (bNOR)
 3 hco_B1subII Heme-copper oxidase B1-family, subunit II
 2 hco_CNOR Heme-copper oxidase C-family cyt c dependent nitric oxide reductases (cNOR)

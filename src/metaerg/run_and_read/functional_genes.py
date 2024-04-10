@@ -1,12 +1,12 @@
 import os
 import gzip
 import shutil
-from math import log10
 from pathlib import Path
 from concurrent import futures
+from zipfile import ZipFile
 
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
-from metaerg.datatypes import sqlite
+from metaerg.datatypes import sqlite, fasta
 from metaerg import context
 from metaerg.datatypes import functional_genes
 from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
@@ -51,26 +51,13 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             if not feature:
                 raise Exception(f'Found functional gene result for unknown feature {blast_result.query()}, '
                                 f'may need to rerun metaerg with --force')
-            blast_result.hits = blast_result.hits[:10]
+            if new_matches := functional_genes.match(blast_result, number_of_hits_considered=1):
+                hit_count += 1
+                for new_match in new_matches:
+                    if not new_match in feature.subsystems:
+                        feature.subsystems.append(new_match)
+            blast_result.hits = blast_result.hits[:5]
             feature.hmm = blast_result
-            for h in blast_result.hits:
-                db_entry = h.hit
-                confidence = 1.0
-                if h.aligned_length / db_entry.length < 0.7:
-                    continue
-                if db_entry.min_score:
-                    if h.score < db_entry.min_score:
-                        continue
-                    confidence = h.score / db_entry.min_t_score
-                else:
-                    if h.evalue > 0:
-                        confidence = min(1.0, - log10(h.evalue) / 100)
-                if new_matches := functional_genes.match_hit(h, confidence):
-                    hit_count += 1
-                    for new_match in new_matches:
-                        if not new_match in feature.subsystems:
-                            feature.subsystems.append(new_match)
-                break
             sqlite.update_feature_in_db(db_connection, feature)
     # with all subsystems annotated, we are ready to update the genome's subsystems:
     genome.codon_usage_bias, genome.doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
@@ -146,6 +133,7 @@ def install_functional_gene_databases():
     all_target_hmm_names = set()
     for gene_def in functional_genes.GENES:
         all_target_hmm_names.update(gene_def.cues)
+        all_target_hmm_names.update(gene_def.anti_cues)
 
     hmm_dir = context.DATABASE_DIR / 'hmm'
     hmm_dir.mkdir(exist_ok=True, parents=True)
@@ -153,8 +141,8 @@ def install_functional_gene_databases():
     (hmm_dir / 'user_config').mkdir(exist_ok=True, parents=True)  # used by functional_genes.py
     user_hmm_dir.mkdir(exist_ok=True, parents=True)  # used below
     context.log(f'Installing functional gene hmm database at {hmm_dir}...')
-
     current_working_dir = os.getcwd()
+
     # fetch bd type oxygen reductases
     bdor_dir = hmm_dir / 'bdor'
     if bdor_dir.exists():
@@ -169,6 +157,7 @@ def install_functional_gene_databases():
         for hmm_file in sorted((bdor_dir / 'Cytbd_HMM_2020_paper_version').glob('*.hmm')):
             os.system(f'sed -i "s|^NAME.*|NAME  bdor_{hmm_file.stem}|" {hmm_file}')
             context.run_external(f'/bio/bin/hmmer3/bin/hmmconvert {hmm_file}', stdout=writer)
+
     # fetch heme copper oxidase hmms
     hco_dir = hmm_dir / 'hco'
     if hco_dir.exists():
@@ -184,9 +173,36 @@ def install_functional_gene_databases():
             os.system(f'sed -i "s|^NAME.*|NAME  hco_{hmm_file.stem}|" {hmm_file}')
             context.run_external(f'hmmconvert {hmm_file}', stdout=writer)
 
-    # unzip hmms from data
+    # fetch nitrite reductase data from Pold et al. (2024) ISME Reports...
+    nir_hmm_file = hmm_dir / 'nir.hmm'
+    hmm_nir_install_dir = hmm_dir / 'nir'
+    hmm_nir_install_dir.mkdir(exist_ok=True, parents=True)
+    os.chdir(hmm_nir_install_dir)
+    os.system('wget -q https://figshare.com/ndownloader/articles/23913078/versions/1')
+    nir_archive_file = hmm_nir_install_dir / '1'
+    with ZipFile(nir_archive_file, 'r') as zipped_file:
+        zipped_file.extractall(path=hmm_nir_install_dir)
+    nir_hmm_archive_file = hmm_nir_install_dir / 'clade_specific_HMMs.zip'
+    with ZipFile(nir_hmm_archive_file, 'r') as zipped_file:
+        zipped_file.extractall(path=hmm_nir_install_dir)
+    with open(nir_hmm_file, 'w') as nir_hmm_writer:
+        for f in sorted((hmm_nir_install_dir / 'clade_specific_HMMs' / 'NirK').glob('*.hmm')):
+            with open(f, 'r') as reader:
+                for l in reader:
+                    if l.startswith('NAME'):
+                        l = 'NAME  NirK_' + l[6:]
+                    nir_hmm_writer.write(l)
+        for f in sorted((hmm_nir_install_dir / 'clade_specific_HMMs' / 'NirS').glob('*.hmm')):
+            with open(f, 'r') as reader:
+                for l in reader:
+                    if l.startswith('NAME  Clade') or l.startswith('NAME  Arch'):
+                        l = 'NAME  NirS_' + l[6:]
+                    nir_hmm_writer.write(l)
+    shutil.rmtree(hmm_nir_install_dir)
+
+    # unzip hmms from metaerg python module
     hmm_data_dir = Path(__file__).parent / 'data'
-    print (hmm_data_dir)
+    context.log(f'Now unpacking hmm data from {hmm_data_dir}')
     for hmm_file in hmm_data_dir.glob('*.hmm.gz'):
         with gzip.open(hmm_file, 'rb') as f_in:
             dest_hmm_file = hmm_dir / hmm_file.stem
@@ -217,3 +233,58 @@ def install_functional_gene_databases():
             add_hmm_file_to_db(hmm_file, output, names_done, all_target_hmm_names)
     context.run_external(f'hmmpress -f {hmm_dir / "functional_genes.hmm"}')
     os.chdir(current_working_dir)
+
+
+def collect_nir_hmms():
+    context.log(f'Installing Nir HMMs from Pold et al. (2024) ISME Reports...')
+    hmm_nir_install_dir = context.DATABASE_DIR / 'hmm' / 'nir'
+    hmm_nir_install_dir.mkdir(exist_ok=True, parents=True)
+    os.chdir(hmm_nir_install_dir)
+    os.system('wget -q https://figshare.com/ndownloader/articles/23913078/versions/1')
+    nir_archive_file = hmm_nir_install_dir / '1'
+    with ZipFile(nir_archive_file, 'r') as zipped_file:
+        zipped_file.extractall(path=hmm_nir_install_dir)
+    nir_hmm_archive_file = hmm_nir_install_dir / 'clade_specific_HMMs.zip'
+    with ZipFile(nir_hmm_archive_file, 'r') as zipped_file:
+        zipped_file.extractall(path=hmm_nir_install_dir)
+    nir_hmm_archive_dir = hmm_nir_install_dir / 'clade_specific_HMMs'
+    nirk_hmm_archive_dir = nir_hmm_archive_dir / 'NirK'
+    nirk_fasta_dir = nirk_hmm_archive_dir / 'fasta'
+    nirk_hmm_dir = nirk_hmm_archive_dir / 'hmm'
+    nirk_fasta_dir.mkdir(exist_ok=True, parents=True)
+    nirk_hmm_dir.mkdir(exist_ok=True, parents=True)
+    for f in nirk_hmm_archive_dir.glob('*.hmm'):
+        with open(f, 'r') as reader, open(nirk_hmm_dir / f.name, 'w') as writer:
+            for l in reader:
+                if l.startswith('NAME'):
+                    l = 'NAME  NirK_' + l[6:]
+                writer.write(l)
+    for f in nirk_hmm_archive_dir.glob('*.fasta'):
+        with fasta.FastaParser(f, cleanup_seq=True) as reader, open(nirk_fasta_dir / f.name, 'w') as writer:
+            for fe in reader:
+                fe['seq'] = fe['seq'].replace('X', '')
+                fasta.write_fasta(writer, fe)
+    nirs_hmm_archive_dir = nir_hmm_archive_dir / 'NirS'
+    nirs_fasta_dir = nirs_hmm_archive_dir / 'fasta'
+    nirs_hmm_dir = nirs_hmm_archive_dir / 'hmm'
+    nirs_fasta_dir.mkdir(exist_ok=True, parents=True)
+    nirs_hmm_dir.mkdir(exist_ok=True, parents=True)
+    for f in nirs_hmm_archive_dir.glob('*.hmm'):
+        with open(f, 'r') as reader, open(nirs_hmm_dir / f.name, 'w') as writer:
+            for l in reader:
+                if l.startswith('NAME  Clade') or l.startswith('NAME  Arch'):
+                    l = 'NAME  NirS_' + l[6:]
+                writer.write(l)
+    for f in nirs_hmm_archive_dir.glob('*.fasta'):
+        with fasta.FastaParser(f, cleanup_seq=True) as reader, open(nirs_fasta_dir / f.name, 'w') as writer:
+            for fe in reader:
+                fe['seq'] = fe['seq'].replace('X', '')
+                fasta.write_fasta(writer, fe)
+
+def main():
+    context.DATABASE_DIR = Path('/bio/data/databases/metaerg')
+    collect_nir_hmms()
+
+if __name__ == "__main__":
+    main()
+

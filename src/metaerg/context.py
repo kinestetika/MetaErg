@@ -13,7 +13,7 @@ import httpx
 from metaerg import registry
 
 
-VERSION = "2.5.4"
+VERSION = "2.5.5"
 
 BASE_DIR = Path()
 TEMP_DIR = Path()
@@ -361,6 +361,8 @@ def log(log_message, values=(), topic=''):
                 log_handle.write(final_msg)
                 log_handle.write('\n')
         except FileNotFoundError:
+            pass
+        except TypeError:
             pass
 
 

@@ -8,7 +8,6 @@ from metaerg.datatypes import functional_genes
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.blast import DBentry, TabularBlastParser
-from metaerg.calculations.cluster_database import get_match_key
 
 CDD = {}
 CDD_CLUSTERS = {}
@@ -54,11 +53,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             # process the feature's cdd
             feature.cdd = cdd_result
             cdd_result_count += 1
-            if new_matches := functional_genes.match(cdd_result):
-                for new_match in new_matches:
-                    if not new_match in feature.subsystems:
-                        feature.subsystems.append(new_match)
-                        subsystem_result_count += 1
+            for new_match in functional_genes.match(cdd_result, number_of_hits_considered=5):
+                if not new_match in feature.subsystems:
+                    feature.subsystems.append(new_match)
+                    subsystem_result_count += 1
             top_entry: DBentry = cdd_result.hits[0].hit
             feature.descr = f'{top_entry.accession}|{top_entry.gene} {top_entry.descr}'
             if len(feature.descr) > 35:

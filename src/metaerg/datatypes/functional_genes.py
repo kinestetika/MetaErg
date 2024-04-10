@@ -1,4 +1,5 @@
 from pathlib import Path
+from math import log10
 
 from metaerg import context
 from metaerg.datatypes import sqlite
@@ -9,13 +10,13 @@ SUBSYSTEMS = []
 CONFIG_DATA_FILE_EXTENSION = '.config.txt'
 
 class FunctionalGene:
-
-    def __init__(self, subsystem, gene, confidence=1.0):
+    def __init__(self, subsystem, gene_descr, confidence=1.0):
         self.subsystem = subsystem
-        self.gene = gene
+        self.gene = gene_descr
         self.confidence = confidence
         self.pathway_positions = []
         self.cues = frozenset()
+        self.anti_cues = frozenset()
 
     def __iter__(self):
         for k, v in self.__dict__.items():
@@ -30,7 +31,7 @@ class FunctionalGene:
         return 3
 
     def __str__(self):
-        if self.confidence > 0 and self.confidence < 1.0:
+        if 0 < self.confidence < 1.0:
             return f'[{self.subsystem}|{self.gene}|{self.confidence:.1f}]'
         else:
             return f'[{self.subsystem}|{self.gene}]'
@@ -73,7 +74,12 @@ def parse_functional_gene_config_file(file: Path):
                 except ValueError:
                     pass
                 new_gene_def = FunctionalGene(current_subsystem, line[si + 1:])
-                new_gene_def.cues = frozenset(line[:si].split('|'))
+                try:
+                    (cue_text, anti_cue_text) = line[:si].split('!')
+                    new_gene_def.anti_cues = frozenset(anti_cue_text.split('|'))
+                except ValueError:
+                    cue_text = line[:si]
+                new_gene_def.cues = frozenset(cue_text.split('|'))
                 new_gene_def.pathway_positions = pathway_positions
                 GENES.append(new_gene_def)
     context.log(f'Parsed {len(SUBSYSTEMS)} subsystems, {len(GENES)} genes from {file} ...')
@@ -94,27 +100,43 @@ def init_functional_gene_config():
     context.log(f'Complete configuration contains {gene_count} genes.')
 
 
-def match(blast_result: BlastResult) -> list:
+def match(blast_result: BlastResult, number_of_hits_considered) -> list:
     matches = []
     i = 0
     for h in blast_result.hits:
         i += 1
-        if i > 5:
+        if i > number_of_hits_considered:
             break
-        if new_matches := match_hit(h):
-            for new_match in new_matches:
+        if new_matches := match_hit(h, blast_result):
+            for new_match in new_matches:  # Add only one hit to any distinct functional gene
                 if not new_match in matches:
                     matches.append(new_match)
     return matches
 
 
-def match_hit(blast_hit: BlastHit, confidence=1) -> list:
+def match_hit(blast_hit: BlastHit, blast_result: BlastResult) -> list:
     matches = []
     for gene_def in GENES:
+        if blast_hit.hit.min_score:
+            if blast_hit.score < blast_hit.hit.min_score:
+                continue
+            confidence = blast_hit.score / blast_hit.hit.min_t_score
+        elif blast_hit.evalue > 0:
+            confidence = min(1.0, - log10(blast_hit.evalue) / 100)
+        else:
+            confidence = 0
+            context.log('CONFIDENCE Problem', blast_hit.evalue)
         if blast_hit.hit.accession in gene_def.cues and blast_hit.aligned_length >= 0.7 * blast_hit.hit.length:
-            new_match = FunctionalGene(gene_def.subsystem, gene_def.gene, confidence)
-            if not new_match in matches:
-                matches.append(new_match)
+            anti_ques_ok = True
+            for other_blast_hit in blast_result.hits:
+                if other_blast_hit.hit.accession in gene_def.anti_cues and blast_hit.evalue > other_blast_hit.evalue / 1e10:
+                    # (1e10 based on inspection of evalues of in-group sequences to nir outgroup hmms... the difference was actually > ~1e50)
+                    anti_ques_ok = False
+                    break
+            if anti_ques_ok:
+                new_match = FunctionalGene(gene_def.subsystem, gene_def.gene, confidence)
+                if not new_match in matches:
+                    matches.append(new_match)
     return matches
 
 
