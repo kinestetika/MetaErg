@@ -693,6 +693,21 @@ cd01678|cd01677|COG1882 Pyruvate formate lyase
 11 PRK08063 Enoyl-acyl-carrier-protein reductase FabL
 12 PRK13656 Enoyl-acyl-carrier-protein reductase FabV
 
+>Metabolism, Phosphonate Biosynthesis
+1 TIGR02320 Phosphoenolpyruvate mutase, PepM
+2 TIGR03297 Phosphonopyruvate decarboxylase, Ppd/AepY
+3 cd08182 Hydroxyethylphosphoate dehydrogenase HepD/PhpC
+4 TIGR03405 Phosphonate-associated iron-containing alcohol dehydrogenase
+
+>Metabolism, Phosphonate Degradation, Generic Pathway
+1 cl01456|COG3626|pfam05861 Alpha-D-ribose 1-methylphosphonate 5-triphosphate synthase, PhnI
+2 COG3454|PRK15446|TIGR02318 Alpha-D-ribose 1-methylphosphonate 5-triphosphate diphosphatase, PhnM
+3 COG3627 Alpha-D-ribose 1-methylphosphonate 5-phosphate C-P lyase, PhnJ
+
+>Metabolism, Phosphonate Degradation, Specific Pathways
+1 TIGR00686|TIGR02335 alkylphosphonate utilization operon protein, PhnA
+1 TIGR02321 Phosphoenolpyruvate hydrolase, PalA
+
 >Metabolism, Inositol Phosphate Biosynthesis
 1 pfam16670|PLN02222|PLN02223|PLN02230|PLN02952 Phosphoinositide phospholipase C
 2 pfam16726 Inositol polyphosphate 5-phosphatase clathrin binding domain
