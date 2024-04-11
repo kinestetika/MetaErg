@@ -43,7 +43,6 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     cdd_cluster_count = 0
     def get_cdd_db_entry(id: str) -> DBentry:
         return CDD[int(id[4:])]
-
     with TabularBlastParser(result_files[0], 'BLAST', get_cdd_db_entry) as handle:
         for cdd_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, cdd_result.query())

@@ -10,9 +10,9 @@ SUBSYSTEMS = []
 CONFIG_DATA_FILE_EXTENSION = '.config.txt'
 
 class FunctionalGene:
-    def __init__(self, subsystem, gene_descr, confidence=1.0):
+    def __init__(self, subsystem, gene, confidence=1.0):
         self.subsystem = subsystem
-        self.gene = gene_descr
+        self.gene = gene
         self.confidence = confidence
         self.pathway_positions = []
         self.cues = frozenset()
@@ -20,7 +20,7 @@ class FunctionalGene:
 
     def __iter__(self):
         for k, v in self.__dict__.items():
-            if k == 'cues' or k == 'pathway_positions':
+            if k == 'cues' or k == 'pathway_positions' or k == 'anti_cues':
                 continue
             yield k, v
 
@@ -124,8 +124,7 @@ def match_hit(blast_hit: BlastHit, blast_result: BlastResult) -> list:
         elif blast_hit.evalue > 0:
             confidence = min(1.0, - log10(blast_hit.evalue) / 100)
         else:
-            confidence = 0
-            context.log('CONFIDENCE Problem', blast_hit.evalue)
+            confidence = 1.0
         if blast_hit.hit.accession in gene_def.cues and blast_hit.aligned_length >= 0.7 * blast_hit.hit.length:
             anti_ques_ok = True
             for other_blast_hit in blast_result.hits:
