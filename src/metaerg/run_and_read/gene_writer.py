@@ -25,7 +25,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             try:
                 feature.parent = preliminary_id_mapping[feature.parent]
             except KeyError:
-                context.log(f'WARNING: Unknown feature parent {feature.parent} reference for {feature.id}')
+                context.log(f'WARNING in gene_writer: Unknown feature parent {feature.parent} reference for {feature.id}')
         if feature.id:
             prelim_id = feature.id
         feature.id = create_new_id(genome.name, feature.contig, j)

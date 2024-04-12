@@ -8,6 +8,7 @@ from metaerg.datatypes import sqlite
 from metaerg.datatypes import functional_genes
 from metaerg.run_and_read import gene_writer
 
+ANNOTATOR_KEY = 'antismash'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Should execute the helper programs to complete the analysis"""
@@ -96,7 +97,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                              end=g['end'],
                                              strand=g['strand'],
                                              type=g['type'],
-                                             inference='antismash',
+                                             inference=ANNOTATOR_KEY,
                                              descr= ' '.join((region_feature.descr, antismash_gene_function,
                                                               antismash_gene_category)),
                                              aa_seq=g['translation'])
@@ -110,7 +111,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 91,
-             'annotator_key': 'antismash',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'prediction of secondary metabolite genes with antismash',
              'programs': ('antismash',),
              'result_files': ('antismash',),

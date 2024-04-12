@@ -7,6 +7,7 @@ from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'cmscan'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
@@ -91,7 +92,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                    end = hit.query_end,
                    strand = hit.query_strand,
                    type = f_type,
-                   inference = 'cmscan',
+                   inference = ANNOTATOR_KEY,
                    nt_seq = seq,
                    descr = "{} {}".format(hit.hit_id, hit.descr))
         sqlite.add_new_feature_to_db(db_connection, feature)
@@ -102,7 +103,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_cmscan():
     return ({'pipeline_position': 21,
-             'annotator_key': 'cmscan',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'noncoding (RNA) gene prediction with cmscan',
              'programs': ('cmscan',),
              'result_files': ("cmscan",),

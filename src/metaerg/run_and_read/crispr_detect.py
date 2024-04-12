@@ -1,6 +1,7 @@
 from metaerg import context
 from metaerg.datatypes import fasta, gff, sqlite
 
+ANNOTATOR_KEY = 'crispr_detect'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Executes the helper programs to complete the analysis"""
@@ -25,7 +26,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""
-    with gff.GffParser(result_files[0], contig_dict) as gff_parser:
+    with gff.GffParser(result_files[0], contig_dict=contig_dict, inference=ANNOTATOR_KEY) as gff_parser:
         count = 0
         for feature in gff_parser:
             feature.genome = genome.name
@@ -39,7 +40,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_crispr_detect():
     return ({'pipeline_position': 2,
-             'annotator_key': 'crispr_detect',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'CRISPR prediction with CRISPRDetect',
              'programs': ('CRISPRDetect.pl',),
              'result_files': ("crispr_detect.gff",),

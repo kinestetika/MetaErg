@@ -4,6 +4,7 @@ from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'prodigal'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
@@ -73,7 +74,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                        end = end,
                        strand = strand,
                        type = 'CDS',
-                       inference = 'prodigal',
+                       inference = ANNOTATOR_KEY,
                        aa_seq = seq_rec['seq'],
                        nt_seq = nucl_seq_hash[seq_rec['id']])
             if 'partial=01' in seq_rec['descr'] or 'partial=01' in seq_rec['descr'] or 'partial=11' in seq_rec['descr']:
@@ -89,7 +90,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_prodigal():
     return ({'pipeline_position': 61,
-             'annotator_key': 'prodigal',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'coding sequence prediction with prodigal',
              'programs': ('prodigal',),
              'result_files': ('prodigal','prodigal-nucl'),

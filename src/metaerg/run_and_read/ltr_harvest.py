@@ -3,6 +3,7 @@ from metaerg.datatypes import fasta
 from metaerg.datatypes import gff
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'ltr_harvest'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
@@ -19,7 +20,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     count = 0
-    with gff.GffParser(result_files[0], contig_dict, inference='ltr_harvest',
+    with gff.GffParser(result_files[0], contig_dict, inference=ANNOTATOR_KEY,
                        target_feature_type_dict={'repeat_region': 'retrotransposon'}) as parser:
         for feature in parser:
             feature.descr = 'LTR retrotransposon'
@@ -31,7 +32,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_ltr_harvest():
     return ({'pipeline_position': 31,
-             'annotator_key': 'ltr_harvest',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'retrotransposon prediction with ltrharvest',
              'programs': ('gt',),
              'result_files': ('ltr_harvest',),

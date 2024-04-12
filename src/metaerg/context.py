@@ -416,6 +416,10 @@ def write_metaerg_progress(genome_name, new_progress):
             writer.write(f'{k}={v}\n')
 
 
+def check_annotator_results_for_consistency_with_previous_run(db_connection):
+    pass
+
+
 def register_annotator(define_annotator):
     param = define_annotator()
 
@@ -472,11 +476,6 @@ def register_annotator(define_annotator):
             if all_programs_in_path:
                 try:
                     param['run'](genome, contig_dict, db_connection, result_files)
-                except FatalException as e:
-                    log('({}) Error while running {}: {}', (genome.name, param['purpose'],
-                                                            "".join(traceback.format_exception(e))))
-                    raise(Exception('({}) Error while running {}: {}', (genome.name, param['purpose'],
-                                                            "".join(traceback.format_exception(e)))))
                 except Exception as e:
                     log('({}) Error while running {}: {}', (genome.name, param['purpose'],
                                                             "".join(traceback.format_exception(e))))
@@ -517,5 +516,4 @@ def register_database_installer(database_installer):
     # print(len(registry.DATABASE_INSTALLER_REGISTRY))
     return database_installer
 
-class FatalException(Exception):
-    pass
+

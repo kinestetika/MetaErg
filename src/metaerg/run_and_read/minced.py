@@ -1,6 +1,7 @@
 from metaerg import context
 from metaerg.datatypes import fasta, gff, sqlite
 
+ANNOTATOR_KEY = 'minced'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     """Executes the helper programs to complete the analysis"""
@@ -12,7 +13,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""
-    with gff.GffParser(result_files[0], contig_dict, inference='minced',
+    with gff.GffParser(result_files[0], contig_dict, inference=ANNOTATOR_KEY,
                        target_feature_type_dict={'repeat_unit': 'CRISPR'}) as gff_parser:
         count = 0
         for feature in gff_parser:
@@ -25,7 +26,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 #@context.register_annotator  # (to enable minced, uncomment and add to __init__
 def run_and_read_minced():
     return ({'pipeline_position': 1,
-             'annotator_key': 'minced',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'CRISPR prediction with minced',
              'programs': ('minced',),
              'result_files': ("minced",),

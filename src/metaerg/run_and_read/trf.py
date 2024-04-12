@@ -2,6 +2,7 @@ from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'trf'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
@@ -32,7 +33,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                      end = end,
                                      strand = 1,
                                      type = 'repeat_unit',
-                                     inference = 'tandem-repeat-finder',
+                                     inference = ANNOTATOR_KEY,
                                      nt_seq = seq,
                                      notes = f'period size {words[2]}; copies {words[3]}')
             sqlite.add_new_feature_to_db(db_connection, feature)
@@ -42,7 +43,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_trf():
     return ({'pipeline_position': 41,
-             'annotator_key': 'trf',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'tandem repeat prediction with trf',
              'programs': ('trf',),
              'result_files': ('tandem-repeat-finder',),

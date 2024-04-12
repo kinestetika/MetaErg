@@ -4,6 +4,7 @@ from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'aragorn'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
@@ -73,7 +74,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                                        end = end,
                                        strand = strand,
                                        type = 'tRNA' if trna_type.startswith('tRNA') else 'tmRNA',
-                                       inference = 'aragorn',
+                                       inference = ANNOTATOR_KEY,
                                        nt_seq = seq,
                                        descr = f'{trna_type}-{codon}')
                             sqlite.add_new_feature_to_db(db_connection, feature)
@@ -98,7 +99,7 @@ def set_translation_table(genome, table_id, mean_protein_length):
 @context.register_annotator
 def run_and_read_aragorn():
     return ({'pipeline_position': 11,
-             'annotator_key': 'aragorn',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'tRNA prediction with aragorn',
              'programs': ('aragorn',),
              'result_files': ("aragorn",),

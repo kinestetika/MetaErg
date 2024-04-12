@@ -5,6 +5,8 @@ from metaerg import context
 from metaerg.datatypes import fasta
 from metaerg.datatypes import sqlite
 
+ANNOTATOR_KEY = 'repeat_masker'
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
     fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
@@ -67,7 +69,7 @@ def words2feature(words: list[str], contig, genome_name:str) -> sqlite.Feature:
                           end = end,
                           strand = strand,
                           type = 'repeat_unit',
-                          inference = 'repeatmasker',
+                          inference = ANNOTATOR_KEY,
                           nt_seq = seq)
 
 
@@ -107,7 +109,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_repeatmasker():
     return ({'pipeline_position': 51,
-             'annotator_key': 'repeat_masker',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'repeat prediction with repeatmasker',
              'programs': ('build_lmer_table', 'RepeatScout', 'filter-stage-1.prl', 'RepeatMasker'),
              'result_files': ('repeatmasker',),
