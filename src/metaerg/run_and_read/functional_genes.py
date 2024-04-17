@@ -11,6 +11,7 @@ from metaerg import context
 from metaerg.datatypes import functional_genes
 from metaerg.calculations.codon_usage_bias import compute_codon_bias_estimate_doubling_time
 
+ANNOTATOR_KEY = 'hmm'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
@@ -49,7 +50,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for blast_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
             if not feature:
-                raise Exception(f'Found functional gene result for unknown feature {blast_result.query()}, '
+                context.log(
+                    f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {blast_result.query()}, '
+                    f'may need to rerun metaerg with --force')
+                raise Exception(f'Found {ANNOTATOR_KEY} result for unknown feature {blast_result.query()}, '
                                 f'may need to rerun metaerg with --force')
             if new_matches := functional_genes.match(blast_result, number_of_hits_considered=1):
                 hit_count += 1
@@ -72,7 +76,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_canthyd():
     return ({'pipeline_position': 101,
-             'annotator_key': 'hmm',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'identification of functional genes with HMMs',
              'programs': ('hmmscan',),
              'databases': (Path('hmm', 'functional_genes.hmm'),),

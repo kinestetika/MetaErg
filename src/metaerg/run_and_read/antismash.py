@@ -79,7 +79,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
                 closest_gene = None
                 closest_distance = 100000
-                for f1 in sqlite.read_all_features(db_connection, contig=contig, start=max(g['start']-20000,0), end=g['end']+20000):
+                for f1 in sqlite.read_all_features(db_connection, contig=contig, start=max(g['start'] - 20000, 0), end=g['end'] + 20000):
                     new_distance = f1.start - g['start']
                     if new_distance < closest_distance:
                         closest_gene = f1

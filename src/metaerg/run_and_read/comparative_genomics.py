@@ -427,6 +427,7 @@ def write_homologue_info_to_sql(cluster_list: list, all_taxa: list):
             feature.homologous_group_taxon_representation = len(cluster.taxa) / len(all_taxa)
             feature.homologous_group_member_count = len(cluster.members)
             sqlite.update_feature_in_db(db_connection, feature)
+        sqlite.write_db(db_connection, db_file)
 
 
 def analyse_gene_context(cluster_list, all_taxa: list, window_size: int = 4, min_match_score: float = 0.5) -> dict:
@@ -535,6 +536,7 @@ def write_remaining_results_to_sql(cluster_list: list, cluster_context_links: di
                 if f.type != 'region':
                     f.parent = region_feature.id
                     sqlite.update_feature_in_db(db_connection, f)
+        sqlite.write_db(db_connection, db_file)
         context.log(f"Wrote {len(existing_regions)} homology-informed sequence regions to sql for '{taxon}'")
 
 

@@ -14,6 +14,8 @@ CDD_CLUSTERS = {}
 CLUSTER_MAX_CDD_HITS = 5
 CLUSTER_MIN_MATCH_SCORE = 0.2
 
+ANNOTATOR_KEY = 'cdd'
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
@@ -47,7 +49,9 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for cdd_result in handle:
             feature = sqlite.read_feature_by_id(db_connection, cdd_result.query())
             if not feature:
-                raise Exception(f'Found cdd result for unknown feature {cdd_result.query()}, '
+                context.log(f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {cdd_result.query()}, '
+                                f'may need to rerun metaerg with --force')
+                raise Exception(f'({genome.name}) Found {ANNOTATOR_KEY} result for unknown feature {cdd_result.query()}, '
                                 f'may need to rerun metaerg with --force')
             # process the feature's cdd
             feature.cdd = cdd_result
@@ -88,7 +92,7 @@ def preload_db():
 @context.register_annotator
 def run_and_read_cdd():
     return ({'pipeline_position': 71,
-             'annotator_key': 'cdd',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'function prediction using RPSBlast and the conserved domain database',
              'programs': ('rpsblast',),
              'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd.pal')),

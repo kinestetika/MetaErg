@@ -11,7 +11,7 @@ from time import sleep
 import httpx
 
 from metaerg import registry
-
+from metaerg.datatypes import sqlite
 
 VERSION = "2.5.5"
 
@@ -430,7 +430,7 @@ def register_annotator(define_annotator):
     except KeyError:
         pass
 
-    def annotator(genome, contig_dict, db_connection) -> int:
+    def annotator(genome, contig_dict, db_connection_current, db_connection_previous) -> int:
         """Runs programs and reads results."""
         # (1) Read metaerg progress file, update progress and log the start of the analysis
         if not ANNOTATOR_STATUS[param['annotator_key']]:
@@ -475,7 +475,7 @@ def register_annotator(define_annotator):
                     all_programs_in_path = False
             if all_programs_in_path:
                 try:
-                    param['run'](genome, contig_dict, db_connection, result_files)
+                    param['run'](genome, contig_dict, db_connection_current, result_files)
                 except Exception as e:
                     log('({}) Error while running {}: {}', (genome.name, param['purpose'],
                                                             "".join(traceback.format_exception(e))))
@@ -498,7 +498,14 @@ def register_annotator(define_annotator):
         write_metaerg_progress(genome.name, current_progress)
         positive_count = 0
         if results_complete:
-            positive_count = param['read'](genome, contig_dict, db_connection, result_files)
+            positive_count = param['read'](genome, contig_dict, db_connection_current, result_files)
+            # (8) Compare to previous results
+            if diff := sqlite.compare_annotation_results(db_connection_previous, db_connection_current, param["annotator_key"]):
+                if diff[2]:
+                    log(f'({genome.name}) {param["annotator_key"]} predicted {diff[1]} features, previously {diff[0]}, with {diff[2]} updates.')
+                else:
+                    log(f'({genome.name}) {param["annotator_key"]} prediction coordinates were identical to previous run.')
+
         log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
         return 0
 

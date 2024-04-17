@@ -103,6 +103,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                 feature.notes = f' (occurs {len(repeat_list)}x)'
                 sqlite.add_new_feature_to_db(db_connection, feature)
                 count += 1
+    context.log(f'({genome.name}) {ANNOTATOR_KEY} results may appear different from a previous run, but some repeats may later be rejected based on prodigal predictions.')
     return count
 
 

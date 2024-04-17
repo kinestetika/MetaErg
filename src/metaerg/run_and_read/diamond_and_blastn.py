@@ -33,7 +33,7 @@ IGNORED_FEATURE_TYPES = 'gene pseudogene exon direct_repeat region sequence_feat
 
 TAXONOMY = {'p': {}, 'e': {}, 'v': {}}
 DESCRIPTIONS = {'p': {}, 'e': {}, 'v': {}}
-
+ANNOTATOR_KEY = 'diamond_and_blastn'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     rna_nt_file = context.spawn_file('rna.fna', genome.name)
@@ -56,6 +56,8 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     def process_blast_result(blast_result: BlastResult):
         feature = sqlite.read_feature_by_id(db_connection, blast_result.query())
         if not feature:
+            context.log(f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {blast_result.query()}, '
+                        f'may need to rerun metaerg with --force')
             raise Exception(f'Found diamond_and_blastn result for unknown feature {blast_result.query()}, '
                             f'may need to rerun metaerg with --force')
         feature.blast = blast_result
@@ -118,7 +120,7 @@ def preload_db():
 @context.register_annotator
 def run_and_read_diamond_blastn():
     return ({'pipeline_position': 81,
-             'annotator_key': 'diamond_and_blastn',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'function prediction and taxonomic classification of genes with diamond and blastn',
              'programs': ('diamond', 'blastn'),
              'databases': (Path(DB_PROTEINS_FILENAME + '.dmnd'),

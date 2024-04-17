@@ -4,6 +4,8 @@ from metaerg import context
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.fasta import FastaParser
 
+ANNOTATOR_KEY = 'pureseqtm'
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     context.run_external(f'PureseqTM_proteome.sh -i {cds_aa_file} -o {result_files[0]} -c {context.CPUS_PER_GENOME}')
@@ -32,7 +34,10 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             if len(tmh_list):
                 feature = sqlite.read_feature_by_id(db_connection, orf['id'])
                 if not feature:
-                    raise Exception(f'({genome.name}) Found pureseqtm result for unknown feature {orf["id"]}, '
+                    context.log(
+                        f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {orf["id"]}, '
+                        f'may need to rerun metaerg with --force')
+                    raise Exception(f'({genome.name}) Found {ANNOTATOR_KEY} result for unknown feature {orf["id"]}, '
                                     f'may need to rerun metaerg with --force')
                 feature.tmh = len(tmh_list)
                 feature.tmh_topology = ','.join(f'{tmh["start"]}-{tmh["end"]}' for tmh in tmh_list)
@@ -44,7 +49,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_pureseqtm():
     return ({'pipeline_position': 112,
-             'annotator_key': 'pureseqtm',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'transmembrane helix prediction with PureseqTM',
              'programs': ('PureseqTM_proteome.sh',),
              'result_files': ('pureseqtm',),

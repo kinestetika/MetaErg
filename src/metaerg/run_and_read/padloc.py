@@ -7,6 +7,8 @@ from metaerg.datatypes import gff
 from metaerg.datatypes import sqlite
 from metaerg.datatypes.functional_genes import FunctionalGene
 
+ANNOTATOR_KEY = 'padloc'
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     gff_file = context.spawn_file('gff', genome.name, extension='gff')
     with open(gff_file, 'w') as handle:
@@ -34,14 +36,17 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
         for pf in gff_parser:
             # padloc does not report the origal gene id, so we find the genes by their start position
             found_feature = False
-            for f in sqlite.read_all_features(db_connection, additional_sql = f'start = {pf.start}'):
+            for f in sqlite.read_all_features(db_connection, additional_sql =f'start = {pf.start}'):
                 f.subsystems.append(FunctionalGene(f'Defense ({pf.type})', pf.id, 1))
                 padloc_features.append(f)
                 padloc_feature_systems[f] = pf.type  # we do not have easy access to the Functional Gene
                 found_feature = True
                 break
             if not found_feature:
-                raise Exception(f'Found padloc result for unknown feature at position {pf.start}, '
+                context.log(
+                    f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature at position {pf.start}, '
+                    f'may need to rerun metaerg with --force')
+                raise Exception(f'Found {ANNOTATOR_KEY} result for unknown feature at position {pf.start}, '
                                 f'may need to rerun metaerg with --force')
 
     # manage clusters
@@ -96,7 +101,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_antismash():
     return ({'pipeline_position': 92,
-             'annotator_key': 'padloc',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'prediction of antiviral defense mechanisms',
              'programs': ('padloc',),
              'result_files': ('padloc',),

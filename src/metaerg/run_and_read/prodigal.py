@@ -14,7 +14,7 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
     else:
         # prodigal should have taken care of the genetic code...
         if not genome.genetic_code:
-            raise(context.FatalException('No available genetic code for prodigal to predict protein-coding genes, aborting!'))
+            raise(Exception('No available genetic code for prodigal to predict protein-coding genes, aborting!'))
         context.run_external(
             f'prodigal -g {genome.genetic_code} -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
 
@@ -47,13 +47,13 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 
             # reconciliation with repeats
             overlapping_features = [f for f in sqlite.read_all_features(db_connection, contig=contig_id,
-                                    start=start, end=end, type='rRNA tRNA tmRNA ncRNA CRISPR repeat_unit binding_site retrotransposon'.split())]
+                                                                        start=start, end=end, type='rRNA tRNA tmRNA ncRNA CRISPR repeat_unit binding_site retrotransposon'.split())]
 
             if len(overlapping_features):
                 overlap = 0
                 for f in overlapping_features:
                     overlap += min(f.end, end) - max(start, f.start)
-                non_repeat_features = [f for f in overlapping_features if f.type in 'rRNA tRNA tmRNA ncRNA CRISPR binding_site retrotransposon'.split()]
+                non_repeat_features = [f for f in overlapping_features if f.inference in 'rRNA tRNA tmRNA ncRNA CRISPR binding_site retrotransposon'.split()]
                 if len(non_repeat_features):
                     rejected_cds_count += 1
                     continue

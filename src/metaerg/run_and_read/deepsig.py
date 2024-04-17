@@ -4,6 +4,9 @@ from metaerg import context
 from metaerg.datatypes import sqlite
 
 
+ANNOTATOR_KEY = 'deepsig'
+
+
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
     context.run_external(f'deepsig -f {cds_aa_file} -o {result_files[1]} -k gramn')
@@ -22,7 +25,9 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                     case [feature_id, _, 'Signal peptide', start, end, score, _, _, _]:
                         feature = sqlite.read_feature_by_id(db_connection, feature_id)
                         if not feature:
-                            raise Exception(f'({genome.name}) Found deepsig result for unknown feature {feature_id}, '
+                            context.log(f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {feature_id}, '
+                                        f'may need to rerun metaerg with --force')
+                            raise Exception(f'({genome.name}) Found {ANNOTATOR_KEY} result for unknown feature {feature_id}, '
                                             f'may need to rerun metaerg with --force')
                         if feature.signal_peptide:
                             feature.signal_peptide += ','
@@ -38,7 +43,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
 @context.register_annotator
 def run_and_read_pureseqtm():
     return ({'pipeline_position': 122,
-             'annotator_key': 'deepsig',
+             'annotator_key': ANNOTATOR_KEY,
              'purpose': 'signal peptide prediction with DeepSig',
              'programs': ('deepsig',),
              'result_files': ('deepsig_gram-negative','deepsig_gram-positive'),

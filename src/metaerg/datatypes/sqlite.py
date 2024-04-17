@@ -153,6 +153,10 @@ class Feature:
     def length_aa(self):
         return (self.end - self.start) // 3
 
+    def get_coord_key(self):
+        return f'{self.contig}-{self.start}-{self.end}'
+
+
 SQLITE_CREATE_GENOME_TABLE_SYNTAX = '''CREATE TABLE genomes(
     name TEXT,
     input_fasta_file TEXT,
@@ -324,8 +328,13 @@ def genome_factory(cursor, row) -> Genome:
     return Genome(**{key: value for key, value in zip(fields, row)})
 
 
-def connect_to_db(sql_db_file, target='Features'):
-    connection = sql.connect(sql_db_file)
+def connect_to_db(sql_db_file, target='Features', load_into_memory=True):
+    if load_into_memory:
+        source = sql.connect(sql_db_file)
+        connection = sql.connect(':memory:')
+        source.backup(connection)
+    else:
+        connection = sql.connect(sql_db_file)
     if 'Features' == target:
         connection.row_factory = feature_factory
     elif 'Genomes' == target:
@@ -409,7 +418,7 @@ def read_genome_by_id(sql_connection, genome_name) -> Genome:
     return result.fetchone()
 
 
-def read_all_features(sql_connection, contig='', type=None, start=-1, end=-1, additional_sql=None):
+def read_all_features(sql_connection, contig='', type=None, inference=None, start=-1, end=-1, additional_sql=None):
     cursor = sql_connection.cursor()
 
     where_str = []
@@ -421,6 +430,9 @@ def read_all_features(sql_connection, contig='', type=None, start=-1, end=-1, ad
         else:
             where_str.append('type = ?')
             fields.append(type)
+    if inference:
+        where_str.append('inference = ?')
+        fields.append(inference)
     if contig:
         where_str.append('contig = ?')
         fields.append(contig)
@@ -446,6 +458,29 @@ def read_all_features(sql_connection, contig='', type=None, start=-1, end=-1, ad
         return cursor.execute('SELECT rowid, * FROM features ORDER BY contig, start')
     #for columns in result.fetchall():
     #    yield Feature(*columns)
+
+
+def compare_annotation_results(db_connection_prev, db_connection_current, inference):
+    previously_detected_feature_coordinates = set()
+    newly_detected_coordinates = set()
+    try:
+        features_detected_previously = 0
+        for prev_feature in read_all_features(db_connection_prev, inference=inference):
+            previously_detected_feature_coordinates.add(prev_feature.get_coord_key())
+            features_detected_previously += 1
+        features_detected_currently = 0
+        for current_feature in read_all_features(db_connection_current, inference=inference):
+            key = current_feature.get_coord_key()
+            if key in previously_detected_feature_coordinates:
+                previously_detected_feature_coordinates.remove(key)
+            else:
+                newly_detected_coordinates.add(key)
+            features_detected_currently += 1
+        update_count = len(previously_detected_feature_coordinates) + len(newly_detected_coordinates)
+        return features_detected_previously, features_detected_currently, update_count
+    except:
+        return None
+
 
 def read_all_genomes(sql_connection, sql_where=''):
     cursor = sql_connection.cursor()
