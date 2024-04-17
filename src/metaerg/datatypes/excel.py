@@ -69,6 +69,7 @@ def write_genomes_to_xls(db_connection, excel_file):
                     e_sheet.cell(row=row, column=1).value = subsystem
                 else:
                     e_sheet.cell(row=row, column=1).value = ''
+                    first_row = False
                 e_sheet.cell(row=row, column=2).value = gene
                 e_sheet.cell(row=row, column=e_column).value = ', '.join(feature_ids)
                 row += 1

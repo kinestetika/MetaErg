@@ -13,7 +13,7 @@ import httpx
 from metaerg import registry
 from metaerg.datatypes import sqlite
 
-VERSION = "2.5.5"
+VERSION = "2.5.6"
 
 BASE_DIR = Path()
 TEMP_DIR = Path()
