@@ -5,14 +5,13 @@ from metaerg import context
 from metaerg.datatypes import sqlite
 
 
-def write_genomes_to_xls(db_connection):
+def write_genomes_to_xls(db_connection, excel_file):
     try:
         rows_for_taxon = max(len(g.top_taxon.split('; ')) for g in sqlite.read_all_genomes(db_connection))
     except ValueError:
         context.log('No genomes in database, rerun metaerg with --update_annotations.')
         return
 
-    excel_file = context.BASE_DIR / 'genome_properties.xls'
     e_workbook = openpyxl.Workbook()
     e_column = 3
     black = Font(color="000000")
@@ -56,6 +55,7 @@ def write_genomes_to_xls(db_connection):
                 else:
                     color = grey
                 subsystem += ' (# genes)'
+            e_sheet.cell(row=row, column=1).value = ''
             e_sheet.cell(row=row, column=2).value = subsystem
             if color is not grey:
                 e_sheet.cell(row=row, column=e_column).value = value
@@ -63,8 +63,12 @@ def write_genomes_to_xls(db_connection):
             row += 1
 
         for subsystem, genes in genome.subsystems.items():
-            e_sheet.cell(row=row, column=1).value = subsystem
+            first_row = True
             for gene, feature_ids in genes.items():
+                if first_row:
+                    e_sheet.cell(row=row, column=1).value = subsystem
+                else:
+                    e_sheet.cell(row=row, column=1).value = ''
                 e_sheet.cell(row=row, column=2).value = gene
                 e_sheet.cell(row=row, column=e_column).value = ', '.join(feature_ids)
                 row += 1

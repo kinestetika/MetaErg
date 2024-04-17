@@ -226,8 +226,9 @@ def main():
         genome_db_file = Path(context.BASE_DIR, 'genome_properties.sqlite')
         genome_db_file.unlink(missing_ok=True)
         sqlite.write_db(genome_db_connection, genome_db_file)
-        context.log('Now writing all-genomes overview to excel...')
-        write_genomes_to_xls(genome_db_connection)
+        excel_file = context.BASE_DIR / 'genome_properties.xls'
+        context.log(f'Now writing all-genomes overview to {excel_file}...')
+        write_genomes_to_xls(genome_db_connection, excel_file)
         genome_db_connection.close()
         context.log(f'Done. Thank you for using metaerg.py {context.VERSION}')
 
