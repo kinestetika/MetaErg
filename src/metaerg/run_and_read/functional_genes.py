@@ -43,7 +43,12 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     context.log(f'({genome.name}) {len(functional_gene_db)} functional gene profiles in database.')
 
     def get_db_entry(db_id) -> DBentry:
-        return functional_gene_db[db_id]
+        try:
+            return functional_gene_db[db_id]
+        except KeyError:
+            context.log(f'({genome.name}) Unkown hmm database id "{db_id}". Did the hmm database change after this prediction was done?')
+            raise Exception(f'({genome.name}) Unkown hmm database id "{db_id}". Did the hmm database change after this prediction was done?')
+
 
     with TabularBlastParser(result_files[0], 'HMMSCAN_DOM_TABLE', get_db_entry) as handle:
         hit_count = 0

@@ -201,12 +201,12 @@ def main():
                 for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
                     genome_dict[genome_name] = executor.submit(annotate_genome, genome_name, contig_file)
             for genome_name, future in genome_dict.items():
-                try:
-                    if genome := future.result():
-                        sqlite.add_new_genome_to_db(genome_db_connection, genome)
-                    genome_dict[genome_name] = genome
-                except Exception as e:
-                    context.log(f'({genome_name}) {str(e)}')
+                #try:
+                if genome := future.result():
+                    sqlite.add_new_genome_to_db(genome_db_connection, genome)
+                genome_dict[genome_name] = genome
+                #except Exception as e:
+                #    context.log(f'({genome_name}) {e}')
         else:
             for genome_name, contig_file in zip(context.GENOME_NAMES, context.CONTIG_FILES):
                 try:

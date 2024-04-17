@@ -607,8 +607,8 @@ def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float 
     for genome_name, genome in genome_dict.items():
         context.log(f'({genome_name}) Now writing final result as .html for visualization...')
         feature_db_connection = sqlite.connect_to_db(context.BASE_DIR / 'annotations.sqlite' / genome_name)
-        for html_writer in registry.HTML_WRITER_REGISTRY:
-            html_writer(genome, feature_db_connection, context.HTML_DIR)
+        html_feature_table.write_html(genome, feature_db_connection, context.HTML_DIR)
+        html_feature_details.write_html(genome, feature_db_connection, context.HTML_DIR)
 
 
 def make_match_key(id1: int, id2: int):
