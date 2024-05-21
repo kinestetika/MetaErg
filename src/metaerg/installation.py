@@ -1,5 +1,6 @@
 from pathlib import Path
 import os
+import sys
 from shutil import which
 from virtualenv import cli_run
 
@@ -316,7 +317,12 @@ def install_antismash(bin_dir:Path, antismash_database_dir):
     # need to create antismash virtualenv here
     cli_run(["antismash-env"])
     os.chdir("antismash-env")
-    antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
+    # get python version
+    python_version = sys.version.split()[0]
+    final_dot_index = python_version.rfind('.')
+    python_version = python_version[0:final_dot_index]
+    # install and set up database dir
+    antismash_database_python_dir = Path('lib') / f'python{python_version}' / 'site-packages' / 'antismash' / 'databases'
     os.system('wget https://github.com/antismash/antismash/archive/refs/tags/7-1-0-1.tar.gz')
     os.system('tar xf 7-1-0-1.tar.gz')
     os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7-1-0-1/')

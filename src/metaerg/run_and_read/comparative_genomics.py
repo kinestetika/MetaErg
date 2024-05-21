@@ -102,7 +102,7 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
             input_fasta_file:Path, tmp_dir: Path, fasta_output_dir: Path,
             fraction_id:float=0.5, fraction_overlap:float=0.8,
             min_fraction_orthologues:float=0.0,
-            min_fraction_of_taxa_represented:float=0.1, min_taxa_represented:float=3,
+            min_fraction_of_taxa_represented:float=0.0, min_taxa_represented:float=3,
             include_paralogues_in_fasta_output=True, file_extension:str='.faa'):
     unique_taxa = {taxon for taxon in seq_id_2_taxon}
     context.log(f'Now clustering sequences in {input_fasta_file}...')
@@ -148,7 +148,7 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
     accepted_cluster_count = 0
     sequences_clustered_count = 0
     taxon_representaton = Counter()
-    final_min_taxpon_threshold = max(min_taxa_represented, min_fraction_of_taxa_represented * len(unique_taxa))
+    final_min_taxon_threshold = max(min_taxa_represented, min_fraction_of_taxa_represented * len(unique_taxa))
     with MMSeqsClusterParser(cluster_file_tsv, seq_id_2_taxon, blast_scores) as reader:
         for cluster in reader:
             cluster.seq_type = file_extension
@@ -160,7 +160,7 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
             cluster.selection_omega = -1  # w = ka / ks (orthologous members only)
             cluster.selection_omega_quantile = -1  # quantile of median w, 0 = purifying, 9 = diversifying
             if cluster.fraction_orthologues < min_fraction_orthologues \
-                    or len(cluster.taxa) < final_min_taxpon_threshold\
+                    or len(cluster.taxa) < final_min_taxon_threshold\
                     or cluster.error:
                 error_count += cluster.error
                 for seq_id in cluster.seq_ids:
@@ -180,7 +180,12 @@ def cluster(seq_id_2_taxon: list, cluster_list: list,
                 sequences_clustered_count += len(cluster.seq_ids)
             cluster.taxa = set()  # reset taxa, recoded numbers will be replaced with original filenames
 
-    context.log(f'Accepted {accepted_cluster_count} clusters in total, rejected {rejected_cluster_count} because <{final_min_taxpon_threshold} taxa represented or too many ({(1-min_fraction_orthologues):.1%}) paralogues, {error_count} due to lacking mmseqs alignments.')
+    context.log(f'Accepted {accepted_cluster_count} clusters in total, rejected {rejected_cluster_count} because <{final_min_taxon_threshold} taxa represented or too many ({(1-min_fraction_orthologues):.1%}) paralogues, {error_count} due to lacking mmseqs alignments.')
+    if accepted_cluster_count == 0 or not cluster_list:
+        context.log(f'Fatal problem in comparative genomics analysis of {file_extension} files - no sets of homologous '
+                    f'genes were acceptable. This happens when too few genomes or MAGs were included in the analysis or '
+                    f'data quality is very poor.')
+        return
     context.log(f'Average percent id among all clusters: {percent_id/accepted_cluster_count:.1%}')
     # filter out taxa with poor representaton
     poorly_represented_taxa = {t for t in unique_taxa if taxon_representaton[t] < 0.2 * len(cluster_list)}
@@ -596,6 +601,10 @@ def run(genome_dict: dict, cluster_window_size: int = 4, min_match_score: float 
             fasta_output_dir=rna_clusters_dir,
             fraction_id=0.5,
             file_extension='.fna')
+    if not cluster_list:
+        context.log('No acceptable sets of homologous genes found. Aborting comparative genomics analysis.')
+        return
+
     align_aa_clusters(cluster_list, cds_clusters_alignment_dir)
     save_clusters_as_nt_fasta_and_compute_codon_bias(cluster_list, taxa, cds_clusters_nt_dir)
     estimate_selection_pressure(cluster_list, cds_clusters_alignment_dir, cds_clusters_nt_dir)

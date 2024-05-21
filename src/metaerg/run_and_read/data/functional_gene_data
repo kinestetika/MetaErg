@@ -696,7 +696,7 @@ cd01678|cd01677|COG1882 Pyruvate formate lyase
 >Metabolism, Phosphonate Biosynthesis
 1 TIGR02320 Phosphoenolpyruvate mutase, PepM
 2 TIGR03297 Phosphonopyruvate decarboxylase, Ppd/AepY
-3 cd08182 Hydroxyethylphosphoate dehydrogenase HepD/PhpC
+3 cd08182 Hydroxyethylphosphoate dehydrogenase, HepD/PhpC
 4 TIGR03405 Phosphonate-associated iron-containing alcohol dehydrogenase
 
 >Metabolism, Phosphonate Degradation, Generic Pathway
