@@ -165,7 +165,7 @@ def install_functional_gene_databases():
     with open(hmm_dir / 'bdor.hmm', 'w') as writer:
         for hmm_file in sorted((bdor_dir / 'Cytbd_HMM_2020_paper_version').glob('*.hmm')):
             os.system(f'sed -i "s|^NAME.*|NAME  bdor_{hmm_file.stem}|" {hmm_file}')
-            context.run_external(f'/bio/bin/hmmer3/bin/hmmconvert {hmm_file}', stdout=writer)
+            context.run_external(f'hmmconvert {hmm_file}', stdout=writer)
 
     # fetch heme copper oxidase hmms
     hco_dir = hmm_dir / 'hco'
