@@ -1,4 +1,4 @@
-## metaerg.py, version 2.5.9
+## metaerg.py, version 2.5.10
 
 Metaerg.py annotates genomes or sets of mags/bins from microbial ecosystems (bacteria, archaea, viruses). Input data 
 consists of nucleotide fasta files, one per genome or mag, each with one or more contigs. Output files with annotations 
@@ -96,7 +96,7 @@ You can use the following arguments when running metaerg:
 --min_contig_length     Only annotate contigs that are longer than the specified length. 
                         Default: 0.
 --cpus                  Number of threads used for annotation. Default: threads available 
-                        on the system / 2.
+                        on the system.
 --mode                  Use "--mode contig" to annotate contigs individually instead of assuming they
                         are part of a genome, MAG or bin. When using this option, metaerg will not
                         run repeatscout and will run prodigal in metagenome mode. Use the option
@@ -166,7 +166,8 @@ You can use the following arguments when running metaerg:
                         database. It needs this to build its prokaryote blast database.
 --install_deps          Use this argument to install all helper programs on your system. You need
                         to follow this argument with an installation dir, where you want to have
-                        the programs installed.
+                        the programs installed. Optionally, you can follow the dir with a comma
+                        followed by the names of the programs you would like to install:
 --padloc_database       Use optionally with --install_deps if you want this database to be in a
                         non-default place/filesystem. Afterward, use --create_database D to
                         actually download and install the padloc database.
@@ -217,7 +218,7 @@ If you install metaerg's helper programs this way, before running metaerg you ne
 ## Database
 The database was created from the following sources:
 * [gtdbtk](https://ecogenomics.github.io/GTDBTk/index.html) is used for its taxonomy
-* NCBI annotations of >40K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server. 
+* NCBI annotations of >60K representative archael and bacterial genomes present in gtdb are sourced directly from the ncbi ftp server.
 * NCBI (refseq) annotations of viral genes are obtained from [viral refseq](https://support.nlm.nih.gov/knowledgebase/article/KA-03474/en-us).
 * For Eukaryotes, for each taxon within Amoebozoa, Ancyromonadida, Apusozoa, Breviatea, CRuMs, Cryptophyceae, Discoba, Glaucocystophyceae, Haptista, Hemimastigophora, Malawimonadida, Metamonada, Rhodelphea, Rhodophyta, Sar, Aphelida, Choanoflagellata, Filasterea, Fungi, Ichthyosporea, Rotosphaeridagenomes, one genome is added to the database using [ncbi-datasets](https://www.ncbi.nlm.nih.gov/datasets/). 
 * [RFAM](https://rfam.xfam.org/) and [CDD](https://www.ncbi.nlm.nih.gov/Structure/cdd/cdd.shtml) databases are also used.

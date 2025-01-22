@@ -164,21 +164,24 @@ def main():
         for db_installer in registry.DATABASE_INSTALLER_REGISTRY:
             db_installer()
     elif context.METAERG_ACTION == context.METAERG_ACTION_DOWNLOAD_DATABASE:
+        # tarball instructions
+        # (1) tar -cf metaerg_2_5_10_gtdb_220.tar db_descriptions.txt db_taxonomy.txt db_protein.faa cdd/ hmm/ rfam/
+        # (2) gzip metaerg_2_5_10_gtdb_220.tarls
+        # (3) md5sum
         # upload instructions:
         # (1) >source [credentials file]
         # (2) >swift upload test_container -S 1073741824 large_file
-        context.log('Downloading premade databases, version 2_3.40_gtdb_214, from https://object-arbutus.cloud.computecanada.ca...')
-        database_tarbal_file = context.DATABASE_DIR / 'metaerg_2_3.40_gtdb_214.tar,gz'  # 'metaerg_db_207_v2.tar.gz'
-        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2_3.40_gtdb_214.tar,gz',
+        context.log('Downloading premade databases, version 2_5.10_gtdb_220, from https://object-arbutus.cloud.computecanada.ca...')
+        database_tarbal_file = context.DATABASE_DIR / 'metaerg_2_5_10_gtdb_220.tar.gz'  # 'metaerg_db_207_v2.tar.gz'
+        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2_5_10_gtdb_220.tar.gz',
                          database_tarbal_file)
         #context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
         #                 database_tarbal_file)
         md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
-        print(md5sum)
-        if '76273d10e4e002445d802fe605821a06' == md5sum:  # '48ffe7150711dd6f982e1f3d759e4ff9' == md5sum:
+        if '8ad69fa6901ac215cc8b6553376d465d' == md5sum:  # '76273d10e4e002445d802fe605821a06' == md5sum:
             context.log(f'checksum {md5sum} as expected.')
         else:
-            raise Exception('Downloaded database has incorrect checksum - download failed. Aborting...')
+            raise Exception(f'Downloaded database has incorrect checksum {md5sum} - download failed. Aborting...')
         context.log('Now extracting databases from tar archive...')
         database_archive = tarfile.open(database_tarbal_file)
         database_archive.extractall(context.DATABASE_DIR)

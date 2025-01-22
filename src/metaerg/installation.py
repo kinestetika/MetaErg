@@ -82,7 +82,7 @@ PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
 PATH=$BIOINF_PREFIX/mmseqs/bin/:$PATH
 PATH=$BIOINF_PREFIX/:$PATH
 export PATH
-export DEEPSIG_ROOT=$BIOINF_PREFIX/deepsig
+export DEEPSIG_ROOT=$BIOINF_PREFIX/deepsig-env/deepsig
 export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
 '''
     profile_file = bin_dir / 'profile'
@@ -147,12 +147,12 @@ def install_aragorn(bin_dir:Path):
 
 
 def install_infernal(bin_dir:Path):
-    # (infernal) cmsearch 1.1.4 http://eddylab.org/infernal/
+    # (infernal) cmsearch 1.1.5 http://eddylab.org/infernal/
     os.chdir(bin_dir)
-    os.system('wget -q http://eddylab.org/infernal/infernal-1.1.4-linux-intel-gcc.tar.gz')
-    os.system('tar -xf infernal-1.1.4-linux-intel-gcc.tar.gz')
-    os.system('mv infernal-1.1.4-linux-intel-gcc infernal')
-    os.system('rm infernal-1.1.4-linux-intel-gcc.tar.gz')
+    os.system('wget -q http://eddylab.org/infernal/infernal-1.1.5-linux-intel-gcc.tar.gz')
+    os.system('tar -xf infernal-1.1.5-linux-intel-gcc.tar.gz')
+    os.system('mv infernal-1.1.5-linux-intel-gcc infernal')
+    os.system('rm infernal-1.1.5-linux-intel-gcc.tar.gz')
 
 
 def install_genometools(bin_dir:Path):
@@ -219,21 +219,21 @@ def install_prodigal(bin_dir:Path):
 
 
 def install_diamond(bin_dir:Path):
-    # (diamond) diamond 2.1.8 https://github.com/bbuchfink/diamond
+    # (diamond) diamond 2.1.10 https://github.com/bbuchfink/diamond
     os.chdir(bin_dir)
-    os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.1.8/diamond-linux64.tar.gz')
+    os.system('wget -q https://github.com/bbuchfink/diamond/releases/download/v2.1.10/diamond-linux64.tar.gz')
     os.system('tar -xf diamond-linux64.tar.gz')
     os.system('rm diamond-linux64.tar.gz')
 
 
 def install_ncbi_blast(bin_dir:Path):
-    # (ncbi-blast) blast 2.15.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
+    # (ncbi-blast) blast 2.16.0 https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/
     os.chdir(bin_dir)
-    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.15.0+-x64-linux.tar.gz')
-    os.system('tar -xf ncbi-blast-2.15.0+-x64-linux.tar.gz')
+    os.system('wget -q https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.16.0+-x64-linux.tar.gz')
+    os.system('tar -xf ncbi-blast-2.16.0+-x64-linux.tar.gz')
     os.system('rm ncbi-blast')
-    os.system('mv ncbi-blast-2.15.0+ ncbi-blast')
-    os.system('rm ncbi-blast-2.15.0+-x64-linux.tar.gz')
+    os.system('mv ncbi-blast-2.16.0+ ncbi-blast')
+    os.system('rm ncbi-blast-2.16.0+-x64-linux.tar.gz')
 
 
 def install_hmmer(bin_dir:Path):
@@ -252,11 +252,20 @@ def install_hmmer(bin_dir:Path):
 
 
 def install_deepsig(bin_dir:Path):
-    #(deepsig) https://github.com/BolognaBiocomp/deepsig https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
+    #(deepsig) https://github.com/BolognaBiocomp/deepsig 1.2.5 https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
     # when cuda and a gpu are in use, may need to: "pip install tensorrt" for this to work
     os.chdir(bin_dir)
-    os.system(f'{Path(which("python")).parent / "pip"} install deepsig-biocomp')
+    cli_run(["deepsig-env"])
+    os.chdir("deepsig-env")
+    os.system(f'{Path("bin") / "pip"} install keras==2.15 tensorflow==2.15')
+    os.system(f'{Path("bin") / "pip"} install deepsig-biocomp')
     os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
+    os.chdir(bin_dir)
+    deepsig_wrapper = bin_dir / 'deepsig'
+    deepsig_bin =  bin_dir / 'deepsig-env' / 'bin'
+    with open(deepsig_wrapper, "w") as handle:
+        handle.write(f'#!/bin/sh\n{deepsig_bin / "python"} {deepsig_bin / "antismash"} "$@"\n')
+    os.system('chmod a+x deepsig')
 
 
 def install_mmseqs(bin_dir: Path):

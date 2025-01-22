@@ -146,6 +146,14 @@ def init_pristine_db_dir(dir) -> tuple[Path, Path, Path, Path]:
 
 
 def update_db_descriptions_get_db_id(description, dictionary, file_handle, kingdom):
+    if description.startswith('MAG'):
+        colon_index = description.find(':')
+        if colon_index > 0:
+            description = description[colon_index+2:]
+        else:
+            description = re.compile('MAG\d+ family').sub('hypothetical', description)
+    if 'hypothetical protein' in description:
+        description = 'hypothetical protein'
     try:
         descr_id = dictionary[description]
     except KeyError:
@@ -176,14 +184,17 @@ def install_viral_database():
             open(taxon_db, 'w') as taxon_handle:
         for i in range(1,5):
             f = Path(VIR_DB_DIR, f'viral.{i}.protein.gpff.gz')
-            if not f.exists() or not f.stat().st_size:
-                url = 'ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
-                context.run_external(f'wget -P {VIR_DB_DIR} {url}.{i}.protein.gpff.gz')
+            if context.FORCE_INSTALLATION_OF_DB or not f.exists() or not f.stat().st_size:
+                try:
+                    url = 'ftp.ncbi.nlm.nih.gov/refseq/release/viral/viral'
+                    context.run_external(f'wget -P {VIR_DB_DIR} {url}.{i}.protein.gpff.gz')
+                except:
+                    break
             gene_count = 0
             with gzip.open(f, 'rt') as file_handle:
                 for gb_record in SeqIO.parse(file_handle, "genbank"):
                     if gb_record.annotations['molecule_type'] != 'protein':
-                        context.log("warning: skipping non-coding gene in viral refseq")
+                        context.log("Warning: skipping non-coding gene in viral refseq")
                         continue
                     match = pattern.search(gb_record.description)
                     if match:
@@ -206,6 +217,7 @@ def install_viral_database():
                     seq_record.description = gb_record.description
                     SeqIO.write(seq_record, prot_fasta_out_handle, "fasta")
                     gene_count += 1
+        context.log(f"Successfully downloaded {gene_count} viral proteins from the Viral Refseq database.")
 
 
 @context.register_database_installer
@@ -400,34 +412,34 @@ def install_prokaryote_database():
                 taxon['in_local_cache'] = True
                 download_status = '++'
                 genomes_in_cache_count += 1
-            else:
-                try:
-                    download_status = ''
-                    targets = []
-                    if not future_faa_file.exists():
-                        targets.append(('_protein.faa.gz', future_faa_file))
-                    if not future_rna_file.exists():
-                        targets.append(('_rna_from_genomic.fna.gz', future_rna_file))
-                    success = ncbi_ftp.fetch(accession, targets, context.TEMP_DIR)
-                    if success is not None and future_faa_file in success.keys() and success[future_faa_file]:
-                        download_status += '*'
-                        success_count += 1
-                        taxon['in_local_cache'] = True
-                        genomes_in_cache_count += 1
-                    if success is not None and future_rna_file in success.keys() and success[future_rna_file]:
-                        download_status += '*'
-                    if not download_status:
-                        continue
-                except EOFError:
-                    context.log('FTP Error at NCBI - resetting connection')
-                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
-                    ftp.login()
-                    continue
-                except BrokenPipeError:
-                    context.log('FTP Error at NCBI - resetting connection')
-                    ftp = FTP('ftp.ncbi.nlm.nih.gov')
-                    ftp.login()
-                    continue
+            # else:
+            #     try:
+            #         download_status = ''
+            #         targets = []
+            #         if not future_faa_file.exists():
+            #             targets.append(('_protein.faa.gz', future_faa_file))
+            #         if not future_rna_file.exists():
+            #             targets.append(('_rna_from_genomic.fna.gz', future_rna_file))
+            #         success = ncbi_ftp.fetch(accession, targets, context.TEMP_DIR)
+            #         if success is not None and future_faa_file in success.keys() and success[future_faa_file]:
+            #             download_status += '*'
+            #             success_count += 1
+            #             taxon['in_local_cache'] = True
+            #             genomes_in_cache_count += 1
+            #         if success is not None and future_rna_file in success.keys() and success[future_rna_file]:
+            #             download_status += '*'
+            #         if not download_status:
+            #             continue
+            #     except EOFError:
+            #         context.log('FTP Error at NCBI - resetting connection')
+            #         ftp = FTP('ftp.ncbi.nlm.nih.gov')
+            #         ftp.login()
+            #         continue
+            #     except BrokenPipeError:
+            #         context.log('FTP Error at NCBI - resetting connection')
+            #         ftp = FTP('ftp.ncbi.nlm.nih.gov')
+            #         ftp.login()
+            #         continue
             context.log(f'({count}/{taxa_count}) {download_status} {future_faa_file.name} {taxonomy}')
             # extract_proteins_and_rna_prok(taxon, descr_dict, PROK_DB_DIR)
             for input, output in ((future_faa_file, fasta_protein_db), (future_rna_file, fasta_nt_db)):

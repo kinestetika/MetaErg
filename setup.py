@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name='metaerg',
-    version='2.5.9',
+    version='2.5.10',
     packages=setuptools.find_packages(where='src'),
     url='https://github.com/kinestetika/MetaErg',
     license='MIT',
@@ -27,7 +27,7 @@ setuptools.setup(
     package_data={'': ['functional_gene_data']},
     python_requires='>=3.10',
     # versions for keras and tensorflow are limited because deepsig is currently not compatible with later versions
-    install_requires=['keras == 2.15', 'tensorflow == 2.15', 'biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx', 'virtualenv', 'h5py', 'pyarrow', 'openpyxl', 'tqdm'],
+    install_requires=['biopython', 'ncbi-datasets-pylib', 'pandas', 'httpx', 'virtualenv', 'h5py', 'pyarrow', 'openpyxl', 'tqdm'], #'keras == 2.15', 'tensorflow == 2.15',
     extras_require={  # Optional
         'dev': ['setuptools', 'build', 'twine'],
         'test': []
