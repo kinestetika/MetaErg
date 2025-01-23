@@ -323,8 +323,15 @@ def install_antismash(bin_dir:Path, antismash_database_dir):
 
     # (antismash)
     os.chdir(bin_dir)
+    # depending on the version, antismash may need an older python version
+    os.system('wget https://www.python.org/ftp/python/3.11.9/Python-3.11.9.tgz')
+    os.system('tar -xf Python-3.11.9.tgz')
+    os.chdir('Python-3.11.9')
+    os.system('./configure')
+    os.system('make')
+    os.chdir(bin_dir)
     # need to create antismash virtualenv here
-    cli_run(["antismash-env"])
+    cli_run(["-p", "Python-3.11.9/python", "antismash-env"])
     os.chdir("antismash-env")
     # get python version
     python_version = sys.version.split()[0]

@@ -13,8 +13,6 @@ import httpx
 from metaerg import registry
 from metaerg.datatypes import sqlite
 
-VERSION = "2.5.10"
-
 BASE_DIR = Path()
 TEMP_DIR = Path()
 HTML_DIR = Path()
@@ -97,7 +95,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         instr = install_deps.split(',')
         BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
         LOG_FILE = (BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS / 'log.txt').absolute()
-        log(f'This is metaerg.py {VERSION}')
+        log(f'This is metaerg.py {__version__}')
         log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
             f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
         if len(instr) > 1:
@@ -122,7 +120,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     DATABASE_DIR = Path(database_dir).absolute()
     if download_database:
         LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
-        log(f'This is metaerg.py {VERSION}')
+        log(f'This is metaerg.py {__version__}')
         METAERG_ACTION = METAERG_ACTION_DOWNLOAD_DATABASE
         DATABASE_DIR.mkdir(exist_ok=True)
         log(f'Ready to download databases.')
@@ -133,7 +131,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         exit(1)
     elif create_database:
         LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
-        log(f'This is metaerg.py {VERSION}')
+        log(f'This is metaerg.py {__version__}')
         METAERG_ACTION = METAERG_ACTION_CREATE_DATABASE
         if create_database == 'all':
             DATABASE_TASKS = 'PVEBRCSAD'
@@ -171,7 +169,7 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
         # Now we are ready to create the log file and start logging
         LOG_FILE = (BASE_DIR / 'log.txt').absolute()
-        log(f'This is metaerg.py {VERSION}')
+        log(f'This is metaerg.py {__version__}')
 
         for f in prelim_contig_files:
             if f.exists():

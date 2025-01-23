@@ -233,7 +233,7 @@ def main():
         context.log(f'Now writing all-genomes overview to {excel_file}...')
         write_genomes_to_xls(genome_db_connection, excel_file)
         genome_db_connection.close()
-        context.log(f'Done. Thank you for using metaerg.py {context.VERSION}')
+        context.log(f'Done. Thank you for using metaerg.py {__version__}')
 
 
 if __name__ == "__main__":
