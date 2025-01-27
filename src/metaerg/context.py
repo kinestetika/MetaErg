@@ -12,6 +12,7 @@ import httpx
 
 from metaerg import registry
 from metaerg.datatypes import sqlite
+from metaerg import __version__
 
 BASE_DIR = Path()
 TEMP_DIR = Path()
@@ -40,18 +41,19 @@ ANNOTATOR_STATUS = {'antismash': RUN_ANNOTATOR,
                     'cdd': RUN_ANNOTATOR,
                     'checkm': RUN_ANNOTATOR,
                     'cmscan': RUN_ANNOTATOR,
-                    'crispr_detect': RUN_ANNOTATOR,
+                    #'crispr_detect': RUN_ANNOTATOR,
                     'deepsig': RUN_ANNOTATOR,
                     'diamond_and_blastn': RUN_ANNOTATOR,
                     'hmm': RUN_ANNOTATOR,
-                    'write_genes': RUN_ANNOTATOR,
+                    'minced': RUN_ANNOTATOR,
                     'ltr_harvest': RUN_ANNOTATOR,
                     'padloc': RUN_ANNOTATOR,
                     'prodigal': RUN_ANNOTATOR,
                     'pureseqtm': RUN_ANNOTATOR,
                     'repeat_masker': RUN_ANNOTATOR,
                     'trf': RUN_ANNOTATOR,
-                    'visualization': RUN_ANNOTATOR}
+                    'visualization': RUN_ANNOTATOR,
+                    'write_genes': RUN_ANNOTATOR}
 DELIMITER = ''
 CPUS_PER_GENOME = 0
 CPUS_AVAILABLE = 0
@@ -471,6 +473,7 @@ def register_annotator(define_annotator):
                 program_path = shutil.which(p, mode=os.X_OK)
                 if not program_path:
                     all_programs_in_path = False
+                    break
             if all_programs_in_path:
                 try:
                     param['run'](genome, contig_dict, db_connection_current, result_files)
@@ -502,7 +505,7 @@ def register_annotator(define_annotator):
                 if diff[2]:
                     log(f'({genome.name}) {param["annotator_key"]} predicted {diff[1]} features, previously {diff[0]}, with {diff[2]} updates.')
                 else:
-                    log(f'({genome.name}) {param["annotator_key"]} prediction coordinates were identical to previous run.')
+                    log(f'({genome.name}) {param["annotator_key"]} feature coordinates were identical to previous run.')
 
         log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
         return 0

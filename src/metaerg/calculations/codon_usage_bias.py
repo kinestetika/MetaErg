@@ -195,7 +195,7 @@ def compute_codon_pair_bias_for_cds(feature, codon_pair_scores) -> float:
 #         return CUBData(genome_id, 0, 0, 0, 0, 0, 0)
 
 
-def compute_codon_bias_estimate_doubling_time(db_connection):
+def compute_codon_bias_estimate_doubling_time(genome_name, db_connection):
     background_frequencies = compute_codon_frequencies_for_feature_data(db_connection, additional_sql='end - start >= 240')
     cub_ribosomal = [compute_codon_usage_bias_for_feature(rp, background_frequencies)
                                for rp in sqlite.read_all_features(db_connection, type='CDS',
@@ -207,10 +207,10 @@ def compute_codon_bias_estimate_doubling_time(db_connection):
         for cds in sqlite.read_all_features(db_connection, type='CDS', additional_sql='end - start >= 240'):
             cds.codon_bias = compute_codon_usage_bias_for_feature(cds, background_frequencies)
             sqlite.update_feature_in_db(db_connection, cds)
-
+        context.log(f'({genome_name}) Estimated a doubling time of {doubling_time:.1f} days based on codon usage bias of {len(cub_ribosomal)} ribosomal proteins.')
         return codon_usage_bias, doubling_time
     else:
-        context.log('Warning: No ribosomomal proteins for genome. Could not estimate codon usage bias and doubling time...')
+        context.log(f'({genome_name}) Warning: No ribosomomal proteins found in genome. Could not estimate codon usage bias and doubling time...')
         return 0, 0
 
 

@@ -2,7 +2,6 @@ from pathlib import Path
 import os
 import sys
 from shutil import which
-from virtualenv import cli_run
 
 
 def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir='', antismash_database_dir=''):
@@ -11,8 +10,8 @@ def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=''
 
     if not todo_list or 'profile' in todo_list:
         create_profile(bin_dir)
-    if not todo_list or 'crisprdetect' in todo_list:
-        install_crisprdetect_plus_deps(bin_dir)
+    if not todo_list or 'minced' in todo_list:
+        install_minced(bin_dir)
     if not todo_list or 'padloc' in todo_list:
         install_padloc(bin_dir, padloc_database_dir)
     if not todo_list or 'aragorn' in todo_list:
@@ -23,8 +22,8 @@ def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=''
         install_genometools(bin_dir)
     if not todo_list or 'trf' in todo_list:
         install_trf(bin_dir)
-    if not todo_list or 'repeatscout' in todo_list:
-        install_repeatscout(bin_dir)
+    if not todo_list or 'repeatmasker' in todo_list:
+        install_repeatmasker(bin_dir)
     if not todo_list or 'prodigal' in todo_list:
         install_prodigal(bin_dir)
     if not todo_list or 'diamond' in todo_list:
@@ -48,7 +47,7 @@ def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir=''
 def check_installation_prereqs():
     # check for required programs
     success = True
-    for cmd in 'git make gcc tar wget perl sed'.split():
+    for cmd in 'git make gcc tar wget perl sed java'.split():
         if cmd_loc := which(cmd):
             print(f'{cmd}: will use {cmd_loc}')
         else:
@@ -67,19 +66,20 @@ def create_profile(bin_dir:Path):
     # >source /home/my_name/bin/metaerg/bin/profile
     # (if that is the path to your installation)
     # PATH=$BIOINF_PREFIX/cd-hit:$PATH
+    # PATH =$BIOINF_PREFIX / CRISPRDetect /:$PATH
+    # PATH =$BIOINF_PREFIX/emboss/bin:$PATH
     profile = f'''
 export BIOINF_PREFIX={bin_dir}
 PATH=$BIOINF_PREFIX/infernal/binaries:$PATH
 PATH=$BIOINF_PREFIX/hmmer2/src:$PATH
-PATH=$BIOINF_PREFIX/repeatscout:$PATH
-PATH=$BIOINF_PREFIX/repeatmasker:$PATH
 PATH=$BIOINF_PREFIX/hmmer3/bin:$PATH
 PATH=$BIOINF_PREFIX/ncbi-blast/bin:$PATH
-PATH=$BIOINF_PREFIX/emboss/bin:$PATH
 PATH=$BIOINF_PREFIX/padloc/bin:$PATH
-PATH=$BIOINF_PREFIX/CRISPRDetect/:$PATH
 PATH=$BIOINF_PREFIX/PureseqTM_Package/:$PATH
 PATH=$BIOINF_PREFIX/mmseqs/bin/:$PATH
+PATH=$BIOINF_PREFIX/minced:$PATH
+PATH=$BIOINF_PREFIX/repeatmasker:$PATH
+PATH=$BIOINF_PREFIX/repeatscout:$PATH
 PATH=$BIOINF_PREFIX/:$PATH
 export PATH
 export DEEPSIG_ROOT=$BIOINF_PREFIX/deepsig-env/deepsig
@@ -95,29 +95,14 @@ export R_LIBS=$BIOINF_PREFIX/r:$R_LIBS
     print(os.environ["PATH"])
 
 
-def install_crisprdetect_plus_deps(bin_dir:Path):
-    # (crisprdetect) crisprdetect 2.4 https://github.com/davidchyou/CRISPRDetect_2.4/tree/master
-    # first we need emboss
-    os.chdir(bin_dir)
-    os.system("wget -m 'ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz'")
-    os.system('mv emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz .')
-    os.system('rm -r emboss.open-bio.org')
-    os.system('tar -zxf emboss-latest.tar.gz')
-    os.system('rm emboss-latest.tar.gz')
-    os.chdir('EMBOSS-6.6.0/')
-    os.system(f'./configure --without-x --prefix={bin_dir / "emboss"}')
+def install_minced(bin_dir: Path):
+    os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
+    os.system('tar -xf 0.4.2.tar.gz')
+    os.chdir('minced-0.4.2')
     os.system('make')
-    os.system(f'make install')
     os.chdir(bin_dir)
-    os.system('rm -rf EMBOSS-6.6.0/')
-    os.system('git clone https://github.com/davidchyou/CRISPRDetect_2.4.git')
-    os.chdir('CRISPRDetect_2.4/')
-    os.system('unzip CRISPRDetect_2.4.zip')
-    os.system('rm CRISPRDetect_2.4.zip')
-    os.system('mv CRISPRDetect_2.4/* .')
-    os.system('chmod a+x seqret RNAfold water clustalw cd-hit-est CRISPRDetect.pl')
-    os.chdir(bin_dir)
-    os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
+    os.system('mv minced-0.4.2 minced')
+    os.system('rm 0.4.2.tar.gz')
 
 
 def install_padloc(bin_dir:Path, padloc_database_dir):
@@ -173,7 +158,7 @@ def install_trf(bin_dir:Path):
     os.system('ln -sf trf409.linux64 trf')
 
 
-def install_repeatscout(bin_dir:Path):
+def install_repeatmasker(bin_dir:Path):
     # (RepeatScout) RepeatScout 1.0.5 https://github.com/mmcco/RepeatScout
     os.system('git clone https://github.com/mmcco/RepeatScout.git')
     os.system('mv RepeatScout repeatscout')
@@ -255,16 +240,25 @@ def install_deepsig(bin_dir:Path):
     #(deepsig) https://github.com/BolognaBiocomp/deepsig 1.2.5 https://academic.oup.com/bioinformatics/article/34/10/1690/4769493
     # when cuda and a gpu are in use, may need to: "pip install tensorrt" for this to work
     os.chdir(bin_dir)
-    cli_run(["deepsig-env"])
+    # deepsig needs an older python version
+    os.system('wget https://www.python.org/ftp/python/3.8.20/Python-3.8.20.tgz')
+    os.system('tar -xf Python-3.8.20.tgz')
+    os.chdir('Python-3.8.20')
+    os.system('./configure')
+    os.system('make')
+    os.chdir(bin_dir)
+    os.system('rm Python-3.8.20.tgz')
+    # need to create deepsig virtualenv here
+    os.system('python -m virtualenv -v -p Python-3.8.20/python deepsig-env')
     os.chdir("deepsig-env")
-    os.system(f'{Path("bin") / "pip"} install keras==2.15 tensorflow==2.15')
-    os.system(f'{Path("bin") / "pip"} install deepsig-biocomp')
+    #os.system(f'{Path("bin") / "pip"} install tensorrt')  # keras==2.15 tensorflow==2.15
+    os.system(f'{Path("bin") / "python"} -m pip install deepsig-biocomp')
     os.system('git clone https://github.com/BolognaBiocomp/deepsig.git')
     os.chdir(bin_dir)
     deepsig_wrapper = bin_dir / 'deepsig'
     deepsig_bin =  bin_dir / 'deepsig-env' / 'bin'
     with open(deepsig_wrapper, "w") as handle:
-        handle.write(f'#!/bin/sh\n{deepsig_bin / "python"} {deepsig_bin / "antismash"} "$@"\n')
+        handle.write(f'#!/bin/sh\n{deepsig_bin / "python"} {deepsig_bin / "deepsig"} "$@"\n')
     os.system('chmod a+x deepsig')
 
 
@@ -272,6 +266,7 @@ def install_mmseqs(bin_dir: Path):
     os.chdir(bin_dir)
     os.system('wget https://mmseqs.com/latest/mmseqs-linux-avx2.tar.gz')
     os.system('tar xvfz mmseqs-linux-avx2.tar.gz')
+    os.system('rm mmseqs-linux-avx2.tar.gz')
 
 
 def install_famsa(bin_dir: Path):
@@ -330,18 +325,19 @@ def install_antismash(bin_dir:Path, antismash_database_dir):
     os.system('./configure')
     os.system('make')
     os.chdir(bin_dir)
+    os.system('rm Python-3.11.9.tgz')
     # need to create antismash virtualenv here
-    cli_run(["-p", "Python-3.11.9/python", "antismash-env"])
+    os.system('python -m virtualenv -p Python-3.11.9/python antismash-env')
     os.chdir("antismash-env")
     # get python version
-    python_version = sys.version.split()[0]
-    final_dot_index = python_version.rfind('.')
-    python_version = python_version[0:final_dot_index]
+    #python_version = sys.version.split()[0]
+    #final_dot_index = python_version.rfind('.')
+    #python_version = python_version[0:final_dot_index]
     # install and set up database dir
-    antismash_database_python_dir = Path('lib') / f'python{python_version}' / 'site-packages' / 'antismash' / 'databases'
+    antismash_database_python_dir = Path('lib') / 'python3.11' / 'site-packages' / 'antismash' / 'databases'
     os.system('wget https://github.com/antismash/antismash/archive/refs/tags/7-1-0-1.tar.gz')
     os.system('tar xf 7-1-0-1.tar.gz')
-    os.system(f'{Path("bin") / "pip"} install --upgrade ./antismash-7-1-0-1/')
+    os.system(f'{Path("bin") / "python"} -m pip install --upgrade ./antismash-7-1-0-1/')
     os.system('rm -rf 7-1-0-1.tar.gz antismash-7-1-0-1/') # may need to remove: antismash-6.1.1
     antismash_bin =  bin_dir / 'antismash-env' / 'bin'
 
@@ -372,15 +368,6 @@ def install_antismash(bin_dir:Path, antismash_database_dir):
     #os.chdir(bin_dir)
     #os.system('mv cd-hit-v4.8.1-2019-0228 cd-hit')
     #os.system('rm cd-hit-v4.8.1-2019-0228.tar.gz')
-
-    # # (minced) minced 0.4.2 https://github.com/ctSkennerton/minced
-    # os.system('wget -q https://github.com/ctSkennerton/minced/archive/refs/tags/0.4.2.tar.gz')
-    # os.system('tar -xf 0.4.2.tar.gz')
-    # os.chdir('minced-0.4.2')
-    # os.system('make')
-    # os.chdir(bin_dir)
-    # os.system('mv minced-0.4.2 minced')
-    # os.system('rm 0.4.2.tar.gz')
 
     # we also need the vienna RNA suite
     #os.system('wget https://www.tbi.univie.ac.at/RNA/download/sourcecode/2_6_x/ViennaRNA-2.6.3.tar.gz')
@@ -425,4 +412,39 @@ def install_antismash(bin_dir:Path, antismash_database_dir):
     #     os.system('chmod a+x tmhmm-2.0c/bin/tmhmm')
     #     os.system('rm tmhmm-2.0c.Linux.tar.gz')
     #     os.system('ln -s tmhmm-2.0c tmhmm')
+
+# def install_crisprdetect_plus_deps(bin_dir:Path):
+#     # (crisprdetect) crisprdetect 2.4 https://github.com/davidchyou/CRISPRDetect_2.4/tree/master
+#     # first we need emboss
+#     os.chdir(bin_dir)
+#     os.system("wget -m 'ftp://emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz'")
+#     os.system('mv emboss.open-bio.org/pub/EMBOSS/emboss-latest.tar.gz .')
+#     os.system('rm -r emboss.open-bio.org')
+#     os.system('tar -zxf emboss-latest.tar.gz')
+#     os.system('rm emboss-latest.tar.gz')
+#     os.chdir('EMBOSS-6.6.0/')
+#     os.system(f'./configure --without-x --prefix={bin_dir / "emboss"}')
+#     os.system('make')
+#     os.system(f'make install')
+#     os.chdir(bin_dir)
+#     os.system('rm -rf EMBOSS-6.6.0/')
+#     os.system('git clone https://github.com/davidchyou/CRISPRDetect_2.4.git')
+#     os.chdir('CRISPRDetect_2.4/')
+#     os.system('unzip CRISPRDetect_2.4.zip')
+#     os.system('rm CRISPRDetect_2.4.zip')
+#     os.system('mv CRISPRDetect_2.4/* .')
+#     os.system('chmod a+x seqret RNAfold water clustalw cd-hit-est CRISPRDetect.pl')
+#     os.chdir(bin_dir)
+#     os.system('mv CRISPRDetect_2.4/ CRISPRDetect')
+
+# def install_repeater(bin_dir:Path):
+#     # (repeater) 2 https://github.com/rkalendar/Repeater
+#     os.chdir(bin_dir)
+#     os.system('git clone https://github.com/rkalendar/Repeater.git')
+#     repeater_wrapper = bin_dir / 'repeater'
+#     repeater_path =  bin_dir / 'Repeater' / 'dist'
+#     with open(repeater_wrapper, "w") as handle:
+#         handle.write(f'#!/bin/sh\njava -jar {bin_dir / "Repeater" / "dist" / "Repeater2.jar"} "$@"\n')
+#     os.system(f'chmod a+x {repeater_wrapper}')
+#
 

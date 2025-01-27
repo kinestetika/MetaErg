@@ -18,24 +18,7 @@ ANNOTATOR_KEY = 'cdd'
 
 def _run_programs(genome, contig_dict, db_connection, result_files):
     cds_aa_file = context.spawn_file('cds.faa', genome.name)
-    cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd_NCBI')
-    # if context.CPUS_PER_GENOME > 1:
-    #     split_fasta_files = fasta.write_features_to_fasta(db_connection, 'aa', cds_aa_file, targets=('CDS',),
-    #                                                            split=context.CPUS_PER_GENOME)
-    #     split_cdd_files = [Path(result_files[0].parent, f'{result_files[0].name}.{i}')
-    #                        for i in range(len(split_fasta_files))]
-    #     with ProcessPoolExecutor(max_workers=context.CPUS_PER_GENOME) as executor:
-    #         for split_input, split_output in zip(split_fasta_files, split_cdd_files):
-    #             executor.submit(context.run_external, f'rpsblast -db {cdd_database} -query {split_input} '
-    #                                                   f'-out {split_output} -outfmt 6 -evalue 1e-7')
-    #
-    #     with open(result_files[0], 'wb') as output:
-    #         for split_input_file, split_output_file in zip(split_fasta_files, split_cdd_files):
-    #             with open(split_output_file, 'rb') as input:
-    #                 shutil.copyfileobj(input, output)
-    #             split_input_file.unlink()
-    #             split_output_file.unlink()
-    # else:
+    cdd_database = Path(context.DATABASE_DIR, 'cdd', 'Cdd')
     context.run_external(f'rpsblast -db {cdd_database} -query {cds_aa_file} -out {result_files[0]} -outfmt 6 -evalue 1e-7'
                          f' -num_threads {context.CPUS_PER_GENOME}')
 
@@ -100,7 +83,7 @@ def run_and_read_cdd():
              'annotator_key': ANNOTATOR_KEY,
              'purpose': 'function prediction using RPSBlast and the conserved domain database',
              'programs': ('rpsblast',),
-             'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd_NCBI.pal')),
+             'databases': (Path('cdd', 'cddid.tbl'), Path('cdd', 'Cdd.pal')),
              'result_files': ('cdd',),
              'run': _run_programs,
              'read': _read_results,
@@ -113,14 +96,14 @@ def install_cdd_database():
        return
     cdd_dir = context.DATABASE_DIR / 'cdd'
     context.log(f'Installing the conserved domain database to {cdd_dir}...')
-    cdd_index = cdd_dir / 'cddid.tbl'
     if context.FORCE_INSTALLATION_OF_DB or not cdd_dir.exists():
-        shutil.rmtree(cdd_dir)
+        if cdd_dir.exists():
+            shutil.rmtree(cdd_dir)
         cdd_dir.mkdir(exist_ok=True, parents=True)
         context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/cddid.tbl.gz')
-        context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/bitscore_specific_3.21.txt')
-        context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_NCBI_LE.tar.gz')
-        context.run_external(f'gunzip {cdd_dir}.cddid.tbl.gz')
-        context.run_external(f'gunzip {cdd_dir}.Cdd_NCBI_LE.tar.gz')
+        context.run_external(f'wget -P {cdd_dir} https://ftp.ncbi.nih.gov/pub/mmdb/cdd/little_endian/Cdd_LE.tar.gz')
+        context.run_external(f'gunzip {cdd_dir / "cddid.tbl.gz"}')
+        context.run_external(f'tar -C {cdd_dir} -xf {cdd_dir / "Cdd_LE.tar.gz"}')
+        (cdd_dir / "Cdd_LE.tar.gz").unlink()
     else:
         context.log(f'{cdd_dir} already exists, use --force all to overwrite existing installation of cdd')

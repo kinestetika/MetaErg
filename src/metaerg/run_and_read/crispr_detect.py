@@ -37,7 +37,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     return count
 
 
-@context.register_annotator
+#@context.register_annotator
 def run_and_read_crispr_detect():
     return ({'pipeline_position': 2,
              'annotator_key': ANNOTATOR_KEY,

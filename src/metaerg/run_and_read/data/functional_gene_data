@@ -1,54 +1,58 @@
 >Translation, Ribosome
-1 CHL00129 Ribosomal protein L1
-2 CHL00052 Ribosomal protein L2
-3 CHL00143 Ribosomal protein L3
-4 CHL00147 Ribosomal protein L4
-5 CHL00078 Ribosomal protein L5
-6 CHL00140 Ribosomal protein L6
-7 CHL00160 Ribosomal protein L9
-8 CHL00127 Ribosomal protein L11
-9 CHL00083 Ribosomal protein L12
-10 CHL00159 Ribosomal protein L13
-11 CHL00057 Ribosomal protein L14
-12 TIGR01071 Ribosomal protein L15
-13 CHL00044 Ribosomal protein L16
-14 CHL00139 Ribosomal protein L18
-15 CHL00084 Ribosomal protein L19
-16 CHL00068 Ribosomal protein L20
-17 CHL00075 Ribosomal protein L21
-18 CHL00034 Ribosomal protein L22
-19 CHL00030 Ribosomal protein L23
-20 CHL00141 Ribosomal protein L24
-21 PRK05943 Ribosomal protein L25
-22 CHL00121 Ribosomal protein L27
-23 CHL00112 Ribosomal protein L28
-24 CHL00154 Ribosomal protein L29
-25 CHL00136 Ribosomal protein L31
-26 CHL00152 Ribosomal protein L32
-27 CHL00104 Ribosomal protein L33
-28 CHL00115 Ribosomal protein L34
-29 CHL00103 Ribosomal protein L35
-30 CHL00029 Ribosomal protein L36
-31 PRK00087 Ribosomal protein S1
-32 CHL00067 Ribosomal protein S2
-33 CHL00048 Ribosomal protein S3
-34 CHL00113 Ribosomal protein S4
-35 CHL00138 Ribosomal protein S5
-36 CHL00123 Ribosomal protein S6
-37 CHL00053 Ribosomal protein S7
-38 CHL00042 Ribosomal protein S8
-39 CHL00079 Ribosomal protein S9
-40 CHL00135 Ribosomal protein S10
-41 CHL00041 Ribosomal protein S11
-42 CHL00051 Ribosomal protein S12
-43 CHL00137 Ribosomal protein S13
-44 CHL00074 Ribosomal protein S14
-45 CHL00027 Ribosomal protein S15
-46 CHL00005 Ribosomal protein S16
-47 CHL00142 Ribosomal protein S17
-48 CHL00077 Ribosomal protein S18
-49 CHL00050 Ribosomal protein S19
-50 CHL00102 Ribosomal protein S20
+1 CHL00129|COG0081|pfam00687 Ribosomal protein L1
+2 CHL00052|COG0090 Ribosomal protein L2
+3 CHL00143|COG0087|cl46849|pfam00297 Ribosomal protein L3
+4 CHL00147|COG0088|pfam00573 Ribosomal protein L4
+5 CHL00078|COG0094|pfam00281 Ribosomal protein L5
+6 CHL00140|COG0097|pfam00347 Ribosomal protein L6
+9 COG0222|cl46846|pfam00542|CHL00083 Ribosomal protein L7/12
+7 CHL00160|COG0359|TIGR00158|pfam01281|pfam03948 Ribosomal protein L9
+52 COG0244|cd00379|cd05797|pfam00466 Ribosomal protein L10
+8 CHL00127|COG0080|COG2264|cd00349|pfam00298 Ribosomal protein L11
+10 CHL00159|COG0102|cd00392|pfam00572 Ribosomal protein L13
+11 CHL00057|COG0093|cl00328|pfam00238 Ribosomal protein L14
+12 TIGR01071|COG0200 Ribosomal protein L15
+13 CHL00044|COG0197|pfam00252 Ribosomal protein L16
+14 COG0203|cl00356|pfam01196 Ribosomal protein L17
+15 CHL00139|COG0256 Ribosomal protein L18
+16 CHL00084|COG0335|pfam01245 Ribosomal protein L19
+17 CHL00068|COG0292|cd07026|cl00393|pfam00453 Ribosomal protein L20
+18 CHL00075|COG0261 Ribosomal protein L21
+19 CHL00034|COG0091|cd00336|pfam00237 Ribosomal protein L22
+20 CHL00030|COG0089|pfam00276 Ribosomal protein L23
+21 CHL00141|COG0198 Ribosomal protein L24
+22 PRK05943|COG1825|TIGR00731|cl00787 Ribosomal protein L25
+23 CHL00121|COG0211|cl46636 Ribosomal protein L27
+24 CHL00112|COG0227|cl46649 Ribosomal protein L28
+25 CHL00154|COG0255 Ribosomal protein L29
+53 COG1841|cd01658|pfam00327 Ribosomal protein L30
+26 CHL00136|COG0254|pfam01197 Ribosomal protein L31
+27 CHL00152|COG0333|pfam01655 Ribosomal protein L32
+28 CHL00104|COG0267|cl00383|pfam00471 Ribosomal protein L33
+29 CHL00115|COG0230|cl00370|pfam00468 Ribosomal protein L34
+30 CHL00103|COG0291|pfam01632 Ribosomal protein L35
+31 CHL00029|COG0257|cl46668|pfam00444 Ribosomal protein L36
+32 PRK00087|COG0539 Ribosomal protein S1
+33 CHL00067|COG0052|pfam00318 Ribosomal protein S2
+34 CHL00048|COG0092 Ribosomal protein S3
+35 CHL00113|q|pfam00163 Ribosomal protein S4
+36 CHL00138|COG0098|pfam00333|pfam03719 Ribosomal protein S5
+37 CHL00123|COG0360|pfam01250 Ribosomal protein S6
+38 CHL00053|COG0049|pfam00177 Ribosomal protein S7
+39 CHL00042|COG0096|pfam00410|cl00330 Ribosomal protein S8
+40 CHL00079|COG0103|pfam00380 Ribosomal protein S9
+41 CHL00135|COG0051|pfam00338 Ribosomal protein S10
+42 CHL00041|COG0100|pfam00411 Ribosomal protein S11
+43 CHL00051|COG0048|pfam00164 Ribosomal protein S12
+44 CHL00137|COG0099|pfam00416 Ribosomal protein S13
+45 CHL00074|COG0199|pfam00253 Ribosomal protein S14
+46 CHL00027|pfam00312 Ribosomal protein S15
+47 CHL00005|COG0228|cl46646|pfam00886 Ribosomal protein S16
+48 CHL00142|COG0186|pfam00366 Ribosomal protein S17
+49 CHL00077|COG0238|cl46633|pfam01084 Ribosomal protein S18
+50 CHL00050|COG0185|pfam00203 Ribosomal protein S19
+51 CHL00102|COG0268 Ribosomal protein S20
+55 CHL00083|cl00529|pfam01165 Ribosomal protein S21
 
 >Translation, RNA polymerase
 1 CHL00013 RNA polymerase subunit alpha, RpoA
@@ -85,7 +89,7 @@ TIGR00869 Preprotein translocase, subunit sec62
 
 >Transport, Siderophore, Peptide, etc Import
 1 COG0810|PRK10819|TIGR01352 Periplasmic protein TonB
-1 TIGR02794|COG0823|PRK04922|PRK00178 Periplasmic protein TolA/B
+1 TIGR02794|COG0823 Periplasmic protein TolA/B
 2 TIGR02797|TIGR02805|COG0811|TIGR02796|pfam01618 Inner membrane protein ExbB/MotA/TolQ
 3 TIGR02803|TIGR02804|COG0848|pfam02472|PRK11267 Inner membrane protein ExbD/TolR
 4 NF038079 TonB-dependent receptor, siderophores, myxochelin MxcH family
@@ -109,7 +113,7 @@ TIGR00869 Preprotein translocase, subunit sec62
 4 COG0649|PRK06075|PRK12322 NADH:ubiquinone oxidoreductase 49 kD subunit, NuoD
 5 COG1905|PRK12373|PRK07539 NADH:ubiquinone oxidoreductase 24 kD subunit, NuoE
 6 COG1894|PRK13596|PRK11278 NADH:ubiquinone oxidoreductase, NADH-binding 51 kD subunit, NuoF
-7 COG1034|PRK08166|PRK08493 NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit, NuoG
+7 COG1034|PRK08493 NADH dehydrogenase/NADH:ubiquinone oxidoreductase 75 kD subunit, NuoG
 8 COG1005|PRK06076 NADH:ubiquinone oxidoreductase subunit 1, NuoH
 9 COG1143|PRK05888 NADH:ubiquinone oxidoreductase 23 kD subunit. NuoI/Formate hydrogen lyase subunit 6
 10 COG0839|PRK06638 NADH:ubiquinone oxidoreductase subunit 6, NuoJ
@@ -200,7 +204,7 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 2 PRK07353|CHL00118|cd06503 ATP synthase, subunit F0 B-prime
 3 TIGR01260|PRK07354|CHL00061 ATP synthase, subunit F0 C
 4 TIGR00962|PRK09281|CHL00059|COG0056 ATP synthase, subunit F1 alpha
-5 TIGR01039|CHL00060|PRK09280|COG0055 ATP synthase, subunit F1 beta
+5 TIGR01039|CHL00060|COG0055 ATP synthase, subunit F1 beta
 6 TIGR01146|PRK05621|pfam00231|COG0224|cd12151|PRK13423 ATP synthase, F1 subunit gamma
 7 TIGR01145|pfam00213|PRK05758|PRK13429|CHL00119|COG0712 ATP synthase, F1 subunit delta
 8 TIGR01216|CHL00063|PRK00571|COG0355|PRK13446 ATP synthase, F1 subunit epsilon
@@ -245,8 +249,8 @@ CHL00009 Cytochrome b6/f complex, subunit VIII, PetN
 5 PRK10953|TIGR01931 Sulfite reductase (NADPH) flavoprotein alpha-component CysJ
 6 TIGR02041 Sulfite reductase (NADPH) hemoprotein beta-component CysI
 5|6 TIGR02042 Sulfite reductase, ferredoxinsir dependent, Sir
-5 PRK15055|TIGR02910 Anaerobic sulfite reductase subunit A AsrA
-6 PRK08221|TIGR02911 Anaerobic sulfite reductase subunit AsrB
+5 TIGR02910 Anaerobic sulfite reductase subunit A AsrA
+6 TIGR02911 Anaerobic sulfite reductase subunit AsrB
 TIGR02912 Anaerobic sulfite reductase subunit AsrC
 
 >Sulfur Cycle, Sulfide Oxidation, H2S -> Persulfide or sulfur
@@ -278,7 +282,7 @@ TIGR02912 Anaerobic sulfite reductase subunit AsrC
 >Carbon Cycle, Methane Oxidation
 1 pfam14100|TIGR03080|cl21655 Methane/ammonia monooxygenase subunit PmoA/AmoA
 2|3 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
-4 cd19412|TIGR03078|cl04829|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
+4 cd19412|TIGR03078|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
 1 TIGR04550 Soluble methane/ammonia monoxygenase Smmo
 2 TIGR04550 Soluble methane monooxygenase-binding protein MmoD
 3 A0A1W6N1N0|B2HJD1 Soluble methane monooxygenase component A beta chain MmoY
@@ -323,7 +327,7 @@ A0A067BP47|A0A076K2E6|A0A0E1CBI4|A0A0P0DR48|A0A1U6GPM3|A0A1U8KZK1|A0A1U9KWX9|A0A
 >Carbon Cycle, CO2 Fixation via Reductive Pentose Phosphate Cycle (Calvin cycle)
 1 PLN02318|PLN02348|PRK07429|PRK15453|COG3954 Phosphoribulokinase PrkB
 2 CHL00040|COG1850|PRK04208|PRK13475 ribulose-bisphosphate carboxylase (RuBisCO) large subunit RbcL
-3 CHL00130|COG4451|cl29940|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit RbcS
+3 CHL00130|COG4451|PLN02289 ribulose-bisphosphate carboxylase (RuBisCO) small subunit RbcS
 
 >Carbon Cycle, CO2 Fixation via Reductive Citrate (TCA, Arnon-Buchanan) Cycle
 1 COG0674|PRK08367|PRK09622|cd07034 Pyruvate:ferredoxin oxidoreductase alpha subunit PorA
@@ -414,7 +418,7 @@ sBmoZ Undefined hydrocarbon degradation gene sBmoZ
 >Nitrogen Cycle, Nitrification
 1 pfam14100|TIGR03080|cl21655 Methane/ammonia monooxygenase subunit PmoA/AmoA
 2 TIGR03079|cl19551|pfam04744 Methane/ammonia monooxygenase subunit PmoB/AmoB
-3 cd19412|TIGR03078|cl04829|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
+3 cd19412|TIGR03078|pfam04896|cd22188 Methane/ammonia monooxygenase subunit PmoC.AmoC
 1 TIGR04550 Soluble methane/ammonia monoxygenase Smmo
 4 TIGR04392 Hydroxylamine dehydrogenase Hao
 
@@ -522,8 +526,8 @@ A0A0A1DRF3|A0A0M4Q303|A0A126NXW7|B0ULZ7|E6VIG6|E6WMT2|F0QD97|F4CK12|F4CU20|F7ZB2
 2 TIGR01286 Nitrogenase molybdenum-iron protein beta chain NifK
 3 TIGR01862 Nitrogenase component I, alpha chain
 4 TIGR01290 Nitrogenase cofactor biosynthesis protein NifB
-5 PRK14476|TIGR01283|TIGR01285 Nitrogenase molybdenum-cofactor biosynthesis protein NifE/NifN
-6 PRK13232|PRK13233|PRK13234|PRK13235|PRK13236|TIGR01287 Nitrogenase reductase, iron protein NifH
+5 TIGR01283|TIGR01285 Nitrogenase molybdenum-cofactor biosynthesis protein NifE/NifN
+6 PRK13233|TIGR01287 Nitrogenase reductase, iron protein NifH
 7 PRK00810|PRK14102 Nitrogenase stabilizing/protective protein NifW
 
 >Hydrogen Production (Fe-Fe Hydrogenases)
@@ -627,7 +631,7 @@ TIGR03059 Plant photosystem I subunit, PsaO
 17 CHL00128 Photosystem II protein PsbW
 18 CHL00114 Photosystem II protein PsbX
 19 CHL00196|PRK13240 Photosystem II protein PsbY
-20 CHL00082|PRK02576|TIGR03043 Photosystem II protein PsbZ
+20 CHL00082|TIGR03043 Photosystem II protein PsbZ
 21 TIGR03044 Photosystem II protein Psb27
 
 >Light, Proton Pumps
@@ -638,7 +642,7 @@ COG5524|NF038020|cd14965|cd15028 Bacteriorhodopsin and similar
 2 PLN02649|PRK00179|PRK00973|PRK03868|PRK04190|PRK14095|PRK14096|PRK14097|PTZ00430|TIGR02128|cd02218 Glucose-6-phosphate-isomerase
 3 COG4809|COG0205|COG4809|PLN02251|PLN02564|PLN02884|PRK03202|PRK03979|PRK06830|PRK09513|PRK10294|PRK14071|PTZ00287|PTZ00468|TIGR02045|TIGR02477|TIGR02478|TIGR02482|TIGR02483|TIGR03168|TIGR03828 Phosphofructokinase
 4 NF033379|PLN02227|PLN02425|PLN02455|PLN02858|PRK07226|PRK07315|PRK07709|PRK08610|PRK09196|PRK09197|PRK09250|PRK13399|PTZ00019|TIGR01520|TIGR01521 Fructose-bisphosphate aldolase
-5 PLN02429|PLN02561|PRK00042|PRK04302|PRK13962|PRK14565|PRK14566|PRK14567|PRK14905|PRK15492|PTZ00333|TIGR00160 Triosephosphate isomerase
+5 PLN02429|PLN02561|PRK00042|PRK04302|PRK13962|PRK14565|PRK14905|PRK15492|PTZ00333|TIGR00160 Triosephosphate isomerase
 6 PLN00412|PLN02237|PLN02272|PLN02358|PLN03096|PRK04207|PRK07403|PRK07729|PRK08289|PRK08955|PRK15425|PTZ00023|PTZ00353|TIGR01546 Glyceraldehyde-3-phosphate dehydrogenase
 7 COG0126|COG2074|PLN02282|PLN03034|PRK00073|PRK04220|PRK12337|PRK13962|PTZ00005|cl00198 Phosphoglycerate kinase
 8 COG3635|PLN02538|PRK01112|PRK03482|PRK04024|PRK04135|PRK04200|PRK05434|PRK14115|PRK14116|PRK14118|PTZ00122|PTZ00123|TIGR00306|TIGR01258|TIGR01307 Phosphoglycerate mutase
@@ -648,10 +652,10 @@ COG5524|NF038020|cd14965|cd15028 Bacteriorhodopsin and similar
 >Metabolism, Pentose Phosphate pathway
 1 PRK12853|TIGR03554 Glucose-6-phosphate dehydrogenase
 2 COG0363|COG2706|PLN02360|PRK11028|TIGR01198 6-Phosphogluconolactonase
-3 COG0362|COG1023|PRK12490|PTZ00142|TIGR00872|TIGR00873 6-Phosphogluconate dehydrogenase
+3 COG0362|COG1023|PTZ00142|TIGR00872|TIGR00873 6-Phosphogluconate dehydrogenase
 4 PLN02384|PRK00702|PRK05571|COG0120|TIGR00021|TIGR00689 Ribose-5-phosphate isomerase
 5 COG3623|PRK13209|PRK13210|PTZ00170|cd00429|TIGR01163 Ribulose-5-phosphate 3-epimerase
-6 COG0021|PLN02790|PRK05899|PRK12753|PRK12754|PTZ00089|TIGR00232 Transketolase
+6 COG0021|PLN02790|PRK05899|PTZ00089|TIGR00232 Transketolase
 7 COG0176|PRK03343|PRK03903|PRK05269|PRK09533|PRK12309|PRK12346|TIGR00874 Transaldolase
 
 >Metabolism, Citric Acid/Krebs/TCA cycle
@@ -666,14 +670,14 @@ COG5524|NF038020|cd14965|cd15028 Bacteriorhodopsin and similar
 9 COG1249 Pyruvate/2-oxoglutarate dehydrogenase, dihydrolipoamide dehydrogenase (E3) component
 10 COG0074|PRK05678|PTZ00187|TIGR01019 Succinyl-CoA synthetase, alpha subunit, SucD
 11 COG0045|TIGR01016 Succinyl-CoA synthetase, beta subunit, SucC
-12 COG1053|PLN00128|PRK05675|PRK05945|PRK06069|TIGR01811|TIGR01812|TIGR01816 Succinate dehydrogenase (respiratory complex II), flavoprotein subunit SdhA
+12 COG1053|PLN00128|PRK05945|PRK06069|TIGR01811|TIGR01812|TIGR01816 Succinate dehydrogenase (respiratory complex II), flavoprotein subunit SdhA
 13 COG0479|PLN00129|PRK05950|PRK06259|PRK07570|TIGR00384 Succinate dehydrogenase (respiratory complex II), Fe-S protein subunit SdhB
 14 COG2009|PLN00126|PLN00127|PRK09487|TIGR02046 Succinate dehydrogenase (respiratory complex II), cytochrome b subunit SdhC
 15 COG2142|PRK09488|TIGR02968 Succinate dehydrogenase (respiratory complex II), hydrophobic anchor subunit SdhD
 16 COG0114|PLN00134|PRK00485|PRK12425|PRK15389|PRK15390|PRK15391|PRK15392|PTZ00226|cd01362|TIGR00979 Fumarate hydratase
-17 PLN00106|PLN00112|PLN00135|PRK05086|PRK05442|PRK06223|PRK14025|PTZ00117|PTZ00325 Malate dehydrogenase
+17 PLN00106|PLN00112|PLN00135|PRK05442|PRK06223|PRK14025|PTZ00117|PTZ00325 Malate dehydrogenase
 18 TIGR01346|COG2224|PLN02892|PRK06498|PRK15063 Isocitrate Lyase AceA
-19 COG2225|TIGR01344|PLN02626|PRK02999|PRK08951|PRK09255|TIGR01345 Malate synthase AceB
+19 COG2225|TIGR01344|PLN02626|PRK02999|PRK08951|TIGR01345 Malate synthase AceB
 
 >Metabolism, Pyruvate Fermentation
 COG0039|COG1052|NF033901|PLN00105|PLN02602|PRK11197 Lactate dehydrogenase
@@ -714,7 +718,7 @@ cd01678|cd01677|COG1882 Pyruvate formate lyase
 3 PRK10757 Inositol-1-monophosphatase SuhB
 4 COG1260 Myo-inositol-1-phosphate synthase
 5 PLN02438 Inositol-3-phosphate synthase
-6 TIGR04380|cl40708 Inositol 2-dehydrogenase IolG
+6 TIGR04380 Inositol 2-dehydrogenase IolG
 7 PRK04302 Triosephosphate isomerase
 8 TIGR01859 Fructose-1,6-bisphosphate aldolase IolJ
 9 TIGR03396 Phospholipase C, phosphocholine-specific
@@ -774,43 +778,43 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 
 >Motility, Bacterial Flagellum
 1 TIGR03170|COG1261|PRK12786|PRK12617|PRK12618|PRK08515|PRK06005|PRK06804|PRK07018 Flagellar basal body P-ring formation protein FlgA
-2 cl30383|TIGR01396|COG1815|PRK12685|PRK12627|PRK12626|PRK12625|PRK12624|PRK12623|PRK12622|PRK12621|PRK12619|PRK12620|PRK05680|PRK06003|PRK06004|PRK06797|PRK07182 Flagellar basal body rod protein FlgB
+2 cl30383|TIGR01396|COG1815|PRK12685|PRK12627|PRK12626|PRK12624|PRK12623|PRK12622|PRK12621|PRK12619|PRK12620|PRK06003|PRK06004|PRK06797|PRK07182 Flagellar basal body rod protein FlgB
 3 TIGR01395|COG1558|PRK12782|PRK12632|PRK12631|PRK12630|PRK12628|PRK12629|PRK05681|PRK06802 Flagellar basal body rod protein FlgC
-4 pfam03963|cl30617|cl29105|COG1843|PRK09619|PRK09618|PRK05842|PRK06009|PRK06655 Flagellar hook assembly protein FlgD
+4 pfam03963|cl29105|COG1843|PRK09619|PRK09618|PRK05842|PRK06009|PRK06655 Flagellar hook assembly protein FlgD
 5 TIGR02489|COG1749|PRK12637|PRK08425|PRK05682|PRK05841 Flagellar hook protein FlgE
 6 TIGR02490|COG4787|PRK12689|PRK12640|PRK12643|PRK12641|PRK12642 Flagellar basal body rod protein FlgF
-7 TIGR02488|COG4786|PRK12819|PRK12818|PRK12816|PRK12817|PRK12636|PRK12694|PRK12693|PRK12691|PRK12692 Flagellar basal body rod protein FlgG
+7 TIGR02488|COG4786|PRK12819|PRK12818|PRK12816|PRK12817|PRK12636|PRK12693|PRK12692 Flagellar basal body rod protein FlgG
 8 pfam02107|cl19182|COG2063|PRK12788|PRK12698|PRK00249|PRK12407|PRK12697 Flagellar basal body L-ring protein FlgH
 9 pfam02119|cl19280|COG1706|PRK05303|PRK12789 Flagellar basal body P-ring protein FlgI
 10 TIGR02541|COG1705|PRK12790|PRK05684|PRK12713|PRK12712|PRK12711|PRK12709|PRK12710 Flagellar assembly peptidoglycan hydrolase/muramidase FlgJ
-11 pfam02120|cl24001|TIGR02492|COG1256|PRK12715|PRK12714|PRK08871|PRK08471|PRK08147|PRK07739|PRK05683|PRK06665|PRK06799|PRK06945|PRK07191|PRK07521 Flagellar hook-associated protein FlgK
-12 cl30668|TIGR02550|COG1344|PRK14692|PRK12718|PRK08870|PRK08412|PRK08027|PRK07192|PRK07701 Flagellar hook-associated protein FlgL
+11 pfam02120|TIGR02492|COG1256|PRK12715|PRK12714|PRK08871|PRK08471|PRK08147|PRK07739|PRK05683|PRK06665|PRK06799|PRK06945|PRK07191|PRK07521 Flagellar hook-associated protein FlgK
+12 TIGR02550|COG1344|PRK14692|PRK12718|PRK08870|PRK08412|PRK08027|PRK07192|PRK07701 Flagellar hook-associated protein FlgL
 13 pfam04316|cl01052|TIGR03824|COG2747|PRK10810 Negative regulator of flagellin synthesis (Anti-sigma-28 factor) FlgM
 14 pfam05130|cl09176|COG3418|PRK15459 Flagellar/type III secretory pathway chaperone FlgN
 15 pfam17680 Flagellar H-ring protein FlgO
-16 cl24946|pfam16538|pfam16539|pfam16548 Flagellar P-ring protein FlgT
+16 pfam16538|pfam16539|pfam16548 Flagellar P-ring protein FlgT
 17 PRK06819|PRK08026|PRK12805|pfam08884|pfam12445|pfam12613 Flagellin FliC/FljB
 18 COG1345|PRK06664|PRK08453|PRK08724|PRK12765|pfam02465|pfam07195 Flagellar capping protein FliD
 19 COG1677|cl09139|PRK12729|TIGR00205|PRK12728|PRK00253|PRK00732|PRK00790|PRK01482|PRK01699|PRK03907 Flagellar MS ring/basal body protein FliE
-20 COG1766|PRK06007|PRK07193|PRK12800|TIGR00206|cl40738 Flagellar MS ring/basal body protein FliF
+20 COG1766|TIGR00206 Flagellar MS ring/basal body protein FliF
 21 COG1536|TIGR00207|PRK07194|PRK05686 Flagellar motor switch protein FliG
 22 COG1317|PRK13386|PRK06800|PRK06669|PRK06032|PRK05687 Flagellar assembly protein FliH
 23 COG1157|TIGR01026|PRK08972|PRK08927|PRK08472|PRK07960|PRK07721|PRK07196|PRK06793|PRK06002|PRK05688 Flagellar protein export ATPase FliI
 24 COG2882|TIGR02473|PRK07720|PRK05689 Flagella biosynthesis chaperone FliJ
-25 pfam02120|cl38920|cl24001|cd17470|cd17466|PRK10118|COG3144 Flagellar hook-length control protein FliK
+25 pfam02120|cl38920|cd17470|cd17466|PRK10118|COG3144 Flagellar hook-length control protein FliK
 26 COG1580|PRK05696|PRK05697|PRK06654|PRK07021|PRK07718|PRK08455|PRK12785|cl00681|pfam03748 Flagellar MS ring/basal body-associated protein FliL
 27 pfam16973|pfam01052|TIGR02480|pfam02154|cd17908|TIGR01397|COG1868|PRK06666|PRK12795|PRK08916|PRK08983 Flagellar motor switch protein FliM
 28 COG1886|PRK05698|PRK06033|PRK07963|PRK08433 Flagellar motor switch/type III secretory pathway protein FliN
 29 pfam00813|cl00593|TIGR01103|COG3190|PRK11486|PRK12430|TIGR03500|cl01247|pfam04347 Flagellar biogenesis protein FliO
 30 pfam01313|cl00867|TIGR01402|COG1987|PRK05700|PRK06010|PRK12781 Flagellar biosynthesis protein FliQ
 31 pfam01311|cl00734|COG1684|PRK05701|PRK12780|TIGR01400 Flagellar biosynthesis protein FliR
-32 COG1516|PRK05685|TIGR00208|cd16098|cl00654|pfam02561 Flagellin-specific chaperone FliS
+32 COG1516|TIGR00208|cd16098|cl00654|pfam02561 Flagellin-specific chaperone FliS
 33 PRK10548|cl05125|pfam05400 Flagellar biosynthesis regulatory protein FliT
 34 COG1298|PRK06012|PRK12792|TIGR01398|PRK12773|PRK13109 Flagellar type III secretion system protein FlhA
 35 TIGR00328|COG1377|PRK05702|PRK12468 Flagellar type III secretion system protein FlhB
 36 pfam06366 Flagellar protein FlhE
 37 COG1291|PRK08124|PRK08456|PRK09110|PRK12482|TIGR03818|cl00568|pfam01618 Flagellar motor protein MotA
-38 TIGR03818|COG1360|PRK05996|PRK06667|PRK06925|PRK07734|PRK08457|PRK08944|PRK09041|PRK12799|cl39081 Flagellar motor protein MotB
+38 TIGR03818|COG1360|PRK05996|PRK06667|PRK06925|PRK07734|PRK08457|PRK08944|PRK09041|PRK12799 Flagellar motor protein MotB
 39 PRK09109 Flagellar motor protein MotC
 40 PRK09038 Flagellar motor protein MotD
 41 COG3334 Flagellar motility protein MotE, a chaperone for MotC folding
@@ -823,7 +827,7 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 4 COG4968 Pilus assembly protein PilE
 5 COG3063 Pilus assembly protein PilF
 6 TIGR01175|COG4972|pfam07419|pfam11104 Inner membrane associated protein PilM
-7 COG3166|cl19830|pfam05137|pfam11104 Cytoplasmic pilus assembly protein PilN
+7 COG3166|pfam05137|pfam11104 Cytoplasmic pilus assembly protein PilN
 8 COG3167|cl01234|pfam04350|pfam04351 Pilus assembly protein PilO
 9 TIGR02515|TIGR02519|TIGR02520 Type IV pilus outer membrane pore PilQ, Type II general secretory pathway PulD
 
@@ -835,11 +839,11 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 >Transport, Protein Secretion, Type II
 1 COG1450|TIGR02517|cl39077 Type II secretion outer membrane protein GspD/PulD
 2 PRK09681|TIGR01713|pfam11356|COG3031 Type II secretion periplasmic linker GspC
-3 TIGR01710|cl29224|pfam11773 Type II secretion periplasmic protein/pilin GspG/PulG
+3 TIGR01710|pfam11773 Type II secretion periplasmic protein/pilin GspG/PulG
 4 TIGR01708|pfam12019 Type II secretion periplasmic protein/pilin GspH/PulH
 5 TIGR01707 Type II secretion periplasmic protein GspI/PulI
 6 TIGR01711 Type II secretion periplasmic protein GspJ/PulJ
-7 NF037980|COG3156|cl38996|pfam03934 Type II secretion periplasmic protein/psuedopilin GspK/PulK
+7 NF037980|COG3156|pfam03934 Type II secretion periplasmic protein/psuedopilin GspK/PulK
 8 TIGR02120|COG1459 Type II secretion membrane protein GspF/PulF
 9 TIGR01709|COG3297 Type II secretion membrane-associated protein GspL
 10 pfam04612|pfam10741|TIGR04412 Type II secretion membrane-associated protein GspM
@@ -852,22 +856,22 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 4 TIGR02501 Type III secretion protein YscE
 5 TIGR02105|TIGR02105|cl09641|pfam09392|cl09641|pfam09392 Type III secretion needle protein YscF/MxiH/SsaG/EprI/PscF/EscF/SsaG
 6 TIGR02508|cl23891|pfam09477 Type III secretion chaperone YscG
-7 TIGR02497|cl14758|cl19575|cl19576|cl23893|pfam09613|pfam17001 Type III secretion protein YscI/HrpB
+7 TIGR02497|cl19575|cl19576|cl23893|pfam09613|pfam17001 Type III secretion protein YscI/HrpB
 8 TIGR02544|PRK15324|PRK15348|cl01907 Type III secretion inner membrane ring protein EscJ/YscJ/HrcJ
 9 PRK06328|PRK06937|PRK09098|TIGR02499|pfam06188|pfam06188 Type III secretion membrane-associated protein HrpE/YscL
 10 PRK06820|PRK06936|PRK07594 Type III secretion membrane-associated ATPase EscN/YscN/HrcN
 11 pfam07321|pfam16789 Type III secretion protein YscO
-12 TIGR02514|cd17466|cd17467|cl24001|cl38920|pfam02120 Type III secretion needle protein YscP
+12 TIGR02514|cd17466|cd17467|cl38920|pfam02120 Type III secretion needle protein YscP
 13 TIGR02551|PRK06933|PRK08035|PRK08158 Type III secretion membrane-associated protein YscQ/HrcQ
 14 TIGR01102|PRK12796|PRK12797|cl00593 Type III secretion membrane-associated protein YscR/HrcR/SpaP
 15 PRK15333|PRK15350 Type III secretion membrane-associated protein EscS/YscS/HrcS
 16 PRK15332|PRK15349|TIGR01401 Type III secretion membrane-associated protein SpaR/YscT/HrcT
-17 TIGR01404|PRK08156|PRK09108|PRK12721|cl19167|pfam01312 Type III secretion membrane-associated protein EscU/YscU/HrcU
+17 TIGR01404|PRK08156|PRK12721|cl19167|pfam01312 Type III secretion membrane-associated protein EscU/YscU/HrcU
 18 TIGR01399|PRK12720|PRK15337 Type III secretion membrane-associated protein EscV/YscV/HrcV
 19 TIGR02567|cl15825|pfam09619 Type III secretion chaperone YscW
 20 NF038054|PRK15325 Type III secretion inner rod protein SctI/BsaK/PrgJ/MxiI
 21 PRK15374|pfam16535 Type III secretion tip/injectome protein SipB
-22 TIGR02101|NF038055|PRK15373|cl27854|pfam09599 Type III secretion tip/injectome protein SctB/YopD/EspB/IpaC/SipC
+22 TIGR02101|NF038055|PRK15373|pfam09599 Type III secretion tip/injectome protein SctB/YopD/EspB/IpaC/SipC
 23 TIGR02553|PRK15330 Type III secretion tip/injectome protein SipD
 
 >Transport, Protein Secretion, Type IV
@@ -883,7 +887,7 @@ PRK10509|COG2906 Bacterioferritin associated ferredoxin
 10 PRK13850|PRK13897|cd01127 Type IV secretion membrane protein VirD4
 
 >Transport, Protein Secretion, Type V
-TIGR01414|TIGR02601|cl15373|TIGR04393|pfam03797 Autotransported effector with integrated outer membrane pore
+TIGR01414|TIGR02601|TIGR04393|pfam03797 Autotransported effector with integrated outer membrane pore
 
 >Transport, Protein Secretion, Type VI
 1 TIGR03348|pfam06744 Type VI secretion periplasmic protein IcmF
@@ -899,11 +903,11 @@ TIGR01414|TIGR02601|cl15373|TIGR04393|pfam03797 Autotransported effector with in
 >Metabolism, Porphyrins
 1 COG0373|PRK00045|PRK00676|TIGR01035 Glutamyl-tRNA reductase HemA
 2 TIGR00713|COG0001 Glutamate-1-semialdehyde aminotransferase HemL
-3 PRK09064|PRK13392|PRK13393|cd06454|pfam09029 5-aminolevulinate synthase
+3 PRK13392|cd06454|pfam09029 5-aminolevulinate synthase
 4 COG0113 Delta-aminolevulinic acid dehydratase, porphobilinogen synthase HemB
-5 TIGR00212|PRK00072|COG0181|cd13644 Porphobilinogen deaminase HemC
+5 TIGR00212|COG0181|cd13644 Porphobilinogen deaminase HemC
 6 COG1587|cd06578|cl03649|pfam02602 Uroporphyrinogen-III synthase HemD
-7 PRK00115|TIGR01464|COG0407 Uroporphyrinogen-III decarboxylase HemE
+7 TIGR01464|COG0407 Uroporphyrinogen-III decarboxylase HemE
 8 COG0408 Oxygen-dependent coproporphyrinogen III oxidase HemF
 9 COG0635|TIGR00538|pfam06969 Oxygen-independent coproporphyrinogen III oxidase HemN
 10 COG4635|PRK11104 Menaquinone-dependent protoporphyrinogen IX oxidase HemG
@@ -925,7 +929,7 @@ COG0007|COG1648|PRK10637|TIGR01469|TIGR01470|cd11642 Uroporphyrinogen-III methyl
 6 TIGR02020|cl06353|pfam07284 2-vinyl bacteriochlorophyllide hydratase BchF
 7 TIGR01476 Bacteriochlorophyll/chlorophyll synthetase BchG
 8 TIGR02025|PLN03241|PRK12493|PRK13405 Magnesium chelatase subunit ChlH/BchH
-9 TIGR02030|PRK13407|pfam01078|pfam13335 Magnesium chelatase subunit ChlI/BchI
+9 TIGR02030|pfam01078|pfam13335 Magnesium chelatase subunit ChlI/BchI
 10 TIGR02019 Bacteriochlorophyll 4-vinyl reductase BchJ
 11 TIGR02021 Magnesium-protoporphyrin O-methyltransferase BchM/ChlM
 12 TIGR03056 Magnesium chelatase accessory protei BchO
@@ -937,7 +941,7 @@ COG0007|COG1648|PRK10637|TIGR01469|TIGR01470|cd11642 Uroporphyrinogen-III methyl
 3 TIGR02435 Precorrin-3B synthase CobG
 4 TIGR01466|PRK15478|cd11646 Precorrin-3B C(17)-methyltransferase CbiH/CobJ
 5 TIGR01465|PRK15473|cd11641|pfam11760|pfam11761 Cobalt-precorrin-4 methyltransferase CbiF/CobM
-6 COG2073|PRK07027|cl12133|cl26443|pfam01890 Cobalamin biosynthesis protein CbiG
+6 COG2073|PRK07027|pfam01890 Cobalamin biosynthesis protein CbiG
 7 COG1903|PRK00075|TIGR00312|cl00828|pfam01888 Cobalamin biosynthesis protein CbiD
 6|7 TIGR02434|COG2243|cd11643 Precorrin-2 methylase CobF
 8 cl00922|pfam02571 Precorrin-6x reductase CbiJ/CobK
@@ -962,13 +966,13 @@ COG0007|COG1648|PRK10637|TIGR01469|TIGR01470|cd11642 Uroporphyrinogen-III methyl
 2 TIGR00492 Alanine racemase Alr
 3 TIGR01072|COG0766 UDP-N-acetylglucosamine enolpyruvyl transferase MurA
 4 TIGR00179|PRK00046|PRK13906|PRK13904|PRK13903|PRK13905 UDP-N-acetylmuramate dehydrogenase MurB
-5 TIGR01082|COG0773|PRK00421 UDP-N-acetylmuramate--L-alanine ligase MurC
-6 TIGR01087|COG0771|PRK00141|PRK00683|PRK04690|PRK04663|PRK04308|PRK03815|PRK03806|PRK03803|PRK03369|PRK02705|PRK02472|PRK02006|PRK01390|PRK01368|PRK01438|PRK01710 UDP-N-acetylmuramoyl-L-alanine--D-glutamate ligase MurD
+5 TIGR01082|COG0773 UDP-N-acetylmuramate--L-alanine ligase MurC
+6 TIGR01087|COG0771|RK04690 UDP-N-acetylmuramoyl-L-alanine--D-glutamate ligase MurD
 7 TIGR01085|COG0769|PRK00139 UDP-N-acetylmuramoylalanyl-D-glutamate--2,6-diaminopimelate ligase MurE
 8 TIGR01143|COG0770 UDP-N-acetylmuramyl pentapeptide synthase MurF
 9 TIGR01133|PRK00726 undecaprenyldiphospho-muramoylpentapeptide beta-N- acetylglucosaminyltransferase MurG
 10 TIGR00274|COG2103|PRK05441 N-acetylmuramic acid 6-phosphate (MurNAc-6-P) etherase MurQ
-11 TIGR00445|PRK14654|PRK14655|PRK00108 Phospho-N-acetylmuramoyl-pentapeptide-transferase MraY
+11 TIGR00445 Phospho-N-acetylmuramoyl-pentapeptide-transferase MraY
 12 TIGR01695|COG0728 Peptidoglycan biosynthesis protein MviN/MurJ
 pfam02388 Peptidoglycan pentaglycine glycine transferase FemAB
 
@@ -992,7 +996,7 @@ cd00342|cd01345 Outer-membrane porins
 # COG0334|COG2902|PLN02477|PTZ00324|PTZ00079|PRK14031|PRK14030|PRK09414 (glu) Glutamate dehydrogenase GdhA/Leucine dehydrogenase
 6 TIGR00653|PRK09469|COG0174|COG3968|pfam00120|pfam03951|pfam12437|pfam16952|pfam18318 (gln) Glutamine synthetase GlnA
 # From phosphoglycerate to serine
-7 COG0111|PRK11790|PRK13581|TIGR01327|cd00611 (ser) Phosphoglycerate dehydrogenase SerA and related
+7 COG0111|PRK11790|TIGR01327|cd00611 (ser) Phosphoglycerate dehydrogenase SerA and related
 8 COG1932|PRK12462|TIGR01364|TIGR01365|TIGR01366 (ser) Phosphoserine aminotransferase SerC
 9 TIGR00338|COG0560|PLN02954|PRK11133|PRK13463|PRK13582 (ser) Phosphoserine phosphatase SerB
 # From alanine to serine
@@ -1000,7 +1004,7 @@ cd00342|cd01345 Outer-membrane porins
 # From serine to cysteine and selenocysteine
 10 COG1045|PRK11132|TIGR01172 (cys) Serine acetyltransferase CysE
 11 COG0031|PLN00011|PLN02556|PLN02565|PLN03013|PRK06084|PRK06702|PRK08248|PRK10717|PRK11761|TIGR01136|TIGR01137|TIGR01138|TIGR01139 (cys) Cysteine synthase CysK/M and related
-12 PRK04311|pfam12390 (sec) Selenocysteine synthase
+12 pfam12390 (sec) Selenocysteine synthase
 # From serine to glycine (and vice versa)
 13 COG0112|PRK00011|cd00378 (gly) Glycine/serine hydroxymethyltransferase GlyA
 # From glycine to threonine (and vice versa)
@@ -1008,7 +1012,7 @@ cd00342|cd01345 Outer-membrane porins
 # From pyruvate to valine and isoleucine via 2-oxo-isovalerate
 15 cl39075|TIGR00118|PRK08979|PRK09107|PRK08978|PRK08527|PRK08617|PRK08322|PRK08155|PRK08178|PRK07979|PRK07710|PRK07789|PRK07586|PRK07282|PRK07418|PRK06965|PRK06882|PRK06725|PRK06456|PRK06466|COG0028|PLN02470|PRK05858|PRK06048|PRK06112|PRK06276 (val/ile) Acetolactate synthase, large subunit IlvB
 16 COG0440|PRK11895|TIGR00119|COG3978|PRK11152|pfam01842 (val/ile) Acetolactate synthase, small subunit
-17 pfam01450|cl29486|TIGR00465|COG0059 (val/ile) Ketol-acid reductoisomerase IlvC
+17 pfam01450|TIGR00465|COG0059 (val/ile) Ketol-acid reductoisomerase IlvC
 18 COG0129|TIGR00110 (val/ile) Dihydroxyacid dehydratase IlvD/phosphogluconate dehydratase
 19 COG0115|TIGR01122|TIGR01123 (val/ile) Branched-chain amino acid aminotransferase IlvE/4-amino-4-deoxychorismate lyase
 19 PRK09440 (val/ile) Valine-pyruvate transaminase AvtA
@@ -1024,7 +1028,7 @@ cd00342|cd01345 Outer-membrane porins
 26 COG0460|COG4091|PRK09466|PRK09436|PRK08374|PRK06813|PRK06392|PRK06349|PRK06270|PLN02700 (lys/met/thr) Homoserine dehydrogenase MetL/ThrA
 # From homoserine to threonine
 27 COG0083|cd05153|TIGR00938|TIGR00191|PTZ00299|PRK05231|PRK01212|PLN02451 (thr) Homoserine kinase ThrB
-28 COG0498|TIGR00260|PRK09225|PRK08329|PRK08197|PRK07591|PRK07409|PRK06721|PRK06450|PRK06381|PRK06352|PRK06260|PLN02569|PRK05638 (thr) Threonine synthase ThrC
+28 COG0498|TIGR00260|PRK08329|PRK08197|PRK06450|PRK06381|PLN02569|PRK05638 (thr) Threonine synthase ThrC
 29 COG2008|PLN02721|PRK10534|cd06502 (thr) Threonine aldolase
 # From aspartate semialdehyde to lysine
 30 COG0329|TIGR00674 (lys) 4-hydroxy-tetrahydrodipicolinate synthase DapA
@@ -1032,14 +1036,14 @@ cd00342|cd01345 Outer-membrane porins
 32 COG2171|PRK11830|TIGR00965|TIGR03532|TIGR03535|TIGR03536 (lys) Tetrahydrodipicolinate N-succinyltransferase DapD
 33 TIGR03539|TIGR03538|TIGR03537|PRK07777 (lys) Succinyldiaminopimelate transaminase DapC/ArgD
 34 TIGR01910|TIGR01900|TIGR01246|PRK06837 (lys) Succinyl-diaminopimelate desuccinylase DapE/ArgE
-32|33|34 TIGR03540|TIGR03542|PRK09276|PRK09148|PRK08636|PRK07865|PRK07681|PRK07590|PRK06290|PRK07366 (lys) LL-diaminopimelate aminotransferase
-35 TIGR00652|COG0253|PLN02536|PRK00450|PRK13577|pfam01678 (lys) Diaminopimelate epimerase DapF
+32|33|34 TIGR03540|TIGR03542|PRK09276|PRK09148|PRK08636|PRK07681|PRK06290|PRK07366 (lys) LL-diaminopimelate aminotransferase
+35 TIGR00652|COG0253|PLN02536|PRK13577|pfam01678 (lys) Diaminopimelate epimerase DapF
 32|33|34|35 TIGR01921|pfam16654 (lys) Diaminopimelate dehydrogenase Dapdh
-36 COG0019|TIGR01048|PLN02537|PRK08961|PRK11165 (lys) Diaminopimelate decarboxylase LysA
+36 COG0019|TIGR01048|PLN02537|PRK08961 (lys) Diaminopimelate decarboxylase LysA
 # From oxoglutarate to lysine (fungal, rare bacteria)
 30 TIGR02144 (lys) Lysine biosynthesis protein LysX
 31 COG0548|TIGR00761 (lys) Acetylglutamate kinase ArgB/LysZ
-32 COG0002|cl40723 (lys) N-acetyl-gamma-glutamylphosphate reductase ArgC/LysY
+32 COG0002 (lys) N-acetyl-gamma-glutamylphosphate reductase ArgC/LysY
 33 COG4992|TIGR00707|PRK05093|PRK01278|PRK02936|PRK03244|PRK03715|PRK04013|PRK04612 (lys) Acetylornithine/succinylornithine transaminase ArgD/LysJ
 34 COG0624|PRK06837|TIGR01892|TIGR01910 (lys) Acetylornithine deacetylase/Succinyl-diaminopimelate desuccinylase ArgE/LysK and related,
 35 TIGR01206|PRK04443|PRK14058|cd13946|cl11748 (lys) Lysine/ornithine hydrolase LysW
@@ -1050,30 +1054,30 @@ cd00342|cd01345 Outer-membrane porins
 # From glutamate to arginine (includes urea cycle)
 39 TIGR01890|PRK05279|COG5630|COG1246|COG1364|pfam04768 (arg) N-acetylglutamate synthase ArgA/J
 40 TIGR00761|PRK04531|PRK00942|PLN02512|COG0548|CHL00202 (arg) Acetylglutamate kinase ArgB
-41 TIGR01851|TIGR01850|PRK00436|COG0002|cl40723 (arg) N-acetyl-gamma-glutamylphosphate reductase ArgC
+41 TIGR01851|TIGR01850|COG0002 (arg) N-acetyl-gamma-glutamylphosphate reductase ArgC
 # (see 34 for ArgD)
 # (see 35 for ArgE)
-42 TIGR01368|CHL00197|pfam00988|cl03056 (arg) Carbamoyl-phosphate synthase arginine-specific small subunit
-43 TIGR01369|PRK05294|PLN02735|pfam02787|pfam02786|cl29395 (arg) Carbamoyl-phosphate synthase large subunit
+42 TIGR01368|CHL00197|pfam00988 (arg) Carbamoyl-phosphate synthase arginine-specific small subunit
+43 TIGR01369|PRK05294|PLN02735|pfam02787|pfam02786 (arg) Carbamoyl-phosphate synthase large subunit
 44 COG0078 (arg) Ornithine carbamoyltransferase ArgF
 45 COG0137|PLN00200|PRK00509|PRK04527|PRK05370|PRK13820|TIGR00032|cd01999 (arg) Argininosuccinate synthase ArgG
 46 pfam14698|cd01359|TIGR00838|PRK12308|PRK06705|PRK06389|PRK04833|PRK02186|PRK00855|COG0165|PLN02646 (arg) Argininosuccinate lyase ArgH
 TIGR01227|COG0010|PLN02615|TIGR01229|TIGR01230|cd09015|pfam00491|pfam12640 (arg) arginase/formimidoylglutamase/agmatinase SpeB/RocF and related
 # From ribose-phosphate to histidine
-47 pfam01634|TIGR00070|PRK13584|PRK13583|PRK01686|COG0040|PRK00489 (his) ATP phosphoribosyltransferase HisG
+47 pfam01634|TIGR00070|COG0040 (his) ATP phosphoribosyltransferase HisG
 48 COG0140|PRK00400|PRK02759|TIGR03188|cd11534|pfam01503 (his) Phosphoribosyl-ATP pyrophosphohydrolase HisE/I
 49 COG0106|TIGR00007|TIGR01919|TIGR00734|TIGR02129|cd04723|cd04732|pfam00977 (his) Phosphoribosylformimino-5-aminoimidazole carboxamide ribotide isomerase HisA/F
-50 COG0107|PRK01033|PRK02083 (his) Imidazole glycerol-phosphate synthase subunit HisF
+50 COG0107 (his) Imidazole glycerol-phosphate synthase subunit HisF
 51 PRK14004|PRK13181|PRK13170|PRK13152|PRK13146|PRK13142|COG0118|PRK13141|PRK13143 (his) Imidazole glycerol-phosphate synthase subunit HisH
 52 COG0131|COG0241|PRK00951|PRK05446 (his) Imidazoleglycerol-phosphate dehydratase HisB
 53 COG0079|TIGR01141 (his) Histidinol-phosphate aminotransferase HisC or cobyric acid decarboxylase
 54 COG0141|cd06572|pfam00815|PRK00877|TIGR00069 (his) Histidinol dehydrogenase HisD
 # From erythrose-phosphate or fructose-phosphate to prepyhenate via chorismate, shikimate
-55 PRK08673|TIGR01361|TIGR01358|PRK13398|PRK13397|PRK13396|PRK12595|PRK12756 (phe/tyr/trp) 3-deoxy-7-phosphoheptulonate synthase
-56 pfam01959|pfam01761|cl00640|TIGR01357|PRK14021|PRK13951|PRK06203|PRK02290|PRK00002}PLN02834|COG1465 (phe/tyr/trp) 3-dehydroquinate synthase AroB
-57 COG0710|COG0757|cd00466|cd00502|pfam01487|cl00505|TIGR01093|TIGR01088|PRK13576|PRK13015|PRK13575|PRK09310|PRK02412|PLN02520|PRK01261|PRK05395 (phe/tyr/trp) 3-dehydroquinate dehydratase AroD/E/Q
+55 PRK08673|TIGR01361|TIGR01358|PRK13396|PRK12595|PRK12756 (phe/tyr/trp) 3-deoxy-7-phosphoheptulonate synthase
+56 pfam01959|pfam01761|cl00640|TIGR01357|PRK14021|PRK13951|PRK06203|PRK02290|PLN02834|COG1465 (phe/tyr/trp) 3-dehydroquinate synthase AroB
+57 COG0710|COG0757|cd00466|cd00502|pfam01487|cl00505|TIGR01093|TIGR01088|PRK13576|PRK13015|PRK09310|PRK02412|PLN02520|PRK01261|PRK05395 (phe/tyr/trp) 3-dehydroquinate dehydratase AroD/E/Q
 58 PLN02520|PRK12548|PRK12749|PRK14027|TIGR00507 (phe/tyr/trp) Shikimate dehydrogenase AroE
-59 COG0703|COG1685|cd00464|TIGR01920|PRK14021|PRK13949|PRK13951|PRK13948|PRK13946|PRK13947|PRK05057|PRK01123|PRK03731|PRK00625|PLN02199|PRK00131 (phe/tyr/trp) Shikimate kinase AroK/L
+59 COG0703|COG1685|cd00464|TIGR01920|PRK14021|PRK13949|PRK13951|PRK13948|PRK13946|PRK13947|PRK05057|PRK03731|PRK00625|PLN02199|PRK00131 (phe/tyr/trp) Shikimate kinase AroK/L
 60 COG0082|PLN02754|PRK05382|PRK12463|TIGR00033|cd07304|pfam01264 (phe/tyr/trp) Chorismate synthase AroC
 61 PRK11199|PRK10622|PRK09269|PRK08055|PRK09239|PRK07857|PRK06443|PRK07248|COG1605|COG4401|PLN02344|PRK06285|PRK12595|TIGR01791|TIGR01795|TIGR01796|TIGR01802|TIGR01805|TIGR01806|TIGR01808|cd02185|pfam07736|pfam01817|cl10037 (phe/tyr/trp) Chorismate mutase AroAH/TyrA
 # From prephenate to phenylalanine
@@ -1083,13 +1087,13 @@ TIGR01227|COG0010|PLN02615|TIGR01229|TIGR01230|cd09015|pfam00491|pfam12640 (arg)
 63 COG0287 (tyr) Prephenate dehydrogenase TyrA
 # (final step is a transaminase)
 #From chorismate to tryptophan
-64 COG0147|TIGR00564|TIGR01815|TIGR01820|PRK06404|PLN02335|PLN02445|PRK05940|PRK13574|PRK13572|PRK13573|PRK13571|PRK13570|PRK13569|PRK13567|PRK13566|PRK13564|PRK13565 (trp) Anthranilate/para-aminobenzoate synthase component I TrpE
+64 COG0147|TIGR00564|TIGR01815|TIGR01820|PRK06404|PLN02335|PLN02445|PRK05940|PRK13574|PRK13572|PRK13571|PRK13567|PRK13566|PRK13564 (trp) Anthranilate/para-aminobenzoate synthase component I TrpE
 65 CHL00101|PRK05670|PRK05637|PRK08857|PRK07765|PRK06895|PRK07649|PRK07649 (trp) Anthranilate synthase component II
 66 COG0547|PRK09522|TIGR01245 (trp) Anthranilate phosphoribosyltransferase TrpD
 67 COG0135|PRK09427|TIGR01919|COG0134|PRK00278 (trp) Phosphoribosylanthranilate isomerase TrpF/Indole-3-glycerol phosphate synthase TrpC
 68 CHL00200|COG0159|PRK13111|PRK13125|TIGR00262 (trp) Tryptophan synthase subunit TrpA
 69 COG0133|COG1350|PRK12391|TIGR00263 (trp) Tryptophan synthase subunit TrpB
 # From glutamate to proline
-70 COG0263|TIGR01027|TIGR01092|cd04242|cd04256|PRK13402|PTZ00489 (pro) Glutamate 5-kinase ProB
+70 COG0263|TIGR01027|TIGR01092|cd04242|cd04256|PTZ00489 (pro) Glutamate 5-kinase ProB
 71 COG0014|TIGR01092|cd04256|PRK00197|TIGR00407 (pro) Gamma-glutamyl phosphate reductase ProA
 

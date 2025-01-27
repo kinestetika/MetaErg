@@ -14,7 +14,8 @@ def _run_programs(genome, contig_dict, db_connection, result_files):
 def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     """Should parse the result files and return the # of positives"""
     with gff.GffParser(result_files[0], contig_dict, inference=ANNOTATOR_KEY,
-                       target_feature_type_dict={'repeat_unit': 'CRISPR'}) as gff_parser:
+                       target_feature_type_dict={'repeat_unit': 'CRISPR',
+                                                 'repeat_region': 'repeat_region'}) as gff_parser:
         count = 0
         for feature in gff_parser:
             feature.genome = genome.name
@@ -23,7 +24,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
     return count
 
 
-#@context.register_annotator  # (to enable minced, uncomment and add to __init__
+@context.register_annotator  # (to enable minced, uncomment and add to __init__
 def run_and_read_minced():
     return ({'pipeline_position': 1,
              'annotator_key': ANNOTATOR_KEY,

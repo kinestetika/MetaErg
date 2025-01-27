@@ -9,6 +9,8 @@ ANNOTATOR_KEY = 'prodigal'
 def _run_programs(genome, contig_dict, db_connection, result_files):
     fasta_file = context.spawn_file('masked', genome.name)
     # no masking here becasuse we want to arbitrate with repeatmasker results
+    fasta.write_contigs_to_fasta(contig_dict, fasta_file, db_connection, genome.name,
+                                 mask_targets=set('rRNA tRNA tmRNA ncRNA CRISPR'.split()))
     if not context.TRANSLATION_TABLE:
         context.run_external(f'prodigal -p meta -m -f gff -q -i {fasta_file} -a {result_files[0]} -d {result_files[1]}')
     else:

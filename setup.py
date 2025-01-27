@@ -1,11 +1,20 @@
 import setuptools
+import os
+
+def read_version():
+    with open(os.path.join('src', 'metaerg', '__init__.py'), 'r', encoding="utf-8") as handle:
+        for line in handle:
+            if line.startswith('__version__'):
+                return line.split('=')[-1].strip().strip('\'')
+    raise ValueError("unable to find version")
+
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name='metaerg',
-    version=metaerg.__version__,
+    version=read_version(),
     packages=setuptools.find_packages(where='src'),
     url='https://github.com/kinestetika/MetaErg',
     license='MIT',

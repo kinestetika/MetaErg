@@ -1,2 +1,2 @@
-__all__ = 'antismash aragorn cdd cmscan crispr_detect deepsig diamond_and_blastn functional_genes gene_writer ltr_harvest ' \
-          'padloc prodigal repeat_masker pureseqtm trf checkm'.split()
+__all__ = 'antismash aragorn cdd cmscan deepsig diamond_and_blastn functional_genes gene_writer ltr_harvest minced' \
+          ' padloc prodigal pureseqtm checkm repeat_masker trf'.split()

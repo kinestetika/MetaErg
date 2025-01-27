@@ -47,6 +47,7 @@ class FunctionalGene:
             return self.__key() == other.__key()
         return NotImplemented
 
+
 SECONDARY_METABOLITE_GENE = FunctionalGene('Secondary-metabolites', 'Secondary-metabolites', 1)
 
 
@@ -173,3 +174,31 @@ def get_subsystem_completeness(subsystem_name: str, genes: dict):
                         relevant_feature_ids.add(feature_id)
     return len(positions_found) / denominator if denominator > 0 else len(relevant_feature_ids)
 
+
+def test_alignment_cdd_and_functional_gene_data(database_dir):
+    print('initing config')
+    init_functional_gene_config()
+
+    cdd_index = {}
+    cdd_index_file = Path(database_dir, 'cdd', 'cddid.tbl')
+    with open(cdd_index_file) as db_handle:
+        for line in db_handle:
+            words = line.strip().split("\t")
+            cdd_index[words[1]] = f'{words[2]} {words[3]}'
+    context.log(f'Parsed {len(cdd_index)} entries from conserved domain database.')
+
+    for gene in GENES:
+        for cue in gene.cues:
+            if not cue in cdd_index.keys() and (cue.startswith('cl') or cue.startswith('PRK')):
+                print(f'{cue} {gene.subsystem} {gene.gene[:15]}')
+        for cue in gene.anti_cues:
+            if not cue in cdd_index.keys() and (cue.startswith('cl') or cue.startswith('PRK')):
+                print(f'{cue}')
+
+
+def main ():
+    test_alignment_cdd_and_functional_gene_data('/bio/data/databases/metaerg')
+
+
+if __name__ == "__main__":
+    main()

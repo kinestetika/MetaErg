@@ -59,7 +59,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
                     f'({genome.name}) FATAL ERROR: Found {ANNOTATOR_KEY} result for unknown feature {blast_result.query()}, '
                     f'may need to rerun metaerg with --force')
                 raise Exception(f'Found {ANNOTATOR_KEY} result for unknown feature {blast_result.query()}, '
-                                f'may need to rerun metaerg with --force')
+                                f'may need to rerun metaerg with --force all')
             if new_matches := functional_genes.match(blast_result, number_of_hits_considered=1):
                 hit_count += 1
                 for new_match in new_matches:
@@ -69,7 +69,7 @@ def _read_results(genome, contig_dict, db_connection, result_files) -> int:
             feature.hmm = blast_result
             sqlite.update_feature_in_db(db_connection, feature)
     # with all subsystems annotated, we are ready to update the genome's subsystems:
-    genome.codon_usage_bias, genome.doubling_time = compute_codon_bias_estimate_doubling_time(db_connection)
+    genome.codon_usage_bias, genome.doubling_time = compute_codon_bias_estimate_doubling_time(genome.name, db_connection)
     genome.subsystems = functional_genes.aggregate(db_connection)
     for subsystem, subsystem_genes in genome.subsystems.items():
         subsystem_completeness = functional_genes.get_subsystem_completeness(subsystem, subsystem_genes)

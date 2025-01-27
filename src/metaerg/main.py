@@ -6,12 +6,10 @@ from hashlib import md5
 
 import pandas as pd
 
+from metaerg import __version__
 from metaerg.run_and_read import *
 from metaerg.html import *
 import metaerg.run_and_read.diamond_and_blastn
-#import metaerg.run_and_read.functional_genes
-#import metaerg.run_and_read.antismash
-#from metaerg.run_and_read import tmhmm
 from metaerg import context
 from metaerg import registry
 from metaerg.datatypes import functional_genes
@@ -166,19 +164,19 @@ def main():
     elif context.METAERG_ACTION == context.METAERG_ACTION_DOWNLOAD_DATABASE:
         # tarball instructions
         # (1) tar -cf metaerg_2_5_10_gtdb_220.tar db_descriptions.txt db_taxonomy.txt db_protein.faa cdd/ hmm/ rfam/
-        # (2) gzip metaerg_2_5_10_gtdb_220.tarls
-        # (3) md5sum
+        # (2) gzip metaerg_2_5_10_gtdb_220.tar
+        # (3) md5sum metaerg_2_5_10_gtdb_220.tar.gz
         # upload instructions:
         # (1) >source [credentials file]
-        # (2) >swift upload test_container -S 1073741824 large_file
+        # (2) >swift upload metaerg_2.5 -S 1073741824 metaerg_2_5_10_gtdb_220.tar.gz
         context.log('Downloading premade databases, version 2_5.10_gtdb_220, from https://object-arbutus.cloud.computecanada.ca...')
         database_tarbal_file = context.DATABASE_DIR / 'metaerg_2_5_10_gtdb_220.tar.gz'  # 'metaerg_db_207_v2.tar.gz'
-        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2_5_10_gtdb_220.tar.gz',
+        context.download('https://object-arbutus.cloud.computecanada.ca/metaerg_2.5/metaerg_2_5_10_gtdb_220.tar.gz',
                          database_tarbal_file)
         #context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
         #                 database_tarbal_file)
         md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
-        if '8ad69fa6901ac215cc8b6553376d465d' == md5sum:  # '76273d10e4e002445d802fe605821a06' == md5sum:
+        if 'e7ec949e50884ac65693ed9804f2b7c1' == md5sum:
             context.log(f'checksum {md5sum} as expected.')
         else:
             raise Exception(f'Downloaded database has incorrect checksum {md5sum} - download failed. Aborting...')
