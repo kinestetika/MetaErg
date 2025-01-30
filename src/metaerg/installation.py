@@ -7,9 +7,8 @@ from shutil import which
 def install_all_helper_programs(bin_dir: Path, todo_list, padloc_database_dir='', antismash_database_dir=''):
 
     check_installation_prereqs()
+    create_profile(bin_dir)
 
-    if not todo_list or 'profile' in todo_list:
-        create_profile(bin_dir)
     if not todo_list or 'minced' in todo_list:
         install_minced(bin_dir)
     if not todo_list or 'padloc' in todo_list:

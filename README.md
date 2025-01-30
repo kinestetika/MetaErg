@@ -25,16 +25,16 @@ conserved domain database and RPSBlast to assign genes to subsystems for effecti
 work in progress, and can be expanded and customized as needed.
 
 The Metaerg 2.5 pipeline ...
-* predicts CRISPR regions using [CRISPRDetect](https://github.com/davidchyou/CRISPRDetect_2.4), version 2.4.
+* predicts CRISPR regions using [minced](https://github.com/ctSkennerton/minced), version 0.4.2.
 * predicts tRNAs using [Aragorn](https://www.ansikte.se/ARAGORN/Downloads/), version 1.2.41.
 * predicts RNA genes and other non-coding features using [Infernal](http://eddylab.org/infernal/) - cmscan and RFAM, version 1.1.4.
 * predicts retrotransposons with [LTR Harvest](http://genometools.org/tools/gt_ltrharvest.html) - LTRHarvest, genometools version 1.6.2.
 * predicts tandem repeats with [Tandem Repeats Finder](https://tandem.bu.edu/trf/trf.html), version 4.0.9.
 * predicts other repeat regions with [Repeatscout](http://bix.ucsd.edu/repeatscout/), version 1.0.5, and [Repeatmasker](http://www.repeatmasker.org/RepeatMasker/), version 4.1.5.
 * predicts coding genes with [Prodigal](https://github.com/hyattpd/Prodigal), version 2.6.3.
-* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.0.15, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
-* annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and NCBI's Conserved Domain Database (CDD).
-* annotates genes involved in production of secondary met abolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
+* annotates taxonomy and functions of RNA and protein genes using [Diamond](https://github.com/bbuchfink/diamond), version 2.1.10, [NCBI blastn](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.14.0 and a database of >50,000 prokaryotes, based on [gtdb](https://gtdb.ecogenomic.org/) version 214, 11,569 viral and 139 eukaryotic genomes.
+* annotates gene functions using [RPSBlast](https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/), version 2.16.0 and NCBI's Conserved Domain Database (CDD) version 3.21.
+* annotates genes involved in production of secondary metabolites using [Antismash](https://dl.secondarymetabolites.org/releases), version 7.0.
 * annotates membrane and translocated proteins using [PureseqTM](https://github.com/PureseqTM/pureseqTM_package) and [deepsig](https://github.com/BolognaBiocomp/deepsig).
 * assigns genes to a [built-in set of 1,001 functions](https://github.com/kinestetika/MetaErg/blob/master/src/metaerg/run_and_read/data/functional_gene_data) using [HMMER](http://hmmer.org), version 3.3.2 and commmunity contributed HMM profiles (see below).
 * estimates doubling times of a genome's host based on [codon usage bias](https://www.pnas.org/doi/epdf/10.1073/pnas.2016810118)
@@ -44,6 +44,11 @@ The Metaerg 2.5 pipeline ...
 * enables the user to add custom HMMs and expand the set of functional genes as needed.
 
 When using metaerg, please cite [Xiaoli Dong and Marc Strous (2019) Frontiers in Genetics](https://www.frontiersin.org/articles/10.3389/fgene.2019.00999/full)
+
+## Important changes in version 2.5.10
+* Now using minced instead of CRISPdetect for crispr detection
+* Updated the blast database to GTDB 220, CDD to 3.21. The database now includes (113104, 189, 14447) taxa for (prokaryotes, eukaryotes and viruses) respectively.
+* Fixed installation problems with some dependencies such as antismash, deepsig and some databases
 
 ## Important changes in version 2.5
 * Comparative genomics mode was added. This depends on MMSeqs and Famsa. These programs are automatically installed by metaerg.
@@ -126,7 +131,7 @@ You can use the following arguments when running metaerg:
                         hmm                 Annotate gene functions according to metaergs built-in 
                                             scheme.
                         ltr_harvest         Call retrotransposons.
-                        crispr_detect       Call CRSIPR repeats.
+                        minced              Call CRSIPR repeats.
                         padloc              Annotate genes involved in cellular defense
                         prodigal            Call open reading frames (genes encoding proteins). If
                                             you skip this step, no proteins will be annotated.
@@ -134,7 +139,6 @@ You can use the following arguments when running metaerg:
                                             anchors).
                         repeat_masker       Call any repeat sequences.
                         trf                 Call tandem repeats.
-                          
 
 --translation_table     Translation table(s) to be used when calling open reading frames with 
                         prodigal. Default: 11,25. If the mean ORF length is less than 200 amino-
@@ -164,10 +168,10 @@ You can use the following arguments when running metaerg:
                         contamination into its output.
 --gtdbtk_dir            Use this argument with --create_database to point metaerg to the gtdbtk
                         database. It needs this to build its prokaryote blast database.
---install_deps          Use this argument to install all helper programs on your system. You need
-                        to follow this argument with an installation dir, where you want to have
-                        the programs installed. Optionally, you can follow the dir with a comma
-                        followed by the names of the programs you would like to install:
+--install_deps          Use this argument to install one or more helper programs on your system.
+--bin_dir               The installation dir, where you want to have the programs installed.
+--target_programs       Comma separated list of the programs you wish to install. Default: all.
+                        Options: Program names are listed under "--skip" above.
 --padloc_database       Use optionally with --install_deps if you want this database to be in a
                         non-default place/filesystem. Afterward, use --create_database D to
                         actually download and install the padloc database.
@@ -199,12 +203,12 @@ Or, using apptainer:
 
 ## Installation
 
-To install metaerg, its 19 helper programs (diamond, prodigal, etc.) and databases run the following commands:
+To install metaerg, its helper programs (diamond, prodigal, etc.) and databases run the following commands:
 ```commandline
 >python -m virtualenv metaerg-env
 >source metaerg-env/bin/activate
 >pip install --upgrade metaerg
->metaerg --install_deps /path/to/bin_dir
+>metaerg --install_deps /path/to/bin_dir --antismash_dir /path/to/metaerg-databases/antismash --padloc_database /path/to/metaerg-databases/padloc
 >source /path/to/bin_dir/profile
 >metaerg --download_database --database_dir /path/to/metaerg-databases/
 ```

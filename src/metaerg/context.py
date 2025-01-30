@@ -81,7 +81,7 @@ PROGRESS_COMPLETE = 'complete'
 
 def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_length, cpus, force, file_extension,
          translation_table, delimiter, checkm_dir, gtdbtk_dir, prefix, create_database, download_database,
-         install_deps, update_annotations, output_dir, log_topics='', mode = 'genome', skip_step='',
+         install_deps, bin_dir, target_programs, update_annotations, output_dir, log_topics='', mode = 'genome', skip_step='',
          padloc_database='', antismash_database=''):
     global BASE_DIR, TEMP_DIR, HTML_DIR, DATABASE_DIR, CHECKM_DIR, GTDBTK_DIR, GENOME_NAME_MAPPING_FILE, MULTI_MODE,\
            RENAME_CONTIGS, RENAME_GENOMES, MIN_CONTIG_LENGTH, FILE_EXTENSION, TRANSLATION_TABLE, CPUS_PER_GENOME, \
@@ -94,14 +94,16 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
 
     if install_deps:
         METAERG_ACTION = METAERG_ACTION_INSTALL_DEPS
-        instr = install_deps.split(',')
-        BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(instr[0]).absolute()
+        if not bin_dir:
+            log('Need to specify --bin_dir, where programs will be installed...')
+            exit(1)
+        BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(bin_dir).absolute()
         LOG_FILE = (BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS / 'log.txt').absolute()
         log(f'This is metaerg.py {__version__}')
         log(f'Ready to install {",".join(WHICH_PROGRAMS_TO_INSTALL)} helper program(s) at '
             f'{BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS}.')
-        if len(instr) > 1:
-            WHICH_PROGRAMS_TO_INSTALL = tuple(instr[1:])
+        if target_programs != 'all':
+            WHICH_PROGRAMS_TO_INSTALL = target_programs.split(',')
         if padloc_database:
             PADLOC_DATABASE = Path(padloc_database).absolute()
         else:
@@ -118,8 +120,8 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
     if not database_dir:
         print("No database dir provided or database dir is not a dir. Use -h for help.")
         exit(1)
-
     DATABASE_DIR = Path(database_dir).absolute()
+
     if download_database:
         LOG_FILE = (DATABASE_DIR / 'log.txt').absolute()
         log(f'This is metaerg.py {__version__}')
@@ -140,6 +142,9 @@ def init(contig_file, database_dir, rename_contigs, rename_genomes, min_contig_l
         else:
             DATABASE_TASKS = create_database
         FORCE_INSTALLATION_OF_DB = True if force else False
+        if padloc_database:
+            PADLOC_DATABASE = Path(padloc_database).absolute()
+        BIN_DIR_FOR_INSTALLATIONS_OF_PROGRAMS = Path(bin_dir).absolute()
         GTDBTK_DIR = Path(gtdbtk_dir)
         log(f'Ready to create databases from scratch with tasks {DATABASE_TASKS}.')
         return
@@ -504,8 +509,6 @@ def register_annotator(define_annotator):
             if diff := sqlite.compare_annotation_results(db_connection_previous, db_connection_current, param["annotator_key"]):
                 if diff[2]:
                     log(f'({genome.name}) {param["annotator_key"]} predicted {diff[1]} features, previously {diff[0]}, with {diff[2]} updates.')
-                else:
-                    log(f'({genome.name}) {param["annotator_key"]} feature coordinates were identical to previous run.')
 
         log('({}) {} complete. Found {}.', (genome.name, param['purpose'].capitalize(), positive_count))
         return 0

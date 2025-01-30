@@ -187,13 +187,16 @@ def install_functional_gene_databases():
     hmm_nir_install_dir = hmm_dir / 'nir'
     hmm_nir_install_dir.mkdir(exist_ok=True, parents=True)
     os.chdir(hmm_nir_install_dir)
-    os.system('wget -q https://figshare.com/ndownloader/articles/23913078/versions/1')
-    nir_archive_file = hmm_nir_install_dir / '1'
+    # see https://api.figshare.com/v2/articles/23913078
+    os.system('wget -q https://ndownloader.figshare.com/files/42604285')
+    nir_archive_file = hmm_nir_install_dir / '42604285'
     with ZipFile(nir_archive_file, 'r') as zipped_file:
         zipped_file.extractall(path=hmm_nir_install_dir)
-    nir_hmm_archive_file = hmm_nir_install_dir / 'clade_specific_HMMs.zip'
-    with ZipFile(nir_hmm_archive_file, 'r') as zipped_file:
-        zipped_file.extractall(path=hmm_nir_install_dir)
+    #nir_hmm_archive_file = hmm_nir_install_dir / 'clade_specific_HMMs'
+    #with ZipFile(nir_hmm_archive_file, 'r') as zipped_file:
+    #    zipped_file.extractall(path=hmm_nir_install_dir)
+    nirk_count = 0
+    nirs_count = 0
     with open(nir_hmm_file, 'w') as nir_hmm_writer:
         for f in sorted((hmm_nir_install_dir / 'clade_specific_HMMs' / 'NirK').glob('*.hmm')):
             with open(f, 'r') as reader:
@@ -201,12 +204,16 @@ def install_functional_gene_databases():
                     if l.startswith('NAME'):
                         l = 'NAME  NirK_' + l[6:]
                     nir_hmm_writer.write(l)
+                    nirk_count += 1
+
         for f in sorted((hmm_nir_install_dir / 'clade_specific_HMMs' / 'NirS').glob('*.hmm')):
             with open(f, 'r') as reader:
                 for l in reader:
                     if l.startswith('NAME  Clade') or l.startswith('NAME  Arch'):
                         l = 'NAME  NirS_' + l[6:]
                     nir_hmm_writer.write(l)
+                    nirs_count += 1
+    context.log(f'Downloaded and added {nirs_count} and {nirk_count} profiles for NirS and Nir respectively.')
     shutil.rmtree(hmm_nir_install_dir)
 
     # unzip hmms from metaerg python module

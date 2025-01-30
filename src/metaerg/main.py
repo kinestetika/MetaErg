@@ -52,10 +52,12 @@ def parse_arguments():
                                                                  'to create all components of the database.). Use '
                                                                  'any combination of PVEBRCSAD to only create specific '
                                                                  'parts of the database (see README)')
-    parser.add_argument('--install_deps', default='', help='Dir for installation of all required helper programs. Programs '
-                                                           'will be installed in the specified dir. Can optionally be '
-                                                           'followed by a comma and a list of programs to install,'
-                                                           'separated by commas.')
+    parser.add_argument('--install_deps', default=False, help='Install helper programs, such as prodigal and blast.')
+    parser.add_argument('--bin_dir', default='', help='Dir where the required helper programs will be installed.')
+    parser.add_argument('--target_programs', default='all', help='Comma separated list of helper programs to install.'
+                                                                  'Default is all. The programs are minced, padloc, aragorn, '
+                                                                  'cmscan, genometools, trf, repeatmasker, prodigal, diamond, '
+                                                                  'ncbi_blast, hmmer, mmseqs famsa, deepsig, pureseqtm, antismash ')
     parser.add_argument('--force', default='',  help='Use force to overwrite previous result files. Use "--force all" to redo '
                                                      'everything, or antismash, aragorn, cdd, cmscan, crispr_detect, '
                                                      'diamond_and_blastn, hmm, ltr_harvest, padloc, prodigal, signalp, '
@@ -163,7 +165,7 @@ def main():
             db_installer()
     elif context.METAERG_ACTION == context.METAERG_ACTION_DOWNLOAD_DATABASE:
         # tarball instructions
-        # (1) tar -cf metaerg_2_5_10_gtdb_220.tar db_descriptions.txt db_taxonomy.txt db_protein.faa cdd/ hmm/ rfam/
+        # (1) tar -cf metaerg_2_5_10_gtdb_220.tar db_descriptions.txt db_taxonomy.txt db_protein.faa db_rna.fna cdd/ hmm/ rfam/
         # (2) gzip metaerg_2_5_10_gtdb_220.tar
         # (3) md5sum metaerg_2_5_10_gtdb_220.tar.gz
         # upload instructions:
@@ -176,7 +178,7 @@ def main():
         #context.download('https://object-arbutus.cloud.computecanada.ca/metaerg/metaerg_2.25_gtdb_207_v2.tar.gz',
         #                 database_tarbal_file)
         md5sum = md5(open(database_tarbal_file,'rb').read()).hexdigest()
-        if 'e7ec949e50884ac65693ed9804f2b7c1' == md5sum:
+        if 'bacc7a8b462d4a22a9bb84f3ba24902d' == md5sum:
             context.log(f'checksum {md5sum} as expected.')
         else:
             raise Exception(f'Downloaded database has incorrect checksum {md5sum} - download failed. Aborting...')
