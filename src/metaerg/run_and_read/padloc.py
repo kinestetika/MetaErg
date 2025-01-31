@@ -118,16 +118,20 @@ def format_padloc_databases():
     if not padloc_db_original_location.exists():
         context.log(f'The padloc db installation dir is missing: {padloc_db_original_location} ')
     padloc_db_final_location = context.PADLOC_DATABASE if context.PADLOC_DATABASE else context.DATABASE_DIR / 'padloc'
-    if not padloc_db_final_location.exists():
-        context.log(f'Creating padloc database dir "{padloc_db_final_location}"')
-        padloc_db_final_location.mkdir()
-    else:
-        context.log(f'Found existing padloc database dir "{padloc_db_final_location}"')
-    # the following is done while installing the program 'padloc' in installation.py:
-    # ln -s /bio/data/databases/metaerg/padloc /bio/bin/padloc/data
-    # the problem is: padloc does not respect the existing symlink but will replace it with the actual
-    # dir and put the data there.
+    if padloc_db_final_location.exists():
+        context.log(f'Found existing padloc database dir "{padloc_db_final_location}". Will delete this.')
+        if context.FORCE_INSTALLATION_OF_DB:
+            if padloc_db_final_location.is_dir():
+                shutil.rmtree(padloc_db_final_location)
+            else:
+                padloc_db_final_location.unlink()
+        else:
+            context.log(f'Run with "--force all" to enable overwriting of existing file {padloc_db_final_location}.')
+            exit()
     context.run_external(f'padloc --db-update')
-    padloc_db_final_location.unlink(missing_ok=True)
-    padloc_db_original_location.rename(padloc_db_final_location)
+    # the following happens while installing the program 'padloc' in installation.py:
+    # ln -s /path/to/database/padloc /path/to/bin/dir/padloc/data
+    # The problem is: padloc does not respect the created symlink, but will replace it with the actual dir and put the
+    # data there. To fix this:
+    shutil.move(padloc_db_original_location, padloc_db_final_location)
     os.system(f'ln -s {padloc_db_final_location} {padloc_db_original_location}')

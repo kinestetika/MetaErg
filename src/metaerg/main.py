@@ -52,7 +52,8 @@ def parse_arguments():
                                                                  'to create all components of the database.). Use '
                                                                  'any combination of PVEBRCSAD to only create specific '
                                                                  'parts of the database (see README)')
-    parser.add_argument('--install_deps', default=False, help='Install helper programs, such as prodigal and blast.')
+    parser.add_argument('--install_deps', default=False, action="store_true",
+                                                       help='Install helper programs, such as prodigal and blast.')
     parser.add_argument('--bin_dir', default='', help='Dir where the required helper programs will be installed.')
     parser.add_argument('--target_programs', default='all', help='Comma separated list of helper programs to install.'
                                                                   'Default is all. The programs are minced, padloc, aragorn, '
